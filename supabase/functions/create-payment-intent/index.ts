@@ -76,11 +76,17 @@ Deno.serve(async (req) => {
   if (typeof paymentId !== "string" || !method) {
     return json({ error: "validation_error" }, 400);
   }
+  // Pagamentos de reservas podem ter de ser devolvidos: só cartão (e Apple
+  // Pay / Google Pay), que ficam cativos. MB WAY e Multibanco cobram logo e
+  // um reembolso perde a taxa da Stripe (pedido do Rafael, 2026-11-20).
+  if (method === "mb_way" || method === "multibanco") {
+    return json({ error: "method_not_allowed" }, 409);
+  }
 
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select(
-      "id, booking_id, payer_id, partner_id, amount, type, status, provider_payment_id, bookings(booking_number, total_amount, couple_id), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
+      "id, booking_id, quote_request_id, payer_id, partner_id, amount, type, status, due_at, provider_payment_id, bookings(booking_number, total_amount, couple_id), quote_requests(total_amount, couple_id), partner_profiles(stripe_account_id, stripe_charges_enabled, business_name, created_at)",
     )
     .eq("id", paymentId)
     .single();
@@ -93,6 +99,21 @@ Deno.serve(async (req) => {
     payment.status !== "pending"
   ) {
     return json({ error: "invalid_state" }, 409);
+  }
+  // O resto (e o pagamento único das categorias sem sinal) só se paga nos
+  // 6 dias antes do prazo (migrações 204/205): assim pode ficar cativo
+  // dentro dos 7 dias que a Stripe deixa.
+  // Sinal pago ao pedir (207): ainda sem reserva, o total vem do pedido.
+  const bookingTotal = Number(
+    (payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ??
+      (payment.quote_requests as unknown as { total_amount?: number } | null)?.total_amount ?? 0,
+  );
+  const payInFull = payment.type === "deposit" && bookingTotal > 0 && Number(payment.amount) >= bookingTotal - 0.005;
+  if ((payment.type === "final_payment" || payInFull) && payment.due_at) {
+    const opensAt = new Date(payment.due_at as string).getTime() - 6 * 24 * 3600 * 1000;
+    if (Date.now() < opensAt) {
+      return json({ error: "not_open_yet", opens_at: new Date(opensAt).toISOString() }, 409);
+    }
   }
 
   const partner = payment.partner_profiles as unknown as {
@@ -160,8 +181,11 @@ Deno.serve(async (req) => {
   // Taxa do parceiro (migração 123): gravada aqui, descontada na libertação.
   const partnerFeePct = Number((settings as Record<string, unknown> | null)?.partner_fee_percentage ?? 0);
   const partnerAmountCents = Math.round((payment.amount as number) * 100);
+  // Sinal pago ao pedir (migração 207): ainda sem reserva — o total é o do
+  // pedido (pacote + extras).
+  const request = payment.quote_requests as unknown as { total_amount?: number; couple_id?: string } | null;
   const bookingTotalCents = Math.round(
-    Number((payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ?? payment.amount) * 100,
+    Number((payment.bookings as unknown as { total_amount?: number } | null)?.total_amount ?? request?.total_amount ?? payment.amount) * 100,
   );
   const sett = (settings as Record<string, unknown> | null) ?? {};
   // Taxa do organizador por escalões (migração 127), parte proporcional
@@ -186,15 +210,18 @@ Deno.serve(async (req) => {
       return json({ error: "card_error" }, 400);
     }
   }
+  // Migração 193: 50 % na taxa de serviço da 1.ª transação; migração
+  // 210: prémio de convites = 2 pontos a menos na percentagem (4 % + 1 €
+  // → 2 % + 1 €; 6 % + 1 € → 4 % + 1 €). Reserva um crédito do pagador e
+  // outro do parceiro.
+  const payerCredit = await takeFeeDiscount(admin, user.id, payment.id as string);
+  const payerDiscountPct = payerCredit.pct;
   const feeFor = (tiers: FeeTier[]) => paymentFeeCents(
     partnerAmountCents,
     Math.max(bookingTotalCents, partnerAmountCents),
-    tiers,
-    commissionPct,
+    proTiers(tiers, payerCredit.points),
+    Math.max(0, commissionPct - payerCredit.points),
   ) + fixedCents;
-  // Migração 193: 50 % na taxa de serviço (1.ª transação ou prémio de
-  // convites) — reserva um crédito do pagador e outro do parceiro.
-  const payerDiscountPct = await takeFeeCredit(admin, user.id, payment.id as string);
   const discounted = (cents: number, pct: number) => Math.round(cents * (1 - pct / 100));
   const applicationFeeCents = discounted(feeFor(organizerTiersForCard(sett, region)), payerDiscountPct);
   const baseChargeCents = partnerAmountCents + discounted(feeFor(organizerTiersForCard(sett, "EEA")), payerDiscountPct);
@@ -206,22 +233,32 @@ Deno.serve(async (req) => {
   // Só dos clientes trazidos pelo próprio parceiro (link /p/CODIGO, antes de
   // qualquer pedido), a cada `referral_free_every` (5) um fica sem comissão
   // do parceiro (migração 151).
-  const coupleId = (payment.bookings as unknown as { couple_id?: string } | null)?.couple_id ?? null;
+  const coupleId = (payment.bookings as unknown as { couple_id?: string } | null)?.couple_id ?? request?.couple_id ?? null;
   // Plano Pro (migração 161): comissão 1 ponto mais baixa, cliente
   // trazido sem comissão a cada 3 (em vez de 5) e destaque a +4%.
   const isPro = await partnerIsPro(admin, payment.partner_id as string);
   const partnerFree = await isReferredClient(admin, payment.partner_id as string, coupleId, sett, isPro);
   // Migração 155: reserva que veio do destaque pago do parceiro → +6%.
-  const promoExtraPct = partnerFree ? 0 : await promotionExtraPct(admin, payment.booking_id as string);
+  // Sinal pago ao pedir (migração 207): ainda sem reserva, conta-se a
+  // partir do pedido (`request_promotion_extra`).
+  const promoExtraPct = partnerFree
+    ? 0
+    : payment.booking_id
+    ? await promotionExtraPct(admin, payment.booking_id as string)
+    : payment.quote_request_id
+    ? await requestPromotionExtraPct(admin, payment.quote_request_id as string)
+    : 0;
   // O crédito do parceiro só se gasta quando ele paga taxa.
-  const partnerDiscountPct = partnerFree ? 0 : await takeFeeCredit(admin, payment.partner_id as string, payment.id as string);
+  const partnerCredit = partnerFree ? { pct: 0, points: 0 } : await takeFeeDiscount(admin, payment.partner_id as string, payment.id as string);
+  const partnerDiscountPct = partnerCredit.pct;
+  const partnerPoints = (isPro ? Number(sett.pro_fee_discount ?? 1) : 0) + partnerCredit.points;
   const partnerFeeCents = partnerFree ? 0 : discounted(Math.min(
     partnerAmountCents,
     paymentFeeCents(
       partnerAmountCents,
       Math.max(bookingTotalCents, partnerAmountCents),
-      proTiers(partnerTiers, isPro ? Number(sett.pro_fee_discount ?? 1) : 0),
-      Math.max(0, partnerFeePct - (isPro ? Number(sett.pro_fee_discount ?? 1) : 0)),
+      proTiers(partnerTiers, partnerPoints),
+      Math.max(0, partnerFeePct - partnerPoints),
     ) + Math.round((partnerAmountCents * promoExtraPct) / 100) + fixedCents,
   ), partnerDiscountPct);
   const bookingNumber = (payment.bookings as unknown as { booking_number: string } | null)?.booking_number ?? "";
@@ -255,8 +292,10 @@ Deno.serve(async (req) => {
       currency: "eur",
       ...(pmId ? { payment_method: pmId } : {}),
       ...(holdDeposit ? { capture_method: "manual" as const } : {}),
+      // «all» = o formulário da Stripe: só cartões (Apple Pay e Google
+      // Pay incluídos), para poder cativar.
       ...(method === "all"
-        ? { automatic_payment_methods: { enabled: true, allow_redirects: "never" as const } }
+        ? { payment_method_types: ["card"] }
         : { payment_method_types: [method] }),
       // MB WAY e Multibanco confirmados já aqui: a app não mostra nenhum
       // formulário da Stripe.
@@ -265,15 +304,18 @@ Deno.serve(async (req) => {
         : method === "multibanco"
         ? { payment_method_data: { type: "multibanco", billing_details: { email: user.email ?? undefined } }, confirm: true }
         : {}),
-      description: `${label} — reserva ${bookingNumber} · ${partner.business_name}`.trim(),
+      description: (bookingNumber
+        ? `${label} — reserva ${bookingNumber} · ${partner.business_name}`
+        : `${label} — pedido de reserva · ${partner.business_name}`).trim(),
       receipt_email: user.email ?? undefined,
       // Pagamento antecipado (2026-10-25, migração 119): o dinheiro fica na
       // À Nossa! e só é transferido ao parceiro 3 dias depois do evento,
       // sem disputa (`release-partner-funds`). Antes ia logo para o parceiro.
-      transfer_group: payment.booking_id as string,
+      ...(payment.booking_id ? { transfer_group: payment.booking_id as string } : {}),
       metadata: {
         payment_id: payment.id,
-        booking_id: payment.booking_id,
+        booking_id: (payment.booking_id as string | null) ?? "",
+        quote_request_id: (payment.quote_request_id as string | null) ?? "",
         kind: "booking_payment",
         partner_account: partner.stripe_account_id ?? "",
         partner_amount_cents: String(partnerAmountCents),
@@ -329,6 +371,13 @@ Deno.serve(async (req) => {
     base_amount_cents: baseChargeCents,
     card_region: region,
     fee_discount_pct: payerDiscountPct,
+    fee_discount_points: payerCredit.points,
+    // A taxa que fica nesta transação (percentagem + fixo), para a app a
+    // mostrar tal como é («2 % + 1 €»), não só o desconto.
+    fee_pct_now: partnerAmountCents > 0
+      ? Math.round(((applicationFeeCents - fixedCents) / partnerAmountCents) * 1000) / 10
+      : 0,
+    fee_fixed_cents: fixedCents,
     email: user.email ?? null,
     status: intent.status,
     ...(mbNew ? { multibanco: { entity: mbNew.entity, reference: mbNew.reference, expires_at: mbNew.expires_at } } : {}),
@@ -372,6 +421,19 @@ async function promotionExtraPct(admin: any, bookingId: string): Promise<number>
   }
 }
 
+// O mesmo para o sinal pago ao pedir (migração 207). Sem a migração, 0.
+// deno-lint-ignore no-explicit-any
+async function requestPromotionExtraPct(admin: any, quoteRequestId: string): Promise<number> {
+  try {
+    const { data, error } = await admin.rpc("request_promotion_extra", { p_quote_request: quoteRequestId });
+    if (error) return 0;
+    const v = Number(data ?? 0);
+    return Number.isFinite(v) && v > 0 ? v : 0;
+  } catch {
+    return 0;
+  }
+}
+
 // Plano Pro (migração 161). Sem a migração, false.
 // deno-lint-ignore no-explicit-any
 async function partnerIsPro(admin: any, partnerId: string): Promise<boolean> {
@@ -386,6 +448,24 @@ async function partnerIsPro(admin: any, partnerId: string): Promise<boolean> {
 
 // Escalões do parceiro com o desconto do Pro (nunca abaixo de 0%).
 // deno-lint-ignore no-explicit-any
+/// Migração 210: crédito em percentagem (boas-vindas) ou em pontos
+/// (convites). Antes da 210, só a percentagem (`take_fee_credit`).
+async function takeFeeDiscount(admin: any, profileId: string | null, paymentId: string): Promise<{ pct: number; points: number }> {
+  if (!profileId) return { pct: 0, points: 0 };
+  try {
+    const { data, error } = await admin.rpc("take_fee_discount", { p_profile: profileId, p_payment: paymentId });
+    if (error) return { pct: await takeFeeCredit(admin, profileId, paymentId), points: 0 };
+    const pct = Number((data as Record<string, unknown> | null)?.pct ?? 0);
+    const points = Number((data as Record<string, unknown> | null)?.points ?? 0);
+    return {
+      pct: Number.isFinite(pct) && pct > 0 && pct <= 100 ? pct : 0,
+      points: Number.isFinite(points) && points > 0 && points <= 100 ? points : 0,
+    };
+  } catch {
+    return { pct: 0, points: 0 };
+  }
+}
+
 async function takeFeeCredit(admin: any, profileId: string | null, paymentId: string): Promise<number> {
   if (!profileId) return 0;
   try {

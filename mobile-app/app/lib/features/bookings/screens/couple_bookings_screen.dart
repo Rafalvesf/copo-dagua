@@ -7,8 +7,11 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/home/home_providers.dart';
 import '../../../core/bookings/hire_privacy.dart';
-import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException;
-import '../../../core/payments/payments.dart' show PayArgs;
+import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException, getOrCreateConversation;
+import '../../../core/supabase/supabase_config.dart';
+import '../../payments/booking_extras_sheet.dart';
+import '../widgets/reject_proposal.dart';
+import '../../../core/payments/payments.dart' show PayArgs, payDay;
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
 import '../../../core/wedding/wedding_controller.dart';
@@ -384,7 +387,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => _payPending(
+                  onPressed: !booking.depositOpen ? null : () => _payPending(
                     booking.pendingDepositPaymentId,
                     deposit: true,
                     amount: amountWithCommission(booking.depositAmount ?? 0, commissionPct),
@@ -396,9 +399,18 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
-                    '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}',
+                    booking.depositOpen
+                        ? '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}'
+                        : 'Pagar a partir de ${payDay(booking.depositOpensAt!)}',
                   ),
                 ),
+              ),
+            ],
+            if (needsDeposit && !booking.depositIsFull) ...[
+              const SizedBox(height: 6),
+              const Text(
+                'A data só fica garantida com o sinal pago: até lá, o parceiro pode aceitar outro pedido para esse dia.',
+                style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
               ),
             ],
             if (needsFinalPayment) ...[
@@ -406,7 +418,8 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => _payPending(
+                  // O resto só se paga nos 6 dias antes do prazo (migração 204).
+                  onPressed: !booking.finalPaymentOpen ? null : () => _payPending(
                     booking.pendingFinalPaymentId,
                     deposit: false,
                     amount: amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct),
@@ -418,7 +431,9 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
-                    'Pagar restante — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}',
+                    booking.finalPaymentOpen
+                        ? 'Pagar o resto — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}'
+                        : 'Pagar o resto a partir de ${payDay(booking.finalPaymentOpensAt!)}',
                   ),
                 ),
               ),
@@ -491,6 +506,14 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
     setState(() => _accepting = true);
     try {
       await acceptProposal(widget.proposal.id, private: secret);
+      // Mockup (2026-11-21): depois de aceitar, os extras do parceiro.
+      try {
+        final b = await supabase.from('bookings').select('id').eq('proposal_id', widget.proposal.id).maybeSingle();
+        final bookingId = b?['id'] as String?;
+        if (bookingId != null && mounted) {
+          await offerBookingExtras(context, bookingId, partnerName: widget.proposal.partnerName);
+        }
+      } catch (_) {}
       ref.invalidate(pendingProposalsProvider);
       ref.invalidate(coupleBookingsProvider);
       if (mounted) {
@@ -546,6 +569,30 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
     }
   }
 
+  /// «Recusar» com o motivo, que segue para o parceiro na conversa.
+  Future<void> _reject() async {
+    final p = widget.proposal;
+    setState(() => _accepting = true);
+    final done = await rejectProposalFlow(
+      context,
+      proposalId: p.id,
+      partnerName: p.partnerName,
+      sendMessage: (text) async {
+        final partnerId = p.partnerId;
+        if (partnerId == null) return;
+        final conv = await getOrCreateConversation(weddingId: p.weddingId, partnerId: partnerId);
+        await supabase.from('messages').insert({
+          'conversation_id': conv,
+          'sender_role': 'couple',
+          'sender_id': supabase.auth.currentUser!.id,
+          'body': text,
+        });
+      },
+    );
+    if (done) ref.invalidate(pendingProposalsProvider);
+    if (mounted) setState(() => _accepting = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final proposal = widget.proposal;
@@ -597,8 +644,8 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             Expanded(
               child: Text(
                 proposal.depositRefundable
-                    ? 'Sinal reembolsável se cancelares nas 48 h depois de pagar'
-                    : 'Sinal não reembolsável',
+                    ? 'Sinal cancelável apenas nas 48 h depois de pagar'
+                    : 'Sinal não reembolsável depois de o parceiro aceitar',
                 style: TextStyle(
                   fontSize: AppFontSize.xs,
                   fontWeight: FontWeight.w600,
@@ -608,19 +655,34 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             ),
           ]),
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _accepting ? null : _accept,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: const StadiumBorder(),
+          // «Recusar» + «Aceitar» (mockup 2026-11-21).
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _accepting ? null : _reject,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.ink,
+                  side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: const StadiumBorder(),
+                ),
+                child: const Text('Recusar'),
               ),
-              child: Text(_accepting ? 'A aceitar...' : 'Aceitar proposta'),
             ),
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton(
+                onPressed: _accepting ? null : _accept,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.ink,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: const StadiumBorder(),
+                ),
+                child: Text(_accepting ? 'A aceitar...' : 'Aceitar'),
+              ),
+            ),
+          ]),
         ],
       ),
     );

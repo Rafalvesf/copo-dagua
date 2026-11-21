@@ -9,6 +9,9 @@ import { syncPartnerPro } from "../_shared/pro.ts";
 // { action: "checkout", interval: "month" | "year", success_url, cancel_url } → { url }
 // { action: "sync" }                → { active, until }  (ao voltar da Stripe)
 // { action: "portal", return_url }  → { url }  (gerir ou cancelar a subscrição)
+// { action: "trial", interval, payment_method } → { status: "succeeded" }
+//   (migração 209: Premium grátis `pro_trial_months` meses depois de pôr o
+//   cartão; uma só vez; no fim, a subscrição é cobrada nesse cartão)
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const authHeader = req.headers.get("Authorization");
@@ -58,6 +61,66 @@ Deno.serve(async (req) => {
       if (!partner.pro_subscription_id) return json({ error: "no_subscription" }, 409);
       await stripe.subscriptions.update(partner.pro_subscription_id, { cancel_at_period_end: body.action === "cancel" });
       return json(await syncPartnerPro(stripe, admin, partner.id));
+    }
+
+    // Premium grátis com cartão (migração 209). A app cria o método de
+    // pagamento com o cartão escrito (Stripe, nunca passa pela app) e manda-o
+    // aqui; a subscrição começa já, a contar como Premium, e só é cobrada no
+    // fim dos meses grátis (pode cancelar antes, sem pagar nada).
+    if (body.action === "trial") {
+      const pm = typeof body.payment_method === "string" && body.payment_method.startsWith("pm_") ? body.payment_method : null;
+      if (!pm) return json({ error: "validation_error" }, 400);
+      const trialInterval = body.interval === "year" ? "year" : "month";
+      const { data: s } = await admin.from("platform_settings")
+        .select("pro_enabled, pro_price_monthly, pro_price_yearly, pro_trial_months").eq("id", 1).maybeSingle();
+      if (s && s.pro_enabled === false) return json({ error: "pro_disabled" }, 409);
+      const months = Number(s?.pro_trial_months ?? 0);
+      if (!Number.isFinite(months) || months <= 0) return json({ error: "trial_unavailable" }, 409);
+      const { data: t, error: tErr } = await admin.from("partner_profiles")
+        .select("pro_trial_used_at").eq("id", partner.id).maybeSingle();
+      if (tErr) return json({ error: "trial_unavailable" }, 409); // migração 209 por correr
+      if (t?.pro_trial_used_at) return json({ error: "trial_used" }, 409);
+      if (partner.pro_subscription_id) {
+        const st = await syncPartnerPro(stripe, admin, partner.id);
+        if (st.active) return json({ error: "already_pro" }, 409);
+      }
+      let cust = partner.stripe_customer_id as string | null;
+      if (!cust) {
+        const c = await stripe.customers.create({
+          email: (partner.contact_email as string | null) ?? user.email ?? undefined,
+          name: partner.business_name ?? undefined,
+          metadata: { partner_id: partner.id },
+        });
+        cust = c.id;
+        await admin.from("partner_profiles").update({ stripe_customer_id: cust }).eq("id", partner.id);
+      }
+      try {
+        await stripe.paymentMethods.attach(pm, { customer: cust });
+      } catch (e) {
+        console.error("trial card attach failed", (e as Error).message);
+        return json({ error: "declined" }, 402);
+      }
+      await stripe.customers.update(cust, { invoice_settings: { default_payment_method: pm } });
+      const priceEur = Number(trialInterval === "year" ? s?.pro_price_yearly ?? 190 : s?.pro_price_monthly ?? 19);
+      const pid = `anossa_premium_${trialInterval}`;
+      const product = await stripe.products.retrieve(pid).catch(() =>
+        stripe.products.create({ id: pid, name: trialInterval === "year" ? "À Nossa! Premium · anual" : "À Nossa! Premium · mensal" })
+      );
+      const end = new Date();
+      end.setMonth(end.getMonth() + months);
+      await stripe.subscriptions.create({
+        customer: cust,
+        items: [{ price_data: { currency: "eur", unit_amount: Math.round(priceEur * 100), recurring: { interval: trialInterval }, product: product.id } }],
+        default_payment_method: pm,
+        trial_end: Math.floor(end.getTime() / 1000),
+        // Sem cartão válido no fim dos meses grátis, acaba (nunca fica Premium sem pagar).
+        trial_settings: { end_behavior: { missing_payment_method: "cancel" } },
+        payment_settings: { save_default_payment_method: "on_subscription", payment_method_types: ["card"] },
+        metadata: { kind: "partner_pro", partner_id: partner.id, trial: "1" },
+      });
+      await admin.from("partner_profiles").update({ pro_trial_used_at: new Date().toISOString() }).eq("id", partner.id);
+      await syncPartnerPro(stripe, admin, partner.id);
+      return json({ status: "succeeded" });
     }
 
     if (body.action !== "checkout" && body.action !== "subscribe") return json({ error: "validation_error" }, 400);

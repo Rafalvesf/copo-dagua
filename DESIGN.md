@@ -171,7 +171,8 @@ ecrãs. O resto da app mantém a tabela acima.
   continuar enquanto carrega; parada com «reduzir movimento». Onde:
   listas vazias → a dormir; erros → triste; evento criado e pagamento
   feito → parabéns; convites e «vou» → apaixonada; aceitar/juntar →
-  contente; sugestões → ideia; conversas vazias → piscar o olho. Substitui
+  contente; sugestões → ideia; conversas vazias → piscar o olho; Premium → fixe
+  (de óculos, pedido 2026-11-21). Substitui
   as duas taças.
 - **Páginas** (`shared/widgets/page_kit.dart`, canvases «Páginas do
   evento / parceiro / convidado», 2026-11-14): voltar redondo branco 44 numa
@@ -241,13 +242,43 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   exceção à regra «verde nunca em botões/fundos»: o verde só existe durante
   a animação.
 - **Fechar:** tocar fora ou puxar para baixo (se o popup o permitir).
+- **Sair pergunta sempre** (pedido do Rafael, 2026-11-20): tocar no «×»,
+  tocar fora do popup ou puxá-lo para baixo abre sempre «Tens a certeza que
+  queres sair?» («O que preencheste neste popup não fica guardado.») com
+  «Sair» (contorno) e «Continuar» (preto, volta ao popup como estava). Esta
+  pergunta não tem «×».
+- **Voltar — sempre no mesmo sítio** (pedido do Rafael, 2026-11-20, regra
+  da consistência): nos popups com passos, a partir do 2.º passo, o voltar é
+  um **círculo 44 `#F2F0EB` com a seta ← 20, no canto superior esquerdo**, ao
+  lado do título (o «×» de fechar fica à direita). **Nunca** um botão
+  «Voltar» em baixo: os botões de baixo são só ações (um preto a toda a
+  largura, ou contorno + preto, p. ex. «Pagar mais tarde» + «Pagar»). Vale
+  para todas as secções da app (organizador, parceiro e convidado).
 
 ## 6.2 Parceiros e perfis (mockups «Parceiros e perfis», 2026-11-20)
 
-- **Página Parceiros** (correção do Rafael, 2026-11-20): **não muda** — os
-  cartões, os tamanhos e a barra de categorias ficam como estavam. Dos
-  mockups «Parceiros e perfis» só entram o perfil do parceiro (abaixo) e os
-  popups (§6.1).
+- **Página Parceiros** (pedido do Rafael, 2026-11-20, mockup «Parceiros ·
+  cartões novos»): o **topo não muda** (título, localidade, Empresas/Lojas,
+  pesquisa, categorias em pílulas **sem imagens**). Mudam os cartões e as
+  secções:
+  - **Cartão de parceiro** (`PartnerBigCard`, `partner_cards.dart`): branco,
+    cantos 22, sombra suave; foto 150 em cima com a etiqueta à esquerda
+    («Em destaque» verde, «Novo» branca) e a nota (pílula branca com
+    estrela) à direita; logótipo redondo 44 com aro branco 3 a sobrepor o
+    canto da foto; nome 19 + coração; categoria 13; «zona · N anos de
+    experiência» 13; divisória `#ECE7DC`; rodapé com «Responde em ~1 h»
+    (ou «Desloca-se até X km» / «Todo o país») e a caixa de preço.
+  - **Secções em carrossel:** «Em destaque (perto de ti)», «Mais bem
+    avaliados», «Novos na À Nossa!» e as 3 categorias com mais parceiros
+    («Ver todos» escolhe a categoria). Cartões de **330**, 10 entre eles,
+    12 entre o título e os cartões, 24 entre secções.
+  - Por baixo, «N parceiros» + «Filtrar» com o **mesmo cartão a toda a
+    largura**.
+- **Avaliações no perfil do parceiro:** um só cartão branco — «Experiência
+  geral» com a nota 40 numa caixa com contorno, as barras verdes por
+  estrelas e, por baixo de uma linha `#ECE7DC`, os comentários (avatar 40,
+  nome 16, «zona · mês ano» 13, nota 12 com estrela preta, texto 14
+  justificado). «Ver todas (N)» mostra o resto no mesmo cartão.
 - **Topo do perfil do parceiro** (pedido do Rafael): a foto tem 300 e
   **encolhe com o scroll** até à faixa dos botões, que fica **sempre
   visível**. Aberta: «Em destaque», logótipo 56 e nome 28 a branco sobre um
@@ -268,10 +299,27 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   valor 40, para que é (13) e a explicação. O valor é o que o parceiro
   indica em «Preços e pacotes» (`average_quote_price`) e a nota é
   `reference_note` (migração 203).
-- **Popups de reserva:** «Reservar <pacote>» (evento com «Mudar», pessoas,
-  extras, mensagem, total e botão), «Reserva pedida» (estrela contente,
-  resumo, «Ver conversa» + «OK») e «Pedir orçamento» (referência, evento,
-  data, local com o seletor de moradas e mensagem).
+- **Popups de reserva — o mesmo fluxo em todas as categorias** (mockups
+  «Reservar por categoria», 2026-11-20/21): Para que evento? (sempre) ·
+  Confirma as pessoas (vêm do evento e das respostas; aviso amarelo só se
+  forem **mais** do que no evento, «22 de 122 do evento» se forem menos) ·
+  Quem paga? (só onde faz sentido) · o que falta saber da categoria (hora,
+  entrega, partida…) · Tudo certo? («Continuar») · Queres juntar alguma
+  coisa? (extras; «Sem extras» + «Continuar») · Pedir reserva. A reserva só
+  é pedida depois dos extras. Nunca se volta a perguntar o dia, o local nem
+  as pessoas. Fim: «Reserva pedida» (estrela contente, resumo, «Ver
+  conversa» + «OK»); pagamento feito → estrela de parabéns.
+- **Pedir orçamento:** o mesmo fluxo — evento, pessoas, «O que procuras?»
+  (hora e mensagem), Tudo certo? → «Pedir orçamento» → «Orçamento pedido».
+  Na proposta: «Recusar» (pergunta o motivo, que segue para o parceiro na
+  conversa) ou «Aceitar» → extras → pagar o sinal.
+- **Pagar mais tarde:** enquanto houver tempo, o ecrã de pagar tem
+  «Pagar mais tarde» ao lado de «Pagar». Abre «Pagar mais tarde?» com o
+  aviso do que acontece sem pagamento (amarelo; vermelho nos últimos 3
+  dias): sem o sinal, o parceiro pode aceitar outro pedido; sem o valor
+  todo, a reserva é cancelada; o convidado que não paga sai da reserva (os
+  outros vão na mesma). A taxa de serviço só entra no passo de pagar e
+  diz-se antes: «+ taxa de serviço no passo seguinte».
 - **Perfil do organizador:** faixa de cor 200 no topo (sem foto: botões
   brancos cheios 44 — voltar, partilhar, ⋯), a `ProfileCard_Users` por cima
   dela, «Próximos eventos» em carrossel, «A seguir», e a barra fixa com
@@ -284,6 +332,70 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   sugestões do Google, «Usar a minha localização» e «Confirmar local» com o
   mapa e a localidade, código postal e distrito preenchidos. **Nunca** uma
   caixa de texto livre para moradas.
+
+## 6.3 Moldes fixos — popups e páginas (pedido do Rafael, 2026-11-21)
+
+Para não inventar a cada ecrã: **qualquer popup ou página nova monta-se com
+estes moldes**, tal e qual (mockups «Reservar por categoria», «Pagar ·
+extras e loja» e «Definições · Pagamentos e Premium»). Se nenhum servir,
+perguntar antes.
+
+**Popup (ilha, §6.1) — de cima para baixo, interior 20, espaço 16:**
+1. *(Só em fluxos com passos)* barra verde **10** + «2 DE 5» (12 negrito) à
+   direita.
+2. Cabeçalho: voltar **44** `#F2F0EB` à esquerda (a partir do 2.º passo) ·
+   título **22** negrito + subtítulo **13** `#57534E` · «×» **44**
+   `#F2F0EB` à direita.
+3. Corpo, só com estas peças:
+   - **Grupo** `#F2F0EB`, cantos 22, interior 4×16, linhas separadas por
+     `#ECE7DC` (opções, pessoas, métodos de pagamento, extras). Opção
+     escolhida: círculo verde com o visto; métodos: círculo com ponto.
+   - **Título de grupo** em maiúsculas 12, espaçamento 2 («COMO QUERES
+     PAGAR», «PARA QUEM»).
+   - **Resumo**: grupo com linhas de 48 (rótulo 13 `#57534E`, valor 14
+     negrito) e, por baixo, «A pagar agora» 13 + valor **20** negrito.
+   - **Alerta** do §7 (linha 1,5, ponto, título 16 + frase 13).
+   - **Nota**: uma linha 13 `#57534E` (prazos, o que acontece a seguir).
+   - **Etiqueta** verde («Oferta», «3 meses grátis») antes de uma frase 13.
+   - Pílulas **38** (filtros/escolhas, verdes quando escolhidas); caixas
+     de texto em pílula **52** `#F2F0EB`.
+4. Botões em baixo, **52**: um preto a toda a largura, ou contorno + preto
+   («Pagar mais tarde» + «Pagar · 511,00 €»). Nunca «Voltar» aqui.
+
+**Popup de fim** («Reserva pedida», «Pagamento feito», «És Premium»):
+estrela **120** ao centro (contente para pedidos; parabéns para pagamentos
+e Premium), título **22** ao centro, frase **14** `#57534E` ao centro,
+resumo se houver, e «OK» preto (ou «Ver conversa» + «OK»). Sem «×».
+
+**Página (fundo `#F2F0EB`, margem 20):** voltar branco **44** · título
+**28** à esquerda + subtítulo **13** · blocos separados por títulos de
+grupo em maiúsculas (24 acima, 12 abaixo). Blocos permitidos
+(`shared/widgets/premium_kit.dart`, `page_kit.dart`):
+- **Topo chamativo** (`HeroSummary`): cartão branco, cantos 22, interior
+  18, **sem sombra**, tudo ao centro — estrela **150**, rótulo 12 em
+  maiúsculas, número **40** + unidade 13, etiqueta verde, linha 13.
+- **Cartão de número** (`NumberCard`): rótulo 12 em maiúsculas, número
+  **40** + unidade 13, linha 13 («As contas», «Grátis ainda», «Disponível
+  para receber»).
+- **Sem / Com** (`CompareTable`): grupo branco, cabeçalho SEM/COM em
+  maiúsculas 12, linhas de 56 com o nome 16, o «sem» a 14 `#57534E` e o
+  «com» numa etiqueta verde.
+- **Grupo de linhas** (§4): definições (nome 16, valor 14 + seta, sem
+  ícones, sem texto por baixo) ou dinheiro (nome 16 + meta 13 à esquerda,
+  valor 16 negrito à direita, sem seta).
+- **Cartão em destaque** (`FeaturedCard`, só para o que queremos vender,
+  como o Premium nas Definições, que fica **sempre no topo**): branco,
+  cantos 22, interior 18, sombra suave do §5; estrela **76** à esquerda com
+  etiqueta verde, título **19** e meta 13; por baixo `MiniStats` e/ou um
+  cartão de número `#F2F0EB`; botão **44** (preto para comprar, contorno
+  para gerir).
+- **Barra fixa** (`StickyActionBar`): branca, cantos 35, 20 dos lados e em
+  baixo, sombra da navbar, interior 12; um botão **52** e uma linha 13 ao
+  centro por baixo. Preto para a ação principal; contorno quando a ação
+  não é para incentivar («Cancelar subscrição»).
+
+**Taxas e preços no texto:** dizer sempre a taxa como fica («2 % + 1 €»),
+nunca só o desconto («−2 %»), quando se sabe o valor.
 
 ## 7. Alertas
 

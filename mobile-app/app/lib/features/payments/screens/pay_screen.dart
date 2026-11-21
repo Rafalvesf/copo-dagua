@@ -11,13 +11,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/home/home_providers.dart';
+import '../../../core/invites/invites.dart';
 import '../../../core/payments/payments.dart';
 import '../../../core/payments/stripe_element.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/pay_later_sheet.dart';
 import '../../../shared/widgets/line_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
@@ -52,8 +55,18 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   String? _error;
   int? _amountCents;
   double _discountPct = 0;
+  // Prémio de convites (migração 210): pontos a menos na percentagem.
+  double _discountPoints = 0;
+  // A taxa desta transação, como fica (ex.: «2 % + 1 €»).
+  String? _feeNow;
   MultibancoRef? _mb;
   Timer? _poll;
+
+  /// Prazo deste pagamento (sinal, resto ou a parte de um convidado):
+  /// enquanto houver tempo, dá para «Pagar mais tarde» (mockups «Reservar
+  /// por categoria», 2026-11-21).
+  DateTime? _dueAt;
+  bool _deposit = false;
 
   PayArgs get a => widget.args;
 
@@ -66,8 +79,11 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   List<PayMethod> get _methods => [
         if (_wallet.isNotEmpty) PayMethod.wallet,
         PayMethod.card,
-        PayMethod.mbWay,
-        PayMethod.multibanco,
+        // Reservas podem ter de ser devolvidas: só cartão e Apple Pay /
+        // Google Pay, que ficam cativos. MB WAY e Multibanco cobram logo
+        // (pedido do Rafael, 2026-11-20).
+        if (!a.isBooking) PayMethod.mbWay,
+        if (!a.isBooking) PayMethod.multibanco,
       ].where((m) => a.methods == null || a.methods!.contains(m)).toList();
 
   @override
@@ -77,6 +93,72 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     _phone.text = ref.read(authControllerProvider).profile?.phone ?? '';
     _checkExisting();
     _prepare();
+    if (a.isBooking) _loadDue();
+  }
+
+  Future<void> _loadDue() async {
+    try {
+      final r = await supabase
+          .from('payments')
+          .select('due_at, type, booking_id, bookings(choice_deadline, deposit_amount, total_amount)')
+          .eq('id', a.paymentId)
+          .maybeSingle();
+      // Sinal pago ao pedir (sem reserva ainda, migração 207): o «Pagar mais
+      // tarde» já foi oferecido no fim do pedido.
+      if (r == null || r['booking_id'] == null || !mounted) return;
+      final b = r['bookings'] as Map?;
+      final raw = r['due_at'] ?? ((a.isGuestShare && b != null) ? b['choice_deadline'] : null);
+      final due = raw == null ? null : DateTime.tryParse(raw.toString())?.toLocal();
+      final dep = (b?['deposit_amount'] as num?)?.toDouble() ?? 0;
+      final tot = (b?['total_amount'] as num?)?.toDouble() ?? 0;
+      setState(() {
+        _dueAt = due;
+        _deposit = r['type'] == 'deposit' && dep < tot;
+      });
+    } catch (_) {}
+  }
+
+  bool get _canPayLater {
+    final d = _dueAt;
+    return d != null && d.isAfter(DateTime.now());
+  }
+
+  /// «Pagar mais tarde?»: o aviso do que acontece sem pagamento (amarelo;
+  /// vermelho nos últimos 3 dias — DESIGN.md §7). «Pagar mais tarde» fecha.
+  Future<void> _payLater() async {
+    final due = _dueAt;
+    if (due == null) return;
+    final tone = toneForDue(due);
+    final left = payLaterDaysLeft(due);
+    final when = payLaterDay(due);
+    final urgent = tone == AlertTone.urgent;
+    final (String head, String sub) = a.isGuestShare
+        ? (
+            urgent ? '$left · sem pagamento, sais da reserva' : 'Sem pagamento até $when, sais da reserva',
+            'Tu e quem vem no teu convite. Os outros convidados vão na mesma.',
+          )
+        : _deposit
+            ? (
+                urgent ? '$left para pagar o sinal' : 'Sem o sinal, podes perder a reserva',
+                '${a.partnerName} pode aceitar outro pedido para este dia.',
+              )
+            : (
+                urgent ? '$left · sem pagamento, perdes a reserva' : 'Sem pagamento até $when, perdes a reserva',
+                a.kind == 'final_payment'
+                    ? 'A reserva é cancelada e o sinal não é devolvido.'
+                    : 'A reserva é cancelada e o dia fica livre.',
+              );
+    final later = await askPayLater(
+      context,
+      partnerName: a.partnerName,
+      tone: tone,
+      head: head,
+      sub: sub,
+      note: '${_deposit && !urgent ? 'Tens até $when (30 dias antes do evento)' : 'Podes pagar até $when'}. '
+          'Avisamos-te 6 dias antes do prazo e nos últimos 3 dias. '
+          '${a.isGuestShare ? 'Pagas no convite, na app.' : 'Pagas em Reservas, no evento.'}',
+    );
+    if (later && mounted) context.pop();
   }
 
   @override
@@ -90,6 +172,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   /// Chave pública + Apple Pay / Google Pay disponível neste telemóvel.
   Future<void> _prepare() async {
     if (!_stripe.supported) return;
+    // Só cartão (ex.: Premium grátis, migração 209): sem Apple/Google Pay.
+    if (a.methods != null && !a.methods!.contains(PayMethod.wallet)) return;
     final pk = await stripePublishableKey();
     if (pk == null || !mounted) return;
     _pk = pk;
@@ -151,6 +235,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           if (!mounted) return;
           _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
+      _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
           setState(() {
             _mb = info.multibanco;
             _step = info.multibanco == null ? _Step.select : _Step.multibanco;
@@ -219,6 +305,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       final before = _amountCents ?? (a.amount * 100).round();
       _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
+      _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
       if (pmId != null && info.cardRegion != null && info.cardRegion != 'EEA' && info.amountCents > before) {
         final ok = await _confirmCardFee(info);
         if (!mounted) return;
@@ -230,6 +318,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           return;
         }
       }
+      // Já feito no servidor (Premium grátis com cartão: nada a cobrar agora).
+      if (info.status == 'succeeded') return _done();
       final r = await _stripe.payCard(info.clientSecret, _email, paymentMethodId: pmId);
       _handleResult(r, back: _Step.card);
     } catch (e) {
@@ -264,6 +354,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         final info = await a.createIntent(PayMethod.wallet);
         _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
+      _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
         return info.clientSecret;
       } catch (e) {
         _fail(e, _Step.select);
@@ -292,6 +384,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       if (!mounted) return;
       _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
+      _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
       if (info.status == 'succeeded') return _done();
       setState(() => _step = _Step.mbWayWaiting);
       _startPolling();
@@ -469,7 +563,11 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       child: Column(children: [
         if (base != null && total > base) ...[
           line(a.title, euros(base, cents: true)),
-          line(_discountPct > 0 ? 'Taxa de serviço (−${_discountPct.toStringAsFixed(0)} %)' : 'Taxa de serviço',
+          line(_discountPct > 0
+                  ? 'Taxa de serviço (−${_discountPct.toStringAsFixed(0)} %)'
+                  : _discountPoints > 0
+                      ? 'Taxa de serviço (${_feeNow ?? '−${_pts(_discountPoints)} %'} · oferta)'
+                      : 'Taxa de serviço',
               euros(total - base, cents: true)),
           const Divider(height: 8, color: Color(0xFFECE7DC)),
           const SizedBox(height: 8),
@@ -479,6 +577,35 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const Spacer(),
           Text(_amountLabel, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
+        if (_discountPoints > 0) _inviteOffer(),
+      ]),
+    );
+  }
+
+  static String _eur(double v) => v == v.roundToDouble() ? '${v.toStringAsFixed(0)} €' : '${v.toStringAsFixed(2).replaceAll('.', ',')} €';
+
+  static String _pts(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
+
+  /// Oferta de convites (pedido 2026-11-21): quantas pessoas convidou e em
+  /// quantas transações ainda tem a taxa mais baixa (esta incluída).
+  Widget _inviteOffer() {
+    final s = ref.watch(myInviteStatsProvider).value;
+    final times = s == null ? 0 : s.credits;
+    final who = s == null || s.counted <= 0 ? '' : 'Convidaste ${s.counted} ${s.counted == 1 ? 'pessoa' : 'pessoas'} que já ${s.counted == 1 ? 'pagou' : 'pagaram'} na app. ';
+    final fee = _feeNow ?? '${_pts(_discountPoints)} % mais baixa';
+    final when = times > 1 ? 'Tens a taxa a $fee em $times transações, esta incluída.' : 'Nesta transação a taxa fica a $fee.';
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: const BoxDecoration(color: Color(0xFFE6EDE1), borderRadius: BorderRadius.all(Radius.circular(999))),
+          child: const Text('Oferta', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text('$who$when', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.35)),
+        ),
       ]),
     );
   }
@@ -689,12 +816,20 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         if (_method == PayMethod.wallet) {
           button = _stripe.walletButton(_payWallet) ?? _SheetButton(label: 'Pagar com $_walletName', onTap: _payWallet);
         } else {
-          button = _SheetButton(label: _method == PayMethod.card ? 'Pagar $_amountLabel' : 'Continuar', onTap: _continue);
+          button = _SheetButton(label: _method == PayMethod.card ? (a.actionLabel ?? 'Pagar $_amountLabel') : 'Continuar', onTap: _continue);
+        }
+        // Enquanto houver tempo: «Pagar mais tarde» ao lado de «Pagar».
+        if (_canPayLater) {
+          button = Row(children: [
+            Expanded(child: _SheetButton(label: 'Pagar mais tarde', secondary: true, onTap: _payLater)),
+            const SizedBox(width: 8),
+            Expanded(child: button),
+          ]);
         }
         extras.add(const _SecureNote('Pagamento seguro pela Stripe, dentro da app.'));
         if (a.isBooking && !a.isGuestShare) extras.add(_CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit' && !_full));
       case _Step.card:
-        button = _SheetButton(label: 'Pagar $_amountLabel', onTap: _cardMounted && _card.complete ? _payCard : null);
+        button = _SheetButton(label: a.actionLabel ?? 'Pagar $_amountLabel', onTap: _cardMounted && _card.complete ? _payCard : null);
         extras.add(const _SecureNote('O número do cartão vai direto para a Stripe.'));
       case _Step.confirming:
         button = const _SheetButton(label: 'A pagar…', busy: true);

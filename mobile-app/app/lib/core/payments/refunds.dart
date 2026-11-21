@@ -121,7 +121,7 @@ String coupleCancelRefundNote({required DateTime eventDate, required RefundInfo 
   if (paidAt != null) {
     final deadline = paidAt.add(Duration(hours: info.windowHours));
     if (!info.depositRefundable) {
-      lines.add('O parceiro definiu o sinal como não reembolsável: fica com ele.');
+      lines.add('O sinal não é reembolsável depois de o parceiro aceitar: fica com ele.');
     } else if (t.isBefore(deadline)) {
       final left = deadline.difference(t);
       final h = left.inHours;

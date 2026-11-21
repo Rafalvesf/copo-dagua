@@ -24,7 +24,6 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
-import '../../../shared/widgets/page_kit.dart' show KitCaps, KitPills, KitPill;
 import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/reviews/review_providers.dart';
@@ -35,18 +34,18 @@ import '../../../core/wedding/organizers.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../partner_style.dart';
 import '../widgets/partner_cards.dart';
+import '../../payments/open_payment.dart' show openPaymentFlow;
+import '../widgets/reserve_flow.dart';
 import '../../../shared/widgets/dense_card.dart' show PriceBox, MiniStats;
 import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/navigation_sheet.dart' show showNavigationSheet;
 import '../../../shared/widgets/venue_map.dart' show VenueMap;
-import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
 import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
-import '../../../core/profile/username.dart';
 
 
 /// Eventos onde ainda dá para reservar este parceiro: elegíveis (sou dono, ou
@@ -156,6 +155,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// «Quem paga» (190): verdadeiro = cada convidado paga a sua parte.
   bool _eachPays = false;
 
+  /// Percentagem do sinal deste parceiro (`partner_deposit_pct`, 191): 100
+  /// = sem sinal. Lida ao abrir «Reservar».
+  double _depositPct = 30;
+
   @override
   void dispose() {
     _packageMessage.dispose();
@@ -185,22 +188,22 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// «Pedir este pacote» (188): pacote, extras, pessoas e mensagem. Antes
   /// da migração (função em falta) cai no pedido de orçamento normal com
   /// o pacote na mensagem.
-  Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people, {Wedding? event}) async {
+  Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people, {Wedding? event, ReserveFlowResult? flow}) async {
     if (_requestingQuote) return;
     final wedding = event ?? await _chooseEvent();
     if (wedding == null || !mounted) return;
-    final chosen = extras.where((e) => _selectedExtras.contains(e.id)).toList();
+    final chosen = flow?.extras ?? extras.where((e) => _selectedExtras.contains(e.id)).toList();
     final summary = [
       'Pacote "${pkg.name}"',
       if (pkg.perPerson) 'para $people pessoas',
       if (chosen.isNotEmpty) 'com ${chosen.map((e) => e.name).join(', ')}',
       if (_eachPays) '(cada um paga o seu)',
     ].join(' ');
-    final note = _packageMessage.text.trim();
+    final note = flow?.summary() ?? _packageMessage.text.trim();
     setState(() => _requestingQuote = true);
     Funnel.track('quote_request_start', ref: widget.partner.id);
     try {
-      await supabase.rpc('request_package', params: {
+      final quoteId = await supabase.rpc('request_package', params: {
         'p_partner_id': widget.partner.id,
         'p_wedding_id': wedding.id,
         'p_package_id': pkg.id,
@@ -221,16 +224,38 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       } catch (_) {}
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
+      // «Pagar o sinal» no fim do pedido (migração 207): fica cativo até o
+      // parceiro responder; se recusar ou não responder em 48 h, é libertado.
+      var depositPaid = false;
+      if (flow != null && flow.payNow && quoteId is String && mounted) {
+        try {
+          final paymentId = await supabase.rpc('prepay_request_deposit', params: {'p_quote_request_id': quoteId});
+          if (paymentId is String && mounted) {
+            await openPaymentFlow(context, ref, paymentId);
+            final row = await supabase.from('payments').select('status').eq('id', paymentId).maybeSingle();
+            depositPaid = row?['status'] == 'paid';
+          }
+        } catch (_) {}
+      }
       if (mounted) {
         double each(String unit, double price) => unit == 'person' ? price * people : price;
         final total = each(pkg.priceUnit, pkg.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
+        final due = wedding.weddingDate?.subtract(const Duration(days: 3));
+        final noDeposit = (flow != null) && _depositPct >= 100;
         await _showRequestSent(
           title: 'Reserva pedida',
-          body: '${widget.partner.name} aceita ou recusa — avisamos-te assim que responder.',
+          body: _eachPays
+              ? '${widget.partner.name} aceita ou recusa e avisamos-te. Cada convite paga a sua parte${due != null ? ' até ${reserveShortDay(due).toLowerCase()}' : ''}.'
+              : noDeposit
+                  ? '${widget.partner.name} aceita ou recusa e avisamos-te. Sem sinal: pagas tudo de uma vez, nos 6 dias antes do prazo.'
+                  : depositPaid
+                      ? 'Pagaste o sinal: fica cativo até ${widget.partner.name} responder (48 h). Se recusar, é libertado.'
+                      : '${widget.partner.name} aceita ou recusa e avisamos-te. Paga o sinal para garantir a data.',
           recapTitle: [pkg.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra'].join(' '),
           recapMeta: [wedding.displayNames, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · '),
           recapValue: pkg.isStartingPrice ? null : euros(total),
           event: wedding,
+          paid: depositPaid,
         );
       }
     } on PostgrestException catch (e) {
@@ -259,11 +284,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
 
   /// «Reservar mesa» (190): cada um escolhe o seu menu e extras na app.
   /// A reserva não tem sinal; quem paga é decidido em [_eachPays].
-  Future<void> _requestTable(int people, {Wedding? event}) async {
+  Future<void> _requestTable(int people, {Wedding? event, ReserveFlowResult? flow}) async {
     if (_requestingQuote) return;
     final wedding = event ?? await _chooseEvent();
     if (wedding == null || !mounted) return;
-    final note = _packageMessage.text.trim();
+    final note = flow?.summary() ?? _packageMessage.text.trim();
     final summary = 'Mesa para $people pessoas · cada um escolhe${_eachPays ? ' e paga' : ''} o seu';
     setState(() => _requestingQuote = true);
     Funnel.track('quote_request_start', ref: widget.partner.id);
@@ -290,10 +315,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       if (mounted) {
         await _showRequestSent(
           title: 'Reserva pedida',
-          body: '${widget.partner.name} aceita ou recusa — avisamos-te assim que responder.',
+          body: '${widget.partner.name} aceita ou recusa e avisamos-te. Depois, cada convidado escolhe o seu menu na app${_eachPays ? ' e cada convite paga a sua parte' : ''}.',
           recapTitle: 'Mesa para $people',
           recapMeta: wedding.displayNames,
-          recapValue: '0 €',
+          recapValue: 'Grátis',
           event: wedding,
         );
       }
@@ -342,8 +367,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   }
 
   /// Popup de confirmação depois de enviar um pedido/reserva (pedido do
-  /// Rafael, 2026-11-18): "Reserva pedida" com um só botão "OK". O pagamento
-  /// do sinal só acontece mais tarde, quando o parceiro aceita (no aceite).
+  /// Rafael, 2026-11-18): "Reserva pedida" com um só botão "OK". Com o sinal
+  /// pago no fim do pedido (migração 207), a estrela é a de parabéns.
   Future<void> _showRequestSent({
     required String title,
     required String body,
@@ -351,6 +376,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     String? recapMeta,
     String? recapValue,
     Wedding? event,
+    bool paid = false,
   }) async {
     if (!mounted) return;
     // Mockup «Reserva pedida» (2026-11-20): estrela contente, o resumo do
@@ -364,7 +390,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Center(child: EstrelaMascot(Estrela.contente, size: 96)),
+            // Pedido → contente; pagamento feito → parabéns (DESIGN.md §6).
+            Center(child: EstrelaMascot(paid ? Estrela.parabens : Estrela.contente, size: 96)),
             const SizedBox(height: 16),
             Text(title,
                 textAlign: TextAlign.center,
@@ -449,22 +476,25 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     if (!mounted || events.isEmpty) return;
     final partner = widget.partner;
 
-    // Mockup «Pedir orçamento» (2026-11-20): o valor de referência, o
-    // evento, a data, o local (com o seletor de moradas) e a mensagem.
-    final result = await showIslandSheet<_RequestQuoteResult>(
+    // Mockups «Reservar por categoria» · Só orçamento (2026-11-21): o
+    // mesmo fluxo da reserva — evento, pessoas, o que procuras e «Pedir
+    // orçamento». O dia, o local e as pessoas vêm do evento.
+    final result = await showIslandSheet<ReserveFlowResult>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _RequestQuoteSheet(
+      builder: (context) => ReserveFlowSheet(
         partnerName: partner.name,
-        reference: partner.quoteOnly ? partnerReference(partner) : null,
-        referenceNote: partner.referenceNote,
+        kind: reserveKindFor(partner.primaryCategorySlug),
         events: events,
-        myId: ref.read(authControllerProvider).profile?.id,
+        quote: true,
+        reference: partner.quoteOnly ? partnerReference(partner) : null,
         initialMessage: initialMessage,
       ),
     );
     if (result == null || !mounted) return;
     final wedding = result.event;
+    final place = (wedding.venue?.trim().isNotEmpty == true) ? wedding.venue!.trim() : wedding.location?.trim();
+    final quoteMessage = [result.summary(), if (result.message != null) result.message!].join('\n');
 
     setState(() => _requestingQuote = true);
     Funnel.track('quote_request_start', ref: widget.partner.id);
@@ -477,15 +507,15 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         params: {
           'p_partner_id': widget.partner.id,
           'p_wedding_id': wedding.id,
-          'p_event_date': result.eventDate?.toIso8601String().split('T').first,
-          'p_location': result.location,
+          'p_event_date': wedding.weddingDate?.toIso8601String().split('T').first,
+          'p_location': (place == null || place.isEmpty) ? null : place,
           // O parceiro define o preço na proposta (`send_proposal_screen.dart`)
           // — o casal deixou de indicar orçamento min./máx. aqui, pedido
           // explícito do utilizador (2026-09-04): só envia o pedido, sem
           // pré-condicionar o valor.
           'p_budget_min': null,
           'p_budget_max': null,
-          'p_message': result.message,
+          'p_message': quoteMessage,
         },
       );
       // Pedido explícito do utilizador: o pedido de orçamento tem de
@@ -496,9 +526,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           weddingId: wedding.id,
           partnerId: widget.partner.id,
           partnerName: widget.partner.name,
-          eventDate: result.eventDate,
-          location: result.location,
-          message: result.message,
+          eventDate: wedding.weddingDate,
+          location: (place == null || place.isEmpty) ? null : place,
+          message: quoteMessage,
         );
       } catch (_) {}
       // O botão passa logo a "Pedido já enviado".
@@ -506,9 +536,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
       if (mounted) {
         await _showRequestSent(
-          title: 'Pedido enviado',
-          body: '${partner.name} vai responder pelas Mensagens com uma proposta.',
-          recapTitle: 'Pedido de orçamento',
+          title: 'Orçamento pedido',
+          body: '${partner.name} responde com uma proposta e avisamos-te. Não pagas nada agora.',
+          recapTitle: 'Só orçamento',
           recapMeta: wedding.displayNames,
           event: wedding,
         );
@@ -575,18 +605,14 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         .watch(partnerExtrasForProvider(partner.id))
         .maybeWhen(data: (e) => e, orElse: () => const <ServiceExtra>[]);
     final weddingGuests = ref.watch(weddingControllerProvider.select((s) => s.wedding?.estimatedGuests));
-    final eventType = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType));
     // Menus por pessoa (restaurantes, catering): pessoas e «Como escolhem»
     // no topo da carta (190).
     final perPersonMenus = !widget.selectionMode && !widget.publicView && packages.any((p) => p.perPerson);
-    // «Quem paga» só em jantares e festas de grupo (empresa, aniversário,
-    // curso…); nos eventos de família paga quem organiza (2026-11-15).
-    final askWhoPays = perPersonMenus &&
-        eventType != null &&
-        !const {
-          EventType.wedding, EventType.baptism, EventType.communion,
-          EventType.engagement, EventType.vowRenewal, EventType.babyShower,
-        }.contains(eventType);
+    // O organizador nunca escolhe o menu de ninguém (pedido do Rafael,
+    // 2026-11-20): com menus por pessoa reserva-se a mesa e cada convidado
+    // escolhe o seu depois. No perfil os menus só se veem.
+    final menusOnly = perPersonMenus && reserveKindFor(partner.primaryCategorySlug) == ReserveKind.mesa;
+    _eachChooses = menusOnly;
     final selPkg = !_eachChooses && _selectedPackage != null && _selectedPackage! < packages.length ? packages[_selectedPackage!] : null;
     final peopleMin = selPkg?.minPeople ?? 1;
     final peopleMax = selPkg?.maxPeople ?? 9999;
@@ -682,7 +708,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       barLabel = 'Pedir orçamento';
       barAction = _requestingQuote ? null : () => _requestQuote();
     } else if (_eachChooses) {
-      barBox = ('MESA PARA $topPeople', '0 €');
+      barBox = ('MESA', 'Grátis');
       barLabel = 'Reservar mesa';
       barAction = _requestingQuote ? null : () => _openTableSheet(topPeople);
     } else if (selPkgBar != null) {
@@ -776,77 +802,34 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 if (packages.isNotEmpty) ...[
                   KeyedSubtree(
                     key: _packagesKey,
-                    child: sectionTitle(
-                      'Pacotes',
-                      action: canReserve && !_eachChooses ? 'Escolhe um' : '${packages.length} ${packages.length == 1 ? 'pacote' : 'pacotes'}',
-                    ),
-                  ),
-                  // Menus por pessoa (mockup «Restaurante · perfil»): pessoas,
-                  // «Como escolhem» e «Quem paga» antes da carta (190).
-                  if (perPersonMenus)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 16),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                          child: Row(children: [
-                            const Expanded(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text('Para quantas pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
-                                Text('Do teu evento · podes mudar', style: TextStyle(fontSize: 13, color: muted)),
-                              ]),
-                            ),
-                            _StepButton(icon: Hi.minus, onTap: topPeople > peopleMin ? () => setState(() => _people = topPeople - 1) : null),
-                            SizedBox(width: 44, child: Text('$topPeople', textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink))),
-                            _StepButton(icon: Hi.plus, onTap: topPeople < peopleMax ? () => setState(() => _people = topPeople + 1) : null),
-                          ]),
-                        ),
-                        const KitCaps('Como escolhem'),
-                        KitPills([
-                          KitPill(label: 'Igual para todos', selected: !_eachChooses, onTap: () => setState(() => _eachChooses = false)),
-                          KitPill(
-                            label: 'Cada um escolhe',
-                            selected: _eachChooses,
-                            onTap: () => setState(() {
-                              _eachChooses = true;
-                              _selectedPackage = null;
-                              _selectedExtras.clear();
-                            }),
-                          ),
-                        ], top: 0),
-                        if (_eachChooses)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8),
-                            child: Text('Reservam a mesa e cada convidado escolhe o seu menu e extras na app, antes de pagar.',
-                                style: TextStyle(fontSize: 13, color: muted)),
-                          ),
-                        if (askWhoPays) ...[
-                          const KitCaps('Quem paga'),
-                          KitPills([
-                            KitPill(label: 'Pagamos nós', selected: !_eachPays, onTap: () => setState(() => _eachPays = false)),
-                            KitPill(label: 'Cada um paga o seu', selected: _eachPays, onTap: () => setState(() => _eachPays = true)),
-                          ], top: 0),
-                          if (_eachPays)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                _eachChooses
-                                    ? 'Cada convidado paga a sua parte na app quando escolhe. A reserva é grátis.'
-                                    : 'Cada convidado paga a sua parte na app. O pedido de pagamento chega 3 dias antes.',
-                                style: const TextStyle(fontSize: 13, color: muted),
+                    child: menusOnly
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+                            child: Row(children: [
+                              const Expanded(child: Text('Menus', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink))),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+                                child: const Text('Escolhes depois de reservares',
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
                               ),
-                            ),
-                        ],
-                      ]),
-                    ),
+                            ]),
+                          )
+                        : sectionTitle(
+                            'Pacotes',
+                            action: canReserve && !_eachChooses ? 'Escolhe um' : '${packages.length} ${packages.length == 1 ? 'pacote' : 'pacotes'}',
+                          ),
+                  ),
+                  // Pessoas e «Quem paga» perguntam-se no pedido de reserva
+                  // (mockups «Reservar por categoria», 2026-11-20).
                   RowGroup(children: [
                     for (var i = 0; i < packages.length; i++)
                       _PackageRow(
                         package: packages[i],
                         first: i == 0,
                         selected: !_eachChooses && _selectedPackage == i,
-                        onTap: widget.selectionMode
+                        viewOnly: menusOnly,
+                        onTap: widget.selectionMode || menusOnly
                             ? null
                             : pub
                                 ? _needAccount
@@ -857,6 +840,14 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                                         : () => setState(() => _selectedPackage = _selectedPackage == i ? null : i),
                       ),
                   ]),
+                  if (menusOnly)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 0),
+                      child: Text(
+                        'Só para veres e decidires. Depois de reservares, cada convidado escolhe o seu na app (e tu o teu). Ninguém escolhe pelos outros.',
+                        style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4),
+                      ),
+                    ),
                   if (!widget.selectionMode && canReserve)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
@@ -1020,58 +1011,55 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     return current == null ? const [] : [current];
   }
 
-  /// Popup «Reservar <pacote>» (mockup 2026-11-20): evento, pessoas (se o
-  /// preço for por pessoa), extras, mensagem e total; depois envia.
+  /// Pedido de reserva em passos (mockups «Reservar por categoria»,
+  /// 2026-11-20/21): evento, pessoas a confirmar, quem paga, o que falta
+  /// saber, «Tudo certo?», extras e «Pedir reserva» — o mesmo em todas as
+  /// categorias.
   Future<void> _openReserveSheet(ServicePackage pkg, List<ServiceExtra> pkgExtras, int? fixedPeople, int? guests) async {
     final events = await _eventsForSheet();
     if (!mounted || events.isEmpty) return;
-    final result = await showIslandSheet<_ReserveResult>(
+    try {
+      final pct = await supabase.rpc('partner_deposit_pct', params: {'p_partner_id': widget.partner.id});
+      if (pct is num) _depositPct = pct.toDouble();
+    } catch (_) {}
+    if (!mounted) return;
+    final result = await showIslandSheet<ReserveFlowResult>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => _ReserveSheet(
+      builder: (ctx) => ReserveFlowSheet(
         partnerName: widget.partner.name,
+        kind: reserveKindFor(widget.partner.primaryCategorySlug),
         package: pkg,
-        extras: pkgExtras,
         events: events,
-        myId: ref.read(authControllerProvider).profile?.id,
-        initialExtras: {..._selectedExtras},
-        initialPeople: fixedPeople ?? _people ?? guests ?? pkg.minPeople ?? 1,
-        peopleFixed: fixedPeople != null,
-        eachPays: _eachPays,
-        message: _packageMessage.text,
+        extras: pkgExtras,
+        depositPct: _depositPct,
       ),
     );
     if (result == null || !mounted) return;
     setState(() {
-      _selectedExtras
-        ..clear()
-        ..addAll(result.extras);
+      _selectedExtras.clear();
       _people = result.people;
-      _packageMessage.text = result.message;
+      _eachPays = result.eachPays;
     });
-    await _requestPackage(pkg, pkgExtras, result.people, event: result.event);
+    await _requestPackage(pkg, pkgExtras, result.people, event: result.event, flow: result);
   }
 
-  /// Popup «Reservar mesa» (cada um escolhe o seu, 190).
+  /// «Reservar mesa»: cada convidado escolhe o seu menu depois (190).
   Future<void> _openTableSheet(int people) async {
     final events = await _eventsForSheet();
     if (!mounted || events.isEmpty) return;
-    final result = await showIslandSheet<_ReserveResult>(
+    final result = await showIslandSheet<ReserveFlowResult>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => _ReserveSheet(
+      builder: (ctx) => ReserveFlowSheet(
         partnerName: widget.partner.name,
+        kind: ReserveKind.mesa,
         events: events,
-        myId: ref.read(authControllerProvider).profile?.id,
-        initialPeople: people,
-        peopleFixed: true,
-        eachPays: _eachPays,
-        message: _packageMessage.text,
       ),
     );
     if (result == null || !mounted) return;
-    _packageMessage.text = result.message;
-    await _requestTable(people, event: result.event);
+    setState(() => _eachPays = result.eachPays);
+    await _requestTable(result.people, event: result.event, flow: result);
   }
 
   Future<void> _share(Partner partner) async {
@@ -1192,268 +1180,19 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
                   ]);
                 }),
               ),
+            // Os comentários no mesmo cartão, por baixo de uma linha
+            // (mockup «Perfil do parceiro», 2026-11-20).
+            for (final r in shown) ...[
+              const SizedBox(height: 16),
+              ReviewTile(review: r, partnerName: widget.partnerName, partnerAvatarUrl: widget.partnerAvatarUrl, embedded: true),
+            ],
           ]),
         ),
-        const SizedBox(height: 10),
-        for (final r in shown)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-            child: ReviewTile(review: r, partnerName: widget.partnerName, partnerAvatarUrl: widget.partnerAvatarUrl),
-          ),
       ],
     ]);
   }
 }
 
-class _RequestQuoteResult {
-  final Wedding event;
-  final DateTime? eventDate;
-  final String? location;
-  final String? message;
-
-  const _RequestQuoteResult({required this.event, this.eventDate, this.location, this.message});
-}
-
-/// Popup «Pedir orçamento» (mockup 2026-11-20) — liga ao RPC real
-/// `request_quote()` (`009_quotations_bookings.sql`). Data, local e
-/// mensagem são opcionais; a data tem de ter pelo menos 7 dias de
-/// antecedência (`P0003`), por isso o calendário já não deixa escolher
-/// antes. O local escolhe-se no seletor de moradas.
-class _RequestQuoteSheet extends StatefulWidget {
-  final String partnerName;
-  final double? reference;
-  final String? referenceNote;
-  final List<Wedding> events;
-  final String? myId;
-  final String? initialMessage;
-
-  const _RequestQuoteSheet({
-    required this.partnerName,
-    this.reference,
-    this.referenceNote,
-    required this.events,
-    this.myId,
-    this.initialMessage,
-  });
-
-  @override
-  State<_RequestQuoteSheet> createState() => _RequestQuoteSheetState();
-}
-
-class _RequestQuoteSheetState extends State<_RequestQuoteSheet> {
-  late Wedding _event = widget.events.first;
-  late final _message = TextEditingController(text: widget.initialMessage ?? '');
-  DateTime? _eventDate;
-  String? _location;
-  String? _locationSub;
-
-  DateTime get _minSelectableDate => DateTime.now().add(const Duration(days: 7));
-
-  @override
-  void initState() {
-    super.initState();
-    _fromEvent();
-  }
-
-  /// Data e local vêm do evento escolhido (podem mudar-se).
-  void _fromEvent() {
-    final d = _event.weddingDate;
-    _eventDate = (d != null && !d.isBefore(_minSelectableDate)) ? d : null;
-    final venue = _event.venue?.trim() ?? '';
-    final place = _event.location?.trim() ?? '';
-    _location = venue.isNotEmpty ? venue : (place.isNotEmpty ? place : null);
-    _locationSub = venue.isNotEmpty && place.isNotEmpty ? '$place · do teu evento' : (_location != null ? 'do teu evento' : null);
-  }
-
-  @override
-  void dispose() {
-    _message.dispose();
-    super.dispose();
-  }
-
-  Future<void> _changeEvent() async {
-    final picked = await showIslandSheet<Wedding>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _EventPickerSheet(events: widget.events, partnerName: widget.partnerName, myId: widget.myId),
-    );
-    if (picked != null && mounted) {
-      setState(() {
-        _event = picked;
-        _fromEvent();
-      });
-    }
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _eventDate ?? _minSelectableDate,
-      firstDate: _minSelectableDate,
-      lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
-    );
-    if (picked != null) setState(() => _eventDate = picked);
-  }
-
-  Future<void> _pickPlace() async {
-    final picked = await showAddressPicker(context, title: 'Onde é o evento?', initialQuery: _location);
-    if (picked != null && mounted) {
-      setState(() {
-        _location = picked.name;
-        _locationSub = picked.secondary;
-      });
-    }
-  }
-
-  Widget _pill({required Widget icon, required Widget child, VoidCallback? onTap, String? label}) => Semantics(
-        button: true,
-        label: label,
-        child: SnappyTap(
-          onTap: onTap,
-          child: Container(
-            height: 52,
-            padding: const EdgeInsets.fromLTRB(16, 0, 14, 0),
-            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
-            child: Row(children: [icon, const SizedBox(width: 8), Expanded(child: child)]),
-          ),
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    final d = _eventDate;
-    final dateText = d == null
-        ? 'A combinar'
-        : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Pedir orçamento', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 4),
-              Text('Envia os detalhes do teu evento — ${widget.partnerName} responde pelas Mensagens com uma proposta.',
-                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          const _CloseButton(),
-        ]),
-        if (widget.reference != null) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.ink, width: 1.5),
-            ),
-            child: Row(children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                const Text('REFERÊNCIA',
-                    style: TextStyle(fontSize: 9, letterSpacing: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                Text('≈ ${euros(widget.reference!)}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              ]),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(widget.referenceNote ?? 'Indicado pelo parceiro',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              ),
-            ]),
-          ),
-        ],
-        const SizedBox(height: 16),
-        const _Caps('PARA QUE EVENTO'),
-        _EventChoice(event: _event, onChange: widget.events.length > 1 ? _changeEvent : null),
-        const SizedBox(height: 16),
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const _Caps('DATA'),
-              _pill(
-                label: 'Data do evento',
-                onTap: _pickDate,
-                icon: const Icon(Hi.calendar, size: 18, color: AppTheme.inkMuted),
-                child: Text(dateText, maxLines: 1, style: const TextStyle(fontSize: 15, color: AppTheme.ink)),
-              ),
-            ]),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const _Caps('LOCAL'),
-              _pill(
-                label: 'Escolher local',
-                onTap: _pickPlace,
-                icon: const Icon(Hi.mapPin, size: 18, color: AppTheme.inkMuted),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                      Text(_location ?? 'Escolher local',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 15, color: _location == null ? AppTheme.inkMuted : AppTheme.ink)),
-                      if (_locationSub != null)
-                        Text(_locationSub!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
-                    ]),
-                  ),
-                  const Icon(Hi.chevronRight, size: 16, color: AppTheme.inkMuted),
-                ]),
-              ),
-            ]),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        const _Caps('MENSAGEM'),
-        TextField(
-          controller: _message,
-          minLines: 3,
-          maxLines: 5,
-          maxLength: 500,
-          style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-          decoration: InputDecoration(
-            hintText: 'O que ${widget.partnerName} deve saber: quantidades, estilo, alergias…',
-            hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
-            filled: true,
-            fillColor: AppTheme.background,
-            counterText: '',
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 52,
-          child: FilledButton(
-            onPressed: () => Navigator.of(context).pop(_RequestQuoteResult(
-              event: _event,
-              eventDate: _eventDate,
-              location: _location,
-              message: _message.text.trim().isEmpty ? null : _message.text.trim(),
-            )),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
-              foregroundColor: Colors.white,
-              shape: const StadiumBorder(),
-              textStyle: const TextStyle(
-                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
-            ),
-            child: const Text('Enviar pedido'),
-          ),
-        ),
-      ]),
-    );
-  }
-}
 /// Seguidores, amigos que seguem e o botão Seguir / A seguir.
 class _PartnerFollow extends ConsumerStatefulWidget {
   final String partnerId;
@@ -1649,26 +1388,6 @@ class PackageChoiceCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _StepButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-  const _StepButton({required this.icon, this.onTap});
-
-  @override
-  Widget build(BuildContext context) => SnappyTap(
-        onTap: onTap,
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: onTap == null ? const Color(0xFFCFC8B8) : AppTheme.ink, width: 1.5),
-          ),
-          child: Icon(icon, size: 16, color: onTap == null ? const Color(0xFFCFC8B8) : AppTheme.ink),
-        ),
-      );
 }
 
 /// Linha de um extra: nome, o que é, preço e o botão + / ✓ (188).
@@ -2224,7 +1943,10 @@ class _PackageRow extends StatelessWidget {
   final bool first;
   final bool selected;
   final VoidCallback? onTap;
-  const _PackageRow({required this.package, required this.first, required this.selected, required this.onTap});
+
+  /// Menus de restaurante: só para ver (sem círculo de escolher).
+  final bool viewOnly;
+  const _PackageRow({required this.package, required this.first, required this.selected, required this.onTap, this.viewOnly = false});
 
   @override
   Widget build(BuildContext context) {
@@ -2242,6 +1964,7 @@ class _PackageRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(border: first ? null : const Border(top: BorderSide(color: Color(0xFFECE7DC)))),
           child: Row(children: [
+            if (!viewOnly) ...[
             AnimatedContainer(
               duration: const Duration(milliseconds: 160),
               width: 22,
@@ -2254,6 +1977,7 @@ class _PackageRow extends StatelessWidget {
               child: selected ? const Icon(Hi.check, size: 13, color: Colors.white) : null,
             ),
             const SizedBox(width: 12),
+            ],
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                 Text(p.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -2365,283 +2089,3 @@ class _BottomBar extends StatelessWidget {
       );
 }
 
-/// Título de grupo em maiúsculas (12, espaçamento 2) dos popups.
-class _Caps extends StatelessWidget {
-  final String text;
-  const _Caps(this.text);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
-      );
-}
-
-/// Botão de fechar dos popups: círculo 44 `#F2F0EB` com o ×.
-class _CloseButton extends StatelessWidget {
-  const _CloseButton();
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: 'Fechar',
-        excludeFromSemantics: true,
-        child: SnappyTap(
-          onTap: () => Navigator.of(context).maybePop(),
-          semanticLabel: 'Fechar',
-          child: Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
-            child: const Icon(Hi.xMark, size: 18, color: AppTheme.ink),
-          ),
-        ),
-      );
-}
-
-/// Linha do evento nos popups, com «Mudar» quando há mais do que um.
-class _EventChoice extends StatelessWidget {
-  final Wedding event;
-  final VoidCallback? onChange;
-  const _EventChoice({required this.event, this.onChange});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
-        child: Row(children: [
-          V2Avatar(event.displayNames, size: 44, imageUrl: event.coverPhotoUrlCacheBusted),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(event.displayNames,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              if (_eventMeta(event).isNotEmpty)
-                Text(_eventMeta(event),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ]),
-          ),
-          if (onChange != null) ...[
-            const SizedBox(width: 10),
-            SnappyTap(
-              onTap: onChange,
-              child: Text('Mudar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-            ),
-          ],
-        ]),
-      );
-}
-
-class _ReserveResult {
-  final Wedding event;
-  final Set<String> extras;
-  final int people;
-  final String message;
-  const _ReserveResult({required this.event, required this.extras, required this.people, required this.message});
-}
-
-/// Popup «Reservar <pacote>» / «Reservar mesa» (mockup 2026-11-20): para
-/// que evento, pessoas (se o preço for por pessoa), extras do pacote,
-/// mensagem, total e o botão; por baixo, o que acontece a seguir.
-class _ReserveSheet extends StatefulWidget {
-  final String partnerName;
-
-  /// `null` = reservar mesa (cada um escolhe o seu).
-  final ServicePackage? package;
-  final List<ServiceExtra> extras;
-  final List<Wedding> events;
-  final String? myId;
-  final Set<String> initialExtras;
-  final int initialPeople;
-  final bool peopleFixed;
-  final bool eachPays;
-  final String message;
-
-  const _ReserveSheet({
-    required this.partnerName,
-    this.package,
-    this.extras = const [],
-    required this.events,
-    this.myId,
-    this.initialExtras = const {},
-    required this.initialPeople,
-    this.peopleFixed = false,
-    this.eachPays = false,
-    this.message = '',
-  });
-
-  @override
-  State<_ReserveSheet> createState() => _ReserveSheetState();
-}
-
-class _ReserveSheetState extends State<_ReserveSheet> {
-  late Wedding _event = widget.events.first;
-  late final Set<String> _extras = {...widget.initialExtras};
-  late int _people = widget.initialPeople;
-  late final _message = TextEditingController(text: widget.message);
-
-  @override
-  void dispose() {
-    _message.dispose();
-    super.dispose();
-  }
-
-  Future<void> _changeEvent() async {
-    final picked = await showIslandSheet<Wedding>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _EventPickerSheet(events: widget.events, partnerName: widget.partnerName, myId: widget.myId),
-    );
-    if (picked != null && mounted) setState(() => _event = picked);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final p = widget.package;
-    final minP = p?.minPeople ?? 1;
-    final maxP = p?.maxPeople ?? 9999;
-    final people = _people.clamp(minP, maxP);
-    double each(String unit, double price) => unit == 'person' ? price * people : price;
-    final chosen = widget.extras.where((e) => _extras.contains(e.id)).toList();
-    final total = p == null ? 0.0 : each(p.priceUnit, p.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
-    final needPeople = p != null && !widget.peopleFixed && (p.perPerson || widget.extras.any((e) => e.priceUnit == 'person'));
-    final desc = p?.description.trim().split('\n').first ?? '';
-    final title = p == null ? 'Reservar mesa' : 'Reservar ${p.name}';
-    final subtitle = p == null
-        ? '${widget.partnerName} · mesa para $people · cada um escolhe${widget.eachPays ? ' e paga' : ''} o seu'
-        : [widget.partnerName, if (desc.isNotEmpty) desc].join(' · ');
-    final buttonLabel = p == null
-        ? 'Reservar mesa'
-        : p.isStartingPrice
-            ? 'Reservar · ${p.name}'
-            : 'Reservar · ${euros(total)}';
-    final after = p == null
-        ? '${widget.partnerName} aceita ou recusa. A escolha fecha 3 dias antes do evento.'
-        : widget.eachPays && !p.isStartingPrice
-            ? 'Cada convidado paga ${euros(total / people)} na app, 3 dias antes. ${widget.partnerName} aceita ou recusa.'
-            : '${widget.partnerName} aceita ou recusa — avisamos-te assim que responder.';
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 4),
-              Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          const _CloseButton(),
-        ]),
-        const SizedBox(height: 16),
-        const _Caps('PARA QUE EVENTO'),
-        _EventChoice(event: _event, onChange: widget.events.length > 1 ? _changeEvent : null),
-        if (needPeople) ...[
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
-            child: Row(children: [
-              const Expanded(
-                child: Text('Para quantas pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              ),
-              _StepButton(icon: Hi.minus, onTap: people > minP ? () => setState(() => _people = people - 1) : null),
-              SizedBox(
-                width: 44,
-                child: Text('$people',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              ),
-              _StepButton(icon: Hi.plus, onTap: people < maxP ? () => setState(() => _people = people + 1) : null),
-            ]),
-          ),
-        ],
-        if (p != null && widget.extras.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          _Caps('JUNTAR AO ${p.name.toUpperCase()}'),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
-            child: Column(children: [
-              for (var i = 0; i < widget.extras.length; i++)
-                ExtraChoiceRow(
-                  extra: widget.extras[i],
-                  on: _extras.contains(widget.extras[i].id),
-                  last: i == widget.extras.length - 1,
-                  onTap: () => setState(() => _extras.contains(widget.extras[i].id)
-                      ? _extras.remove(widget.extras[i].id)
-                      : _extras.add(widget.extras[i].id)),
-                ),
-            ]),
-          ),
-        ],
-        const SizedBox(height: 16),
-        const _Caps('MENSAGEM'),
-        TextField(
-          controller: _message,
-          minLines: 1,
-          maxLines: 4,
-          maxLength: 300,
-          style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-          decoration: InputDecoration(
-            hintText: p == null ? 'Ex.: mesa comprida junto à janela, um aniversariante…' : 'Opcional · o que o parceiro deve saber',
-            hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
-            filled: true,
-            fillColor: AppTheme.background,
-            counterText: '',
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(26), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(26), borderSide: BorderSide.none),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(26), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
-          ),
-        ),
-        if (p != null && !p.isStartingPrice) ...[
-          const SizedBox(height: 14),
-          const Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
-          const SizedBox(height: 14),
-          Row(children: [
-            Expanded(
-              child: Text(
-                [p.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra', if (p.perPerson) '$people pessoas'].join(' · '),
-                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
-              ),
-            ),
-            Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          ]),
-        ],
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 52,
-          child: FilledButton(
-            onPressed: () => Navigator.of(context).pop(_ReserveResult(
-              event: _event,
-              extras: _extras,
-              people: people,
-              message: _message.text.trim(),
-            )),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
-              foregroundColor: Colors.white,
-              shape: const StadiumBorder(),
-              textStyle: const TextStyle(
-                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
-            ),
-            child: Text(buttonLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(after, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-      ]),
-    );
-  }
-}

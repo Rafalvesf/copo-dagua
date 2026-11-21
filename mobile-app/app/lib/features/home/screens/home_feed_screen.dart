@@ -1,4 +1,5 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
+import '../../payments/payment_due_prompt.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/line_icon.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
@@ -62,6 +63,10 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     super.initState();
     Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
     WidgetsBinding.instance.addPostFrameCallback((_) => prefetchEventPage());
+    // Sinal ou resto a pagar nos próximos 6 dias: abre o popup (204/205).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) maybeShowPaymentDue(context, ref);
+    });
   }
 
   void _openNotifications(BuildContext context) {
