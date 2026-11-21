@@ -34,6 +34,9 @@ class AppTheme {
   /// Linha mais grossa (2 px) entre secções diferentes (pedido 2026-11-21).
   static const sectionLine = Color(0xFFCFCFCF);
 
+  /// Verde clarinho da barra de progresso (pedido 2026-11-21).
+  static const progress = Color(0xFFA9C79A);
+
   /// Contorno preto 1,5 do destaque do painel do convidado (o resumo / o
   /// agora / a tua resposta) — só aí (pedido 2026-11-21).
   static const cardBorder = Border.fromBorderSide(BorderSide(color: ink, width: 1.5));

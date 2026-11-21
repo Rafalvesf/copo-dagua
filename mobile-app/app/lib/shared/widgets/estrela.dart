@@ -73,6 +73,9 @@ class EstrelaMascot extends StatefulWidget {
 
   final String? semanticLabel;
 
+  /// Sombra no chão (sem ela na barra de progresso, 2026-11-21).
+  final bool shadow;
+
   const EstrelaMascot(
     this.reaction, {
     super.key,
@@ -80,6 +83,7 @@ class EstrelaMascot extends StatefulWidget {
     this.loop = false,
     this.cycles = 3,
     this.semanticLabel,
+    this.shadow = true,
   });
 
   @override
@@ -158,6 +162,7 @@ class _EstrelaMascotState extends State<EstrelaMascot> with SteadyTickerProvider
               clipBehavior: Clip.none,
               children: [
                 // Sombra no chão: encolhe quando a estrela sobe.
+                if (widget.shadow)
                 Positioned(
                   left: w / 2 - 70 * k,
                   top: svg.shadowY * k - 6 * k,

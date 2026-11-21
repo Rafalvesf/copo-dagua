@@ -6,7 +6,7 @@ import '../../core/theme/app_theme.dart';
 import 'estrela.dart';
 
 /// Barra de progresso da app (pedido do Rafael, 2026-11-21, DESIGN.md §6):
-/// a barra **preta** (contraste com a estrela verde) com **a estrela (o ícone novo da app) em cima da ponta**, e
+/// a barra **verde clarinha** (`AppTheme.progress`) com **a estrela (o ícone novo da app) em cima da ponta**, e
 /// **animada quando o progresso muda** — a barra cresce e a estrela dá um saltinho até ao sítio
 /// novo. Com «reduzir movimento», muda sem animação. Usar sempre esta em vez
 /// de `LinearProgressIndicator` com valor.
@@ -75,10 +75,13 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
     // Grande o suficiente para se ver bem (pedido 2026-11-21: «muito pequeno»).
     final starW = math.max(40.0, widget.height * 6.8);
     final starH = starW * 350 / 384;
-    // A base da estrela (com a sombra) assenta em cima da barra.
-    final barTop = starH * 0.77;
-    // Preta, para dar contraste com a estrela verde (pedido 2026-11-21).
-    final color = widget.color ?? AppTheme.ink;
+    // No desenho (350 de altura) o corpo da estrela vai de 68 a 301: o
+    // vazio de cima sai (fica só uma folga para o saltinho) e as pontas de
+    // baixo assentam em cima da barra, sem sombra (2026-11-21).
+    final topCut = starH * 56 / 350;
+    final barTop = starH * 301 / 350 - topCut;
+    // Verde clarinho (pedido 2026-11-21).
+    final color = widget.color ?? AppTheme.progress;
     final track = widget.track ?? const Color(0xFFE0E0E0);
     return SizedBox(
       height: barTop + widget.height,
@@ -116,10 +119,10 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
               ),
               Positioned(
                 left: left,
-                top: -6 * hop,
+                top: -topCut - 6 * hop,
                 child: Transform.rotate(
                   angle: 0.18 * math.sin(t * math.pi * 2) * hop,
-                  child: EstrelaMascot(Estrela.feliz, size: starW, cycles: 0, semanticLabel: ''),
+                  child: EstrelaMascot(Estrela.feliz, size: starW, cycles: 0, semanticLabel: '', shadow: false),
                 ),
               ),
             ]);
