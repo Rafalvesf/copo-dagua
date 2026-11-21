@@ -25,6 +25,9 @@ Deno.serve(async (req) => {
   // fecha — antes de tudo e mesmo sem conta Stripe do parceiro ativa, para
   // a reserva no cartão (válida 7 dias) nunca expirar.
   const captured = await captureHeldDeposits(admin);
+  // Sinais pagos ao pedir (migração 207) que o parceiro recusou ou não
+  // aceitou em 48 h: libertados (nunca cobrados).
+  const unheld = await releaseRequestHolds(admin);
 
   const { data: rows, error } = await admin.rpc("payments_to_release");
   if (error) {
@@ -119,7 +122,7 @@ Deno.serve(async (req) => {
       failed.push(r.payment_id);
     }
   }
-  return Response.json({ released, failed, captured });
+  return Response.json({ released, failed, captured, unheld });
 });
 
 // deno-lint-ignore no-explicit-any
@@ -136,6 +139,9 @@ async function captureHeldDeposits(admin: any): Promise<string[]> {
     .eq("is_held", true)
     .eq("status", "paid")
     .like("provider_payment_id", "pi_%")
+    // Sem reserva = sinal pago ao pedir: nunca se cobra antes de o parceiro
+    // aceitar (migração 207, `releaseRequestHolds`).
+    .not("booking_id", "is", null)
     .limit(200);
   if (!heldErr) {
     for (const r of (held ?? []) as { id: string; provider_payment_id: string }[]) {
@@ -187,6 +193,38 @@ async function captureHeldDeposits(admin: any): Promise<string[]> {
     }
   } catch (e) {
     console.error("captureHeldDeposits failed", (e as Error).message);
+  }
+  return out;
+}
+
+// Sinal pago ao pedir a reserva (migração 207): fica cativo até o parceiro
+// responder. Recusado, expirado ou sem resposta em 48 h → cancela-se no
+// Stripe (o dinheiro volta a ficar livre no cartão, sem cobrança). Marca-se
+// primeiro (`claim_request_hold_release`), para o parceiro não o aceitar a
+// meio.
+// deno-lint-ignore no-explicit-any
+async function releaseRequestHolds(admin: any): Promise<string[]> {
+  const out: string[] = [];
+  const { data, error } = await admin.rpc("request_holds_to_release");
+  if (error) return out; // migração 207 por correr
+  const stripe = stripeClient();
+  for (const r of (data ?? []) as { payment_id: string; provider_payment_id: string | null }[]) {
+    try {
+      const { data: claimed } = await admin.rpc("claim_request_hold_release", { p_payment_id: r.payment_id });
+      if (claimed !== true) continue;
+      if (r.provider_payment_id?.startsWith("pi_")) {
+        const pi = await stripe.paymentIntents.retrieve(r.provider_payment_id);
+        if (pi.status !== "canceled" && pi.status !== "succeeded") {
+          await stripe.paymentIntents.cancel(pi.id, {}, { idempotencyKey: `unhold-${r.payment_id}` });
+        } else if (pi.status === "succeeded") {
+          // Cobrado logo (MB WAY/Multibanco não ficam cativos): reembolsa.
+          await stripe.refunds.create({ payment_intent: pi.id }, { idempotencyKey: `unhold-refund-${r.payment_id}` });
+        }
+      }
+      out.push(r.payment_id);
+    } catch (e) {
+      console.error("request hold release failed", r.payment_id, (e as Error).message);
+    }
   }
   return out;
 }

@@ -17,7 +17,9 @@ import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/pay_later_sheet.dart';
 import '../../../shared/widgets/line_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
@@ -55,6 +57,12 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   MultibancoRef? _mb;
   Timer? _poll;
 
+  /// Prazo deste pagamento (sinal, resto ou a parte de um convidado):
+  /// enquanto houver tempo, dá para «Pagar mais tarde» (mockups «Reservar
+  /// por categoria», 2026-11-21).
+  DateTime? _dueAt;
+  bool _deposit = false;
+
   PayArgs get a => widget.args;
 
   /// 191: sem sinal nesta categoria — paga-se tudo de uma vez.
@@ -77,6 +85,72 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     _phone.text = ref.read(authControllerProvider).profile?.phone ?? '';
     _checkExisting();
     _prepare();
+    if (a.isBooking) _loadDue();
+  }
+
+  Future<void> _loadDue() async {
+    try {
+      final r = await supabase
+          .from('payments')
+          .select('due_at, type, booking_id, bookings(choice_deadline, deposit_amount, total_amount)')
+          .eq('id', a.paymentId)
+          .maybeSingle();
+      // Sinal pago ao pedir (sem reserva ainda, migração 207): o «Pagar mais
+      // tarde» já foi oferecido no fim do pedido.
+      if (r == null || r['booking_id'] == null || !mounted) return;
+      final b = r['bookings'] as Map?;
+      final raw = r['due_at'] ?? ((a.isGuestShare && b != null) ? b['choice_deadline'] : null);
+      final due = raw == null ? null : DateTime.tryParse(raw.toString())?.toLocal();
+      final dep = (b?['deposit_amount'] as num?)?.toDouble() ?? 0;
+      final tot = (b?['total_amount'] as num?)?.toDouble() ?? 0;
+      setState(() {
+        _dueAt = due;
+        _deposit = r['type'] == 'deposit' && dep < tot;
+      });
+    } catch (_) {}
+  }
+
+  bool get _canPayLater {
+    final d = _dueAt;
+    return d != null && d.isAfter(DateTime.now());
+  }
+
+  /// «Pagar mais tarde?»: o aviso do que acontece sem pagamento (amarelo;
+  /// vermelho nos últimos 3 dias — DESIGN.md §7). «Pagar mais tarde» fecha.
+  Future<void> _payLater() async {
+    final due = _dueAt;
+    if (due == null) return;
+    final tone = toneForDue(due);
+    final left = payLaterDaysLeft(due);
+    final when = payLaterDay(due);
+    final urgent = tone == AlertTone.urgent;
+    final (String head, String sub) = a.isGuestShare
+        ? (
+            urgent ? '$left · sem pagamento, sais da reserva' : 'Sem pagamento até $when, sais da reserva',
+            'Tu e quem vem no teu convite. Os outros convidados vão na mesma.',
+          )
+        : _deposit
+            ? (
+                urgent ? '$left para pagar o sinal' : 'Sem o sinal, podes perder a reserva',
+                '${a.partnerName} pode aceitar outro pedido para este dia.',
+              )
+            : (
+                urgent ? '$left · sem pagamento, perdes a reserva' : 'Sem pagamento até $when, perdes a reserva',
+                a.kind == 'final_payment'
+                    ? 'A reserva é cancelada e o sinal não é devolvido.'
+                    : 'A reserva é cancelada e o dia fica livre.',
+              );
+    final later = await askPayLater(
+      context,
+      partnerName: a.partnerName,
+      tone: tone,
+      head: head,
+      sub: sub,
+      note: '${_deposit && !urgent ? 'Tens até $when (30 dias antes do evento)' : 'Podes pagar até $when'}. '
+          'Avisamos-te 6 dias antes do prazo e nos últimos 3 dias. '
+          '${a.isGuestShare ? 'Pagas no convite, na app.' : 'Pagas em Reservas, no evento.'}',
+    );
+    if (later && mounted) context.pop();
   }
 
   @override
@@ -690,6 +764,14 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           button = _stripe.walletButton(_payWallet) ?? _SheetButton(label: 'Pagar com $_walletName', onTap: _payWallet);
         } else {
           button = _SheetButton(label: _method == PayMethod.card ? 'Pagar $_amountLabel' : 'Continuar', onTap: _continue);
+        }
+        // Enquanto houver tempo: «Pagar mais tarde» ao lado de «Pagar».
+        if (_canPayLater) {
+          button = Row(children: [
+            Expanded(child: _SheetButton(label: 'Pagar mais tarde', secondary: true, onTap: _payLater)),
+            const SizedBox(width: 8),
+            Expanded(child: button),
+          ]);
         }
         extras.add(const _SecureNote('Pagamento seguro pela Stripe, dentro da app.'));
         if (a.isBooking && !a.isGuestShare) extras.add(_CancelNote(paymentId: a.paymentId, deposit: a.kind == 'deposit' && !_full));

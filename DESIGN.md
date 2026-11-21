@@ -241,6 +241,18 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   exceção à regra «verde nunca em botões/fundos»: o verde só existe durante
   a animação.
 - **Fechar:** tocar fora ou puxar para baixo (se o popup o permitir).
+- **Sair pergunta sempre** (pedido do Rafael, 2026-11-20): tocar no «×»,
+  tocar fora do popup ou puxá-lo para baixo abre sempre «Tens a certeza que
+  queres sair?» («O que preencheste neste popup não fica guardado.») com
+  «Sair» (contorno) e «Continuar» (preto, volta ao popup como estava). Esta
+  pergunta não tem «×».
+- **Voltar — sempre no mesmo sítio** (pedido do Rafael, 2026-11-20, regra
+  da consistência): nos popups com passos, a partir do 2.º passo, o voltar é
+  um **círculo 44 `#F2F0EB` com a seta ← 20, no canto superior esquerdo**, ao
+  lado do título (o «×» de fechar fica à direita). **Nunca** um botão
+  «Voltar» em baixo: os botões de baixo são só ações (um preto a toda a
+  largura, ou contorno + preto, p. ex. «Pagar mais tarde» + «Pagar»). Vale
+  para todas as secções da app (organizador, parceiro e convidado).
 
 ## 6.2 Parceiros e perfis (mockups «Parceiros e perfis», 2026-11-20)
 
@@ -286,10 +298,27 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   valor 40, para que é (13) e a explicação. O valor é o que o parceiro
   indica em «Preços e pacotes» (`average_quote_price`) e a nota é
   `reference_note` (migração 203).
-- **Popups de reserva:** «Reservar <pacote>» (evento com «Mudar», pessoas,
-  extras, mensagem, total e botão), «Reserva pedida» (estrela contente,
-  resumo, «Ver conversa» + «OK») e «Pedir orçamento» (referência, evento,
-  data, local com o seletor de moradas e mensagem).
+- **Popups de reserva — o mesmo fluxo em todas as categorias** (mockups
+  «Reservar por categoria», 2026-11-20/21): Para que evento? (sempre) ·
+  Confirma as pessoas (vêm do evento e das respostas; aviso amarelo só se
+  forem **mais** do que no evento, «22 de 122 do evento» se forem menos) ·
+  Quem paga? (só onde faz sentido) · o que falta saber da categoria (hora,
+  entrega, partida…) · Tudo certo? («Continuar») · Queres juntar alguma
+  coisa? (extras; «Sem extras» + «Continuar») · Pedir reserva. A reserva só
+  é pedida depois dos extras. Nunca se volta a perguntar o dia, o local nem
+  as pessoas. Fim: «Reserva pedida» (estrela contente, resumo, «Ver
+  conversa» + «OK»); pagamento feito → estrela de parabéns.
+- **Pedir orçamento:** o mesmo fluxo — evento, pessoas, «O que procuras?»
+  (hora e mensagem), Tudo certo? → «Pedir orçamento» → «Orçamento pedido».
+  Na proposta: «Recusar» (pergunta o motivo, que segue para o parceiro na
+  conversa) ou «Aceitar» → extras → pagar o sinal.
+- **Pagar mais tarde:** enquanto houver tempo, o ecrã de pagar tem
+  «Pagar mais tarde» ao lado de «Pagar». Abre «Pagar mais tarde?» com o
+  aviso do que acontece sem pagamento (amarelo; vermelho nos últimos 3
+  dias): sem o sinal, o parceiro pode aceitar outro pedido; sem o valor
+  todo, a reserva é cancelada; o convidado que não paga sai da reserva (os
+  outros vão na mesma). A taxa de serviço só entra no passo de pagar e
+  diz-se antes: «+ taxa de serviço no passo seguinte».
 - **Perfil do organizador:** faixa de cor 200 no topo (sem foto: botões
   brancos cheios 44 — voltar, partilhar, ⋯), a `ProfileCard_Users` por cima
   dela, «Próximos eventos» em carrossel, «A seguir», e a barra fixa com

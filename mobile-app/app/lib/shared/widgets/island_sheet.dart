@@ -17,6 +17,13 @@ import '../hero_icons.dart';
 /// cor desfaz-se no branco à medida que o conteúdo entra. Ao fechar, a onda
 /// volta a encolher para a navbar. Com «reduzir movimento» só aparece e
 /// desaparece.
+///
+/// Sair pergunta sempre (pedido do Rafael, 2026-11-20): tocar no «×»
+/// ([IslandCloseButton]), tocar fora ou puxar para baixo abre «Tens a
+/// certeza que queres sair?». Escolher uma opção ou terminar o popup
+/// (`Navigator.pop(context, valor)`) fecha sem perguntar. Os diálogos
+/// ([showIslandDialog]) e os menus «⋯» ([IslandMenuButton]) não perguntam:
+/// já são, eles próprios, a pergunta ou a escolha.
 Future<T?> showIslandSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -26,6 +33,7 @@ Future<T?> showIslandSheet<T>({
   Color? backgroundColor,
   ShapeBorder? shape,
   bool isDismissible = true,
+  bool confirmExit = true,
 }) {
   final navigator = Navigator.of(context);
   return navigator.push<T>(
@@ -33,6 +41,7 @@ Future<T?> showIslandSheet<T>({
       builder: builder,
       isScrollControlled: isScrollControlled,
       dismissible: isDismissible,
+      confirmExit: confirmExit,
       capturedThemes: InheritedTheme.capture(from: context, to: navigator.context),
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     ),
@@ -51,6 +60,7 @@ class _IslandRoute<T> extends PopupRoute<T> {
     required this.builder,
     required this.isScrollControlled,
     required this.dismissible,
+    required this.confirmExit,
     required this.capturedThemes,
     required String barrierLabel,
   }) : _barrierLabel = barrierLabel;
@@ -58,7 +68,9 @@ class _IslandRoute<T> extends PopupRoute<T> {
   final WidgetBuilder builder;
   final bool isScrollControlled;
   final bool dismissible;
+  final bool confirmExit;
   final CapturedThemes capturedThemes;
+  bool _asking = false;
   final String _barrierLabel;
 
   @override
@@ -99,7 +111,7 @@ class _IslandRoute<T> extends PopupRoute<T> {
       ),
     );
 
-    return capturedThemes.wrap(
+    final island = capturedThemes.wrap(
       Padding(
         padding: EdgeInsets.fromLTRB(_kIslandSide, 0, _kIslandSide, bottom),
         child: Column(
@@ -121,6 +133,20 @@ class _IslandRoute<T> extends PopupRoute<T> {
           ],
         ),
       ),
+    );
+    if (!confirmExit) return island;
+    // «×», tocar fora, puxar para baixo e o «voltar» do sistema passam
+    // todos por aqui (maybePop) e perguntam antes de fechar.
+    return PopScope<T>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop || _asking) return;
+        _asking = true;
+        final leave = await askLeaveIsland(context);
+        _asking = false;
+        if (leave && context.mounted && isCurrent) Navigator.of(context).pop();
+      },
+      child: island,
     );
   }
 
@@ -236,7 +262,113 @@ Future<T?> showIslandDialog<T>({
   required WidgetBuilder builder,
   bool barrierDismissible = true,
 }) =>
-    showIslandSheet<T>(context: context, builder: builder, isDismissible: barrierDismissible);
+    showIslandSheet<T>(context: context, builder: builder, isDismissible: barrierDismissible, confirmExit: false);
+
+/// «Tens a certeza que queres sair?» (DESIGN.md §6.1). Devolve `true` se a
+/// pessoa escolher «Sair». Sem «×»: é a própria pergunta de sair.
+Future<bool> askLeaveIsland(BuildContext context) async {
+  final r = await showIslandSheet<bool>(
+    context: context,
+    confirmExit: false,
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('Tens a certeza que queres sair?',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 4),
+          const Text('O que preencheste neste popup não fica guardado.',
+              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          const SizedBox(height: 20),
+          Row(children: [
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  style: OutlinedButton.styleFrom(
+                    shape: const StadiumBorder(),
+                    side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                    foregroundColor: AppTheme.ink,
+                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  child: const Text('Sair'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SizedBox(
+                height: 52,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.ink,
+                    foregroundColor: Colors.white,
+                    shape: const StadiumBorder(),
+                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
+                  child: const Text('Continuar'),
+                ),
+              ),
+            ),
+          ]),
+        ],
+      ),
+    ),
+  );
+  return r ?? false;
+}
+
+/// Botão redondo 44 dos popups (`#F2F0EB`, ícone 20): o «×» de fechar à
+/// direita do título e o voltar à esquerda (DESIGN.md §6.1).
+class IslandRoundButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const IslandRoundButton({super.key, required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+            child: Icon(icon, size: 20, color: AppTheme.ink),
+          ),
+        ),
+      );
+}
+
+/// «×» de um popup: pergunta antes de sair (passa pelo `maybePop`).
+class IslandCloseButton extends StatelessWidget {
+  const IslandCloseButton({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      IslandRoundButton(icon: Hi.xMark, label: 'Fechar', onTap: () => Navigator.of(context).maybePop());
+}
+
+/// Voltar ao passo anterior de um popup com passos: sempre no canto superior
+/// esquerdo, ao lado do título — nunca um botão «Voltar» em baixo.
+class IslandBackButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const IslandBackButton({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => IslandRoundButton(icon: Hi.arrowLeft, label: 'Voltar', onTap: onTap);
+}
 
 /// Conteúdo de diálogo dentro da ilha: título, texto/campo e botões em
 /// pílula lado a lado (o principal a verde, o secundário claro).
@@ -368,6 +500,7 @@ class IslandMenuButton<T> extends StatelessWidget {
     if (items.isEmpty) return;
     final picked = await showIslandSheet<_Picked<T>>(
       context: context,
+      confirmExit: false,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
         child: Column(
