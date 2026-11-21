@@ -32,9 +32,10 @@ cores, sombras ou tamanhos à mão quando já existe um.
 | Etiqueta neutra / quadrado de ícone | fundo `#E6E6E6`, texto `#3A3733` | — |
 | Pílula ativa da navbar | `#EBEBEB` | — |
 | Erro / recusado | `#C8553D` | `AppStatusColors.declined` |
+| Barra de progresso | `#A9C79A` (verde clarinho, pedido 2026-11-21) | `AppTheme.progress` |
 
-**Verde só para seleção e etiquetas** (filtro ativo, contadores; as barras de
-progresso são pretas, §6). **Nunca** para botões.
+**Verde só para seleção e etiquetas** (filtro ativo, contadores; e as barras
+de progresso, verde clarinho, §6). **Nunca** para botões.
 
 ## 2. Botões
 
@@ -223,8 +224,9 @@ ecrãs. O resto da app mantém a tabela acima.
   etiquetas ou uma linha 13 por baixo — nunca cartão verde; listas em grupos
   de linhas (avatar 44, nome 16, meta 13, etiqueta à direita).
 - **Barra de progresso** (`AppProgressBar`, `shared/widgets/app_progress.dart`,
-  pedido do Rafael 2026-11-21): **em toda a app**, a barra é **preta `#171713`** (para dar contraste com a estrela verde — pedido 2026-11-21) sobre o trilho `#E0E0E0` e leva **a
-  estrela (o ícone novo da app) em cima da ponta**, como quem anda nela, e é **animada quando o progresso
+  pedido do Rafael 2026-11-21): **em toda a app**, a barra é **verde clarinho `#A9C79A`** (`AppTheme.progress`, pedido 2026-11-21) sobre o trilho `#E0E0E0` e leva **a
+  estrela (o ícone novo da app) em cima da ponta**, como quem anda nela —
+  **sem sombra** e com a ponta de baixo da estrela a assentar na barra —, e é **animada quando o progresso
   muda** — a barra cresce e a estrela dá um saltinho até ao sítio novo (e
   enche desde o início ao aparecer). Com «reduzir movimento» muda sem
   animação. Espessura 10 nos resumos e no onboarding, 6–8 nas linhas.
