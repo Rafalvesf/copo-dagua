@@ -71,7 +71,8 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    // A estrela vai em cima da ponta da barra, como quem anda nela.
+    // A estrela vai em cima da ponta da barra, como quem anda nela, e
+    // anima como as outras mascotes (3 vezes ao aparecer, 2026-11-21).
     // Grande o suficiente para se ver bem (pedido 2026-11-21: «muito pequeno»).
     final starW = math.max(40.0, widget.height * 6.8);
     final starH = starW * 350 / 384;
@@ -122,7 +123,7 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
                 top: -topCut - 6 * hop,
                 child: Transform.rotate(
                   angle: 0.18 * math.sin(t * math.pi * 2) * hop,
-                  child: EstrelaMascot(Estrela.feliz, size: starW, cycles: 0, semanticLabel: '', shadow: false),
+                  child: EstrelaMascot(Estrela.feliz, size: starW, semanticLabel: '', shadow: false),
                 ),
               ),
             ]);
