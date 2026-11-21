@@ -19,6 +19,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/pay_later_sheet.dart';
 import '../../../shared/widgets/line_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
@@ -91,10 +92,12 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     try {
       final r = await supabase
           .from('payments')
-          .select('due_at, type, bookings(choice_deadline, deposit_amount, total_amount)')
+          .select('due_at, type, booking_id, bookings(choice_deadline, deposit_amount, total_amount)')
           .eq('id', a.paymentId)
           .maybeSingle();
-      if (r == null || !mounted) return;
+      // Sinal pago ao pedir (sem reserva ainda, migração 207): o «Pagar mais
+      // tarde» já foi oferecido no fim do pedido.
+      if (r == null || r['booking_id'] == null || !mounted) return;
       final b = r['bookings'] as Map?;
       final raw = r['due_at'] ?? ((a.isGuestShare && b != null) ? b['choice_deadline'] : null);
       final due = raw == null ? null : DateTime.tryParse(raw.toString())?.toLocal();
@@ -112,19 +115,14 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     return d != null && d.isAfter(DateTime.now());
   }
 
-  static const _monthsPt = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-  static String _dayMonth(DateTime d) => '${d.day} ${_monthsPt[d.month - 1]}';
-
   /// «Pagar mais tarde?»: o aviso do que acontece sem pagamento (amarelo;
   /// vermelho nos últimos 3 dias — DESIGN.md §7). «Pagar mais tarde» fecha.
   Future<void> _payLater() async {
     final due = _dueAt;
     if (due == null) return;
     final tone = toneForDue(due);
-    final now = DateTime.now();
-    final days = DateTime(due.year, due.month, due.day).difference(DateTime(now.year, now.month, now.day)).inDays;
-    final left = days <= 0 ? 'Último dia' : 'Faltam $days ${days == 1 ? 'dia' : 'dias'}';
-    final when = _dayMonth(due);
+    final left = payLaterDaysLeft(due);
+    final when = payLaterDay(due);
     final urgent = tone == AlertTone.urgent;
     final (String head, String sub) = a.isGuestShare
         ? (
@@ -142,55 +140,17 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                     ? 'A reserva é cancelada e o sinal não é devolvido.'
                     : 'A reserva é cancelada e o dia fica livre.',
               );
-    final later = await showIslandSheet<bool>(
-      context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Pagar mais tarde?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                const SizedBox(height: 4),
-                Text(a.partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              ]),
-            ),
-            const SizedBox(width: 12),
-            const IslandCloseButton(),
-          ]),
-          const SizedBox(height: 16),
-          AlertOutline(
-            tone: tone,
-            radius: 22,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: alertColor(tone))),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(head, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                ]),
-              ),
-            ]),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '${_deposit && !urgent ? 'Tens até $when (30 dias antes do evento)' : 'Podes pagar até $when'}. '
-            'Avisamos-te 6 dias antes do prazo e nos últimos 3 dias. '
-            '${a.isGuestShare ? 'Pagas no convite, na app.' : 'Pagas em Reservas, no evento.'}',
-            style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
-          ),
-          const SizedBox(height: 20),
-          Row(children: [
-            Expanded(child: _SheetButton(label: 'Pagar mais tarde', secondary: true, onTap: () => Navigator.of(ctx).pop(true))),
-            const SizedBox(width: 8),
-            Expanded(child: _SheetButton(label: 'Pagar agora', onTap: () => Navigator.of(ctx).pop(false))),
-          ]),
-        ]),
-      ),
+    final later = await askPayLater(
+      context,
+      partnerName: a.partnerName,
+      tone: tone,
+      head: head,
+      sub: sub,
+      note: '${_deposit && !urgent ? 'Tens até $when (30 dias antes do evento)' : 'Podes pagar até $when'}. '
+          'Avisamos-te 6 dias antes do prazo e nos últimos 3 dias. '
+          '${a.isGuestShare ? 'Pagas no convite, na app.' : 'Pagas em Reservas, no evento.'}',
     );
-    if (later == true && mounted) context.pop();
+    if (later && mounted) context.pop();
   }
 
   @override
