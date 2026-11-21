@@ -34,6 +34,7 @@ import '../../../core/wedding/organizers.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../partner_style.dart';
 import '../widgets/partner_cards.dart';
+import '../../payments/open_payment.dart' show openPaymentFlow;
 import '../widgets/reserve_flow.dart';
 import '../../../shared/widgets/dense_card.dart' show PriceBox, MiniStats;
 import '../../../shared/widgets/estrela.dart';
@@ -202,7 +203,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     setState(() => _requestingQuote = true);
     Funnel.track('quote_request_start', ref: widget.partner.id);
     try {
-      await supabase.rpc('request_package', params: {
+      final quoteId = await supabase.rpc('request_package', params: {
         'p_partner_id': widget.partner.id,
         'p_wedding_id': wedding.id,
         'p_package_id': pkg.id,
@@ -223,6 +224,19 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       } catch (_) {}
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
+      // «Pagar o sinal» no fim do pedido (migração 207): fica cativo até o
+      // parceiro responder; se recusar ou não responder em 48 h, é libertado.
+      var depositPaid = false;
+      if (flow != null && flow.payNow && quoteId is String && mounted) {
+        try {
+          final paymentId = await supabase.rpc('prepay_request_deposit', params: {'p_quote_request_id': quoteId});
+          if (paymentId is String && mounted) {
+            await openPaymentFlow(context, ref, paymentId);
+            final row = await supabase.from('payments').select('status').eq('id', paymentId).maybeSingle();
+            depositPaid = row?['status'] == 'paid';
+          }
+        } catch (_) {}
+      }
       if (mounted) {
         double each(String unit, double price) => unit == 'person' ? price * people : price;
         final total = each(pkg.priceUnit, pkg.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
@@ -234,11 +248,14 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               ? '${widget.partner.name} aceita ou recusa e avisamos-te. Cada convite paga a sua parte${due != null ? ' até ${reserveShortDay(due).toLowerCase()}' : ''}.'
               : noDeposit
                   ? '${widget.partner.name} aceita ou recusa e avisamos-te. Sem sinal: pagas tudo de uma vez, nos 6 dias antes do prazo.'
-                  : '${widget.partner.name} aceita ou recusa e avisamos-te. Depois, paga o sinal para garantir a data.',
+                  : depositPaid
+                      ? 'Pagaste o sinal: fica cativo até ${widget.partner.name} responder (48 h). Se recusar, é libertado.'
+                      : '${widget.partner.name} aceita ou recusa e avisamos-te. Paga o sinal para garantir a data.',
           recapTitle: [pkg.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra'].join(' '),
           recapMeta: [wedding.displayNames, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · '),
           recapValue: pkg.isStartingPrice ? null : euros(total),
           event: wedding,
+          paid: depositPaid,
         );
       }
     } on PostgrestException catch (e) {
@@ -350,8 +367,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   }
 
   /// Popup de confirmação depois de enviar um pedido/reserva (pedido do
-  /// Rafael, 2026-11-18): "Reserva pedida" com um só botão "OK". O pagamento
-  /// do sinal só acontece mais tarde, quando o parceiro aceita (no aceite).
+  /// Rafael, 2026-11-18): "Reserva pedida" com um só botão "OK". Com o sinal
+  /// pago no fim do pedido (migração 207), a estrela é a de parabéns.
   Future<void> _showRequestSent({
     required String title,
     required String body,
@@ -359,6 +376,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     String? recapMeta,
     String? recapValue,
     Wedding? event,
+    bool paid = false,
   }) async {
     if (!mounted) return;
     // Mockup «Reserva pedida» (2026-11-20): estrela contente, o resumo do
@@ -372,7 +390,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Center(child: EstrelaMascot(Estrela.contente, size: 96)),
+            // Pedido → contente; pagamento feito → parabéns (DESIGN.md §6).
+            Center(child: EstrelaMascot(paid ? Estrela.parabens : Estrela.contente, size: 96)),
             const SizedBox(height: 16),
             Text(title,
                 textAlign: TextAlign.center,

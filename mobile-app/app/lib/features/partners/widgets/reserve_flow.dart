@@ -6,6 +6,8 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
+import '../../../shared/widgets/alert_outline.dart' show AlertTone, toneForDue;
+import '../../../shared/widgets/pay_later_sheet.dart';
 import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, IslandCloseButton;
 import '../../../shared/widgets/snappy_tap.dart';
 
@@ -52,6 +54,10 @@ class ReserveFlowResult {
 
   /// Pedido de orçamento: a mensagem para o parceiro.
   final String? message;
+
+  /// «Pagar o sinal» no fim do pedido (migração 207): o sinal paga-se já e
+  /// fica cativo até o parceiro responder. `false` = «Pagar mais tarde».
+  final bool payNow;
   const ReserveFlowResult({
     required this.event,
     required this.adults,
@@ -60,6 +66,7 @@ class ReserveFlowResult {
     required this.details,
     this.extras = const [],
     this.message,
+    this.payNow = false,
   });
 
   int get people => adults + children;
@@ -220,6 +227,12 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
 
   bool get _noDeposit => widget.depositPct >= 100;
 
+  /// Último passo com sinal: «Pagar o sinal» ou «Pagar mais tarde».
+  bool get _paysDeposit =>
+      !widget.quote && widget.package != null && !(_asksWhoPays && _eachPays) && !_noDeposit && _packageTotal != null;
+
+  double get _depositNow => double.parse(((_packageTotal! + _extrasTotal) * widget.depositPct / 100).toStringAsFixed(2));
+
   Future<void> _loadPeople() async {
     if (_loadedFor == _event.id) return;
     setState(() => _loadingPeople = true);
@@ -244,7 +257,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     if (_step > 0) setState(() => _step--);
   }
 
-  ReserveFlowResult get _result => ReserveFlowResult(
+  ReserveFlowResult _resultWith({required bool payNow}) => ReserveFlowResult(
         event: _event,
         adults: _adults,
         children: _children,
@@ -252,7 +265,29 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         details: _details,
         extras: widget.extras.where((e) => _extras.contains(e.id)).toList(),
         message: _message.text.trim().isEmpty ? null : _message.text.trim(),
+        payNow: payNow,
       );
+
+  /// «Pagar mais tarde» no fim do pedido: o aviso de que sem o sinal se pode
+  /// perder a reserva; confirmando, pede-se sem pagar.
+  Future<void> _payLater() async {
+    final ev = _event.weddingDate;
+    final due = ev?.subtract(const Duration(days: 30));
+    final tone = due == null ? AlertTone.pending : toneForDue(due);
+    final urgent = tone == AlertTone.urgent;
+    final later = await askPayLater(
+      context,
+      partnerName: widget.partnerName,
+      tone: tone,
+      head: urgent && due != null ? '${payLaterDaysLeft(due)} para pagar o sinal' : 'Sem o sinal, podes perder a reserva',
+      sub: '${widget.partnerName} pode aceitar outro pedido para este dia.',
+      note: '${due != null && !urgent ? 'Tens até ${payLaterDay(due)} (30 dias antes do evento)' : 'Paga o sinal assim que ${widget.partnerName} aceitar'}. '
+          'Avisamos-te 6 dias antes do prazo e nos últimos 3 dias. Pagas em Reservas, no evento.',
+    );
+    if (later && mounted) Navigator.of(context).pop(_resultWith(payNow: false));
+  }
+
+  ReserveFlowResult get _result => _resultWith(payNow: false);
 
   // ---------- o que foi respondido ----------
   List<(String, String)> get _details => widget.quote ? [if (_time != null) ('Começa às', _time!)] : switch (widget.kind) {
@@ -731,6 +766,33 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       for (final e in chosen) (e.name, euros(_amount(e.priceUnit, e.price))),
     ];
     final due = _event.weddingDate?.subtract(const Duration(days: 3));
+    if (_paysDeposit) {
+      return [
+        _group([
+          for (final (k, v) in rows)
+            Container(
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(children: [
+                Expanded(child: Text(k, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+                const SizedBox(width: 12),
+                Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ]),
+            ),
+        ]),
+        const SizedBox(height: 12),
+        _line('Reserva + extras', euros(total!)),
+        const SizedBox(height: 6),
+        _line('Sinal (${widget.depositPct.round()} %) agora', euros(_depositNow, cents: true), big: true),
+        const Align(
+          alignment: Alignment.centerRight,
+          child: Text('+ taxa de serviço no passo seguinte', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        ),
+        const SizedBox(height: 12),
+        _note('Paga já para garantir a data: o sinal fica cativo até ${widget.partnerName} responder (48 h) e, se recusar, é libertado. '
+            'Cancelável apenas nas 48 h depois de pagar; depois de aceitar, não é reembolsável.'),
+      ];
+    }
     final String text;
     if (_asksWhoPays && _eachPays) {
       text = 'Não pagas nada agora. Cada convite paga a sua parte${due != null ? ' até ${_day(due).toLowerCase()}' : ' até 3 dias antes'}'
@@ -776,7 +838,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       'pays' => ('Quem paga?', 'Podes mudar até a reserva ser aceite.'),
       'when' => (_whenTitle.$1, [_eventLine(_event), 'do evento'].where((s) => s.isNotEmpty).join(' · ')),
       'extras' => ('Queres juntar alguma coisa?', '${widget.partnerName} tem extras para ${widget.package == null ? 'a mesa' : 'o teu pacote'}.'),
-      'request' => ('Pedir reserva', widget.partnerName),
+      'request' => (_paysDeposit ? 'Pagar o sinal' : 'Pedir reserva', widget.partnerName),
       _ => ('Tudo certo?', widget.partnerName),
     };
     final body = switch (st) {
@@ -795,6 +857,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     };
     final primary = switch (st) {
       'people' => 'Confirmar',
+      'request' when _paysDeposit => 'Pagar · ${euros(_depositNow, cents: true)}',
       'request' => 'Pedir reserva',
       'confirm' when widget.quote => 'Pedir orçamento',
       _ => 'Continuar',
@@ -840,6 +903,10 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         const SizedBox(height: 20),
         // Em baixo só ações (o voltar está em cima, DESIGN.md §6.1).
         Row(children: [
+          if (st == 'request' && _paysDeposit) ...[
+            Expanded(child: _Btn('Pagar mais tarde', outlined: true, onTap: _payLater)),
+            const SizedBox(width: 8),
+          ],
           if (st == 'extras') ...[
             Expanded(
               child: _Btn('Sem extras', outlined: true, onTap: () {
@@ -854,7 +921,9 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             child: _Btn(primary,
                 onTap: !canNext
                     ? null
-                    : st == 'request' || (st == 'confirm' && widget.quote)
+                    : st == 'request' && _paysDeposit
+                        ? () => Navigator.of(context).pop(_resultWith(payNow: true))
+                        : st == 'request' || (st == 'confirm' && widget.quote)
                         ? () => Navigator.of(context).pop(_result)
                         : _next),
           ),
