@@ -91,7 +91,7 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
             final t = _c.value;
             // Saltinho enquanto anda; parada no fim.
             final hop = _c.isAnimating ? math.sin(t * math.pi) : 0.0;
-            final left = (w * v - starW / 2).clamp(0.0, math.max(0.0, w - starW));
+            final left = (w * v - starW / 2).clamp(0.0, math.max(0.0, w - starW)).toDouble();
             return Stack(clipBehavior: Clip.none, children: [
               Positioned(
                 left: 0,
