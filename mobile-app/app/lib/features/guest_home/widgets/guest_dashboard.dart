@@ -8,6 +8,7 @@ import '../../../core/guest_home/guest_home_providers.dart' show TableMate;
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/wedding/pastel_colors.dart';
 import '../../../shared/widgets/app_progress.dart';
 import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/page_kit.dart';
@@ -447,10 +448,20 @@ class DashProgram extends StatelessWidget {
       KitGroup([
         for (final (i, p) in shown.indexed)
           KitRow(
-            lead: SizedBox(
-              width: 52,
-              child: Text(p.time, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            ),
+            // Hora e o ícone do momento (2026-11-21): a foto/iniciais do
+            // parceiro escolhido ou, sem parceiro, as iniciais do local
+            // (ou do momento).
+            lead: Row(mainAxisSize: MainAxisSize.min, children: [
+              SizedBox(
+                width: 52,
+                child: Text(p.time, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
+              V2Avatar(
+                p.partner.isNotEmpty ? p.partner : (p.place.isNotEmpty ? p.place : p.title),
+                size: 34,
+                imageUrl: p.partnerAvatarUrl.isEmpty ? null : p.partnerAvatarUrl,
+              ),
+            ]),
             title: p.title,
             sub: p.place.isEmpty ? null : p.place,
             trailing: !live
@@ -488,7 +499,10 @@ const dressStyleHints = {
 /// Guardado como «Estilo · nota» (ou só a nota).
 class DashDressCode extends StatelessWidget {
   final String text;
-  const DashDressCode({super.key, required this.text});
+
+  /// Cores escolhidas pelo organizador (`theme_colors`), em hex.
+  final List<String> colors;
+  const DashDressCode({super.key, required this.text, this.colors = const []});
 
   @override
   Widget build(BuildContext context) {
@@ -518,6 +532,25 @@ class DashDressCode extends StatelessWidget {
                   style: style == null
                       ? const TextStyle(fontSize: 16, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink)
                       : const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.inkMuted)),
+            ],
+            // As cores do organizador, só se as escolheu (2026-11-21).
+            if (colors.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(children: [
+                for (final hex in colors) ...[
+                  Container(width: 22, height: 22, decoration: BoxDecoration(color: colorFromHex(hex), shape: BoxShape.circle)),
+                  const SizedBox(width: 6),
+                ],
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    [for (final hex in colors) ?pastelName(hex)].join(', '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                  ),
+                ),
+              ]),
             ],
           ]),
         ),
