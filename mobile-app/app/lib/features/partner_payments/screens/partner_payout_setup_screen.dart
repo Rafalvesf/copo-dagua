@@ -223,7 +223,7 @@ class _WhiteBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: padding,
-        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: child,
       );
 }

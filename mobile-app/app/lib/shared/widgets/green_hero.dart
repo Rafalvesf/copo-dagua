@@ -30,7 +30,7 @@ class GreenHero extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -86,10 +86,10 @@ class SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 12),
+      padding: const EdgeInsets.only(top: 12, bottom: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        // Uma linha antes de cada bloco (pedido 2026-11-21).
-        const Divider(height: 1, thickness: 1, color: AppTheme.line),
+        // Linha mais grossa entre secções diferentes (pedido 2026-11-21).
+        const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
         const SizedBox(height: 16),
         Row(
         children: [

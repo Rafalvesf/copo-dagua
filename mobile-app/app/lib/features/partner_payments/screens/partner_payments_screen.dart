@@ -192,7 +192,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
   Widget _notActive(ConnectStatus s) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Recebe pagamentos na app', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             SizedBox(height: 6),
@@ -228,7 +228,6 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          border: AppTheme.cardBorder,
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),
@@ -329,7 +328,7 @@ class _Rows extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: Column(children: [
           for (final (i, r) in rows.indexed)
             GestureDetector(

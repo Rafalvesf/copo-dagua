@@ -62,6 +62,9 @@ class DashCover extends StatelessWidget {
   final VoidCallback onExit;
   final VoidCallback? onGroup;
   final VoidCallback? onMap;
+
+  /// Mensagens por ler no grupo (0 = sem contador).
+  final int groupUnread;
   const DashCover({
     super.key,
     required this.wedding,
@@ -70,6 +73,7 @@ class DashCover extends StatelessWidget {
     required this.onExit,
     this.onGroup,
     this.onMap,
+    this.groupUnread = 0,
   });
 
   @override
@@ -102,7 +106,31 @@ class DashCover extends StatelessWidget {
             child: Row(children: [
               V2RoundButton(icon: Hi.chevronLeft, tooltip: 'Sair', onTap: onExit),
               const Spacer(),
-              if (onGroup != null) V2RoundButton(icon: Hi.chatBubbleOvalLeft, tooltip: 'Grupo do evento', onTap: onGroup),
+              if (onGroup != null)
+                Stack(clipBehavior: Clip.none, children: [
+                  V2RoundButton(icon: Hi.chatBubbleOvalLeft, tooltip: 'Grupo do evento', onTap: onGroup),
+                  // Contador (§2): pílula branca 20, número preto, aro preto 2.
+                  if (groupUnread > 0)
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: IgnorePointer(
+                        child: Container(
+                          constraints: const BoxConstraints(minWidth: 22),
+                          height: 22,
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(11),
+                            border: Border.all(color: AppTheme.ink, width: 2),
+                          ),
+                          child: Text(groupUnread > 99 ? '99+' : '$groupUnread',
+                              style: const TextStyle(fontSize: 13, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        ),
+                      ),
+                    ),
+                ]),
               if (onGroup != null && onMap != null) const SizedBox(width: 8),
               if (onMap != null) V2RoundButton(icon: Hi.mapPin, tooltip: 'Como chegar', onTap: onMap),
             ]),
@@ -413,37 +441,134 @@ class DashProgram extends StatelessWidget {
   }
 }
 
-/// Dress code: o estilo e a nota dos anfitriões.
+/// O que vestir em cada estilo do dress code (os estilos que o organizador
+/// escolhe em «Para os convidados»).
+const dressStyleHints = {
+  'Formal': 'Fato e gravata; vestido midi ou comprido.',
+  'Cocktail': 'Fato sem gravata ou blazer; vestido pelo joelho.',
+  'Casual chique': 'Calças de tecido e camisa; vestido ou conjunto leve.',
+  'Black tie': 'Smoking e laço; vestido comprido de cerimónia.',
+  'Tema': 'Segue o tema que os anfitriões escolheram.',
+};
+
+/// Dress code: o cabide, o estilo, o que vestir e a nota dos anfitriões.
+/// Guardado como «Estilo · nota» (ou só a nota).
 class DashDressCode extends StatelessWidget {
   final String text;
   const DashDressCode({super.key, required this.text});
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(color: const Color(0xFFE6E6E6), borderRadius: BorderRadius.circular(18)),
-            child: const Icon(Hi.sparkles, size: 24, color: AppTheme.ink),
-          ),
-          const SizedBox(width: 14),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 17, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-        ]),
-      );
+  Widget build(BuildContext context) {
+    final style = dressStyleHints.keys.where((st) => text == st || text.startsWith('$st · ')).firstOrNull;
+    final note = style == null ? text : text.substring(style.length).replaceFirst(RegExp(r'^\s*·\s*'), '');
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(color: const Color(0xFFE6E6E6), borderRadius: BorderRadius.circular(20)),
+          padding: const EdgeInsets.all(16),
+          child: const CustomPaint(painter: _HangerPainter()),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (style != null) ...[
+              Text(style, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 2),
+              Text(dressStyleHints[style]!, style: const TextStyle(fontSize: 15, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ],
+            if (note.isNotEmpty) ...[
+              if (style != null) const SizedBox(height: 6),
+              Text(note,
+                  style: style == null
+                      ? const TextStyle(fontSize: 17, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink)
+                      : const TextStyle(fontSize: 14, height: 1.35, color: AppTheme.inkMuted)),
+            ],
+          ]),
+        ),
+      ]),
+    );
+  }
 }
 
-/// Fotos no dia: «Juntar as minhas» + «Ver fotos».
-class DashPhotos extends StatelessWidget {
-  final VoidCallback onOpen;
-  const DashPhotos({super.key, required this.onOpen});
+/// O cabide (traço preto), como no mockup.
+class _HangerPainter extends CustomPainter {
+  const _HangerPainter();
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-        Expanded(child: _big('Juntar as minhas', onOpen, outlined: true)),
-        const SizedBox(width: 8),
-        Expanded(child: _big('Ver fotos', onOpen)),
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final p = Paint()
+      ..color = AppTheme.ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.07
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final path = Path()
+      // gancho
+      ..moveTo(w * 0.40, h * 0.22)
+      ..arcToPoint(Offset(w * 0.5, h * 0.12), radius: Radius.circular(w * 0.1))
+      ..arcToPoint(Offset(w * 0.5, h * 0.32), radius: Radius.circular(w * 0.1))
+      ..lineTo(w * 0.5, h * 0.42)
+      // ombros e barra
+      ..lineTo(w * 0.04, h * 0.80)
+      ..lineTo(w * 0.96, h * 0.80)
+      ..lineTo(w * 0.5, h * 0.42);
+    canvas.drawPath(path, p);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Fotos no dia: a grelha das últimas, quantas há e «Juntar as minhas» +
+/// «Ver fotos».
+class DashPhotos extends StatelessWidget {
+  final VoidCallback onOpen;
+  final List<String> urls;
+  final int count;
+  const DashPhotos({super.key, required this.onOpen, this.urls = const [], this.count = 0});
+
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (urls.isNotEmpty) ...[
+          SnappyTap(
+            onTap: onOpen,
+            child: GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              mainAxisSpacing: 6,
+              crossAxisSpacing: 6,
+              children: [
+                for (final u in urls.take(6))
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: SizedNetworkImage(u,
+                        fit: BoxFit.cover, errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFFE6E6E6))),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (count > 0) ...[
+          Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+            Text('$count', style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(width: 8),
+            Expanded(child: Text(count == 1 ? 'foto partilhada pelos convidados' : 'fotos partilhadas pelos convidados', style: _meta)),
+          ]),
+          const SizedBox(height: 12),
+        ],
+        Row(children: [
+          Expanded(child: _big('Juntar as minhas', onOpen, outlined: true)),
+          const SizedBox(width: 8),
+          Expanded(child: _big('Ver fotos', onOpen)),
+        ]),
       ]);
 }
 

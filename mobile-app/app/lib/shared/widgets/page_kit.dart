@@ -269,15 +269,22 @@ class KitCaps extends StatelessWidget {
   final String text;
   final double top;
   final Widget? trailing;
-  const KitCaps(this.text, {super.key, this.top = 24, this.trailing});
+
+  /// Sem linha logo a seguir a uma caixa branca de destaque (2026-11-21).
+  final bool line;
+  const KitCaps(this.text, {super.key, this.top = 24, this.trailing, this.line = true});
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.only(top: top, bottom: 8),
+        // Sem espaço a mais por baixo do grupo anterior: metade por cima da
+        // linha, 16 entre a linha e o título (2026-11-21).
+        padding: EdgeInsets.only(top: line ? top / 2 : top, bottom: 8),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          // Uma linha antes de cada bloco (pedido 2026-11-21).
-          const Divider(height: 1, thickness: 1, color: AppTheme.line),
-          const SizedBox(height: 16),
+          if (line) ...[
+            // Linha mais grossa entre secções diferentes (pedido 2026-11-21).
+            const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
+            const SizedBox(height: 16),
+          ],
           Row(children: [
           Expanded(
             child: Text(text.toUpperCase(),
@@ -327,7 +334,7 @@ class KitSummary extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         // O resumo do topo é o destaque da página: caixa branca com o
         // contorno preto 1,5 (2026-11-21).
-        decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(kicker.toUpperCase(),
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
@@ -393,10 +400,10 @@ class KitSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.only(top: top, bottom: 12),
+        padding: EdgeInsets.only(top: top / 2, bottom: 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          // Uma linha antes de cada bloco (pedido 2026-11-21).
-          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          // Linha mais grossa entre secções diferentes (pedido 2026-11-21).
+          const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
           const SizedBox(height: 16),
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Expanded(

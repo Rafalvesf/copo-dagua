@@ -171,7 +171,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                       if (!isPackages)
                         Container(
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -914,7 +914,7 @@ class _FinalPaymentDaysCardState extends ConsumerState<_FinalPaymentDaysCard> {
         );
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
           const Expanded(

@@ -137,7 +137,7 @@ class _PartnerLocationScreenState extends ConsumerState<PartnerLocationScreen> {
                     child: Container(
                       // Mockup «Páginas do parceiro» → Localização: linha branca.
                       padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-                      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                       child: Row(
                         children: [
                           const Expanded(

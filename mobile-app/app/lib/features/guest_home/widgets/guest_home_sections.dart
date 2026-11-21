@@ -313,7 +313,7 @@ class GuestPlaceCard extends ConsumerWidget {
     // antes dos quadrados, com «Abrir no mapa» e «Copiar morada».
     final copyable = address?.isNotEmpty == true ? address! : title;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const KitCaps('Como chegar', top: 0),
+      const KitCaps('Como chegar'),
       // Sem caixa (2026-11-21): o conteúdo fica no fundo.
       Padding(
       padding: const EdgeInsets.only(bottom: 4),

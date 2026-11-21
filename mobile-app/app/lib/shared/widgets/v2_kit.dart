@@ -15,14 +15,16 @@ export 'sticker_icon.dart' show StickerIcon, DateSticker;
 /// (sem linha), mosaicos de cor suave com o autocolante branco, pílulas
 /// e listas agrupadas.
 
-/// Sem sombras nos cartões (pedido 2026-11-21): as caixas brancas levam o
-/// contorno preto 1,5 ([AppTheme.cardBorder]).
-const softShadow = <BoxShadow>[];
+const softShadow = [
+  BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
+];
 
+/// Cartão branco com a sombra suave (DESIGN.md §5). A linha preta 1,5 é só
+/// para o destaque do painel do convidado (2026-11-21).
 BoxDecoration softCard({double radius = 22, Color color = Colors.white}) => BoxDecoration(
       color: color,
       borderRadius: BorderRadius.circular(radius),
-      border: color == Colors.white ? AppTheme.cardBorder : null,
+      boxShadow: softShadow,
     );
 
 const _tileColors = [Color(0xFFDCE4D8), Color(0xFFF3EBDD), Color(0xFFF3EBDD), Color(0xFFDCE4D8)];
@@ -285,10 +287,10 @@ class V2Caps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 24, bottom: 12),
+        padding: const EdgeInsets.only(top: 12, bottom: 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          // Uma linha antes de cada bloco (pedido 2026-11-21).
-          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          // Linha mais grossa entre secções diferentes (pedido 2026-11-21).
+          const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
           const SizedBox(height: 16),
           Text(text.toUpperCase(),
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1, color: v2Muted)),

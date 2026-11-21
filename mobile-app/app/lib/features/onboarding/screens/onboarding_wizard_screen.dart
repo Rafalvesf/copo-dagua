@@ -491,7 +491,6 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: AppTheme.cardBorder,
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
                 ),
@@ -607,7 +606,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
               child: Row(children: [
                 _RoundStep(
                   path: 'M5 12h14',
@@ -726,7 +725,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
               child: Column(children: [
                 Container(
                   constraints: const BoxConstraints(minHeight: 64),

@@ -359,3 +359,26 @@ Future<ChatGroup> openDirectChat(String profileId) async {
     isDirect: true,
   );
 }
+
+/// Mensagens por ler no grupo do evento («todos», migração 189) — o número
+/// no botão do grupo no topo do painel do convidado (2026-11-21). 0 se não
+/// houver grupo ou se algo falhar.
+final eventGroupUnreadProvider = FutureProvider.autoDispose.family<int, String>((ref, weddingId) async {
+  try {
+    final id = await supabase.rpc('my_event_group', params: {'p_wedding_id': weddingId});
+    if (id is! String) return 0;
+    final read = await supabase
+        .from('chat_group_members')
+        .select('last_read_at')
+        .eq('group_id', id)
+        .eq('profile_id', _me)
+        .maybeSingle();
+    final since = read?['last_read_at'] as String?;
+    var q = supabase.from('chat_group_messages').select('id').eq('group_id', id).neq('sender_id', _me);
+    if (since != null) q = q.gt('created_at', since);
+    final rows = await q.limit(100);
+    return (rows as List).length;
+  } catch (_) {
+    return 0;
+  }
+}, retry: _noRetry);

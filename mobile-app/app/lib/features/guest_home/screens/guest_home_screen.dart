@@ -5,7 +5,8 @@ import 'package:copo_dagua_app/core/events/tickets.dart';
 import 'package:copo_dagua_app/core/events/event_pass.dart';
 import 'package:copo_dagua_app/features/events/screens/ticket_pass_screens.dart' show TicketPassCard;
 import 'package:flutter/material.dart';
-import '../../../core/chat/group_chat.dart' show openEventGroup;
+import '../../../core/chat/group_chat.dart' show openEventGroup, eventGroupUnreadProvider;
+import '../../../core/gallery/gallery_providers.dart' show weddingGalleryPhotosProvider, GalleryPhoto;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/organizers_card.dart';
@@ -232,6 +233,10 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     final started = isToday && DashNow.started(program);
     final photosOn = show(GuestSection.galeria) && (isToday || isPast);
     final groupOn = going && show(GuestSection.grupos);
+    final unread = groupOn ? (ref.watch(eventGroupUnreadProvider(id)).value ?? 0) : 0;
+    final List<GalleryPhoto> photos =
+        photosOn ? (ref.watch(weddingGalleryPhotosProvider(id)).value ?? const <GalleryPhoto>[]) : const <GalleryPhoto>[];
+    final photoUrls = [for (final p in photos) p.imageUrl];
 
     void openPhotos() => context.go('/guest-gallery/$id');
     void openTable() => Navigator.of(context).push(
@@ -242,10 +247,11 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       final g = await openEventGroup(id);
       if (!context.mounted) return;
       if (g != null) {
-        context.push('/group/${g.id}', extra: g);
+        await context.push('/group/${g.id}', extra: g);
       } else {
-        context.push('/groups/$id');
+        await context.push('/groups/$id');
       }
+      ref.invalidate(eventGroupUnreadProvider(id));
     }
 
     void goToPlace() {
@@ -302,8 +308,9 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     if (declined) {
       // Disse que não vai: só a resposta, presentes e anfitriões.
       body.addAll([
-        const KitCaps('A tua resposta', top: 16),
+        const KitCaps('A tua resposta', top: 16, line: false),
         Container(
+          key: const ValueKey('resposta'),
           padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
           decoration: dashHighlight(),
           child: Row(children: [
@@ -322,14 +329,14 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     } else if (isPast) {
       // Depois do evento: as fotos em primeiro, presentes e anfitriões.
       body.addAll([
-        if (photosOn) ...[const KitCaps('Fotos', top: 16), DashPhotos(onOpen: openPhotos)],
+        if (photosOn) ...[const KitCaps('Fotos', top: 16, line: false), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)],
         if (presents != null) ...[const KitCaps('Depois do evento'), KitGroup([presents])],
         hosts,
       ]);
     } else {
       final nothing = !hasTodo && tables.isEmpty && table == null && program.isEmpty && dress.isEmpty && !hasPlace;
       if (started) {
-        body.addAll([const KitCaps('Agora', top: 16), DashNow(program: program)]);
+        body.addAll([const KitCaps('Agora', top: 16, line: false), DashNow(program: program)]);
       } else {
         body.add(DashSummary(
           label: label,
@@ -361,11 +368,11 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       if (nothing) {
         body.add(DashWaiting(hosts: wedding.displayNames.replaceAll(' & ', ' e ')));
       }
-      if (photosOn && isToday) body.addAll([const KitCaps('Fotos'), DashPhotos(onOpen: openPhotos)]);
+      if (photosOn && isToday) body.addAll([const KitCaps('Fotos'), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)]);
       if (table != null) {
         body.addAll([
-          const SizedBox(height: 24),
-          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          const SizedBox(height: 12),
+          const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
           DashTable(table: table, mates: mates, onTap: openTable),
         ]);
       }
@@ -378,7 +385,16 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       if (dress.isNotEmpty) body.addAll([const KitCaps('Dress code'), DashDressCode(text: dress)]);
       if (more.isNotEmpty) body.addAll([const KitCaps('Mais'), KitGroup(more)]);
       body.add(hosts);
-      if (placeBlock != null) body.addAll([const SizedBox(height: 24), placeBlock]);
+      if (placeBlock != null) body.add(placeBlock);
+    }
+
+    // Sem linha logo a seguir à caixa branca de destaque (2026-11-21).
+    final hi = body.indexWhere((w) => w is DashSummary || w is DashNow || w.key == const ValueKey('resposta'));
+    if (hi >= 0 && hi + 1 < body.length && body[hi + 1] is KitCaps) {
+      final c = body[hi + 1] as KitCaps;
+      body[hi + 1] = KitCaps(c.text, top: 20, trailing: c.trailing, line: false);
+    } else if (hi >= 0 && hi + 2 < body.length && body[hi + 1] is SizedBox && body[hi + 2] is Divider) {
+      body.removeAt(hi + 2);
     }
 
     return ListView(
@@ -390,6 +406,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           meta: meta,
           onExit: () => context.canPop() ? context.pop() : context.go('/eventos?tab=meus'),
           onGroup: groupOn ? openGroup : null,
+          groupUnread: unread,
           onMap: hasPlace && !declined && !isPast ? goToPlace : null,
         ),
         Padding(

@@ -209,7 +209,7 @@ class _GuestProfileBody extends ConsumerWidget {
                 margin: const EdgeInsets.only(top: 16),
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
                 child: isOrganizer
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -448,7 +448,7 @@ class _PersonLine extends StatelessWidget {
     final row = Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Row(
         children: [
           V2Avatar(initials.isEmpty ? name : initials, size: 44),
@@ -547,7 +547,7 @@ class _GuestHeader extends StatelessWidget {
     );
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, border: AppTheme.cardBorder, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Row(
         children: [
           Stack(
