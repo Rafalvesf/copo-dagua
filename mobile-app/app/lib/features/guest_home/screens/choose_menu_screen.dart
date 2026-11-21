@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/guest_home/event_tables.dart';
-import '../../../core/home/home_providers.dart' show amountWithCommission, platformCommissionPercentageProvider;
+import '../../../core/home/home_providers.dart' show amountWithCommission, guestShareFeePct;
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/payments/payments.dart' show PayArgs;
@@ -71,7 +71,8 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
         context.pop();
         return;
       }
-      final pct = await ref.read(platformCommissionPercentageProvider.future);
+      final pct = await guestShareFeePct(ref, t.partnerId,
+          (t.totalAmount ?? 0) - ((t.myChoice?['amount'] as num?)?.toDouble() ?? 0) + r.amount, r.amount);
       if (!mounted) return;
       await context.push('/pay', extra: PayArgs(
         paymentId: paymentId,

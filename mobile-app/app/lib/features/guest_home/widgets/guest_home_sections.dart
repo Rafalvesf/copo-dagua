@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/guest_home/event_tables.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
-import '../../../core/home/home_providers.dart' show amountWithCommission, platformCommissionPercentageProvider;
+import '../../../core/home/home_providers.dart' show amountWithCommission, guestShareFeePct;
 import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../shared/money.dart';
 import '../../../shared/widgets/alert_outline.dart';
@@ -719,7 +719,7 @@ class GuestTablesAlerts extends ConsumerWidget {
   Future<void> _pay(BuildContext context, WidgetRef ref, EventTable t) async {
     try {
       final share = await myShareEnsure(t.bookingId);
-      final pct = await ref.read(platformCommissionPercentageProvider.future);
+      final pct = await guestShareFeePct(ref, t.partnerId, t.totalAmount ?? 0, share.amount);
       if (!context.mounted) return;
       await context.push('/pay', extra: PayArgs(
         paymentId: share.paymentId,
@@ -743,7 +743,7 @@ class GuestTablesAlerts extends ConsumerWidget {
       context.push('/mesa/$weddingId', extra: t);
       return;
     }
-    final pct = await ref.read(platformCommissionPercentageProvider.future);
+    final pct = await guestShareFeePct(ref, t.partnerId, t.totalAmount ?? 0, amount);
     if (!context.mounted) return;
     await context.push('/pay', extra: PayArgs(
       paymentId: id,
