@@ -138,7 +138,6 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
       final monthly = pro.interval == 'year' ? '${giftEuros(pro.priceYearly)}/ano' : '${giftEuros(pro.priceMonthly)}/mês';
       showIslandSheet<void>(
         context: context,
-        confirmExit: false,
         builder: (c) => Padding(
           padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
