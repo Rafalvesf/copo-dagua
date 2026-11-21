@@ -117,6 +117,24 @@ ecrãs. O resto da app mantém a tabela acima.
   preta 1,5 só no destaque do painel do convidado** (o resumo «Faltam…», o
   «Agora» e «A tua resposta», §6.4) — em mais lado nenhum (pedido do Rafael,
   2026-11-21: «apenas na parte do convite»).
+- **«Para fazer» — sempre com um de três estados** (regra do Rafael,
+  2026-11-21, para toda a app — organizador, parceiro e convidado): a
+  **lista** das tarefas (com o número no título, «PARA FAZER · 2»); **feito**
+  — estrela contente + «Está tudo tratado» e o que ficou feito («Menus
+  escolhidos e a tua parte paga.»); **ainda sem tarefas** — estrela a dormir
+  + «Aparecem aqui as tuas tarefas» e o que vai aparecer («Menus para
+  escolher e a tua parte para pagar.»). A secção nunca some sem explicação.
+  (Se logo abaixo já houver outra estrela a dormir, esta vai sem estrela.)
+- **Resumo do topo com o estado da pessoa** (toda a app): por baixo do
+  número («Faltam N dias»), uma linha com o estado e a ação — «Vais com…» /
+  «Vais só tu» + «Alterar» (contorno); «Não vais» + «Mudar» (preto). Quem
+  disse que não vai vê o mesmo resumo, não uma caixa à parte.
+- **Página para mudar uma resposta** (molde, mockup «A tua resposta»): voltar
+  preto 44 · título 28 + subtítulo 13 · «VAIS?» com as opções num grupo
+  (círculo verde com o visto na escolhida) · «QUEM VAI CONTIGO · N» com uma
+  linha por pessoa (avatar 44, nome 16, meta 13 com alergias/idade/
+  cadeirinha, «Editar» com contorno 36) · «+ Juntar alguém» com contorno 44 ·
+  a nota 13 do prazo.
 - Tudo o que se toca tem de parecer tocável: seta à direita ou botão (36,
   preto ou com contorno). Nunca texto verde como botão.
 - Linha de definições: altura mínima 56, nome 16 negrito à esquerda, valor 14
@@ -430,8 +448,9 @@ nunca só o desconto («−2 %»), quando se sabe o valor.
   evento, o destaque é o **«Agora»** (o momento, a barra de progresso e «A
   seguir»). Quem disse que não vai: **«A tua resposta»** em caixa branca
   com «Mudar».
-- **Ordem:** PARA FAZER (ou o convite com «Responder», ou «Está tudo
-  tratado» com a estrela) → no dia FOTOS → **A tua mesa** (o número no
+- **Ordem:** PARA FAZER (sempre: as tarefas, «Está tudo tratado» ou
+  «Aparecem aqui as tuas tarefas», §4; quem ainda não respondeu vê antes o
+  convite com «Responder») → no dia FOTOS → **A tua mesa** (o número no
   centro do círculo com as pessoas à volta; tu a preto) → PROGRAMA (o mesmo
   desenho do organizador) → DRESS CODE (cabide) → MAIS (presentes,
   alojamento) → ANFITRIÕES (Mensagem) → **COMO CHEGAR, sempre em último**
@@ -440,9 +459,10 @@ nunca só o desconto («−2 %»), quando se sabe o valor.
   momento, dress code vazio, nada para fazer, sem local → essas secções não
   aparecem; o que o organizador desliga também não. O programa já não se
   pode desligar. As **fotos só aparecem no dia** (e depois).
-- **Sem nada ainda:** a estrela a dormir com «Ainda à espera dos
-  anfitriões», presentes (se ligados) e anfitriões.
-- **Não vou:** só a resposta (Mudar), presentes e anfitriões.
+- **Sem nada ainda:** «Para fazer» vazio, a estrela a dormir com «Ainda à
+  espera dos anfitriões», presentes (se ligados) e anfitriões.
+- **Não vou:** o resumo «Faltam…» com «Não vais · Mudar» (§4), presentes e
+  anfitriões. «Mudar» e «Alterar» abrem a página «A tua resposta» (§4).
 - **Depois do evento:** as fotos em primeiro, agradecer, presentes e
   anfitriões; o programa e o mapa saem.
 - «Vou / Não vou» só na página principal dos eventos.

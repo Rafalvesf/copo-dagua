@@ -306,22 +306,19 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
 
     final body = <Widget>[];
     if (declined) {
-      // Disse que não vai: só a resposta, presentes e anfitriões.
+      // Disse que não vai: o resumo «Faltam…» com «Não vais · Mudar»,
+      // presentes e anfitriões (mockup 2026-11-21).
       body.addAll([
-        const KitCaps('A tua resposta', top: 16, line: false),
-        Container(
-          key: const ValueKey('resposta'),
-          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-          decoration: dashHighlight(),
-          child: Row(children: [
-            const Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Não vais', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text('Podes mudar a resposta.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              ]),
-            ),
-            DashButton36('Mudar', onTap: editAnswer),
-          ]),
+        DashSummary(
+          label: label,
+          big: big,
+          unit: unit,
+          who: 'Não vais',
+          whoSub: 'Podes mudar a resposta',
+          whoNames: const [],
+          onChange: editAnswer,
+          changeLabel: 'Mudar',
+          changeFilled: true,
         ),
         if (presents != null) ...[const KitCaps('Presentes'), KitGroup([presents])],
         hosts,
@@ -360,10 +357,14 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           TicketPassCard(ticket: pass.ticket!, eventName: wedding.displayNames),
         ]);
       }
+      // «Para fazer» sempre (regra 2026-11-21): as tarefas, «Está tudo
+      // tratado» ou «Aparecem aqui as tuas tarefas».
       if (going && hasTodo) {
         body.addAll([KitCaps(isToday ? 'Para fazer' : 'Para fazer · ${tables.where((t) => t.needsAction).length}'), GuestTablesAlerts(weddingId: id)]);
       } else if (going && tables.isNotEmpty) {
         body.addAll([const KitCaps('Para fazer'), const DashAllDone()]);
+      } else {
+        body.addAll([const KitCaps('Para fazer'), DashTasksEmpty(star: !nothing)]);
       }
       if (nothing) {
         body.add(DashWaiting(hosts: wedding.displayNames.replaceAll(' & ', ' e ')));
