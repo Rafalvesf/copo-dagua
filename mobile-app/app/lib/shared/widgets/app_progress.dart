@@ -6,7 +6,7 @@ import '../../core/theme/app_theme.dart';
 import 'estrela.dart';
 
 /// Barra de progresso da app (pedido do Rafael, 2026-11-21, DESIGN.md §6):
-/// a barra verde com **a estrela (o ícone novo da app) em cima da ponta**, e
+/// a barra **preta** (contraste com a estrela verde) com **a estrela (o ícone novo da app) em cima da ponta**, e
 /// **animada quando o progresso muda** — a barra cresce e a estrela dá um saltinho até ao sítio
 /// novo. Com «reduzir movimento», muda sem animação. Usar sempre esta em vez
 /// de `LinearProgressIndicator` com valor.
@@ -74,7 +74,8 @@ class _AppProgressBarState extends State<AppProgressBar> with SingleTickerProvid
     // A estrela vai em cima da ponta da barra, como quem anda nela.
     final star = math.max(24.0, widget.height * 3);
     final starW = star * 384 / 350;
-    final color = widget.color ?? AppTheme.accentOliveDark;
+    // Preta, para dar contraste com a estrela verde (pedido 2026-11-21).
+    final color = widget.color ?? AppTheme.ink;
     final track = widget.track ?? const Color(0xFFE0E0E0);
     return SizedBox(
       height: star + widget.height,

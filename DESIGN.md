@@ -32,8 +32,8 @@ cores, sombras ou tamanhos à mão quando já existe um.
 | Pílula ativa da navbar | `#EBEBEB` | — |
 | Erro / recusado | `#C8553D` | `AppStatusColors.declined` |
 
-**Verde só para seleção, progresso e etiquetas** (filtro ativo, barras,
-contadores). **Nunca** para botões.
+**Verde só para seleção e etiquetas** (filtro ativo, contadores; as barras de
+progresso são pretas, §6). **Nunca** para botões.
 
 ## 2. Botões
 
@@ -176,7 +176,7 @@ ecrãs. O resto da app mantém a tabela acima.
   a 6; dia numa pílula `#E6E6E6`; "hh:mm · Visto"; ilha do evento flutuante
   com cantos da navbar, esconde-se no scroll.
 - **Onboarding** (`shared/widgets/onb_kit.dart`, mockup "Onboarding"
-  2026-11-12): barra de progresso verde de **10** com a percentagem (12
+  2026-11-12): barra de progresso (§6) de **10** com a percentagem (12
   negrito) à direita — começa sempre em 20%; botão de voltar redondo
   preto 44 (§2); "1 DE 4" como título de grupo (13); título 32, subtítulo 17
   (escala de primeiro contacto, §3);
@@ -201,11 +201,11 @@ ecrãs. O resto da app mantém a tabela acima.
   linha com as ações à direita («+» preto 44, ⋯ preto 44); título de página
   28 à esquerda por baixo e subtítulo 13; filtros em pílula 38 **em cima**
   (com contador); **resumo do topo** branco (cantos 22, interior 18, contorno preto
-  1,5, sem sombra): rótulo 12 em maiúsculas, número 40, unidade 13, barra verde 10 e
+  1,5, sem sombra): rótulo 12 em maiúsculas, número 40, unidade 13, barra de progresso 10 (§6) e
   etiquetas ou uma linha 13 por baixo — nunca cartão verde; listas em grupos
   de linhas (avatar 44, nome 16, meta 13, etiqueta à direita).
 - **Barra de progresso** (`AppProgressBar`, `shared/widgets/app_progress.dart`,
-  pedido do Rafael 2026-11-21): **em toda a app**, a barra verde leva **a
+  pedido do Rafael 2026-11-21): **em toda a app**, a barra é **preta `#171713`** (para dar contraste com a estrela verde — pedido 2026-11-21) sobre o trilho `#E0E0E0` e leva **a
   estrela (o ícone novo da app) em cima da ponta**, como quem anda nela, e é **animada quando o progresso
   muda** — a barra cresce e a estrela dá um saltinho até ao sítio novo (e
   enche desde o início ao aparecer). Com «reduzir movimento» muda sem
@@ -296,7 +296,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   - Por baixo, «N parceiros» + «Filtrar» com o **mesmo cartão a toda a
     largura**.
 - **Avaliações no perfil do parceiro:** um só cartão branco — «Experiência
-  geral» com a nota 40 numa caixa com contorno, as barras verdes por
+  geral» com a nota 40 numa caixa com contorno, as barras de progresso (§6) por
   estrelas e, por baixo de uma linha `#D9D9D9`, os comentários (avatar 40,
   nome 16, «zona · mês ano» 13, nota 12 com estrela preta, texto 14
   justificado). «Ver todas (N)» mostra o resto no mesmo cartão.
@@ -361,7 +361,7 @@ extras e loja» e «Definições · Pagamentos e Premium»). Se nenhum servir,
 perguntar antes.
 
 **Popup (ilha, §6.1) — de cima para baixo, interior 20, espaço 16:**
-1. *(Só em fluxos com passos)* barra verde **10** + «2 DE 5» (12 negrito) à
+1. *(Só em fluxos com passos)* barra de progresso **10** (§6) + «2 DE 5» (12 negrito) à
    direita.
 2. Cabeçalho: voltar **44** preto à esquerda (a partir do 2.º passo) ·
    título **22** negrito + subtítulo **13** `#57534E` · «×» **44** preto

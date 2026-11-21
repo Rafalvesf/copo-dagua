@@ -868,7 +868,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
           Expanded(
-            child: AppProgressBar(value: (_step + 1) / steps.length, height: 10, color: AppTheme.accentOliveDark, track: const Color(0xFFD9D9D9)),
+            child: AppProgressBar(value: (_step + 1) / steps.length, height: 10, track: const Color(0xFFD9D9D9)),
           ),
           const SizedBox(width: 10),
           Text('${_step + 1} DE ${steps.length}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),

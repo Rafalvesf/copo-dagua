@@ -557,7 +557,7 @@ class _GuestNowCardState extends State<GuestNowCard> {
             style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
           ),
           const SizedBox(height: 12),
-          AppProgressBar(value: progress, height: 7, color: guestButtonGreen, track: const Color(0xFFE9E8E4)),
+          AppProgressBar(value: progress, height: 7, track: const Color(0xFFE9E8E4)),
         ],
         if (next != null) ...[
           const SizedBox(height: 12),

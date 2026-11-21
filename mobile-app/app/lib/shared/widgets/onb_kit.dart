@@ -27,7 +27,7 @@ class OnbProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(children: [
       // A barra da app: a estrela na ponta e animada (DESIGN.md §6, 2026-11-21).
-      Expanded(child: AppProgressBar(value: value, height: 10, color: _green, track: _track)),
+      Expanded(child: AppProgressBar(value: value, height: 10, track: _track)),
       const SizedBox(width: 12),
       SizedBox(
         width: 34,

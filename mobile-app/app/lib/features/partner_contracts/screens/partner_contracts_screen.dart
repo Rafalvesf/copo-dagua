@@ -197,7 +197,7 @@ class _ContractCard extends StatelessWidget {
               style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
             ),
             const SizedBox(height: 12),
-            AppProgressBar(value: progress, height: 5, color: AppTheme.accentOliveDark, track: AppTheme.borderMuted),
+            AppProgressBar(value: progress, height: 5, track: AppTheme.borderMuted),
             const SizedBox(height: 6),
             Text(
               'Recebido ${euros(c.paid, cents: true)} de ${euros(c.total, cents: true)}',

@@ -511,7 +511,7 @@ class _FunnelRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          AppProgressBar(value: pct, height: 10, color: AppTheme.accentOliveDark, track: AppTheme.borderMuted),
+          AppProgressBar(value: pct, height: 10, track: AppTheme.borderMuted),
         ],
       ),
     );

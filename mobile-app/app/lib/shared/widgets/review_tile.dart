@@ -293,7 +293,7 @@ class ReviewSummaryCard extends StatelessWidget {
                   SizedBox(width: 12, child: Text('$s', style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted))),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: AppProgressBar(value: n == 0 ? 0 : counts[s]! / n, height: 7, color: AppTheme.accentOliveDark, track: const Color(0xFFF2F2F2)),
+                    child: AppProgressBar(value: n == 0 ? 0 : counts[s]! / n, height: 7, track: const Color(0xFFF2F2F2)),
                   ),
                   const SizedBox(width: 8),
                   SizedBox(width: 18, child: Text('${counts[s]}', textAlign: TextAlign.right, style: const TextStyle(fontSize: AppFontSize.xs, color: v2Muted))),

@@ -365,7 +365,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
             ),
             if (booking.paidAmount > 0) ...[
               const SizedBox(height: 10),
-              AppProgressBar(value: booking.amount <= 0 ? 1 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0), height: 5, color: AppTheme.accentOliveDark, track: AppTheme.borderMuted),
+              AppProgressBar(value: booking.amount <= 0 ? 1 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0), height: 5, track: AppTheme.borderMuted),
               const SizedBox(height: 6),
               Text(
                 booking.remainingAmount > 0.009

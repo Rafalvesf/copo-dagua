@@ -103,7 +103,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                               style: const TextStyle(fontSize: AppFontSize.md, color: v2Muted)),
                         ]),
                         const SizedBox(height: 10),
-                        AppProgressBar(value: booking.amount <= 0 ? 0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0), height: 9, color: AppTheme.accentOliveDark, track: const Color(0xFFF2F2F2)),
+                        AppProgressBar(value: booking.amount <= 0 ? 0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0), height: 9, track: const Color(0xFFF2F2F2)),
                         const SizedBox(height: 16),
                         _InfoRow(label: 'Data', value: dateLabel),
                         const SizedBox(height: 10),

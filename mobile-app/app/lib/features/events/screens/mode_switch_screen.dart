@@ -127,7 +127,7 @@ class _ModeSwitchScreenState extends State<ModeSwitchScreen> with SingleTickerPr
                   width: 120,
                   child: AnimatedBuilder(
                     animation: _anim,
-                    builder: (context, _) => AppProgressBar(value: _anim.value, height: 3, color: AppTheme.accentOliveDark, track: AppTheme.borderMuted),
+                    builder: (context, _) => AppProgressBar(value: _anim.value, height: 3, track: AppTheme.borderMuted),
                   ),
                 ),
               ],

@@ -2499,7 +2499,7 @@ class _PlanningBar extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 8),
-        AppProgressBar(value: pct, height: 8, color: _green, track: const Color(0xFFE2DED4)),
+        AppProgressBar(value: pct, height: 8, track: const Color(0xFFE2DED4)),
       ],
     );
   }
@@ -3392,7 +3392,7 @@ class _NextSteps extends ConsumerWidget {
             ]),
             if (total > 0) ...[
               const SizedBox(height: 8),
-              AppProgressBar(value: done / total, height: 8, color: _green, track: const Color(0xFFE2DED4)),
+              AppProgressBar(value: done / total, height: 8, track: const Color(0xFFE2DED4)),
             ],
             const SizedBox(height: 6),
             for (final (i, it) in items.indexed)

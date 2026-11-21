@@ -514,7 +514,7 @@ class BookingChoicesSummary extends ConsumerWidget {
             ]),
             if (people > 0) ...[
               const SizedBox(height: 10),
-              AppProgressBar(value: (choices.length / people).clamp(0, 1).toDouble(), height: 10, color: AppTheme.accentOliveDark, track: const Color(0xFFD9D9D9)),
+              AppProgressBar(value: (choices.length / people).clamp(0, 1).toDouble(), height: 10, track: const Color(0xFFD9D9D9)),
             ],
             if (byMenu.isNotEmpty) ...[
               const SizedBox(height: 10),
