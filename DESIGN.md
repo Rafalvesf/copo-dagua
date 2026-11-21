@@ -43,7 +43,7 @@ progresso são pretas, §6). **Nunca** para botões.
 - Sempre em **pílula** (`StadiumBorder`).
 - Altura: **52** a toda a largura; **44** dentro de cartões; **36** nas linhas
   de lista ("A seguir", "Ver evento"); **34** nas respostas rápidas.
-- Texto: 16 negrito (52), 15 negrito (44), 14 negrito (36/34).
+- Texto: 15 negrito (52), 14 negrito (44), 13 negrito (36/34).
 - **Botão redondo** (voltar, sino, conversa, partilhar, favorito,
   definições, ⋯, fechar «×»): **círculo preto `#171713` 44 com o ícone
   branco e sólido 20** (Heroicons Solid), sem sombra. **Em toda a app**
@@ -63,12 +63,6 @@ eventos", no perfil de um amigo e em qualquer outro sítio; uma linha de lista
 há tamanhos intermédios (12,5, 13,5, 17…). Antes de escrever um tamanho,
 ver nesta tabela qual é o do elemento.
 
-**Escala +1 (pedido do Rafael, 2026-11-21: «aumenta o texto ligeiramente»):**
-a tabela abaixo já está com +1. **Todos os outros tamanhos de texto ≤ 22
-escritos neste documento sobem também 1** (13 → 14, 14 → 15, 16 → 17,
-19 → 20, 22 → 23…). O 28, o 40 e a escala de primeiro contacto (32/17)
-ficam como estão.
-
 **Maiúscula:** o título dos cartões e linhas de eventos começa sempre com
 letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 (`capFirst` em `shared/text_case.dart`).
@@ -81,17 +75,17 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 | Elemento | Tamanho | Peso |
 |---|---|---|
 | Título de página ("Eventos", "Perfil", "Mensagens") — à esquerda | 28 | negrito |
-| Título de secção ("Os meus eventos", "Descobrir", "Pacotes") | 23 | negrito |
-| Ação da secção ("Ver todos (3)") | 15 | negrito, verde |
-| Nome no cartão de perfil | 21 | negrito |
-| Título de cartão de evento/parceiro | 20 | negrito |
-| Título de linha de lista (nome, conversa, pacote) | 17 | negrito |
-| Corpo / descrição | 15 | normal (justificado nas descrições) |
-| Mensagem (bolha) | 16 | normal |
-| Subtítulo / meta (data, local, "Vai a 2 eventos") | 14 | normal, `#57534E` |
-| Etiqueta / chip | 13 | negrito |
-| Título de grupo em maiúsculas ("HOJE", "CONTA") | 13, espaçamento 2 | negrito, `#57534E` |
-| Texto da navbar | 12 | negrito |
+| Título de secção ("Os meus eventos", "Descobrir", "Pacotes") | 22 | negrito |
+| Ação da secção ("Ver todos (3)") | 14 | negrito, verde |
+| Nome no cartão de perfil | 20 | negrito |
+| Título de cartão de evento/parceiro | 19 | negrito |
+| Título de linha de lista (nome, conversa, pacote) | 16 | negrito |
+| Corpo / descrição | 14 | normal (justificado nas descrições) |
+| Mensagem (bolha) | 15 | normal |
+| Subtítulo / meta (data, local, "Vai a 2 eventos") | 13 | normal, `#57534E` |
+| Etiqueta / chip | 12 | negrito |
+| Título de grupo em maiúsculas ("HOJE", "CONTA") | 12, espaçamento 2 | negrito, `#57534E` |
+| Texto da navbar | 11 | negrito |
 
 **Páginas de primeiro contacto** (onboarding e páginas/estados públicos —
 `shared/widgets/onb_kit.dart` e `shared/widgets/public_state.dart`:

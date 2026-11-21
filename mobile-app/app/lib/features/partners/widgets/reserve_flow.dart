@@ -323,7 +323,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
   // ---------- peças ----------
   Widget _caps(String t) => Padding(
         padding: const EdgeInsets.only(bottom: 8),
-        child: Text(t, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+        child: Text(t, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
       );
 
   Widget _option(String title, String sub, bool on, VoidCallback onTap) => Padding(
@@ -354,9 +354,9 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+                    Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
                     if (sub.isNotEmpty)
-                      Text(sub, style: TextStyle(fontSize: 14, color: on ? Colors.white.withValues(alpha: 0.85) : AppTheme.inkMuted)),
+                      Text(sub, style: TextStyle(fontSize: 13, color: on ? Colors.white.withValues(alpha: 0.85) : AppTheme.inkMuted)),
                   ]),
                 ),
               ]),
@@ -381,7 +381,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
                   borderRadius: BorderRadius.circular(19),
                 ),
                 child: Text(it,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: it == selected ? Colors.white : AppTheme.ink)),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: it == selected ? Colors.white : AppTheme.ink)),
               ),
             ),
           ),
@@ -392,15 +392,15 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         child: Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
           _Step(icon: Hi.minus, label: 'Menos', onTap: value > min ? () => onChange(value - 1) : null),
           SizedBox(
             width: 48,
             child: Text(label?.call(value) ?? '$value',
-                textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           _Step(icon: Hi.plus, label: 'Mais', onTap: value < max ? () => onChange(value + 1) : null),
         ]),
@@ -424,10 +424,10 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
-            child: Text(t, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+            child: Text(t, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
           ),
         )
-      : Text(t, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.4));
+      : Text(t, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4));
 
   // ---------- passos ----------
   List<Widget> _eventStep() {
@@ -439,10 +439,10 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), border: Border.all(color: AppTheme.ink, width: 1.5)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Só orçamento', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Text('Só orçamento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             Text(
               [if (widget.reference != null) 'Referência ≈ ${euros(widget.reference!)}', 'responde com uma proposta'].join(' · '),
-              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
             ),
           ]),
         ),
@@ -454,14 +454,14 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(22), border: Border.all(color: AppTheme.ink, width: 1.5)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(p.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(p.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             Text(
               [
                 if (p.minPeople != null && p.maxPeople != null) 'Para ${p.minPeople} a ${p.maxPeople} pessoas'
                 else if (p.maxPeople != null) 'Até ${p.maxPeople} pessoas',
                 '${p.isStartingPrice ? 'desde ' : ''}${euros(p.price)}${priceUnitSuffix(p.priceUnit)}',
               ].join(' · '),
-              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
             ),
           ]),
         ),
@@ -509,8 +509,8 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   const Text('Selecionaste mais convidados do que no evento',
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text('No evento há $ev. Qual está certo?', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text('No evento há $ev. Qual está certo?', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ]),
               ),
             ]),
@@ -534,7 +534,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       ].join(' ')),
       if (outOfPackage) ...[
         const SizedBox(height: 6),
-        const Text('Este número não cabe no pacote.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppStatusColors.declined)),
+        const Text('Este número não cabe no pacote.', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppStatusColors.declined)),
       ],
     ];
   }
@@ -559,7 +559,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           maxLines: 6,
           maxLength: 1000,
           textCapitalization: TextCapitalization.sentences,
-          style: const TextStyle(fontSize: 16, color: AppTheme.ink),
+          style: const TextStyle(fontSize: 15, color: AppTheme.ink),
           decoration: InputDecoration(
             hintText: 'O que procuras, o estilo, o que é importante para vocês…',
             filled: true,
@@ -657,11 +657,11 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             constraints: const BoxConstraints(minHeight: 48),
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(children: [
-              Text(k, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              Text(k, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(v,
-                    textAlign: TextAlign.right, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    textAlign: TextAlign.right, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
             ]),
           ),
@@ -669,8 +669,8 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       if (total != null) ...[
         const SizedBox(height: 12),
         Row(children: [
-          Expanded(child: Text(p!.perPerson ? 'Total previsto' : 'Total', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
-          Text(euros(total), style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Expanded(child: Text(p!.perPerson ? 'Total previsto' : 'Total', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+          Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
       ],
       if (widget.quote) ...[
@@ -716,20 +716,20 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                      Text(e.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      Text(e.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       if (e.details.isNotEmpty || e.priceUnit == 'person')
                         Text(
                           [
                             ...e.details,
                             if (e.priceUnit == 'person') '${euros(e.price)} por pessoa · $_people',
                           ].join(' · '),
-                          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                         ),
                     ]),
                   ),
                   const SizedBox(width: 10),
                   Text('+ ${euros(_amount(e.priceUnit, e.price))}',
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ]),
               ),
             ),
@@ -747,11 +747,11 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
   }
 
   Widget _line(String label, String value, {bool big = false}) => Row(children: [
-        Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
         Text(value,
             style: big
-                ? const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)
-                : const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                ? const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)
+                : const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
       ]);
 
   /// O último passo: o que se paga e quando. Nada se paga aqui (o sinal
@@ -775,9 +775,9 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
               constraints: const BoxConstraints(minHeight: 48),
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(children: [
-                Expanded(child: Text(k, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
+                Expanded(child: Text(k, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
                 const SizedBox(width: 12),
-                Text(v, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ]),
             ),
         ]),
@@ -787,7 +787,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         _line('Sinal (${widget.depositPct.round()} %) agora', euros(_depositNow, cents: true), big: true),
         const Align(
           alignment: Alignment.centerRight,
-          child: Text('+ taxa de serviço no passo seguinte', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+          child: Text('+ taxa de serviço no passo seguinte', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         ),
         const SizedBox(height: 12),
         _note('Paga já para garantir a data: o sinal fica cativo até ${widget.partnerName} responder (48 h) e, se recusar, é libertado. '
@@ -813,9 +813,9 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             constraints: const BoxConstraints(minHeight: 48),
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(children: [
-              Expanded(child: Text(k, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
+              Expanded(child: Text(k, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
               const SizedBox(width: 12),
-              Text(v, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ]),
           ),
       ]),
@@ -871,7 +871,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             child: AppProgressBar(value: (_step + 1) / steps.length, height: 10, track: const Color(0xFFD9D9D9)),
           ),
           const SizedBox(width: 10),
-          Text('${_step + 1} DE ${steps.length}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text('${_step + 1} DE ${steps.length}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 16),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -881,10 +881,10 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           ],
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               if (sub.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(sub, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ],
             ]),
           ),
@@ -975,7 +975,7 @@ class _Btn extends StatelessWidget {
               child: Text(label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: outlined ? AppTheme.ink : Colors.white)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: outlined ? AppTheme.ink : Colors.white)),
             ),
           ),
         ),

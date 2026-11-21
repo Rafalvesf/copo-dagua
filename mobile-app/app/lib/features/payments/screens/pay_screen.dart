@@ -512,7 +512,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                 ],
                 Expanded(
                   child: Text(_sheetTitle,
-                      style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
                 _SheetRound(icon: Hi.xMark, label: 'Fechar', onTap: () => context.pop()),
               ]),
@@ -539,8 +539,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          Text(a.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(a.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
         ]),
       ),
     ]);
@@ -552,9 +552,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     Widget line(String l, String v) => Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(children: [
-            Text(l, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+            Text(l, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
             const Spacer(),
-            Text(v, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+            Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           ]),
         );
     return _WhiteCard(
@@ -571,9 +571,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const SizedBox(height: 8),
         ],
         Row(children: [
-          const Text('Total', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const Spacer(),
-          Text(_amountLabel, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(_amountLabel, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         if (_discountPoints > 0) _inviteOffer(),
       ]),
@@ -598,11 +598,11 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: const BoxDecoration(color: Color(0xFFE6EDE1), borderRadius: BorderRadius.all(Radius.circular(999))),
-          child: const Text('Oferta', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+          child: const Text('Oferta', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Text('$who$when', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.35)),
+          child: Text('$who$when', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.35)),
         ),
       ]),
     );
@@ -618,7 +618,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const SizedBox(height: 14),
           Center(
             child: Text(_step == _Step.checking ? 'A verificar o pagamento…' : 'A preparar o pagamento…',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           ),
           const SizedBox(height: 40),
         ];
@@ -630,7 +630,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           _partnerRow(),
           const SizedBox(height: 18),
           const Text('COMO QUERES PAGAR',
-              style: TextStyle(fontSize: 13, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
           _WhiteCard(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -654,7 +654,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                     height: 48,
                     child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Text(_more ? 'Menos opções' : 'Mais opções',
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       const SizedBox(width: 6),
                       LineIcon(_more ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', size: 16, color: AppTheme.inkMuted),
                     ]),
@@ -705,7 +705,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 18),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26)),
             child: Row(children: [
-              const Text('+351', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              const Text('+351', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
@@ -713,7 +713,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                   keyboardType: TextInputType.phone,
                   autofillHints: const [AutofillHints.telephoneNumber],
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d +]'))],
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.ink),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.ink),
                   decoration: const InputDecoration(
                     isCollapsed: true,
                     filled: false,
@@ -729,7 +729,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           ),
           const SizedBox(height: 10),
           const Text('Vais receber um pedido de pagamento na app MB WAY para aprovar.',
-              style: TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           const SizedBox(height: 12),
           _totals(),
           if (_error != null) ...[const SizedBox(height: 12), _ErrorNote(_error!)],
@@ -744,7 +744,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const SizedBox(height: 10),
           const Text('Enviámos o pedido para o teu telemóvel. Tens 4 minutos para aprovar.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           const SizedBox(height: 14),
           const Center(child: _PendingTag('À espera da aprovação')),
           const SizedBox(height: 12),
@@ -766,21 +766,21 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                     : 'Está tudo pago a ${a.partnerName}.')
                 : 'Pagamento feito.',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
           ),
           const SizedBox(height: 16),
           _WhiteCard(
             child: Column(children: [
               Row(children: [
-                const Text('Pago', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                const Text('Pago', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                 const Spacer(),
-                Text(_amountLabel, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                Text(_amountLabel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
               ]),
               const SizedBox(height: 8),
               const Row(children: [
-                Text('Fatura', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                Text('Fatura', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                 Spacer(),
-                Text('Enviada por email', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text('Enviada por email', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ]),
             ]),
           ),
@@ -800,7 +800,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const SizedBox(height: 12),
           const Text(
             'Paga no multibanco ou no homebanking em "Pagamento de serviços". Confirmamos sozinhos quando o pagamento chegar (pode demorar algumas horas).',
-            style: TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
+            style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
           ),
         ];
     }
@@ -893,7 +893,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: Text(text.toUpperCase(),
-            style: const TextStyle(fontSize: 13, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       );
 }
 
@@ -960,7 +960,7 @@ class _SheetButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700);
+    const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700);
     final child = busy
         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
         : Text(label);
@@ -1043,18 +1043,18 @@ class _MethodRow extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Wrap(spacing: 6, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
                   Text(label ?? method.label,
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   if (recommended)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
                       child: const Text('Recomendado',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
                     ),
                 ]),
                 if (sub != null) ...[
                   const SizedBox(height: 3),
-                  Text(sub, style: const TextStyle(fontSize: 14, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                  Text(sub, style: const TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                 ],
               ]),
             ),
@@ -1090,9 +1090,9 @@ class _RefRow extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 56),
       decoration: last ? null : const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFD9D9D9)))),
       child: Row(children: [
-        Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const Spacer(),
-        Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, letterSpacing: 0.5)),
+        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, letterSpacing: 0.5)),
         if (copy != null)
           IconButton(
             tooltip: 'Copiar',
@@ -1121,7 +1121,7 @@ class _SecureNote extends StatelessWidget {
           size: 14, color: AppTheme.inkMuted),
       const SizedBox(width: 6),
       Flexible(
-        child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+        child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
       ),
     ]);
   }
@@ -1145,7 +1145,7 @@ class _ErrorNote extends StatelessWidget {
       child: Row(children: [
         Container(width: 8, height: 8, decoration: const BoxDecoration(color: red, shape: BoxShape.circle)),
         const SizedBox(width: 10),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.ink))),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink))),
       ]),
     );
   }
@@ -1169,7 +1169,7 @@ class _PendingTag extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Container(width: 8, height: 8, decoration: const BoxDecoration(color: y, shape: BoxShape.circle)),
         const SizedBox(width: 6),
-        Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       ]),
     );
   }
@@ -1209,13 +1209,13 @@ class _CancelNote extends ConsumerWidget {
       if (text != null)
         Text(text,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+            style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
       SnappyTap(
         onTap: () => context.push('/termos'),
         child: const Padding(
           padding: EdgeInsets.symmetric(vertical: 8),
           child: Text('Condições de cancelamento',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink, decoration: TextDecoration.underline)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink, decoration: TextDecoration.underline)),
         ),
       ),
     ]);

@@ -79,7 +79,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   lead: SizedBox(
                     width: 44,
                     child: Text(formatTimePt(item.dueDate!),
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
                   title: item.title,
                   sub: item.assigneeSeeds.isEmpty ? null : _whoLabel(item.assigneeSeeds),

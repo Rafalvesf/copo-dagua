@@ -369,7 +369,7 @@ class ProntoRow extends StatelessWidget {
         children: [
           Icon(Hi.check, size: 18, color: AppTheme.accentOliveDark),
           const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 15, color: AppTheme.ink))),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
           ?trailing,
         ],
       ),

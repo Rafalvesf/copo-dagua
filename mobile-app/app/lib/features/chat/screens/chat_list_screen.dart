@@ -110,7 +110,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       builder: (sheet) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Nova conversa', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Nova conversa', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 12),
           if (mine.isNotEmpty)
             ListTile(
@@ -200,7 +200,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
           if (count != null && count > 0) ...[
             const SizedBox(width: 6),
             Container(
@@ -210,7 +210,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               alignment: Alignment.center,
               decoration: BoxDecoration(color: on ? Colors.white : AppTheme.ink, borderRadius: BorderRadius.circular(10)),
               child: Text('$count',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: on ? AppTheme.accentOliveDark : Colors.white)),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: on ? AppTheme.accentOliveDark : Colors.white)),
             ),
           ],
         ]),
@@ -369,7 +369,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 4, 18, AppTheme.screenMargin, 8),
             child: Text(sectionNames[k],
-                style: const TextStyle(fontSize: 13, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
@@ -387,7 +387,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
           child: Text('Desliza uma conversa para a esquerda para a apagar.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
         ),
       if (items.isEmpty && !(state.loading && allConvs.isEmpty))
         Padding(
@@ -395,7 +395,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           child: Text(
             query.isNotEmpty ? 'Sem conversas para "${_search.text.trim()}".' : 'Nada aqui por agora.',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
           ),
         ),
     ];

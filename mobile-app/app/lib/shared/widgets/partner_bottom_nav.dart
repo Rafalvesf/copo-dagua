@@ -184,7 +184,7 @@ class _NavIcon extends StatelessWidget {
             Text(label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color)),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
           ],
         ),
       ),

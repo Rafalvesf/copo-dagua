@@ -32,7 +32,7 @@ class PartnerEventBrief extends ConsumerWidget {
         if (b == null) return const SizedBox.shrink();
         if (b['available'] != true) {
           return _card(const Text('A lista de convidados, os menus, as alergias e as mesas aparecem aqui quando o cliente pagar o sinal.',
-              style: TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.4)));
+              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4)));
         }
         final total = (b['total'] as num?)?.toInt() ?? 0;
         final children = (b['children'] as num?)?.toInt() ?? 0;
@@ -49,13 +49,13 @@ class PartnerEventBrief extends ConsumerWidget {
           _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             _title(Hi.buildingStorefront, 'Menus'),
             const SizedBox(height: 8),
-            if (menus.isEmpty) const Text('Ainda ninguém escolheu menu.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            if (menus.isEmpty) const Text('Ainda ninguém escolheu menu.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             for (final m in menus)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(children: [
-                  Expanded(child: Text('${m['menu']}', style: const TextStyle(fontSize: 15, color: AppTheme.ink))),
-                  Text('${m['count']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Expanded(child: Text('${m['menu']}', style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
+                  Text('${m['count']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ]),
               ),
           ])),
@@ -63,7 +63,7 @@ class PartnerEventBrief extends ConsumerWidget {
           _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             _title(Hi.shieldCheck, 'Alergias e restrições'),
             const SizedBox(height: 8),
-            if (dietary.isEmpty) const Text('Nenhuma indicada.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            if (dietary.isEmpty) const Text('Nenhuma indicada.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             for (final d in dietary)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
@@ -71,7 +71,7 @@ class PartnerEventBrief extends ConsumerWidget {
                   TextSpan(text: '${d['name']}', style: const TextStyle(fontWeight: FontWeight.w700)),
                   TextSpan(text: ' · ${d['restriction']}'),
                   if (d['table'] != null) TextSpan(text: ' · ${d['table']}', style: const TextStyle(color: AppTheme.inkMuted)),
-                ]), style: const TextStyle(fontSize: 15, color: AppTheme.ink)),
+                ]), style: const TextStyle(fontSize: 14, color: AppTheme.ink)),
               ),
           ])),
           if (tables.isNotEmpty) ...[
@@ -83,17 +83,17 @@ class PartnerEventBrief extends ConsumerWidget {
                   data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                   child: ExpansionTile(
                     tilePadding: EdgeInsets.zero,
-                    title: Text('${t['name']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    subtitle: Text('${t['people']} ${t['people'] == 1 ? 'pessoa' : 'pessoas'}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    title: Text('${t['name']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    subtitle: Text('${t['people']} ${t['people'] == 1 ? 'pessoa' : 'pessoas'}', style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                     children: [
                       for (final g in ((t['guests'] as List?) ?? const []).cast<Map>())
                         Padding(
                           padding: const EdgeInsets.only(bottom: 6),
                           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Expanded(child: Text('${g['name']}', style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
+                            Expanded(child: Text('${g['name']}', style: const TextStyle(fontSize: 13, color: AppTheme.ink))),
                             Flexible(
                               child: Text([if (g['menu'] != null) g['menu'], if (g['dietary'] != null) 'Alergia: ${g['dietary']}'].join(' · '),
-                                  textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                                  textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                             ),
                           ]),
                         ),
@@ -112,11 +112,11 @@ class PartnerEventBrief extends ConsumerWidget {
   Widget _title(IconData icon, String text) => Row(children: [
         Icon(icon, size: 18, color: AppTheme.accentOliveDark),
         const SizedBox(width: 8),
-        Text(text, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       ]);
 
   Widget _stat(String value, String label) => Column(children: [
-        Text(value, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+        Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
       ]);
 }

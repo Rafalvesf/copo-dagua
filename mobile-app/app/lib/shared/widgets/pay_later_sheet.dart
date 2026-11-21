@@ -24,9 +24,9 @@ Future<bool> askPayLater(
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Pagar mais tarde?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Pagar mais tarde?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 4),
-              Text(partnerName, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              Text(partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
           const SizedBox(width: 12),
@@ -42,14 +42,14 @@ Future<bool> askPayLater(
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(head, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(sub, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                Text(head, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
           ]),
         ),
         const SizedBox(height: 12),
-        Text(note, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+        Text(note, style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
         const SizedBox(height: 20),
         Row(children: [
           Expanded(
@@ -62,7 +62,7 @@ Future<bool> askPayLater(
                   foregroundColor: AppTheme.ink,
                   side: const BorderSide(color: AppTheme.ink, width: 1.5),
                   shape: const StadiumBorder(),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Pagar mais tarde'),
               ),
@@ -78,7 +78,7 @@ Future<bool> askPayLater(
                   backgroundColor: AppTheme.ink,
                   foregroundColor: Colors.white,
                   shape: const StadiumBorder(),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Pagar agora'),
               ),

@@ -212,7 +212,7 @@ class _CategoryPreferenceCard extends StatelessWidget {
         Row(children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               if (partners.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: BookedPartnerBadge(partners)),
             ]),
           ),
@@ -242,7 +242,7 @@ class _CategoryPreferenceCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text(text,
                             style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: preference == value ? Colors.white : AppTheme.ink)),
                       ),

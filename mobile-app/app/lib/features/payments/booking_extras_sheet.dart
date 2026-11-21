@@ -73,10 +73,10 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Queres juntar alguma coisa?', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Queres juntar alguma coisa?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 4),
               Text('Aceitaste a proposta. ${widget.partnerName} tem extras para o teu pedido.',
-                  style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
           const SizedBox(width: 12),
@@ -110,15 +110,15 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                          Text(o['name'] as String, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text(o['name'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           if (((o['details'] as List?) ?? const []).isNotEmpty)
                             Text(((o['details'] as List).join(' · ')),
-                                style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                         ]),
                       ),
                       const SizedBox(width: 10),
                       Text('+ ${euros((o['amount'] as num).toDouble())}',
-                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ]),
                   ),
                 ),
@@ -128,21 +128,21 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
         const SizedBox(height: 16),
         if (!full)
           Row(children: [
-            const Expanded(child: Text('Reserva + extras', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
-            Text(euros(newTotal), style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            const Expanded(child: Text('Reserva + extras', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+            Text(euros(newTotal), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ]),
         const SizedBox(height: 6),
         Row(children: [
           Expanded(
             child: Text(full ? 'A pagar agora' : 'Sinal (${(pct * 100).round()} %) agora',
-                style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ),
-          Text(euros(now, cents: true), style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(euros(now, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         // A taxa só entra no passo de pagar: dizê-lo já (mockups 2026-11-21).
         const Align(
           alignment: Alignment.centerRight,
-          child: Text('+ taxa de serviço no passo seguinte', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+          child: Text('+ taxa de serviço no passo seguinte', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         ),
         const SizedBox(height: 20),
         Row(children: [
@@ -156,7 +156,7 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
                   color: Colors.white,
                   shape: StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
                 ),
-                child: const Text('Sem extras', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                child: const Text('Sem extras', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
             ),
           ),
@@ -170,7 +170,7 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
                 alignment: Alignment.center,
                 decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
                 child: Text('Continuar · ${euros(now, cents: true)}',
-                    maxLines: 1, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                    maxLines: 1, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
               ),
             ),
           ),

@@ -393,7 +393,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                             ),
                             child: Text(o?.label ?? 'Todos',
                                 style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                     color: on ? Colors.white : v2Muted)),
                           ),
@@ -581,14 +581,14 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 Expanded(
                                   child: Text(
                                     '${partners.length} ${partners.length == 1 ? 'parceiro' : 'parceiros'}',
-                                    style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                   ),
                                 ),
                                 SnappyTap(
                                   onTap: _showFilters,
                                   child: Text(
                                     _hasAdvancedFilters ? 'Filtros ativos' : 'Filtrar',
-                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
                                   ),
                                 ),
                               ],
@@ -1064,11 +1064,11 @@ class _ModeTile extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                   Text(subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                 ]),
               ),
             ]),

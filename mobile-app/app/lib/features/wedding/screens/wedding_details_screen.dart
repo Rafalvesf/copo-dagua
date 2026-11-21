@@ -270,9 +270,9 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                     children: [
                       const Text('Aparência do menu',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       Text('${layout.label} · ${color.label}',
-                          textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                     ],
                   ),
                 ),
@@ -668,7 +668,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                             const SizedBox(width: 6),
                             Text(
                               look.tagline,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: look.accent),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent),
                             ),
                           ],
                         ),
@@ -1087,14 +1087,14 @@ class _QuickLinkTile extends StatelessWidget {
                         label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppTheme.ink),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                        style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
                       ),
                     ],
                   ),
@@ -1142,7 +1142,7 @@ class _ShareWeddingButton extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               'Partilhar convite',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: on),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: on),
             ),
           ],
         ),
@@ -1240,7 +1240,7 @@ class _TaskRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                      fontSize: 14,
                     ),
                   ),
                   if (description != null) ...[
@@ -1249,7 +1249,7 @@ class _TaskRow extends StatelessWidget {
                       description!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
                     ),
                   ],
                 ],
@@ -1333,15 +1333,15 @@ class _SummaryTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13)),
+          Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.ink)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: AppTheme.ink)),
           const SizedBox(height: 4),
           Text(
             detail,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13),
+            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
           ),
         ],
       ),
@@ -1405,7 +1405,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Text('Pagamentos próximos', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Pagamentos próximos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const Spacer(),
               SnappyTap(
                 onTap: () => context.push('/budget'),
@@ -1439,15 +1439,15 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(expense.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           const SizedBox(height: 2),
-                          const Text('Pendente · toca para pagar', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          const Text('Pendente · toca para pagar', style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(euros(expense.amount, cents: payIds.containsKey(expense.id)),
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ],
                 ),
               ),
@@ -1482,7 +1482,7 @@ class _BookingsSection extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Text('Reservas', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                const Text('Reservas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const Spacer(),
                 SnappyTap(
                   onTap: () => context.push('/bookings'),
@@ -1520,10 +1520,10 @@ class _BookingsSection extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(booking.partnerName, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                   if (booking.category?.isNotEmpty == true)
                                     Text(booking.category!, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                                        style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                                 ],
                               ),
                             ),
@@ -1667,7 +1667,7 @@ class _CoverPhoto extends ConsumerWidget {
                     children: [
                       Icon(Hi.photo, size: 28, color: look.accent),
                       const SizedBox(height: 4),
-                      Text('Adicionar ${EventDecor.of(wedding.eventType).coverHint}', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: look.accent)),
+                      Text('Adicionar ${EventDecor.of(wedding.eventType).coverHint}', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
                     ],
                   ),
                 ),
@@ -1716,7 +1716,7 @@ Widget _namesAndDate(Wedding w, _Look look, {double size = 20}) => Column(
         Text(
           [if (w.weddingDate != null) formatWeddingDateCaps(w.weddingDate!), if (w.location?.isNotEmpty == true) w.location!].join(' · '),
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
         ),
       ],
     );
@@ -1757,16 +1757,16 @@ class _StickersTop extends ConsumerWidget {
           Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              const Text('Faltam ', style: TextStyle(fontSize: 17, color: AppTheme.inkMuted)),
+              const Text('Faltam ', style: TextStyle(fontSize: 16, color: AppTheme.inkMuted)),
               Transform.rotate(
                 angle: -0.05,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                   decoration: BoxDecoration(color: look.color, borderRadius: BorderRadius.circular(999)),
-                  child: Text('$days ${days == 1 ? 'dia' : 'dias'}', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: look.on)),
+                  child: Text('$days ${days == 1 ? 'dia' : 'dias'}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: look.on)),
                 ),
               ),
-              Text(' para ${_eventNoun(wedding)}', style: const TextStyle(fontSize: 17, color: AppTheme.inkMuted)),
+              Text(' para ${_eventNoun(wedding)}', style: const TextStyle(fontSize: 16, color: AppTheme.inkMuted)),
             ],
           ),
         const SizedBox(height: 10),
@@ -1830,7 +1830,7 @@ class _StickersTop extends ConsumerWidget {
                       it.label,
                       textAlign: TextAlign.center,
                       maxLines: 2,
-                      style: const TextStyle(fontSize: 14, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      style: const TextStyle(fontSize: 13, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink),
                     ),
                   ],
                 ),
@@ -1873,8 +1873,8 @@ class _MuralTop extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Olá, $first!', style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
-                  const Text('O nosso mural', style: TextStyle(fontSize: 23, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text('Olá, $first!', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  const Text('O nosso mural', style: TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ],
               ),
             ),
@@ -1886,7 +1886,7 @@ class _MuralTop extends ConsumerWidget {
                 children: [
                   Icon(look.motif, size: 14, color: look.accent),
                   const SizedBox(width: 6),
-                  Text(wedding.eventType.label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: look.accent)),
+                  Text(wedding.eventType.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
                 ],
               ),
             ),
@@ -1934,9 +1934,9 @@ class _MuralTop extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('FALTAM', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: look.on)),
+                          Text('FALTAM', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: look.on)),
                           Text('$days', style: TextStyle(fontSize: 24, height: 1.1, fontWeight: FontWeight.w700, color: look.on)),
-                          Text(days == 1 ? 'DIA' : 'DIAS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: look.on)),
+                          Text(days == 1 ? 'DIA' : 'DIAS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: look.on)),
                         ],
                       ),
                     ),
@@ -1979,8 +1979,8 @@ class _MuralTop extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                            Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                            Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
                           ],
                         ),
                       ),
@@ -2044,7 +2044,7 @@ class _ClotheslineTop extends ConsumerWidget {
                 children: [
                   Text(
                     EventDecor.of(wedding.eventType).kicker.toUpperCase(),
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: look.accent),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: look.accent),
                   ),
                   Text(
                     wedding.displayNames,
@@ -2087,12 +2087,12 @@ class _ClotheslineTop extends ConsumerWidget {
                           children: [
                             _CoverPhoto(wedding: wedding, height: 200, radius: 2),
                             const SizedBox(height: 8),
-                            Text(look.tagline, textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.accent)),
+                            Text(look.tagline, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.accent)),
                             const SizedBox(height: 2),
                             Text(
                               wedding.weddingDate == null ? 'Data por definir' : formatWeddingDateCaps(wedding.weddingDate!),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                              style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
                             ),
                           ],
                         ),
@@ -2138,8 +2138,8 @@ class _ClotheslineTop extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                          Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                          Text(it.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
                         ],
                       ),
                     ),
@@ -2239,8 +2239,8 @@ class _FilmStripState extends State<_FilmStrip> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(v, style: const TextStyle(fontSize: 21, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white)),
-                        Text(l, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFFD9D6CF))),
+                        Text(v, style: const TextStyle(fontSize: 20, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white)),
+                        Text(l, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFFD9D6CF))),
                       ],
                     ),
                   ),
@@ -2451,7 +2451,7 @@ class _UrgentStrip extends ConsumerWidget {
               child: Text('${items.length}',
                   textAlign: TextAlign.center,
                   textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
-                  style: const TextStyle(fontSize: 14, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
+                  style: const TextStyle(fontSize: 13, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -2462,7 +2462,7 @@ class _UrgentStrip extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
-                style: const TextStyle(fontSize: 16, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 15, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
               ),
             ),
             const Icon(Hi.chevronRight, color: AppTheme.ink),
@@ -2490,10 +2490,10 @@ class _PlanningBar extends ConsumerWidget {
       children: [
         Row(
           children: [
-            const Text('Planeamento', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Text('Planeamento', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const Spacer(),
             Text('${(pct * 100).round()}% · $done de $total tarefas',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _green)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _green)),
           ],
         ),
         const SizedBox(height: 8),
@@ -2518,7 +2518,7 @@ class _TodoNow extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(week ? 'Esta semana' : 'Para fazer agora',
-            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -2543,9 +2543,9 @@ class _TodoNow extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(it.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 14, color: it.urgent ? const Color(0xFF8A4B10) : AppTheme.inkMuted)),
+                                style: TextStyle(fontSize: 13, color: it.urgent ? const Color(0xFF8A4B10) : AppTheme.inkMuted)),
                           ],
                         ),
                       ),
@@ -2558,7 +2558,7 @@ class _TodoNow extends ConsumerWidget {
                           minimumSize: const Size(0, 40),
                           padding: const EdgeInsets.symmetric(horizontal: 14),
                           shape: const StadiumBorder(),
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
+                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700),
                         ),
                         child: Text(it.action),
                       ),
@@ -2610,15 +2610,15 @@ class _StatBlocks extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+              Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
               const SizedBox(height: 6),
               Text.rich(TextSpan(children: [
                 TextSpan(text: value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                if (of != null) TextSpan(text: ' $of', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                if (of != null) TextSpan(text: ' $of', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
               ]), textAlign: TextAlign.center),
               const SizedBox(height: 4),
               Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
             ],
           ),
         ),
@@ -2742,9 +2742,9 @@ class _ManageList extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Definições do evento', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text('Definições do evento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           SizedBox(height: 2),
-                          Text('Detalhes, convidados, conteúdo e arquivo', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                          Text('Detalhes, convidados, conteúdo e arquivo', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                         ],
                       ),
                     ),
@@ -2836,12 +2836,12 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 4),
               const Text('Tudo sobre este evento, organizado por tema.',
-                  style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               for (final (title, rows) in groups) if (rows.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 18, bottom: 8, left: 2),
                   child: Text(title.toUpperCase(),
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
                 ),
                 Container(
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
@@ -2861,13 +2861,13 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
                                 child: Row(
                                   children: [
                                     Expanded(
-                                      child: Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                      child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                     ),
                                     if (value.isNotEmpty) ...[
                                       const SizedBox(width: 12),
                                       Flexible(
                                         child: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right,
-                                            style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                                            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                                       ),
                                     ],
                                     const SizedBox(width: 6),
@@ -2917,9 +2917,9 @@ class _InviteCodeCard extends StatelessWidget {
             // Título em cima e o código por baixo, na largura toda: lado a
             // lado, um código comprido (JANTARDENATAL-7984) esmagava o
             // título letra a letra (2026-11-15).
-            const Text('O convite', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
+            const Text('O convite', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.white)),
             const SizedBox(height: 2),
-            const Text('Código para entrar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
+            const Text('Código para entrar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
             if (code != null) ...[
               const SizedBox(height: 10),
               Semantics(
@@ -2933,7 +2933,7 @@ class _InviteCodeCard extends StatelessWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: Text(code, maxLines: 1, style: const TextStyle(fontSize: 23, letterSpacing: 2, fontWeight: FontWeight.w700, color: Colors.white)),
+                    child: Text(code, maxLines: 1, style: const TextStyle(fontSize: 22, letterSpacing: 2, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ),
               ),
@@ -2950,7 +2950,7 @@ class _InviteCodeCard extends StatelessWidget {
                       minimumSize: const Size(0, 46),
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       shape: const StadiumBorder(),
-                      textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w800),
+                      textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
                     ),
                     child: const Text('Enviar convite', maxLines: 1),
                   ),
@@ -2966,7 +2966,7 @@ class _InviteCodeCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         side: const BorderSide(color: Color(0x99FFFFFF), width: 1.5),
                         shape: const StadiumBorder(),
-                        textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w800),
+                        textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
                       ),
                       child: const FittedBox(child: Text('Ver como convidado', maxLines: 1)),
                     ),
@@ -3054,10 +3054,10 @@ class _RemindSheetState extends State<_RemindSheet> {
             Row(children: [
               Icon(icon, color: _green),
               const SizedBox(width: 10),
-              Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+              Expanded(child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink))),
             ]),
             const SizedBox(height: 4),
-            Text(sub, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+            Text(sub, style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
             const SizedBox(height: 12),
             action,
           ]),
@@ -3067,14 +3067,14 @@ class _RemindSheetState extends State<_RemindSheet> {
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(46),
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
         );
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(
           _summary == null ? 'Lembrar quem não respondeu' : '$pending sem resposta',
-          style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink),
         ),
         const SizedBox(height: 14),
         if (_summary == null && !_failed)
@@ -3110,7 +3110,7 @@ class _RemindSheetState extends State<_RemindSheet> {
                 side: const BorderSide(color: Color(0xFFDCD8CE), width: 1.5),
                 minimumSize: const Size.fromHeight(46),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -3222,7 +3222,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
                       child: const Center(
                         widthFactor: 1,
-                        child: Text('Pôr foto de capa', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        child: Text('Pôr foto de capa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       ),
                     ),
                   ]),
@@ -3264,7 +3264,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
               children: [
                 Text(w.typeLabel.toUpperCase(),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12, letterSpacing: 3, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 11, letterSpacing: 3, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                 const SizedBox(height: 6),
                 Text(w.displayNames,
                     textAlign: TextAlign.center,
@@ -3273,7 +3273,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
                   const SizedBox(height: 6),
                   Text(place,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                 ],
                 if (w.weddingDate != null && w.panelShows('countdown')) ...[
                   const SizedBox(height: 18),
@@ -3322,7 +3322,7 @@ class _MinimalCountdownState extends State<_MinimalCountdown> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: const BoxDecoration(border: Border(top: border, bottom: border)),
         child: const Text('É hoje!', textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
       );
     }
     final cells = [
@@ -3343,7 +3343,7 @@ class _MinimalCountdownState extends State<_MinimalCountdown> {
                 child: Column(children: [
                   Text(v, style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                   const SizedBox(height: 4),
-                  Text(l, style: const TextStyle(fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  Text(l, style: const TextStyle(fontSize: 10, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                 ]),
               ),
             ],
@@ -3384,9 +3384,9 @@ class _NextSteps extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(children: [
-              Expanded(child: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppTheme.ink))),
+              Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink))),
               if (total > 0)
-                Text('$done de $total', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: _green)),
+                Text('$done de $total', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _green)),
             ]),
             if (total > 0) ...[
               const SizedBox(height: 8),
@@ -3413,7 +3413,7 @@ class _NextSteps extends ConsumerWidget {
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(it.title, maxLines: 2, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                       const SizedBox(height: 2),
                       if (it.urgent)
                         Container(
@@ -3421,11 +3421,11 @@ class _NextSteps extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(color: _red, borderRadius: BorderRadius.circular(999)),
                           child: Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
                         )
                       else
                         Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                     ]),
                   ),
                   const SizedBox(width: 10),
@@ -3436,7 +3436,7 @@ class _NextSteps extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
-                      child: Text(it.action, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white)),
+                      child: Text(it.action, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
                     ),
                   ),
                 ]),
@@ -3448,7 +3448,7 @@ class _NextSteps extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.zero,
                 minimumSize: const Size(0, 44),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w800),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
               ),
               child: const Text('Ver todas as tarefas'),
             ),
@@ -3494,7 +3494,7 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-          child: Text('Sugestões para ti', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          child: Text('Sugestões para ti', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         ),
         const SizedBox(height: 10),
         SnapCarousel(
@@ -3520,7 +3520,7 @@ class _StatusPill extends StatelessWidget {
         tone: AlertTone.pending,
         radius: 999,
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        child: Text('Falta pagar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        child: Text('Falta pagar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       );
     }
     final (label, bg, fg) = switch (status) {
@@ -3532,7 +3532,7 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: fg)),
+      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: fg)),
     );
   }
 }

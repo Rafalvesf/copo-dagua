@@ -290,13 +290,13 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           ].join(' · ');
 
     final presents = show(GuestSection.presentes)
-        ? KitRow(title: 'Presentes', sub: isPast ? 'Ainda dá para oferecer' : null, trailing: const Text('Lista', style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)), chevron: true, onTap: () => context.go('/guest-gifts/$id'))
+        ? KitRow(title: 'Presentes', sub: isPast ? 'Ainda dá para oferecer' : null, trailing: const Text('Lista', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)), chevron: true, onTap: () => context.go('/guest-gifts/$id'))
         : null;
     final stay = offers.isEmpty
         ? null
         : KitRow(
             title: 'Alojamento e transporte',
-            trailing: Text('${offers.length} ${offers.length == 1 ? 'opção' : 'opções'}', style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+            trailing: Text('${offers.length} ${offers.length == 1 ? 'opção' : 'opções'}', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             chevron: true,
             onTap: () => context.push('/guest-stay/$id'),
           );
@@ -316,8 +316,8 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           child: Row(children: [
             const Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Não vais', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text('Podes mudar a resposta.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                Text('Não vais', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text('Podes mudar a resposta.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
             DashButton36('Mudar', onTap: editAnswer),

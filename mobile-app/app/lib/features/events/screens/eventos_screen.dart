@@ -257,7 +257,7 @@ class _EmptyNote extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(16),
         decoration: softCard(),
-        child: Text(text, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+        child: Text(text, style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
       );
 }
 
@@ -382,9 +382,9 @@ class _PosterCard extends StatelessWidget {
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
                     child: Column(children: [
                       Text(_months[date.month - 1],
-                          style: const TextStyle(fontSize: 10, height: 1.2, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+                          style: const TextStyle(fontSize: 9, height: 1.2, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
                       Text('${date.day}',
-                          style: const TextStyle(fontSize: 17, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ]),
                   ),
                 ),
@@ -413,7 +413,7 @@ class _PosterCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   // Mesmo título que "Os meus eventos" (DESIGN.md: 19 negrito).
-                  style: const TextStyle(fontSize: 20, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 19, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 3),
               MetaRow([
                 if (when != null) (Hi.calendar, when),
@@ -438,7 +438,7 @@ class _PosterCard extends StatelessWidget {
                         ].join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ),
                 ] else ...[
                   // Ainda ninguém vai: lugares livres (mockup B, 2026-11-11).
@@ -449,7 +449,7 @@ class _PosterCard extends StatelessWidget {
                     child: Text('Sê o primeiro a ir!',
                         maxLines: 2,
                         softWrap: true,
-                        style: TextStyle(fontSize: 14, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                        style: TextStyle(fontSize: 13, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
                 ],
                 // O texto ocupa o meio (Expanded): o botão fica sempre
@@ -502,11 +502,11 @@ class _Title extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 18, AppTheme.screenMargin, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(text, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           if (subtitle != null)
             Padding(
               padding: const EdgeInsets.only(top: 2),
-              child: Text(subtitle!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+              child: Text(subtitle!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
             ),
         ]),
       );
@@ -527,7 +527,7 @@ class _CelebrateCard extends StatelessWidget {
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(icon, size: 26, color: _brandGreen),
               const SizedBox(height: 4),
-              Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
             ]),
           ),
         ),
@@ -542,13 +542,13 @@ class _CelebrateCard extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 4),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('NOVO EVENTO',
-                  style: TextStyle(fontSize: 13, letterSpacing: 2, fontWeight: FontWeight.w800, color: Color(0xFFDDE5D3))),
+                  style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w800, color: Color(0xFFDDE5D3))),
               SizedBox(height: 4),
               Text('O que vamos celebrar?',
                   style: TextStyle(fontSize: 26, height: 1.15, fontWeight: FontWeight.w800, color: Colors.white)),
               SizedBox(height: 4),
               Text('Escolhe e fica pronto em 1 minuto.',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
             ]),
           ),
           const SizedBox(height: 16),
@@ -584,7 +584,7 @@ class _FilterChip extends StatelessWidget {
             border: Border.all(color: on ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8)),
           ),
           child: Text(label,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: on ? Colors.white : AppTheme.ink)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: on ? Colors.white : AppTheme.ink)),
         ),
       );
 }
@@ -604,8 +604,8 @@ class _InviteTile extends StatelessWidget {
             SizedBox(width: 12),
             Expanded(
               child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Recebeste um convite?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                Text('Entra com o código ou o link', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                Text('Recebeste um convite?', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                Text('Entra com o código ou o link', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
               ]),
             ),
             Icon(Hi.chevronRight, color: AppTheme.inkMuted),
@@ -652,7 +652,7 @@ class _Cover extends StatelessWidget {
 Widget _pill(String text, {bool dark = false}) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: dark ? AppTheme.ink : Colors.white, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
+      child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
     );
 
 /// Números de um evento que organizo, para o cartão (cartões densos,
@@ -776,7 +776,7 @@ final _seenAlertsProvider = NotifierProvider<_SeenAlerts, Set<String>>(_SeenAler
 Widget _cardTitle(String text) => Text(capFirst(text),
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
-    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink));
+    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink));
 
 List<(IconData, String)> _cardMeta(DateTime? date, String? time, String? place) => [
       if (date != null)
@@ -1004,7 +1004,7 @@ class PublicEventScreen extends ConsumerWidget {
                 child: _PublicEventCard(event: e),
               ),
               if (e.welcomeMessage?.isNotEmpty == true)
-                _Pad(Text(e.welcomeMessage!, style: const TextStyle(fontSize: 16, height: 1.5, color: AppTheme.ink))),
+                _Pad(Text(e.welcomeMessage!, style: const TextStyle(fontSize: 15, height: 1.5, color: AppTheme.ink))),
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 0),
                 child: TextButton.icon(
@@ -1068,13 +1068,13 @@ class _InviteNotice extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               Text(more > 0 ? 'CONVITES POR RESPONDER · ${more + 1}' : 'CONVITE POR RESPONDER',
-                  style: const TextStyle(fontSize: 12, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                  style: const TextStyle(fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
               Text('${capFirst(wedding.displayNames)} ${two ? 'convidaram' : 'convidou'}-te para $what',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 15, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               if (date != null)
-                Text(date, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                Text(date, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
             ]),
           ),
           const SizedBox(width: 10),
@@ -1083,7 +1083,7 @@ class _InviteNotice extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             alignment: Alignment.center,
             decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
-            child: const Text('Ver', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+            child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
           ),
         ]),
       ),
@@ -1119,14 +1119,14 @@ class _OrganizerInviteNotice extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               const Text('CONVITE PARA ORGANIZAR',
-                  style: TextStyle(fontSize: 12, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                  style: TextStyle(fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
               Text(
                   event.isEmpty
                       ? '$inviter convidou-te para a organização de um evento'
                       : '$inviter convidou-te para a organização de $event',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 15, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ]),
           ),
           const SizedBox(width: 10),
@@ -1135,7 +1135,7 @@ class _OrganizerInviteNotice extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             alignment: Alignment.center,
             decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
-            child: const Text('Ver', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+            child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
           ),
         ]),
       ),

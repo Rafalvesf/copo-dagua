@@ -110,10 +110,10 @@ Future<void> openTask(BuildContext context, WidgetRef ref, WeddingTask task) asy
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(task.title, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700)),
+            Text(task.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
             if ((task.description ?? '').trim().isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(task.description!.trim(), style: const TextStyle(fontSize: 15, height: 1.45)),
+              Text(task.description!.trim(), style: const TextStyle(fontSize: 14, height: 1.45)),
             ],
             const SizedBox(height: 18),
             FilledButton.icon(

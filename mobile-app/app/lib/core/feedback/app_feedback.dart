@@ -154,11 +154,11 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
           Row(children: [
             Icon(Hi.bugAnt, color: AppTheme.accentOliveDark),
             const SizedBox(width: 10),
-            const Text('Reportar um erro', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Text('Reportar um erro', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
           const SizedBox(height: 6),
           const Text('Conta-nos o que correu mal. Juntamos o ecrã onde estavas para o encontrarmos mais depressa.',
-              style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           const SizedBox(height: 16),
           TextField(
             controller: _what,
@@ -224,11 +224,11 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
             const Padding(
               padding: EdgeInsets.only(top: 6),
               child: Text('Uma captura de ecrã ajuda muito (até 3).',
-                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
             ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 14)),
+            Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
           ],
           const SizedBox(height: 12),
           FilledButton(
@@ -352,10 +352,10 @@ class _RatingFormState extends State<_RatingForm> {
           const SizedBox(height: 12),
           const Text('Estás a gostar da À Nossa!?',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 6),
           const Text('A tua nota ajuda-nos a melhorar.',
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+              textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           const SizedBox(height: 14),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             for (var i = 1; i <= 5; i++)

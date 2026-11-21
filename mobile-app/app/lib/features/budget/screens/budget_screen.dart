@@ -239,7 +239,7 @@ class _CategoriesSection extends StatelessWidget {
               onTap: onToggleExpand,
               child: Text(
                 expanded ? 'Ver menos' : 'Ver todas as categorias (${categories.length})',
-                style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 15),
+                style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 14),
               ),
             ),
           ),

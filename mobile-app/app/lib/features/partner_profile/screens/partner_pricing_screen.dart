@@ -234,7 +234,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                                 style: TextStyle(
                                   color: AppTheme.ink,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 16,
+                                  fontSize: 15,
                                 ),
                               ),
                             ),
@@ -245,7 +245,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                           KitSection('Extras', action: '+ Adicionar', onAction: _busy ? null : () => _editExtra(packages, ref.read(partnerOwnExtrasProvider).value ?? const [])),
                           const Text(
                             'Aparecem ao cliente só depois de escolher um dos pacotes que marcares.',
-                            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+                            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                           ),
                           const SizedBox(height: 10),
                           Builder(builder: (context) {
@@ -262,7 +262,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                                   onTap: _busy ? null : () => _editExtra(packages, extras, e),
                                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                                     Text('${euros(e.price)}${priceUnitSuffix(e.priceUnit)}',
-                                        style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+                                        style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                                     IslandMenuButton<String>(
                                       tooltip: 'Mais opções',
                                       padding: EdgeInsets.zero,
@@ -657,10 +657,10 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(widget.name.isEmpty ? 'Novo pacote' : 'Pacote',
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 23, color: AppTheme.ink)),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: AppTheme.ink)),
               const SizedBox(height: 4),
               const Text('Diz exatamente o que o cliente recebe. É isto que ele vê antes de pedir e o que fica combinado.',
-                  style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               const SizedBox(height: 16),
               OnbField(controller: _name, label: 'Nome', maxLength: 40, error: _tried && _name.text.trim().isEmpty ? 'Dá um nome ao pacote.' : null),
               const SizedBox(height: 14),
@@ -675,7 +675,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
               const OnbGroupLabel('O que inclui'),
               const SizedBox(height: 4),
               const Text('Uma coisa por linha, com quantidades, horas ou número de pessoas.',
-                  style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               const SizedBox(height: 8),
               for (final c in _lines) ...[
                 OnbField(
@@ -689,7 +689,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
               if (noIncludes)
                 const Padding(
                   padding: EdgeInsets.only(bottom: 8),
-                  child: Text('Escreve pelo menos uma coisa que o pacote inclui.', style: TextStyle(fontSize: 14, color: red)),
+                  child: Text('Escreve pelo menos uma coisa que o pacote inclui.', style: TextStyle(fontSize: 13, color: red)),
                 ),
               OutlinedButton(
                 onPressed: _lines.length >= 12 ? null : () => setState(() => _lines.add(TextEditingController())),
@@ -698,7 +698,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
                   minimumSize: const Size(0, 44),
                   side: const BorderSide(color: AppTheme.ink, width: 1.5),
                   shape: const StadiumBorder(),
-                  textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                  textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Juntar linha'),
               ),
@@ -706,7 +706,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
               OnbField(controller: _excludes, label: 'Não inclui', hint: 'Ex.: bolo dos noivos, bar depois do jantar'),
               const SizedBox(height: 4),
               const Text('Evita surpresas: o que costumam perguntar e não está no preço.',
-                  style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               const SizedBox(height: 18),
               const OnbGroupLabel('Para quantas pessoas'),
               const SizedBox(height: 8),
@@ -791,10 +791,10 @@ class _EditExtraSheetState extends State<_EditExtraSheet> {
         child: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text(widget.extra == null ? 'Novo extra' : 'Extra',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 23, color: AppTheme.ink)),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: AppTheme.ink)),
             const SizedBox(height: 4),
             const Text('Aparece ao cliente só depois de ele escolher um dos pacotes que marcares.',
-                style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             const SizedBox(height: 16),
             OnbField(controller: _name, label: 'Nome', maxLength: 40, error: _tried && _name.text.trim().isEmpty ? 'Dá um nome ao extra.' : null),
             const SizedBox(height: 14),
@@ -816,7 +816,7 @@ class _EditExtraSheetState extends State<_EditExtraSheet> {
                 minimumSize: const Size(0, 44),
                 side: const BorderSide(color: AppTheme.ink, width: 1.5),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
               ),
               child: const Text('Juntar linha'),
             ),
@@ -919,14 +919,14 @@ class _FinalPaymentDaysCardState extends ConsumerState<_FinalPaymentDaysCard> {
         Row(children: [
           const Expanded(
             child: Text('Prazo para pagar o resto',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           step(Hi.minus, 'Menos um dia', days > 1 ? days - 1 : null),
           SizedBox(
             width: 72,
             child: Text('$days ${days == 1 ? 'dia' : 'dias'}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           step(Hi.plus, 'Mais um dia', days < 14 ? days + 1 : null),
         ]),
@@ -935,7 +935,7 @@ class _FinalPaymentDaysCardState extends ConsumerState<_FinalPaymentDaysCard> {
           'O cliente paga o resto (ou o valor todo, se não houver sinal) até $days ${days == 1 ? 'dia (24 h)' : 'dias'} antes do evento — 14 por defeito. '
           'O pagamento abre 6 dias antes desse prazo e, sem pagamento, a reserva é cancelada. '
           'O sinal paga-se até 30 dias antes e não se ajusta.',
-          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.4),
+          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4),
         ),
       ]),
     );

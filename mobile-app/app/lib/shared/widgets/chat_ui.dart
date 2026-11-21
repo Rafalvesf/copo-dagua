@@ -64,7 +64,7 @@ List<Widget> chatTimeline({
               decoration: BoxDecoration(color: const Color(0xFFE6E6E6), borderRadius: BorderRadius.circular(999)),
               child: Text(
                 _dayLabel(local),
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
               ),
             ),
           ),
@@ -93,7 +93,7 @@ List<Widget> chatTimeline({
             alignment: me ? Alignment.centerRight : Alignment.centerLeft,
             child: Text(
               seen.isEmpty ? _hhmm(local) : '${_hhmm(local)} · $seen',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
             ),
           ),
         ),
@@ -147,12 +147,12 @@ class ChatBubble extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
                 child: Text(sender!,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: senderColor(sender!))),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: senderColor(sender!))),
               ),
             Text(
               text,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 height: 21 / 15,
                 fontWeight: FontWeight.w600,
                 color: isMe ? Colors.white : AppTheme.ink,
@@ -205,7 +205,7 @@ class ChatProposalCard extends StatelessWidget {
   Widget _chip(String t) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(999)),
-        child: Text(t, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
+        child: Text(t, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
       );
 
   @override
@@ -233,7 +233,7 @@ class ChatProposalCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
                     child: Text(eyebrow == 'PROPOSTA' ? 'Proposta' : eyebrow,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ),
                 Positioned(right: 12, top: 12, child: PriceBox('TOTAL', price == null ? '—' : euros(price!))),
@@ -245,7 +245,7 @@ class ChatProposalCard extends StatelessWidget {
                 Text(title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 10),
                 Wrap(spacing: 6, runSpacing: 6, children: [
                   if (subtitle != null && subtitle!.isNotEmpty) _chip(subtitle!),
@@ -253,7 +253,7 @@ class ChatProposalCard extends StatelessWidget {
                 ]),
                 if (note != null) ...[
                   const SizedBox(height: 8),
-                  Text(note!, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                  Text(note!, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
                 ],
                 if (actions.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -280,7 +280,7 @@ class ChatProposalCard extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   color: actions[i].onTap == null
                                       ? AppTheme.inkMuted
@@ -377,7 +377,7 @@ class ChatComposer extends StatelessWidget {
                     onChanged: onChanged,
                     onSubmitted: (_) => _send(context),
                     textInputAction: TextInputAction.send,
-                    style: const TextStyle(fontSize: 16, color: AppTheme.ink),
+                    style: const TextStyle(fontSize: 15, color: AppTheme.ink),
                     decoration: InputDecoration(
                       hintText: hint,
                       isDense: true,
@@ -428,7 +428,7 @@ class ChatTypingLine extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
                 child: Center(
                   child: Text(text!,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                 ),
               ),
       );

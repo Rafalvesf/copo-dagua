@@ -516,7 +516,7 @@ class AppTypography {
     fontWeight: FontWeight.w600,
   );
   static const buttonLabel = TextStyle(
-    fontSize: 16,
+    fontSize: 15,
     height: 20 / 15,
     fontWeight: FontWeight.w700,
   );
@@ -555,20 +555,18 @@ class AppTypography {
 /// cada meio-ponto foi arredondado para baixo, para nunca aumentar texto
 /// em sítios apertados (badges, navbar, chips). Um tamanho novo entra
 /// aqui, nunca como literal num ecrã.
-/// Texto +1 em toda a app (pedido 2026-11-21, DESIGN.md §3); a escala de
-/// primeiro contacto (32/17) e os números grandes (28, 40) ficam.
 class AppFontSize {
-  static const double xxxs = 10; // micro-labels (navbar, avatares agrupados)
-  static const double xxs = 11;
-  static const double xs = 12; // badges, meta-info
-  static const double sm = 13;
-  static const double md = 14; // texto secundário
-  static const double base = 15; // corpo
-  static const double lg = 17; // nomes, botões
-  static const double xl = 19; // títulos de módulo
-  static const double xxl = 21;
-  static const double h3 = 23; // título de card/ecrã
-  static const double h2 = 23; // mockups 2026-11-12: sem 24
+  static const double xxxs = 9; // micro-labels (navbar, avatares agrupados)
+  static const double xxs = 10;
+  static const double xs = 11; // badges, meta-info
+  static const double sm = 12;
+  static const double md = 13; // texto secundário
+  static const double base = 14; // corpo
+  static const double lg = 16; // nomes, botões
+  static const double xl = 18; // títulos de módulo
+  static const double xxl = 20;
+  static const double h3 = 22; // título de card/ecrã
+  static const double h2 = 22; // mockups 2026-11-12: sem 24
   static const double h1 = 28;
   static const double display = 30;
   static const double displayLg = 36;

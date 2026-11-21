@@ -183,10 +183,10 @@ class CompanionLimitRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF171713))),
+                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF171713))),
                 Text(
                   subtitle ?? label(value),
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF57534E)),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF57534E)),
                 ),
               ],
             ),
@@ -194,7 +194,7 @@ class CompanionLimitRow extends StatelessWidget {
           btn(Hi.minus, value > 0 ? () => onChanged(value - 1) : null),
           SizedBox(
             width: 36,
-            child: Text('$value', textAlign: TextAlign.center, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Color(0xFF171713))),
+            child: Text('$value', textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF171713))),
           ),
           btn(Hi.plus, value < max ? () => onChanged(value + 1) : null),
         ],

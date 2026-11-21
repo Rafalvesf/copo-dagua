@@ -146,7 +146,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
             const Center(child: EstrelaMascot(Estrela.parabens, size: 120)),
             const SizedBox(height: 16),
             const Text('És Premium', textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 6),
             Text(
               until == null
@@ -155,7 +155,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
                       ? 'Até ${_date(until)}. Depois, $monthly, até cancelares.'
                       : 'Até ${_date(until)}.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.4),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, height: 1.4),
             ),
             const SizedBox(height: 16),
             PillButton('OK', onPressed: () => Navigator.of(c).pop()),
@@ -189,7 +189,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
     if (!pro.enabled && !pro.active) {
       body = [
         const KitCaps('Premium'),
-        const Text('O Premium ainda não está disponível.', style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+        const Text('O Premium ainda não está disponível.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
       ];
     } else if (!pro.active) {
       final trial = pro.trialAvailable;
@@ -215,7 +215,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text('${giftEuros(monthlyOfYear)}/mês · poupas ${giftEuros(yearSaving.toDouble())} por ano',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           ),
         const KitCaps('Sem e com Premium'),
         CompareTable(_compare(pro, baseFee)),

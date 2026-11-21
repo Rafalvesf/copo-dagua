@@ -159,9 +159,9 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
           // Título como grupo em maiúsculas (a força de "O EVENTO" nas
           // Definições), sem o botão "+" (adicionar é o botão em baixo).
           const Text('PROGRAMA',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
-          const Text('O dia ao minuto. Arrasta para reordenar.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+          const Text('O dia ao minuto. Arrasta para reordenar.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           const SizedBox(height: 12),
           if (_items.isEmpty)
             _EmptyCard(onAdd: _add)
@@ -203,7 +203,7 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
             TextButton.icon(
               onPressed: _add,
               icon: const Icon(Icons.add, size: 18, color: _green),
-              label: const Text('Adicionar etapa', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: _green)),
+              label: const Text('Adicionar etapa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _green)),
             ),
         ],
       ),
@@ -261,9 +261,9 @@ class _ProgramRow extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(item.time.trim().isEmpty ? '—' : item.time.trim(),
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     if (item.date.trim().isNotEmpty)
-                      Text(_shortDate(item.date), style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted, letterSpacing: .5)),
+                      Text(_shortDate(item.date), style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted, letterSpacing: .5)),
                   ],
                 ),
               ),
@@ -287,7 +287,7 @@ class _ProgramRow extends StatelessWidget {
                   children: [
                     Text(item.title.trim().isEmpty ? 'Etapa' : item.title.trim(),
                         maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     const SizedBox(height: 2),
                     if (pending)
                       Row(mainAxisSize: MainAxisSize.min, children: [
@@ -295,12 +295,12 @@ class _ProgramRow extends StatelessWidget {
                             decoration: const BoxDecoration(color: Color(0xFFF2A01B), shape: BoxShape.circle)),
                         const Flexible(
                           child: Text('À espera que aceite', maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                         ),
                       ])
                     else
                       Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   ],
                 ),
               ),
@@ -330,10 +330,10 @@ class _EmptyCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-            const Text('Ainda sem programa', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Text('Ainda sem programa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 4),
             const Text('Adiciona a primeira etapa — com um parceiro ou à tua maneira.',
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             const SizedBox(height: 14),
             SizedBox(
               height: 44,
@@ -355,10 +355,10 @@ class _AddChooser extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Adicionar ao programa', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Adicionar ao programa', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 4),
           const Text('Uma etapa com um parceiro do evento, ou uma à tua maneira.',
-              style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           const SizedBox(height: 16),
           _ChooserCard(
             title: 'Com um parceiro',
@@ -396,9 +396,9 @@ class _ChooserCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                    Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   ],
                 ),
               ),
@@ -523,7 +523,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(widget.item.isEmpty ? 'Nova etapa' : 'Editar etapa',
-              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 16),
           const _Label('NOME'),
           _PillField(controller: _name, hint: hasPartner ? 'Ex.: Jantar' : 'Ex.: Passeio no parque'),
@@ -546,7 +546,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
                   const SizedBox(width: 10),
                   const Expanded(
                     child: Text('Adicionar parceiro',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ),
                   const Icon(Icons.chevron_right, size: 20, color: AppTheme.inkMuted),
                 ]),
@@ -571,13 +571,13 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
                     Text(_partner,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     if (pending) ...[
                       const SizedBox(height: 2),
                       Row(mainAxisSize: MainAxisSize.min, children: [
                         Container(width: 7, height: 7, margin: const EdgeInsets.only(right: 6),
                             decoration: const BoxDecoration(color: Color(0xFFF2A01B), shape: BoxShape.circle)),
-                        const Text('À espera que aceite', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                        const Text('À espera que aceite', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                       ]),
                     ],
                   ]),
@@ -592,7 +592,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
           if (hasPartner && pending) ...[
             const SizedBox(height: 8),
             Text('Se o $_partner aceitar, aparece aqui no programa. Até lá, a etapa fica sem ele.',
-                style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
           ],
           const SizedBox(height: 14),
           Row(
@@ -628,7 +628,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
             const SizedBox(height: 6),
             TextButton(
               onPressed: () => Navigator.of(context).pop(const ProgramItem()), // vazio = remover
-              child: const Text('Remover etapa', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFC8553D))),
+              child: const Text('Remover etapa', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFC8553D))),
             ),
           ],
         ],
@@ -664,7 +664,7 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 8, left: 2),
-        child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+        child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
       );
 }
 
@@ -675,10 +675,10 @@ class _PillField extends StatelessWidget {
   @override
   Widget build(BuildContext context) => TextField(
         controller: controller,
-        style: const TextStyle(fontSize: 16, color: AppTheme.ink),
+        style: const TextStyle(fontSize: 15, color: AppTheme.ink),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(fontSize: 16, color: AppTheme.inkMuted),
+          hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
           filled: true,
           fillColor: AppTheme.background,
           contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -702,7 +702,7 @@ class _PillButton extends StatelessWidget {
           decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(999)),
           child: Row(
             children: [
-              Expanded(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, color: AppTheme.ink))),
+              Expanded(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, color: AppTheme.ink))),
               Icon(icon, size: 20, color: AppTheme.inkMuted),
             ],
           ),
@@ -720,10 +720,10 @@ class _PartnerPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return _Sheet(
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('Escolher parceiro', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const Text('Escolher parceiro', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
         const Text('Parceiros do teu evento. Se ainda não aceitaram, a etapa fica à espera.',
-            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         const SizedBox(height: 12),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 360),
@@ -747,14 +747,14 @@ class _PartnerPicker extends StatelessWidget {
                           Text(picks[i].name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           if (picks[i].accepted)
-                            const Text('Reservado', style: TextStyle(fontSize: 14, color: Color(0xFF3F7A4F)))
+                            const Text('Reservado', style: TextStyle(fontSize: 13, color: Color(0xFF3F7A4F)))
                           else
                             Row(mainAxisSize: MainAxisSize.min, children: [
                               Container(width: 7, height: 7, margin: const EdgeInsets.only(right: 6),
                                   decoration: const BoxDecoration(color: Color(0xFFF2A01B), shape: BoxShape.circle)),
-                              const Text('À espera que aceite', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                              const Text('À espera que aceite', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                             ]),
                         ]),
                       ),
@@ -778,11 +778,11 @@ class _NoPartnersSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return _Sheet(
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('Ainda sem parceiros', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const Text('Ainda sem parceiros', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 6),
         const Text(
             'Ainda não pediste a nenhum parceiro neste evento. Explora e pede a um; depois escolhe-o aqui e, se aceitar, aparece no programa.',
-            style: TextStyle(fontSize: 15, height: 1.5, color: AppTheme.inkMuted)),
+            style: TextStyle(fontSize: 14, height: 1.5, color: AppTheme.inkMuted)),
         const SizedBox(height: 18),
         SizedBox(
           height: 52,

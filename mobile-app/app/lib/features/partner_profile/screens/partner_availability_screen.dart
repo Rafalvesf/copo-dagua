@@ -59,8 +59,8 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(subtitle, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ],
             ),
           ),

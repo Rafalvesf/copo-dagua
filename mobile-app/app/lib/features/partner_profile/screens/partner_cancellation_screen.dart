@@ -128,7 +128,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
                     if (_kind == CancellationKind.hours) ...[
                       const SizedBox(height: 18),
                       const Text('Até quanto tempo antes',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                       const SizedBox(height: 8),
                       Wrap(spacing: 8, runSpacing: 8, children: [
                         for (final h in _hourChoices)
@@ -144,7 +144,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
                     if (_kind == CancellationKind.untilPurchase || _kind == CancellationKind.partnerTerms) ...[
                       const SizedBox(height: 18),
                       const Text('As tuas condições',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _note,
@@ -164,7 +164,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
                       child: Row(children: [
                         Icon(Hi.eye, size: 18, color: AppTheme.accentOliveDark),
                         const SizedBox(width: 10),
-                        Expanded(child: Text(preview, style: const TextStyle(fontSize: 14.5, color: AppTheme.ink))),
+                        Expanded(child: Text(preview, style: const TextStyle(fontSize: 13.5, color: AppTheme.ink))),
                       ]),
                     ),
                     const SizedBox(height: 28),

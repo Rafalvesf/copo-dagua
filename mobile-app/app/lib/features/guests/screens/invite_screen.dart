@@ -90,7 +90,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       return const [
         SizedBox(height: 24),
         Text('Ainda não segues ninguém na app. Quem seguires aparece aqui para convidares sem link.',
-            style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
       ];
     }
     final q = _search.text.trim().toLowerCase();
@@ -140,7 +140,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
               side: const BorderSide(color: AppTheme.ink, width: 1.5),
               shape: const StadiumBorder(),
               textStyle: const TextStyle(
-                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
             ),
             child: Text('Ver todos (${onlyMe.length})'),
           ),
@@ -148,14 +148,14 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       ],
       if (list.isEmpty) ...[
         const SizedBox(height: 24),
-        const Text('Ninguém com esse nome.', style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+        const Text('Ninguém com esse nome.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
       ],
       const Padding(
         padding: EdgeInsets.fromLTRB(4, 16, 4, 0),
         child: Text(
           'Recebem o convite na app, com notificação, e respondem lá. Entram logo na lista de convidados como «Por responder».',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+          style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
         ),
       ),
     ];
@@ -215,10 +215,10 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const Text('Para quem ainda não está na app',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 4),
                 const Text('Abre o convite do evento com o RSVP. Quem entra por aqui aparece em «Pedidos para entrar».',
-                    style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                    style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 const SizedBox(height: 14),
                 Row(children: [
                   Expanded(
@@ -230,7 +230,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
                         minimumSize: const Size(0, 52),
                         shape: const StadiumBorder(),
                         textStyle: const TextStyle(
-                            fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+                            fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
                       ),
                       child: const Text('Enviar link'),
                     ),
@@ -245,7 +245,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
                         side: const BorderSide(color: AppTheme.ink, width: 1.5),
                         shape: const StadiumBorder(),
                         textStyle: const TextStyle(
-                            fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+                            fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
                       ),
                       child: const Text('Copiar link'),
                     ),
@@ -284,7 +284,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
           if (guests.isEmpty && (_followed == null || _followed!.isEmpty)) ...[
             const SizedBox(height: 24),
             const Text('Ainda não há convidados. Convida quem segues, ou partilha o link do evento.',
-                style: TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+                style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           ],
         ],
       ),
@@ -404,9 +404,9 @@ class _SendSheet extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Enviar a $first', style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text('Enviar a $first', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 Text([if (guest.group.isNotEmpty) guest.group, 'link só para $first'].join(' · '),
-                    style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
           ]),
@@ -414,7 +414,7 @@ class _SendSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(18)),
-            child: Text(text, style: const TextStyle(fontSize: 15, height: 1.5, color: AppTheme.ink)),
+            child: Text(text, style: const TextStyle(fontSize: 14, height: 1.5, color: AppTheme.ink)),
           ),
           const KitCaps('Enviar por', top: 20),
           KitGroup([
@@ -455,7 +455,7 @@ class _SendSheet extends StatelessWidget {
           ]),
           const SizedBox(height: 12),
           Text('Quando escolhes uma forma de enviar, $first passa para «Já enviados».',
-              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         ]),
       ),
     );

@@ -84,7 +84,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                         'Desejos: escreve o que precisam; os convidados reservam e compram onde quiserem. '
                         'Loja: produtos dos parceiros À Nossa!, pagos na app e enviados para a vossa morada. '
                         'O dinheiro dos presentes nunca passa por vocês nem pela À Nossa!, só o da loja vai para o parceiro.',
-                        style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
+                        style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
                       ),
                       const SizedBox(height: 14),
                       Row(children: [
@@ -125,7 +125,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                       ],
                       if (givers.isNotEmpty) ...[
                         const SizedBox(height: 22),
-                        const Text('Quem ofereceu', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        const Text('Quem ofereceu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                         const SizedBox(height: 8),
                         for (final g in givers)
                           Container(
@@ -139,11 +139,11 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                                 g.kind == 'product'
                                     ? 'Pago na loja${g.shippedAt != null ? ' · enviado pelo parceiro' : ' · o parceiro vai enviar'}'
                                     : 'Vai comprar fora da app',
-                                style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted),
+                                style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
                               ),
                               if (g.message?.isNotEmpty == true) ...[
                                 const SizedBox(height: 4),
-                                Text('«${g.message}»', style: const TextStyle(fontSize: 14.5, fontStyle: FontStyle.italic, color: AppTheme.ink)),
+                                Text('«${g.message}»', style: const TextStyle(fontSize: 13.5, fontStyle: FontStyle.italic, color: AppTheme.ink)),
                               ],
                             ]),
                           ),
@@ -165,7 +165,7 @@ class _Info extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.all(20),
-        child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted)),
+        child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
       );
 }
 
@@ -192,17 +192,17 @@ class _OrganizerItemTile extends ConsumerWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(i.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(i.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             Text(
               [
                 if (i.isProduct) i.partnerName ?? 'Loja' else 'Desejo',
                 if (i.price != null && i.price! > 0) (i.isProduct ? giftEuros(i.price!) : '~${giftEuros(i.price!)}'),
                 _progress(i),
               ].join(' · '),
-              style: TextStyle(fontSize: 13.5, color: i.complete ? _green : AppTheme.inkMuted, fontWeight: i.complete ? FontWeight.w700 : FontWeight.w600),
+              style: TextStyle(fontSize: 12.5, color: i.complete ? _green : AppTheme.inkMuted, fontWeight: i.complete ? FontWeight.w700 : FontWeight.w600),
             ),
             if (i.isProduct && !i.available)
-              const Text('Indisponível na loja', style: TextStyle(fontSize: 13.5, color: Color(0xFFB3261E))),
+              const Text('Indisponível na loja', style: TextStyle(fontSize: 12.5, color: Color(0xFFB3261E))),
           ]),
         ),
         IslandMenuButton<String>(
@@ -262,7 +262,7 @@ class _DeliveryAddressCardState extends ConsumerState<_DeliveryAddressCard> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Text('Morada para os presentes da loja', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 2),
-        const Text('Só os parceiros que receberem uma encomenda a veem.', style: TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
+        const Text('Só os parceiros que receberem uma encomenda a veem.', style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
         const SizedBox(height: 8),
         // Seletor de moradas com o Google (2026-11-20): a morada inteira.
         AddressField(
@@ -363,10 +363,10 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
       padding: EdgeInsets.fromLTRB(22, 18, 22, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(widget.existing == null ? 'Novo desejo' : 'Editar desejo',
-            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 4),
         const Text('O que precisam? Os convidados reservam e compram onde quiserem.',
-            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         const SizedBox(height: 14),
         TextField(controller: _title, maxLength: 120, decoration: const InputDecoration(labelText: 'O que precisam', hintText: 'Máquina de café')),
         TextField(controller: _note, maxLines: 3, maxLength: 600, decoration: const InputDecoration(labelText: 'Nota (opcional)', hintText: 'Cor, tamanho, modelo…')),
@@ -387,7 +387,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
           const SizedBox(width: 14),
           const Text('Quantidade', style: TextStyle(color: AppTheme.inkMuted)),
           IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Hi.minusCircle), tooltip: 'Menos'),
-          Text('$_qty', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+          Text('$_qty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           IconButton(onPressed: _qty < 50 ? () => setState(() => _qty++) : null, icon: const Icon(Hi.plusCircle), tooltip: 'Mais'),
         ]),
         if (_error != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(_error!, style: const TextStyle(color: Color(0xFFB3261E)))),
@@ -467,20 +467,20 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
               child: AspectRatio(aspectRatio: 4 / 3, child: Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 1100, semanticLabel: p.title)),
             ),
           const SizedBox(height: 14),
-          Text(p.title, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-          Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}', style: const TextStyle(fontSize: 14.5, color: AppTheme.inkMuted)),
+          Text(p.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}', style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
-          Text(giftEuros(p.price), style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          Text(giftEuros(p.price), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           if (p.description?.isNotEmpty == true) ...[
             const SizedBox(height: 10),
-            Text(p.description!, style: const TextStyle(fontSize: 15, height: 1.45, color: AppTheme.ink)),
+            Text(p.description!, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
           ],
           if (p.deliveryNote?.isNotEmpty == true) ...[
             const SizedBox(height: 8),
             Row(children: [
               const Icon(Hi.truck, size: 18, color: AppTheme.inkMuted),
               const SizedBox(width: 6),
-              Expanded(child: Text(p.deliveryNote!, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
+              Expanded(child: Text(p.deliveryNote!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
             ]),
           ],
           const SizedBox(height: 16),
@@ -499,7 +499,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
           const Text(
             'Os convidados pagam na app e a loja envia para a vossa morada.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13.5, color: AppTheme.inkMuted),
+            style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
           ),
         ]),
       ),
@@ -581,7 +581,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 12),
                         child: Text('Em destaque',
-                            style: AppTypography.displaySerif(fontSize: 23, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                            style: AppTypography.displaySerif(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                       ),
                       SnapCarousel(
                         height: FeaturedOverlayCard.height,
@@ -600,7 +600,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 12),
                       child: Text('${items.length} ${items.length == 1 ? 'produto' : 'produtos'}',
-                          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     for (final p in items)
                       Padding(
@@ -663,13 +663,13 @@ class _ProductRow extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(p.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppTheme.ink)),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink)),
               const SizedBox(height: 2),
               Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}', maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13)),
+                  style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
               const SizedBox(height: 6),
               Text(p.inStock ? giftEuros(p.price) : 'Esgotado',
-                  style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 14)),
+                  style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700, fontSize: 13)),
             ]),
           ),
           const SizedBox(width: 8),
@@ -716,7 +716,7 @@ class _FeaturedProductCard extends StatelessWidget {
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(color: _green, borderRadius: BorderRadius.circular(999)),
-              child: const Text('Na lista', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Colors.white)),
+              child: const Text('Na lista', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Colors.white)),
             )
           : null,
       title: p.title,
@@ -744,7 +744,7 @@ class GuestGiftListSection extends ConsumerWidget {
     final items = ref.watch(giftListProvider(weddingId)).value;
     if (items == null || items.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const Text('Lista de presentes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+      const Text('Lista de presentes', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
       const SizedBox(height: 8),
       for (final i in items) ...[
         _GuestItemCard(item: i, weddingId: weddingId),
@@ -780,22 +780,22 @@ class _GuestItemCard extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(i.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(i.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               Text(
                 [
                   if (i.isProduct) i.partnerName ?? 'Loja',
                   if (i.price != null && i.price! > 0) (i.isProduct ? giftEuros(i.price!) : 'cerca de ${giftEuros(i.price!)}'),
                 ].join(' · '),
-                style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
               ),
               if (i.note?.isNotEmpty == true) ...[
                 const SizedBox(height: 4),
-                Text(i.note!, style: const TextStyle(fontSize: 14, height: 1.35, color: AppTheme.ink)),
+                Text(i.note!, style: const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.ink)),
               ],
               const SizedBox(height: 4),
               Text(
                 i.mine > 0 ? 'Tu ofereces este presente' : _progress(i),
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: i.mine > 0 || i.complete ? _green : AppTheme.inkMuted),
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: i.mine > 0 || i.complete ? _green : AppTheme.inkMuted),
               ),
             ]),
           ),
@@ -915,20 +915,20 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(22, 18, 22, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(i.title, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+        Text(i.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 4),
         Text(
           i.isProduct
               ? 'Pagas na app; ${i.partnerName ?? 'a loja'} envia o presente para os anfitriões.${i.deliveryNote != null ? ' ${i.deliveryNote}' : ''}'
               : 'Reservas para mais ninguém oferecer o mesmo, e compras onde quiseres.',
-          style: const TextStyle(fontSize: 14.5, height: 1.4, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.inkMuted),
         ),
         if (max > 1) ...[
           const SizedBox(height: 10),
           Row(children: [
             const Expanded(child: Text('Quantidade', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink))),
             IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Hi.minusCircle), tooltip: 'Menos'),
-            Text('$_qty', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+            Text('$_qty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             IconButton(onPressed: _qty < max ? () => setState(() => _qty++) : null, icon: const Icon(Hi.plusCircle), tooltip: 'Mais'),
           ]),
         ],
@@ -939,7 +939,7 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
           maxLength: 600,
           decoration: const InputDecoration(labelText: 'Mensagem para os anfitriões (opcional)', hintText: 'Muitas felicidades!'),
         ),
-        if (_error != null) Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 14)),
+        if (_error != null) Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
         const SizedBox(height: 12),
         FilledButton(
           onPressed: _busy ? null : _go,
@@ -1013,7 +1013,7 @@ class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
                     ? 'Os anfitriões já sabem. A loja envia o presente para a morada deles.'
                     : (_status == 'checking' ? '' : 'Se pagaste, a confirmação chega em breve.'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, height: 1.4, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted),
               ),
               const SizedBox(height: 24),
               if (_status != 'checking')
