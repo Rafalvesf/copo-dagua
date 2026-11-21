@@ -5,7 +5,8 @@ import 'package:copo_dagua_app/core/events/tickets.dart';
 import 'package:copo_dagua_app/core/events/event_pass.dart';
 import 'package:copo_dagua_app/features/events/screens/ticket_pass_screens.dart' show TicketPassCard;
 import 'package:flutter/material.dart';
-import '../../../core/chat/group_chat.dart' show openEventGroup;
+import '../../../core/chat/group_chat.dart' show openEventGroup, eventGroupUnreadProvider;
+import '../../../core/gallery/gallery_providers.dart' show weddingGalleryPhotosProvider, GalleryPhoto;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/organizers_card.dart';
@@ -232,6 +233,10 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     final started = isToday && DashNow.started(program);
     final photosOn = show(GuestSection.galeria) && (isToday || isPast);
     final groupOn = going && show(GuestSection.grupos);
+    final unread = groupOn ? (ref.watch(eventGroupUnreadProvider(id)).value ?? 0) : 0;
+    final List<GalleryPhoto> photos =
+        photosOn ? (ref.watch(weddingGalleryPhotosProvider(id)).value ?? const <GalleryPhoto>[]) : const <GalleryPhoto>[];
+    final photoUrls = [for (final p in photos) p.imageUrl];
 
     void openPhotos() => context.go('/guest-gallery/$id');
     void openTable() => Navigator.of(context).push(
@@ -242,10 +247,11 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       final g = await openEventGroup(id);
       if (!context.mounted) return;
       if (g != null) {
-        context.push('/group/${g.id}', extra: g);
+        await context.push('/group/${g.id}', extra: g);
       } else {
-        context.push('/groups/$id');
+        await context.push('/groups/$id');
       }
+      ref.invalidate(eventGroupUnreadProvider(id));
     }
 
     void goToPlace() {
@@ -322,7 +328,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     } else if (isPast) {
       // Depois do evento: as fotos em primeiro, presentes e anfitriões.
       body.addAll([
-        if (photosOn) ...[const KitCaps('Fotos', top: 16), DashPhotos(onOpen: openPhotos)],
+        if (photosOn) ...[const KitCaps('Fotos', top: 16), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)],
         if (presents != null) ...[const KitCaps('Depois do evento'), KitGroup([presents])],
         hosts,
       ]);
@@ -361,7 +367,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       if (nothing) {
         body.add(DashWaiting(hosts: wedding.displayNames.replaceAll(' & ', ' e ')));
       }
-      if (photosOn && isToday) body.addAll([const KitCaps('Fotos'), DashPhotos(onOpen: openPhotos)]);
+      if (photosOn && isToday) body.addAll([const KitCaps('Fotos'), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)]);
       if (table != null) {
         body.addAll([
           const SizedBox(height: 24),
@@ -390,6 +396,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           meta: meta,
           onExit: () => context.canPop() ? context.pop() : context.go('/eventos?tab=meus'),
           onGroup: groupOn ? openGroup : null,
+          groupUnread: unread,
           onMap: hasPlace && !declined && !isPast ? goToPlace : null,
         ),
         Padding(
