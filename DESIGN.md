@@ -492,8 +492,11 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   sem convidados» + «Convidar» (preto); depois do evento → «FOI HÁ N dias»,
   «108 foram» + as fotos. No dia, a decorrer, o destaque é o **«Agora»**.
 - **Para fazer** (os três estados do §4): **sem tarefas pré-feitas** — só o
-  que existe mesmo: pagamentos com prazo («Pagar»), propostas dos parceiros
-  («Ver») e pedidos para entrar («Aceitar»), com o ponto da cor do prazo
+  que existe mesmo: pagamentos com prazo («Pagar»; numa reserva com menus
+  que o organizador escolhe — restaurante ou catering — os menus escolhem-se
+  ao pagar: o nome do parceiro, «Menus e o sinal (300 €)» e «Escolher e
+  pagar», como no convidado), propostas dos parceiros («Ver») e pedidos
+  para entrar («Aceitar»), com o ponto da cor do prazo
   (§7). Feito: «Pagamentos em dia e propostas respondidas.»; vazio:
   «Pagamentos, pedidos para entrar e propostas dos parceiros.»
 - **Sugestões:** **nunca repetem o «Para fazer»** nem o resto do painel; cada

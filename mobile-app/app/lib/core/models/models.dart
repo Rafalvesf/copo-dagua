@@ -1461,6 +1461,16 @@ class CoupleBooking {
   final String? pendingDepositPaymentId;
   final double? depositAmount;
 
+  /// 190: «Como escolhem» — 'same' (o organizador escolhe para todos) ou
+  /// 'each' (cada convidado escolhe o seu).
+  final String choiceMode;
+
+  /// Reserva com menus (restaurante ou catering) que o organizador escolhe:
+  /// os menus escolhem-se no momento de pagar — «Escolher e pagar»
+  /// (pedido do Rafael, 2026-11-21).
+  bool get organizerChoosesMenus =>
+      choiceMode != 'each' && (category == 'Restaurantes' || category == 'Catering');
+
   /// 191: sem sinal nesta categoria — o primeiro pagamento é o valor todo.
   bool get depositIsFull => amount > 0 && (depositAmount ?? 0) >= amount;
 
@@ -1504,6 +1514,7 @@ class CoupleBooking {
     required this.status,
     this.pendingDepositPaymentId,
     this.depositAmount,
+    this.choiceMode = 'same',
     this.pendingDepositDueAt,
     this.pendingFinalPaymentId,
     this.finalPaymentAmount,

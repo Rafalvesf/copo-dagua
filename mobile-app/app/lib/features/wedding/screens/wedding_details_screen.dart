@@ -3625,13 +3625,24 @@ class _OrgBody extends ConsumerWidget {
     // dos parceiros e pedidos para entrar.
     final tasks = <Widget>[];
     if (perms.can(OrganizerPerm.tarefas)) {
+      final allBookings = ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[];
       for (final (e, payId) in _duePayments(ref).where((p) => p.$1.weddingId == w.id).take(3)) {
         final left = e.dueDate!.difference(now).inDays;
+        final when = left < 0 ? 'o prazo já passou' : left == 0 ? 'até hoje' : left <= 3 ? 'faltam $left ${left == 1 ? 'dia' : 'dias'}' : 'até ${_shortDay(e.dueDate!)}';
+        // Com menus (restaurante/catering, o organizador escolhe): escolhem-se
+        // no momento de pagar — «Escolher e pagar», como no convidado
+        // (pedido do Rafael, 2026-11-21).
+        final parts = e.id.split(':');
+        final booking = parts.length == 3 && parts.first == 'booking' ? allBookings.where((b) => b.id == parts[1]).firstOrNull : null;
+        final menus = booking != null && booking.organizerChoosesMenus;
+        final what = parts.length == 3 && parts[2] == 'final' ? 'o restante' : 'o sinal';
         tasks.add(_orgTaskRow(
           context,
-          title: e.title,
-          sub: '${euros(e.amount, cents: payId != null)} · ${left < 0 ? 'o prazo já passou' : left == 0 ? 'até hoje' : left <= 3 ? 'faltam $left ${left == 1 ? 'dia' : 'dias'}' : 'até ${_shortDay(e.dueDate!)}'}',
-          action: 'Pagar',
+          title: menus ? booking.partnerName : e.title,
+          sub: menus
+              ? 'Menus e $what (${euros(e.amount, cents: payId != null)}) · $when'
+              : '${euros(e.amount, cents: payId != null)} · $when',
+          action: menus ? 'Escolher e pagar' : 'Pagar',
           urgent: toneForDue(e.dueDate) == AlertTone.urgent,
           onTap: () => payId != null ? openPaymentFlow(context, ref, payId) : context.push('/budget'),
         ));
