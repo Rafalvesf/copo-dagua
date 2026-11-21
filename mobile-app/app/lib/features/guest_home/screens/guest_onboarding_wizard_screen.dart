@@ -288,6 +288,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         menuSelection: _me.menu,
         dietaryRestrictions: _me.allAllergies.isEmpty ? null : _me.allAllergies.join(', '),
         side: _side ?? widget.guest.side,
+        weddingId: widget.weddingId,
       );
       if (attending) {
         try {

@@ -253,10 +253,9 @@ Future<void> completeGuestOnboarding({
   String? dietaryRestrictions,
   required WeddingSide side,
   String? groupLabel,
+  String? weddingId,
 }) async {
-  await supabase.rpc(
-    'complete_guest_onboarding',
-    params: {
+  final params = <String, dynamic>{
       'p_attending': attending,
       'p_plus_one_name': plusOneName,
       'p_menu_selection': menuSelection,
@@ -267,8 +266,15 @@ Future<void> completeGuestOnboarding({
         WeddingSide.both => 'both',
       },
       'p_group_label': groupLabel,
-    },
-  );
+  };
+  // Só este evento (migração 211). Antes de a 211 estar aplicada a função
+  // não tem `p_wedding_id`: tenta sem ele.
+  try {
+    await supabase.rpc('complete_guest_onboarding', params: {...params, if (weddingId != null) 'p_wedding_id': weddingId});
+  } on PostgrestException catch (e) {
+    if (weddingId == null || e.code != 'PGRST202') rethrow;
+    await supabase.rpc('complete_guest_onboarding', params: params);
+  }
 }
 
 /// Mudar a resposta (vou / não vou) depois do onboarding. O
