@@ -168,6 +168,11 @@ class DashSummary extends StatelessWidget {
   final String? whoSub;
   final List<String> whoNames;
   final VoidCallback? onChange;
+
+  /// «Alterar» (com contorno) para quem vai; «Mudar» (preto) para quem disse
+  /// que não vai.
+  final String changeLabel;
+  final bool changeFilled;
   const DashSummary({
     super.key,
     required this.label,
@@ -177,6 +182,8 @@ class DashSummary extends StatelessWidget {
     this.whoSub,
     this.whoNames = const [],
     this.onChange,
+    this.changeLabel = 'Alterar',
+    this.changeFilled = false,
   });
 
   @override
@@ -197,6 +204,7 @@ class DashSummary extends StatelessWidget {
             const Divider(height: 1, thickness: 1, color: AppTheme.line),
             const SizedBox(height: 12),
             Row(children: [
+              if (whoNames.isNotEmpty) ...[
               SizedBox(
                 width: 32.0 + 22 * (math.min(whoNames.length, 3) - 1).clamp(0, 2).toDouble(),
                 height: 32,
@@ -206,13 +214,14 @@ class DashSummary extends StatelessWidget {
                 ]),
               ),
               const SizedBox(width: 10),
+              ],
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(who!, style: _title17),
                   if (whoSub != null) Text(whoSub!, style: _meta),
                 ]),
               ),
-              if (onChange != null) DashButton36('Alterar', onTap: onChange!, outlined: true),
+              if (onChange != null) DashButton36(changeLabel, onTap: onChange!, outlined: !changeFilled),
             ]),
           ],
         ]),
@@ -365,6 +374,30 @@ class DashAllDone extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Está tudo tratado', style: _title17),
               Text('Menus escolhidos e a tua parte paga.', style: _meta),
+            ]),
+          ),
+        ]),
+      );
+}
+
+/// «Para fazer» ainda sem tarefas: diz o que vai aparecer (DESIGN.md §4,
+/// estados de uma secção).
+class DashTasksEmpty extends StatelessWidget {
+  final bool star;
+  const DashTasksEmpty({super.key, this.star = true});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(children: [
+          if (star) ...[
+            const EstrelaMascot(Estrela.dormir, size: 64, semanticLabel: ''),
+            const SizedBox(width: 12),
+          ],
+          const Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Aparecem aqui as tuas tarefas', style: _title17),
+              Text('Menus para escolher e a tua parte para pagar.', style: _meta),
             ]),
           ),
         ]),

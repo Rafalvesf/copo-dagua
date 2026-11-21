@@ -192,7 +192,7 @@ class _GuestProfileBody extends ConsumerWidget {
             // Kit das páginas (2026-11-15): voltar, título à esquerda e o
             // cartão do perfil. Sem «Em modo convidado»: só a categoria.
             const KitHeader(),
-            const KitTitle('A tua presença'),
+            const KitTitle('A tua resposta'),
             const SizedBox(height: 16),
             _GuestHeader(
               name: profile.fullName,
@@ -241,7 +241,7 @@ class _GuestProfileBody extends ConsumerWidget {
                       ),
               )
             else ...[
-              const KitCaps('A tua resposta'),
+              const KitCaps('Vais?'),
               _Segmented(
                 going: guest.rsvpStatus != RsvpStatus.declined,
                 onChanged: (going) async {
@@ -257,34 +257,10 @@ class _GuestProfileBody extends ConsumerWidget {
                   }
                 },
               ),
-              KitSection(
-                'Quem vai',
-                // Só enquanto houver lugar, segundo o limite dado pelo
-                // organizador (091).
-                action: companions.length < guest.maxCompanions ? '+ Acompanhante' : null,
-                onAction: () async {
-                        // Nome, idade e telemóvel/email (2026-10-19): com o
-                        // contacto o acompanhante pode depois entrar na app
-                        // e ficar ligado a esta resposta.
-                        final added = await _companionSheet(context);
-                        if (added == null) return;
-                        await saveGuestCompanions(
-                          guestId: guest.id,
-                          weddingId: weddingId,
-                          companions: [...companions, added],
-                        );
-                        ref.invalidate(guestCompanionsProvider(guest.id));
-                      },
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 0, bottom: 12),
-                child: Text(
-                  guest.maxCompanions == 0
-                      ? 'Este convite é só para ti.'
-                      : 'Podes levar até ${guest.maxCompanions} ${guest.maxCompanions == 1 ? 'pessoa' : 'pessoas'} (${companions.length} indicada${companions.length == 1 ? '' : 's'}).',
-                  style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-                ),
-              ),
+              KitCaps('Quem vai contigo · ${1 + (companions.isNotEmpty ? companions.length : (guest.plusOneName?.isNotEmpty == true ? 1 : 0))}'),
+              // Mockup «A tua resposta» (2026-11-21): linhas no fundo, «Editar»
+              // com contorno, «+ Juntar alguém» por baixo e a nota.
+              KitGroup([
               _PersonLine(
                 initials: _initialsOf(profile.fullName),
                 color: AppColors.yellow,
@@ -325,6 +301,33 @@ class _GuestProfileBody extends ConsumerWidget {
                   status: 'Sem conta — está contigo',
                   muted: true,
                 ),
+              ]),
+              if (companions.length < guest.maxCompanions)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: _OutlineButton('+ Juntar alguém', onTap: () async {
+                        // Nome, idade e telemóvel/email (2026-10-19): com o
+                        // contacto o acompanhante pode depois entrar na app
+                        // e ficar ligado a esta resposta.
+                        final added = await _companionSheet(context);
+                        if (added == null) return;
+                        await saveGuestCompanions(
+                          guestId: guest.id,
+                          weddingId: weddingId,
+                          companions: [...companions, added],
+                        );
+                        ref.invalidate(guestCompanionsProvider(guest.id));
+                      }),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 4),
+                child: Text(
+                  guest.maxCompanions == 0
+                      ? 'Este convite é só para ti.'
+                      : 'Podes levar até ${guest.maxCompanions} ${guest.maxCompanions == 1 ? 'pessoa' : 'pessoas'} (${companions.length} indicada${companions.length == 1 ? '' : 's'}).',
+                  style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
+                ),
+              ),
               const KitCaps('Detalhes'),
               KitGroup([
               KitSetRow(
@@ -413,13 +416,47 @@ class _Segmented extends StatelessWidget {
   final ValueChanged<bool> onChanged;
   const _Segmented({required this.going, required this.onChanged});
 
+  // «Vou» / «Não vou» como opções (círculo verde com o visto no escolhido).
+  static Widget _dot(bool on) => Container(
+        width: 26,
+        height: 26,
+        decoration: BoxDecoration(
+          color: on ? AppTheme.accentOliveDark : null,
+          shape: BoxShape.circle,
+          border: on ? null : Border.all(color: AppTheme.sectionLine, width: 1.5),
+        ),
+        child: on ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
+      );
+
   @override
   Widget build(BuildContext context) {
-    return KitPills([
-      KitPill(label: 'Vou', selected: going, onTap: () => onChanged(true)),
-      KitPill(label: 'Não vou', selected: !going, onTap: () => onChanged(false)),
-    ], top: 0);
+    return KitGroup([
+      KitRow(title: 'Vou', sub: 'Contam contigo', trailing: _dot(going), onTap: () => onChanged(true)),
+      KitRow(title: 'Não vou', sub: 'Podes mudar a resposta mais tarde', trailing: _dot(!going), onTap: () => onChanged(false)),
+    ]);
   }
+}
+
+/// Botão com contorno a toda a largura (44).
+class _OutlineButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _OutlineButton(this.label, {required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Container(
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: AppTheme.ink, width: 1.5),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        ),
+      );
 }
 
 class _PersonLine extends StatelessWidget {
@@ -443,31 +480,29 @@ class _PersonLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Linha da lista (kit das páginas): avatar 44, nome 16, meta 13 e a
-    // etiqueta à direita.
-    final row = Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-      child: Row(
-        children: [
-          V2Avatar(initials.isEmpty ? name : initials, size: 44),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(detail, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              ],
+    // Linha do grupo (mockup «A tua resposta», 2026-11-21): avatar 44, nome
+    // 16, meta 13 e «Editar» com contorno.
+    return KitRow(
+      lead: V2Avatar(initials.isEmpty ? name : initials, size: 44),
+      title: name,
+      sub: muted ? '$detail · $status' : detail,
+      trailing: onTap == null
+          ? null
+          : SnappyTap(
+              onTap: onTap!,
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: AppTheme.ink, width: 1.5),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Text('Editar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          KitTag(status, kind: muted ? KitTagKind.neutral : KitTagKind.green),
-        ],
-      ),
     );
-    return onTap == null ? row : SnappyTap(onTap: onTap!, child: row);
   }
 }
 
