@@ -65,7 +65,7 @@ class GuestFacingScreen extends ConsumerStatefulWidget {
   ConsumerState<GuestFacingScreen> createState() => _GuestFacingScreenState();
 }
 
-const _line = Color(0xFFE6E0D2);
+const _line = Color(0xFFE0E0E0);
 const _dressStyles = ['Formal', 'Cocktail', 'Casual chique', 'Black tie', 'Tema'];
 const _caps = Color(0xFF6E6A63);
 const _olive = Color(0xFF3E5539);
@@ -124,7 +124,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         builder: (context, _, _) => SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(title, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 14),
             ...body(),
             const SizedBox(height: 18),
@@ -137,7 +137,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                 minimumSize: const Size.fromHeight(50),
                 shape: const StadiumBorder(),
               ),
-              child: const Text('Feito', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              child: const Text('Feito', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             ),
           ]),
         ),
@@ -488,7 +488,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                   contentPadding: EdgeInsets.zero,
                   activeTrackColor: AppTheme.accentOliveDark,
                   title: const Text('Envelope digital (IBAN)', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  subtitle: const Text('Os convidados transferem para a vossa conta', style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                  subtitle: const Text('Os convidados transferem para a vossa conta', style: TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
                   value: _ibanOn,
                   onChanged: (v) => setState(() {
                     _ibanOn = v;
@@ -505,7 +505,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                   contentPadding: EdgeInsets.zero,
                   activeTrackColor: AppTheme.accentOliveDark,
                   title: const Text('Lista noutra loja', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  subtitle: const Text('Um link para uma lista fora da app', style: TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                  subtitle: const Text('Um link para uma lista fora da app', style: TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
                   value: _giftUrlOn,
                   onChanged: (v) => setState(() {
                     _giftUrlOn = v;
@@ -905,7 +905,7 @@ class _InviteLinkCard extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(rule.$2, style: const TextStyle(fontSize: 13.5, height: 1.35, color: Colors.white)),
+                child: Text(rule.$2, style: const TextStyle(fontSize: 14.5, height: 1.35, color: Colors.white)),
               ),
             ]),
           ),
@@ -915,7 +915,7 @@ class _InviteLinkCard extends ConsumerWidget {
         Text(link,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
         // Código do evento (pedido 2026-11-03): quem já o tem continua a
         // poder entrar com ele na app.
         if (code?.isNotEmpty == true) ...[
@@ -1397,7 +1397,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
         builder: (context, setSheet) => SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Text('Acompanhantes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Text('Acompanhantes', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 14),
             ..._sheetBody(() => setSheet(() {})),
             const SizedBox(height: 18),
@@ -1409,7 +1409,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
                 minimumSize: const Size.fromHeight(50),
                 shape: const StadiumBorder(),
               ),
-              child: const Text('Feito', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+              child: const Text('Feito', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             ),
           ]),
         ),
@@ -1444,8 +1444,8 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Acompanhantes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                  const Text('Acompanhantes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
                 ]),
               ),
               const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
@@ -1603,7 +1603,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(label,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.inkMuted)),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.inkMuted)),
           ),
         ),
       ),
@@ -1612,7 +1612,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
 
   Widget _segment(List<Widget> children) => Container(
         padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
+        decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(999)),
         child: Row(children: children),
       );
 
@@ -1636,7 +1636,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           child: Center(
             widthFactor: 1,
             child: Text('$v €',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? const Color(0xFF3F5A3B) : AppTheme.ink)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: selected ? const Color(0xFF3F5A3B) : AppTheme.ink)),
           ),
         ),
       ),
@@ -1655,15 +1655,15 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           child: Row(children: [
             Expanded(
               child: Text(a,
-                  style: TextStyle(fontSize: bold ? 14.5 : 13.5, fontWeight: bold ? FontWeight.w700 : FontWeight.w600, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
+                  style: TextStyle(fontSize: bold ? 15.5 : 14.5, fontWeight: bold ? FontWeight.w700 : FontWeight.w600, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
             ),
             Text(b,
-                style: TextStyle(fontSize: bold ? 14.5 : 13.5, fontWeight: bold || !muted ? FontWeight.w700 : FontWeight.w600, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
+                style: TextStyle(fontSize: bold ? 15.5 : 14.5, fontWeight: bold || !muted ? FontWeight.w700 : FontWeight.w600, color: muted ? AppTheme.inkMuted : AppTheme.ink)),
           ]),
         );
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-      decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(14)),
       child: Column(children: [
         line('Quem compra paga', eur(price)),
         line('Taxa de serviço', '− ${eur(fee)}', muted: true),
@@ -1672,7 +1672,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Text('O preço mínimo é ${_fmt(_minTicketPrice)} €.',
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFFB3261E))),
+                style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFFB3261E))),
           ),
       ]),
     );
@@ -1748,7 +1748,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           // Igual ao mockup "Bilhetes · Entrada paga" (2026-11-08): − / +
           // à volta do preço, valores rápidos, contas e Guardar preço.
           const SizedBox(height: 16),
-          const Text('Preço por pessoa', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          const Text('Preço por pessoa', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
           Row(children: [
             _stepBtn(Hi.minus, 'Menos 1 €', () => _bump(-1)),
@@ -1820,7 +1820,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
               ),
               child: _savingPrice
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Guardar preço', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                  : const Text('Guardar preço', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
           if (entry.paid) ...[
@@ -1829,7 +1829,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
               child: TextButton(
                 onPressed: () => context.push('/bilhetes'),
                 style: TextButton.styleFrom(foregroundColor: AppTheme.accentOliveDark),
-                child: const Text('Bilhetes vendidos e revendas ›', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                child: const Text('Bilhetes vendidos e revendas ›', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -1906,7 +1906,7 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
     }
     final limited = _limitedLocal ?? saved != null;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const Text('Limite de pessoas', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+      const Text('Limite de pessoas', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       const SizedBox(height: 8),
       widget.segment([
         widget.choice(
@@ -1968,7 +1968,7 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
                 ),
                 const SizedBox(width: 6),
                 const Expanded(
-                  child: Text('pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  child: Text('pessoas', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                 ),
               ]),
             ),
@@ -1988,7 +1988,7 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
             ),
             child: _saving
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Guardar limite', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                : const Text('Guardar limite', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           ),
         ),
       ],
@@ -2071,7 +2071,7 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
             contentPadding: EdgeInsets.zero,
             secondary: Icon(sec.icon, color: sections.shows(sec) ? green : AppTheme.inkMuted),
             title: Text(sec.label, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            subtitle: Text(sec.description, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+            subtitle: Text(sec.description, style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
             value: sections.shows(sec),
             onChanged: _saving ? null : (v) => _set(sections.withSection(sec, v)),
           ),
@@ -2098,13 +2098,13 @@ class _CodeHero extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final code = wedding.guestCode;
     final isPublic = ref.watch(eventIsPublicProvider(wedding.id)).value ?? false;
-    const btnText = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700);
+    const btnText = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700);
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Text('CÓDIGO DO EVENTO',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
         const SizedBox(height: 8),
         Row(children: [
           Expanded(
@@ -2135,7 +2135,7 @@ class _CodeHero extends ConsumerWidget {
         const SizedBox(height: 6),
         Text(
           isPublic ? 'Aparece a todos em Eventos · público' : 'Quem tem o código ou o link entra · privado',
-          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 14),
         Row(children: [
@@ -2239,7 +2239,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
           type: MaterialType.transparency,
           child: Column(children: [
             for (final (i, p) in parts.indexed) ...[
-              if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFECE7DC)),
+              if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFD9D9D9)),
               InkWell(
                 onTap: p.locked
                     ? () => ScaffoldMessenger.of(context).showSnackBar(
@@ -2252,19 +2252,19 @@ class _PartsListState extends ConsumerState<_PartsList> {
                       child: Opacity(
                         opacity: p.locked ? 0.6 : 1,
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(p.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text(p.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           Text(p.status,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                         ]),
                       ),
                     ),
                     if (p.locked)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
-                        child: const Text('Em breve', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
+                        decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(999)),
+                        child: const Text('Em breve', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
                       )
                     else if (p.section != null)
                       Switch.adaptive(
@@ -2283,7 +2283,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
       ),
       const SizedBox(height: 10),
       const Text('Toca numa parte para a editar. Guarda sozinho.',
-          textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
       ...[
         const SizedBox(height: 6),
         Center(
@@ -2333,7 +2333,7 @@ class _OptSwitchState extends ConsumerState<_OptSwitch> {
       contentPadding: EdgeInsets.zero,
       activeTrackColor: AppTheme.accentOliveDark,
       title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-      subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+      subtitle: Text(widget.subtitle, style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
       value: value,
       onChanged: (v) => _set(sections, v),
     );
@@ -2378,7 +2378,7 @@ class _OptSegmentState extends ConsumerState<_OptSegment> {
       const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(999)),
+        decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(999)),
         child: Row(children: [
           for (final (k, label) in widget.options)
             Expanded(
@@ -2396,7 +2396,7 @@ class _OptSegmentState extends ConsumerState<_OptSegment> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: Text(label,
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: value == k ? Colors.white : AppTheme.inkMuted)),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: value == k ? Colors.white : AppTheme.inkMuted)),
                     ),
                   ),
                 ),

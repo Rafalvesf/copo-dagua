@@ -399,7 +399,7 @@ class OnbRows extends StatelessWidget {
             child: Container(
               constraints: const BoxConstraints(minHeight: 56),
               decoration: BoxDecoration(
-                  border: i < rows.length - 1 ? const Border(bottom: BorderSide(color: Color(0xFFECE7DC))) : null),
+                  border: i < rows.length - 1 ? const Border(bottom: BorderSide(color: Color(0xFFD9D9D9))) : null),
               child: Row(children: [
                 Text(rows[i].$1, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(width: 12),

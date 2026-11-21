@@ -61,10 +61,10 @@ class SupportScreen extends ConsumerWidget {
                           SizedBox(height: 16),
                           Text('Ainda não abriram nenhum pedido',
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           SizedBox(height: 4),
                           Text('Quando precisarem, abram um pedido e respondemos por aqui.',
-                              textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                              textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                         ]),
                       );
                     }
@@ -86,7 +86,7 @@ class SupportScreen extends ConsumerWidget {
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(52),
                   shape: const StadiumBorder(),
-                  textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                  textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Novo pedido de suporte'),
               ),

@@ -59,8 +59,8 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(subtitle, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
               ],
             ),
           ),
@@ -91,7 +91,7 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
                       children: [
                         _switch(Hi.calendarDays, 'Aceitar novos pedidos', 'Recebe pedidos de orçamento dos clientes.', _accepting,
                             (v) => setState(() => _accepting = v)),
-                        const Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFD9D9D9)),
                         _switch(Hi.truck, 'Deslocações', 'Disponível para ir ao local do evento.', _travels,
                             (v) => setState(() => _travels = v)),
                       ],

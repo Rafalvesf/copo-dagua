@@ -12,7 +12,7 @@ import 'v2_kit.dart' show softCard;
 const kAlertBg = Color(0xFFF7EACA);
 const kAlertInk = Color(0xFF5A3E0C);
 const kTrackBg = Color(0xFFE2DED4);
-const _chipBg = Color(0xFFF2F0EB);
+const _chipBg = Color(0xFFF2F2F2);
 const _doneBg = Color(0xFFE6EDE1);
 const _doneInk = Color(0xFF3F7A4F);
 
@@ -36,7 +36,7 @@ class DenseChip extends StatelessWidget {
             child: Text(text,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: done ? _doneInk : const Color(0xFF3A3733))),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: done ? _doneInk : const Color(0xFF3A3733))),
           ),
         ]),
       );
@@ -72,7 +72,7 @@ class MetaRow extends StatelessWidget {
               child: Text(text,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
             ),
           ]),
       ]);
@@ -95,7 +95,7 @@ class CtaPill extends StatelessWidget {
           borderRadius: BorderRadius.circular(height / 2),
           border: Border.all(color: AppTheme.ink, width: 1.5),
         ),
-        child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+        child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.ink)),
       );
 }
 
@@ -116,9 +116,9 @@ class PhotoPill extends StatelessWidget {
             Icon(icon, size: 13, color: const Color(0xFFC9A24A)),
             const SizedBox(width: 3),
           ],
-          Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
+          Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
           if (muted != null)
-            Text(' $muted', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            Text(' $muted', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
         ]),
       );
 }
@@ -133,9 +133,9 @@ class ProgressLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           const Spacer(),
-          Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.accentOliveDark)),
+          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.accentOliveDark)),
         ]),
         const SizedBox(height: 6),
         ClipRRect(
@@ -174,7 +174,7 @@ class AlertStrip extends StatelessWidget {
               child: Text(text,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
             const SizedBox(width: 10),
             Container(
@@ -182,7 +182,7 @@ class AlertStrip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.center,
               decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(16)),
-              child: Text(cta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+              child: Text(cta, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
           ]),
         ),
@@ -288,12 +288,12 @@ class MiniStats extends StatelessWidget {
                 border: Border.all(color: AppTheme.ink, width: 1.5),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                Text(items[i].$1, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                Text(items[i].$1, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                 Text(items[i].$2,
                     maxLines: 1,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
               ]),
             ),
           ),
@@ -329,14 +329,14 @@ class PriceBox extends StatelessWidget {
         child: label.isEmpty
             ? const Column(mainAxisSize: MainAxisSize.min, children: [
                 Text('POR',
-                    style: TextStyle(fontSize: 9, height: 1.2, letterSpacing: 0.4, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+                    style: TextStyle(fontSize: 10, height: 1.2, letterSpacing: 0.4, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
                 Text('Orçamento',
-                    style: TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                    style: TextStyle(fontSize: 17, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
               ])
             : Column(mainAxisSize: MainAxisSize.min, children: [
           Text(label,
-              style: const TextStyle(fontSize: 9, height: 1.2, letterSpacing: 0.4, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
-          Text(value, style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 10, height: 1.2, letterSpacing: 0.4, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+          Text(value, style: const TextStyle(fontSize: 17, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         ]),
       );
 }
@@ -393,7 +393,7 @@ class FeaturedOverlayCard extends StatelessWidget {
                     Text(title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     const SizedBox(height: 3),
                     if (subtitle.isNotEmpty) MetaRow([(Hi.mapPin, subtitle)]),
                     const Spacer(),

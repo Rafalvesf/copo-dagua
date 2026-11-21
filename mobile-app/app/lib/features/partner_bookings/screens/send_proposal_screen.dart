@@ -201,7 +201,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                   controller: _description,
                   maxLines: 4,
                   minLines: 3,
-                  style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+                  style: const TextStyle(fontSize: 16, color: AppTheme.ink),
                   decoration: const InputDecoration(
                     isCollapsed: true,
                     filled: false,
@@ -234,7 +234,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                   activeTrackColor: AppTheme.accentOliveDark,
                   title: Text(
                     noDeposit ? 'Cancelável nas primeiras 48 h' : 'Sinal cancelável',
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
                   ),
                   subtitle: Text(
                     noDeposit
@@ -244,7 +244,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
                         : _depositRefundable
                         ? 'Se o organizador cancelar nas 48 h depois de pagar, recebe o sinal de volta. Depois disso, fica contigo.'
                         : 'Se o organizador cancelar, o sinal fica sempre contigo. Se fores tu a cancelar, o organizador recebe tudo de volta.',
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
                   ),
                 ),
               ),

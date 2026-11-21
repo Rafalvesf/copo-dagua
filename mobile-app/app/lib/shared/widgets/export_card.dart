@@ -98,7 +98,7 @@ class _Row extends StatelessWidget {
             width: 40,
             height: 40,
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: const Color(0xFFF2F0EB), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, size: 20, color: AppTheme.accentOliveDark),
           ),
           const SizedBox(width: 12),

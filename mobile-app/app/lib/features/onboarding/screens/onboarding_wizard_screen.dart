@@ -729,7 +729,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
               child: Column(children: [
                 Container(
                   constraints: const BoxConstraints(minHeight: 64),
-                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFECE7DC)))),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFD9D9D9)))),
                   child: Row(children: [
                     Container(
                       width: 44,

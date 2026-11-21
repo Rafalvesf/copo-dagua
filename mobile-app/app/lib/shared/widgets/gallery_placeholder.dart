@@ -9,7 +9,7 @@ import '../../core/theme/app_theme.dart';
 List<Color> get galleryTints => [
   AppTheme.accentTint,
   Color(0xFFF7EACA),
-  Color(0xFFECE7DC),
+  Color(0xFFD9D9D9),
   Color(0xFFF3DEE0),
   Color(0xFFF4E1D2),
   Color(0xFFC9D3B0),

@@ -180,7 +180,7 @@ class _Dashboard extends StatelessWidget {
               ),
               child: const Text(
                 'Ainda sem pedidos nem reservas neste período.',
-                style: TextStyle(fontSize: 13, color: AppTheme.ink, height: 1.4),
+                style: TextStyle(fontSize: 14, color: AppTheme.ink, height: 1.4),
               ),
             ),
           ],
@@ -233,7 +233,7 @@ class _Dashboard extends StatelessWidget {
                 child: Text(
                   'Pedidos por semana',
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 23,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.ink,
                   ),
@@ -262,7 +262,7 @@ class _Dashboard extends StatelessWidget {
           const Text(
             'Do pedido à reserva',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 23,
               fontWeight: FontWeight.w700,
               color: AppTheme.ink,
             ),
@@ -455,7 +455,7 @@ class _KpiTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -464,7 +464,7 @@ class _KpiTile extends StatelessWidget {
           ),
           if (sub != null) ...[
             const SizedBox(height: 4),
-            Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           ],
         ],
       ),
@@ -551,7 +551,7 @@ class _ProInsights extends ConsumerWidget {
               const Expanded(
                 child: Text(
                   'Com o Premium vês as visitas ao teu perfil por semana, quantos começaram um pedido e a conversão.',
-                  style: TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.ink),
+                  style: TextStyle(fontSize: 14.5, height: 1.4, color: AppTheme.ink),
                 ),
               ),
               const Icon(Hi.chevronRight, color: AppTheme.inkMuted),
@@ -569,10 +569,10 @@ class _ProInsights extends ConsumerWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
               const SizedBox(height: 4),
               Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-              if (sub != null) Text(sub, style: TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w700)),
+              if (sub != null) Text(sub, style: TextStyle(fontSize: 13, color: green, fontWeight: FontWeight.w700)),
             ]),
           ),
         );
@@ -582,7 +582,7 @@ class _ProInsights extends ConsumerWidget {
         Row(children: [
           Icon(Hi.trophy, size: 18, color: green),
           const SizedBox(width: 6),
-          const Text('Premium · últimos 30 dias', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Premium · últimos 30 dias', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 12),
         Row(children: [

@@ -107,7 +107,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
                           child: LinearProgressIndicator(
                             value: booking.amount <= 0 ? 0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0),
                             minHeight: 9,
-                            backgroundColor: const Color(0xFFF2F0EB),
+                            backgroundColor: const Color(0xFFF2F2F2),
                             color: AppTheme.accentOliveDark,
                           ),
                         ),

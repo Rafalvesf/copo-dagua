@@ -61,7 +61,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                           const Text(
                             'Os organizadores escolhem os teus produtos para a lista de presentes. Os convidados pagam na app e tu '
                             'recebes o valor, menos a taxa de serviço da À Nossa!. Envias para a morada que aparece na encomenda.',
-                            style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
+                            style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
                           ),
                           const SizedBox(height: 12),
                           // Limite da loja sem Pro (migração 161).
@@ -77,7 +77,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                                   padding: const EdgeInsets.symmetric(vertical: 6),
                                   child: Text(
                                     '${pro.products} de ${pro.freeShopProducts} produtos. Com o Premium não há limite ›',
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: green),
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: green),
                                   ),
                                 ),
                               ),
@@ -140,7 +140,7 @@ class _Info extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.all(20),
-        child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+        child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted)),
       );
 }
 
@@ -163,18 +163,18 @@ class _Orders extends ConsumerWidget {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(AppRadius.lg)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Text('${o.productTitle} × ${o.quantity}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text('${o.productTitle} × ${o.quantity}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 Text('${giftEuros(o.amount)} · oferecido por ${o.buyerName} a ${o.client}',
-                    style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
                 const SizedBox(height: 8),
-                const Text('Enviar para', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                const Text('Enviar para', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                 Text(
                   o.deliveryAddress?.trim().isNotEmpty == true ? o.deliveryAddress! : 'O cliente ainda não indicou a morada. Fala com ele no chat.',
-                  style: const TextStyle(fontSize: 14, height: 1.35, color: AppTheme.ink),
+                  style: const TextStyle(fontSize: 15, height: 1.35, color: AppTheme.ink),
                 ),
                 if (o.message?.isNotEmpty == true) ...[
                   const SizedBox(height: 6),
-                  Text('Mensagem para pôr no presente: «${o.message}»', style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: AppTheme.ink)),
+                  Text('Mensagem para pôr no presente: «${o.message}»', style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: AppTheme.ink)),
                 ],
                 const SizedBox(height: 10),
                 if (o.shippedAt != null)
@@ -308,7 +308,7 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
       padding: EdgeInsets.fromLTRB(22, 18, 22, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(widget.existing == null ? 'Novo produto' : 'Editar produto',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 12),
         Center(
           child: InkWell(

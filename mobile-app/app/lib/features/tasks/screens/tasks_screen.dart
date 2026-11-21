@@ -134,7 +134,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             const KitSection('As vossas tarefas'),
             const Padding(
               padding: EdgeInsets.only(bottom: 12),
-              child: Text('Criadas por vocês, sem limite.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              child: Text('Criadas por vocês, sem limite.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             ),
             KitGroup([
               if (state.userTasks.where((t) => t.status == TaskStatus.active).isEmpty)
@@ -322,11 +322,11 @@ class _PartnerSuggestions extends ConsumerWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           child: Text('Sugestões para ti',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
         const Padding(
           padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 2, AppTheme.screenMargin, 10),
-          child: Text('Com base no que tens procurado.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          child: Text('Com base no que tens procurado.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         ),
         // O mesmo cartão das sugestões do painel (2026-11-11).
         SnapCarousel(

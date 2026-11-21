@@ -457,8 +457,8 @@ class _PersonLine extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                Text(detail, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                Text(name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(detail, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
               ],
             ),
           ),
@@ -592,10 +592,10 @@ class _GuestHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, maxLines: 2, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 if (email.isNotEmpty)
                   Text(email, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                 const SizedBox(height: 8),
                 KitTag(chip, kind: KitTagKind.neutral),
               ],
@@ -695,7 +695,7 @@ class _CompanionFormState extends State<_CompanionForm> {
           ),
           const SizedBox(height: 16),
           Text(widget.existing == null ? 'Novo acompanhante' : 'Acompanhante',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 14),
           TextField(
             controller: _name,
@@ -738,11 +738,11 @@ class _CompanionFormState extends State<_CompanionForm> {
           const SizedBox(height: 8),
           const Text(
             'Com o telemóvel ou o email, o acompanhante pode entrar na app e fica ligado a esta resposta.',
-            style: TextStyle(fontSize: 12, color: AppTheme.inkMuted, height: 1.4),
+            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4),
           ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(fontSize: 13, color: Color(0xFFB3261E))),
+            Text(_error!, style: const TextStyle(fontSize: 14, color: Color(0xFFB3261E))),
           ],
           const SizedBox(height: 18),
           V2BigButton(label: widget.existing == null ? 'Adicionar acompanhante' : 'Guardar', onTap: _save),

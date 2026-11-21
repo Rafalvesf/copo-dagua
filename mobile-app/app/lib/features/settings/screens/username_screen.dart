@@ -119,7 +119,7 @@ class _UsernameScreenState extends ConsumerState<UsernameScreen> {
               maxLength: 30,
               onChanged: _onChanged,
               onSubmitted: (_) => canSave ? _save() : null,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
               decoration: const InputDecoration(
                 labelText: 'Nome de utilizador',
                 prefixText: '@',

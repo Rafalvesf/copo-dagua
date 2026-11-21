@@ -46,10 +46,10 @@ const _green = PdfColor.fromInt(0xFF4F6B4A);
 const _muted = PdfColor.fromInt(0xFF6B6A66);
 
 pw.Widget _header(String title, String owner) => pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-      pw.Text('À Nossa!', style: pw.TextStyle(color: _green, fontWeight: pw.FontWeight.bold, fontSize: 12)),
+      pw.Text('À Nossa!', style: pw.TextStyle(color: _green, fontWeight: pw.FontWeight.bold, fontSize: 13)),
       pw.SizedBox(height: 4),
-      pw.Text(title, style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold)),
-      pw.Text('$owner · gerado a ${_d(DateTime.now())}', style: const pw.TextStyle(color: _muted, fontSize: 10)),
+      pw.Text(title, style: pw.TextStyle(fontSize: 23, fontWeight: pw.FontWeight.bold)),
+      pw.Text('$owner · gerado a ${_d(DateTime.now())}', style: const pw.TextStyle(color: _muted, fontSize: 11)),
       pw.SizedBox(height: 16),
     ]);
 
@@ -61,9 +61,9 @@ pw.Widget _stats(List<(String, String)> items) => pw.Row(children: [
             padding: const pw.EdgeInsets.all(10),
             decoration: pw.BoxDecoration(color: const PdfColor.fromInt(0xFFF2F5EE), borderRadius: pw.BorderRadius.circular(8)),
             child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-              pw.Text(label, style: const pw.TextStyle(color: _muted, fontSize: 9)),
+              pw.Text(label, style: const pw.TextStyle(color: _muted, fontSize: 10)),
               pw.SizedBox(height: 3),
-              pw.Text(value, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              pw.Text(value, style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold)),
             ]),
           ),
         ),
@@ -71,17 +71,17 @@ pw.Widget _stats(List<(String, String)> items) => pw.Row(children: [
 
 pw.Widget _section(String title) => pw.Padding(
       padding: const pw.EdgeInsets.only(top: 18, bottom: 6),
-      child: pw.Text(title, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: _green)),
+      child: pw.Text(title, style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold, color: _green)),
     );
 
 pw.Widget _table(List<String> headers, List<List<String>> rows, {Set<int> right = const {}}) => rows.isEmpty
-    ? pw.Text('Sem registos.', style: const pw.TextStyle(color: _muted, fontSize: 10))
+    ? pw.Text('Sem registos.', style: const pw.TextStyle(color: _muted, fontSize: 11))
     : pw.TableHelper.fromTextArray(
         headers: headers,
         data: rows,
-        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9, color: PdfColors.white),
+        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.white),
         headerDecoration: const pw.BoxDecoration(color: _green),
-        cellStyle: const pw.TextStyle(fontSize: 9),
+        cellStyle: const pw.TextStyle(fontSize: 10),
         cellAlignments: {for (final i in right) i: pw.Alignment.centerRight},
         oddRowDecoration: const pw.BoxDecoration(color: PdfColor.fromInt(0xFFF7F8F5)),
         border: null,
@@ -187,8 +187,8 @@ Future<Uint8List> receiptsPdf(ReportData r, {bool receiptForPartner = false}) as
     pw.Widget row(String k, String v) => pw.Padding(
           padding: const pw.EdgeInsets.symmetric(vertical: 6),
           child: pw.Row(children: [
-            pw.SizedBox(width: 130, child: pw.Text(k, style: const pw.TextStyle(color: _muted, fontSize: 11))),
-            pw.Expanded(child: pw.Text(v, style: const pw.TextStyle(fontSize: 11))),
+            pw.SizedBox(width: 130, child: pw.Text(k, style: const pw.TextStyle(color: _muted, fontSize: 12))),
+            pw.Expanded(child: pw.Text(v, style: const pw.TextStyle(fontSize: 12))),
           ]),
         );
     doc.addPage(pw.Page(
@@ -216,8 +216,8 @@ Future<Uint8List> receiptsPdf(ReportData r, {bool receiptForPartner = false}) as
             row('IVA (${(vatRate * 100).round()}%)', _e(vatAmount(withCommission(p.amount, p.total)))),
             pw.Divider(color: const PdfColor.fromInt(0xFFDDE5D3)),
             pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-              pw.Text('Total pago (IVA incluído)', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
-              pw.Text(_e(withCommission(p.amount, p.total)), style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: _green)),
+              pw.Text('Total pago (IVA incluído)', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              pw.Text(_e(withCommission(p.amount, p.total)), style: pw.TextStyle(fontSize: 19, fontWeight: pw.FontWeight.bold, color: _green)),
             ]),
             if (receiptForPartner) ...[
               pw.SizedBox(height: 6),

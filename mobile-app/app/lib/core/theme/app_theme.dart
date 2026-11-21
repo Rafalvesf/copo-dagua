@@ -23,8 +23,8 @@ class AppTheme {
   static const fontFamily = 'LouisGeorgeCafe';
   static const fontFamilyFallback = ['Roboto'];
 
-  // Creme liso dos mockups (2026-11-12): fundo de todas as páginas.
-  static const background = Color(0xFFF2F0EB);
+  // Cinzento claro neutro (pedido 2026-11-21: «um cinzento não esverdeado»).
+  static const background = Color(0xFFF2F2F2);
   static const ink = Color(0xFF171713);
 
   /// Texto secundário (legendas, descrições). Cinzento quente — antes era
@@ -54,10 +54,10 @@ class AppTheme {
 
   /// Cor de contorno neutra e quente, partilhada por bordas subtis
   /// (chips, botões outline, separadores).
-  static const borderMuted = Color(0xFFE6E0D2);
+  static const borderMuted = Color(0xFFE0E0E0);
 
   /// Fundo geral atrás da moldura de telemóvel, em janelas largas.
-  static const outerBackdrop = Color(0xFFEAE3D1);
+  static const outerBackdrop = Color(0xFFE6E6E6);
 
   /// Margem lateral partilhada por todos os ecrãs principais — o
   /// conteúdo e a navbar flutuante alinham-se a esta mesma largura.
@@ -72,7 +72,7 @@ class AppTheme {
   /// utilizador 2026-08-31: "if the boxes are white turn them
   /// greyish" (depois de remover a sombra dos cards, um card branco
   /// sobre o novo fundo branco liso ficava sem nenhum contraste).
-  static const surface = Color(0xFFF2F0EB);
+  static const surface = Color(0xFFF2F2F2);
 
   /// Sombra exclusiva das barras de pesquisa — pedido explícito do
   /// utilizador 2026-08-31: "only leave the shadow on the
@@ -368,7 +368,7 @@ class AppTheme {
         ),
         cancelButtonStyle: TextButton.styleFrom(
           foregroundColor: ink,
-          backgroundColor: const Color(0xFFF2F0EB),
+          backgroundColor: const Color(0xFFF2F2F2),
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
         ),
@@ -379,12 +379,12 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         hourMinuteShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         hourMinuteColor: WidgetStateColor.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? accentOliveDark.withValues(alpha: 0.14) : const Color(0xFFF2F0EB),
+          (s) => s.contains(WidgetState.selected) ? accentOliveDark.withValues(alpha: 0.14) : const Color(0xFFF2F2F2),
         ),
         hourMinuteTextColor: WidgetStateColor.resolveWith(
           (s) => s.contains(WidgetState.selected) ? accentOliveDark : ink,
         ),
-        dialBackgroundColor: const Color(0xFFF2F0EB),
+        dialBackgroundColor: const Color(0xFFF2F2F2),
         dialHandColor: accentOliveDark,
         dialTextColor: WidgetStateColor.resolveWith(
           (s) => s.contains(WidgetState.selected) ? Colors.white : ink,
@@ -396,7 +396,7 @@ class AppTheme {
         dayPeriodTextColor: WidgetStateColor.resolveWith(
           (s) => s.contains(WidgetState.selected) ? accentOliveDark : inkMuted,
         ),
-        dayPeriodBorderSide: const BorderSide(color: Color(0xFFE6E0D2)),
+        dayPeriodBorderSide: const BorderSide(color: Color(0xFFE0E0E0)),
         entryModeIconColor: accentOliveDark,
         helpTextStyle: const TextStyle(
           fontFamily: fontFamily,
@@ -414,7 +414,7 @@ class AppTheme {
         ),
         cancelButtonStyle: TextButton.styleFrom(
           foregroundColor: ink,
-          backgroundColor: const Color(0xFFF2F0EB),
+          backgroundColor: const Color(0xFFF2F2F2),
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
         ),
@@ -505,7 +505,7 @@ class AppTypography {
     fontWeight: FontWeight.w600,
   );
   static const buttonLabel = TextStyle(
-    fontSize: 15,
+    fontSize: 16,
     height: 20 / 15,
     fontWeight: FontWeight.w700,
   );
@@ -544,18 +544,20 @@ class AppTypography {
 /// cada meio-ponto foi arredondado para baixo, para nunca aumentar texto
 /// em sítios apertados (badges, navbar, chips). Um tamanho novo entra
 /// aqui, nunca como literal num ecrã.
+/// Texto +1 em toda a app (pedido 2026-11-21, DESIGN.md §3); a escala de
+/// primeiro contacto (32/17) e os números grandes (28, 40) ficam.
 class AppFontSize {
-  static const double xxxs = 9; // micro-labels (navbar, avatares agrupados)
-  static const double xxs = 10;
-  static const double xs = 11; // badges, meta-info
-  static const double sm = 12;
-  static const double md = 13; // texto secundário
-  static const double base = 14; // corpo
-  static const double lg = 16; // nomes, botões
-  static const double xl = 18; // títulos de módulo
-  static const double xxl = 20;
-  static const double h3 = 22; // título de card/ecrã
-  static const double h2 = 22; // mockups 2026-11-12: sem 24
+  static const double xxxs = 10; // micro-labels (navbar, avatares agrupados)
+  static const double xxs = 11;
+  static const double xs = 12; // badges, meta-info
+  static const double sm = 13;
+  static const double md = 14; // texto secundário
+  static const double base = 15; // corpo
+  static const double lg = 17; // nomes, botões
+  static const double xl = 19; // títulos de módulo
+  static const double xxl = 21;
+  static const double h3 = 23; // título de card/ecrã
+  static const double h2 = 23; // mockups 2026-11-12: sem 24
   static const double h1 = 28;
   static const double display = 30;
   static const double displayLg = 36;
@@ -582,7 +584,7 @@ class AppRadius {
 class AppColors {
   /// Areia — era azul (`#DCE3EF`); trocado no redesign 2026-10 para
   /// manter só pastéis quentes. Nome mantido para não mexer nos usos.
-  static const blue = Color(0xFFECE7DC);
+  static const blue = Color(0xFFD9D9D9);
   static const green = Color(0xFFDDE5D3);
   static const yellow = Color(0xFFF7EACA);
   static const pink = Color(0xFFF3DEE0);
@@ -607,7 +609,7 @@ class AppGradients {
   /// Fundo da app toda (pedido 2026-10-25): cinzento claro em cima,
   /// branco em baixo. A barra do telemóvel fica com o cinzento do topo.
   // Mockups (2026-11-12): creme liso #F2F0EB em todas as páginas.
-  static const appTop = Color(0xFFF2F0EB);
+  static const appTop = Color(0xFFF2F2F2);
   static const appBackground = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,

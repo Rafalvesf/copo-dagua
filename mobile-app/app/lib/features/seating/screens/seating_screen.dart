@@ -615,7 +615,7 @@ class _TableCell extends StatelessWidget {
                   child: Center(
                     child: locked
                         ? const Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted)
-                        : Text('$count/$seatsPerTable', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
+                        : Text('$count/$seatsPerTable', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg)),
                   ),
                 ),
               ),
@@ -767,7 +767,7 @@ class _TableListView extends StatelessWidget {
                           ),
                           child: locked
                               ? const Icon(Hi.lockClosed, size: 18, color: AppTheme.inkMuted)
-                              : Text('${index + 1}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: c)),
+                              : Text('${index + 1}', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: c)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -973,7 +973,7 @@ class _SelectedTableCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(state.nameFor(index), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    Text(state.nameFor(index), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                     Text('${state.shapeFor(index).label} · ${seated.length} de $seatsPerTable lugares',
                         style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                   ],

@@ -514,7 +514,7 @@ class _ErrorLine extends StatelessWidget {
       child: Row(children: [
         Container(width: 8, height: 8, decoration: const BoxDecoration(color: red, shape: BoxShape.circle)),
         const SizedBox(width: 10),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.ink))),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.ink))),
       ]),
     );
   }
@@ -544,13 +544,13 @@ class _DocTile extends StatelessWidget {
               child: LineIcon(file != null ? LineIcon.check : LineIcon.plus, size: 18, color: Colors.white, stroke: file != null ? 2.6 : 2),
             ),
             const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 2),
             Text(file?.name ?? 'Tirar foto ou escolher',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           ]),
         ),
       );

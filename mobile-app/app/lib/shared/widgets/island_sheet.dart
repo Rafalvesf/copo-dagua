@@ -277,10 +277,10 @@ Future<bool> askLeaveIsland(BuildContext context) async {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text('Tens a certeza que queres sair?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 4),
           const Text('O que preencheste neste popup não fica guardado.',
-              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           const SizedBox(height: 20),
           Row(children: [
             Expanded(
@@ -292,7 +292,7 @@ Future<bool> askLeaveIsland(BuildContext context) async {
                     shape: const StadiumBorder(),
                     side: const BorderSide(color: AppTheme.ink, width: 1.5),
                     foregroundColor: AppTheme.ink,
-                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Sair'),
                 ),
@@ -308,7 +308,7 @@ Future<bool> askLeaveIsland(BuildContext context) async {
                     backgroundColor: AppTheme.ink,
                     foregroundColor: Colors.white,
                     shape: const StadiumBorder(),
-                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Continuar'),
                 ),
@@ -524,7 +524,7 @@ class IslandMenuButton<T> extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (var i = 0; i < items.length; i++) ...[
-                      if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFECE7DC)),
+                      if (i > 0) const Divider(height: 1, thickness: 1, color: Color(0xFFD9D9D9)),
                       InkWell(
                         onTap: items[i].enabled ? () => Navigator.of(ctx).pop(_Picked<T>(items[i].value as T)) : null,
                         child: ConstrainedBox(
@@ -534,7 +534,7 @@ class IslandMenuButton<T> extends StatelessWidget {
                             child: Opacity(
                               opacity: items[i].enabled ? 1 : 0.4,
                               child: DefaultTextStyle.merge(
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                 child: items[i].child ?? const SizedBox.shrink(),
                               ),
                             ),
@@ -555,7 +555,7 @@ class IslandMenuButton<T> extends StatelessWidget {
                   shape: const StadiumBorder(),
                   side: const BorderSide(color: AppTheme.ink, width: 1.5),
                   foregroundColor: AppTheme.ink,
-                  textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Cancelar'),
               ),

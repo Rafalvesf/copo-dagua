@@ -410,7 +410,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               const SizedBox(height: 6),
               const Text(
                 'A data só fica garantida com o sinal pago: até lá, o parceiro pode aceitar outro pedido para esse dia.',
-                style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
+                style: TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.35),
               ),
             ],
             if (needsFinalPayment) ...[

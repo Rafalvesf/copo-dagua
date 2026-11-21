@@ -53,12 +53,12 @@ class V2Tile extends StatelessWidget {
             Text(label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             if (sub != null)
               Text(sub!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: v2Muted)),
+                  style: const TextStyle(fontSize: 13, color: v2Muted)),
           ]),
           if (badge > 0) Positioned(top: 0, right: 0, child: V2Count(badge)),
         ]),
@@ -98,7 +98,7 @@ class V2Count extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 6),
         alignment: Alignment.center,
         decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
-        child: Text('$n', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+        child: Text('$n', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
       );
 }
 
@@ -126,13 +126,13 @@ class V2RowCard extends StatelessWidget {
               Text(title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               if (sub != null && sub!.isNotEmpty) ...[
                 const SizedBox(height: 2),
                 Text(sub!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: v2Muted)),
+                    style: const TextStyle(fontSize: 13, color: v2Muted)),
               ],
             ]),
           ),
@@ -225,12 +225,12 @@ class V2Chip extends StatelessWidget {
             V2Tone.green => (AppTheme.accentOliveDark, AppTheme.accentTint),
             V2Tone.amber => (const Color(0xFF7A5000), const Color(0xFFFCEFD6)),
             V2Tone.red => (const Color(0xFFA3412E), const Color(0xFFF7E3DC)),
-            V2Tone.grey => (v2Muted, const Color(0xFFF2F0EB)),
+            V2Tone.grey => (v2Muted, const Color(0xFFF2F2F2)),
           };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
+      child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
     );
   }
 }
@@ -265,7 +265,7 @@ class V2Segment extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: i == selected ? Colors.white : v2Muted,
                     )),
@@ -287,7 +287,7 @@ class V2Caps extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(top: 24, bottom: 12),
         child: Text(text.toUpperCase(),
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: v2Muted)),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1, color: v2Muted)),
       );
 }
 
@@ -341,7 +341,7 @@ class V2SetRow extends StatelessWidget {
         StickerIcon(icon, size: 36, turns: StickerIcon.tilt(index)),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(label, style: TextStyle(fontSize: 14, color: labelColor ?? AppTheme.ink)),
+          child: Text(label, style: TextStyle(fontSize: 15, color: labelColor ?? AppTheme.ink)),
         ),
         if (value != null)
           Flexible(
@@ -349,7 +349,7 @@ class V2SetRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 13, color: v2Muted)),
+                style: const TextStyle(fontSize: 14, color: v2Muted)),
           ),
         if (toggle != null)
           Switch(
@@ -417,7 +417,7 @@ class V2BigButton extends StatelessWidget {
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 17, fontWeight: FontWeight.w700),
               ),
               child: _label(),
             )
@@ -427,7 +427,7 @@ class V2BigButton extends StatelessWidget {
                 foregroundColor: AppTheme.ink,
                 side: BorderSide(color: AppTheme.ink, width: 1.5),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 17, fontWeight: FontWeight.w700),
               ),
               child: _label(),
             ),

@@ -53,16 +53,16 @@ class TicketPassCard extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('O TEU BILHETE',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
                 const SizedBox(height: 2),
                 Text(
                   ticket.quantity == 1 ? '1 pessoa' : '${ticket.quantity} pessoas',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.white),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   ticket.checkedInAt != null ? 'Entrada registada às ${_hhmm(ticket.checkedInAt!)}' : 'Mostra o QR à entrada',
-                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85)),
+                  style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85)),
                 ),
               ]),
             ),
@@ -101,11 +101,11 @@ class TicketPassScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(eventName.toUpperCase(),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark)),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark)),
             const SizedBox(height: 4),
             const Text('O teu bilhete',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 20),
             Center(
               child: Container(
@@ -116,12 +116,12 @@ class TicketPassScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     ticket.code,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 3, color: AppTheme.ink),
+                    style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, letterSpacing: 3, color: AppTheme.ink),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     ticket.quantity == 1 ? '1 pessoa' : '${ticket.quantity} pessoas',
-                    style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+                    style: const TextStyle(fontSize: 16, color: AppTheme.inkMuted),
                   ),
                 ]),
               ),
@@ -130,12 +130,12 @@ class TicketPassScreen extends StatelessWidget {
             if (ticket.checkedInAt != null)
               Text('Entrada registada às ${_hhmm(ticket.checkedInAt!)}.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark))
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark))
             else
               const Text(
                 'Mostra este código à entrada.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
+                style: TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted),
               ),
           ],
         ),
@@ -202,10 +202,10 @@ class _CheckInScreenState extends ConsumerState<CheckInScreen> {
                 const SizedBox(height: 16),
                 Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 8),
-                Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, height: 1.4, color: AppTheme.ink)),
+                Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, height: 1.4, color: AppTheme.ink)),
                 if (c.event != null) ...[
                   const SizedBox(height: 4),
-                  Text(c.event!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  Text(c.event!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
                 ],
                 const SizedBox(height: 32),
                 if (c.result == CheckInResult.error)

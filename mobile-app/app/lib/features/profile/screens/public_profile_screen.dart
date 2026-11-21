@@ -99,7 +99,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     // e a barra fixa em baixo com Mensagem e Seguir.
     return GradientScaffold(
       // Fundo creme liso (mockup).
-      gradientOverride: const LinearGradient(colors: [Color(0xFFF2F0EB), Color(0xFFF2F0EB)]),
+      gradientOverride: const LinearGradient(colors: [Color(0xFFF2F2F2), Color(0xFFF2F2F2)]),
       body: async.isLoading && p == null
           ? const Center(child: CircularProgressIndicator())
           : p == null
@@ -182,7 +182,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                             const Padding(
                               padding: EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 12, AppTheme.screenMargin, 0),
                               child: Text('Só aparecem eventos públicos ou a que foste convidado.',
-                                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                                  style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                             ),
                           ],
                           FollowingSection(profileId: p.id, people: p.followingPeople, partners: p.followingPartners),

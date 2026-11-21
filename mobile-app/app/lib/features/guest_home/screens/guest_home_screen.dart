@@ -284,7 +284,7 @@ class _GuestHomeBody extends ConsumerWidget {
           ],
           if (show(GuestSection.programa) && wedding.program.isNotEmpty) ...[
             const SizedBox(height: 22),
-            const Text('Hoje', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Text('Hoje', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 10),
             GuestTimeline(program: wedding.program, live: true),
           ],
@@ -441,12 +441,12 @@ class _CountdownBox extends StatelessWidget {
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
           child: Text(
             '$value',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: AppTheme.accentOliveDark),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19, color: AppTheme.accentOliveDark),
           ),
         ),
         const SizedBox(height: 5),
         Text(label,
-            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
       ],
     );
   }

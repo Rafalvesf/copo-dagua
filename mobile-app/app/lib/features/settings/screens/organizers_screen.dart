@@ -20,7 +20,7 @@ const _soft = [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offse
 Widget _caps(String text) => Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 2),
       child: Text(text,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
     );
 
 /// Resumo curto das permissões, mostrado quando "O que pode fazer" está
@@ -103,7 +103,7 @@ class OrganizersScreen extends ConsumerWidget {
           const Text('Organizadores', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 4),
           const Text('Quem organiza o evento contigo. Convida por link e escolhe o que cada um pode fazer.',
-              style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
           const SizedBox(height: 14),
           content,
         ],
@@ -175,7 +175,7 @@ class _Message extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         decoration: _card(),
         padding: const EdgeInsets.all(16),
-        child: Text(text, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+        child: Text(text, style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted)),
       );
 }
 
@@ -194,15 +194,15 @@ class _OwnerCard extends StatelessWidget {
               Text(o.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const Text('Pode tudo', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Pode tudo', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             ]),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
             child: const Text('Tu',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
           ),
         ]),
       );
@@ -219,7 +219,7 @@ class _Avatar extends StatelessWidget {
         decoration: const BoxDecoration(color: Color(0xFFE6EDE1), shape: BoxShape.circle),
         child: Text(
           name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase(),
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
         ),
       );
 }
@@ -304,10 +304,10 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
               Text(o.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               Text(
                 pending ? 'Convite por aceitar' : 'A organizar contigo',
-                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
               ),
             ]),
           ),
@@ -316,7 +316,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
           else if (widget.editable)
             _RemoveButton(onTap: _remove, label: 'Retirar ${o.name}'),
         ]),
-        const Divider(height: 28, color: Color(0xFFECE7DC)),
+        const Divider(height: 28, color: Color(0xFFD9D9D9)),
         // Cabeçalho recolhível: resumo à direita + chevron para abrir/fechar.
         InkWell(
           onTap: () => setState(() => _open = !_open),
@@ -325,7 +325,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
             _caps('O QUE PODE FAZER'),
             const Spacer(),
             Text(_permsSummary(perms, total),
-                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             const SizedBox(width: 8),
             AnimatedRotation(
               turns: _open ? 0.5 : 0,
@@ -354,7 +354,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
           ]),
           const SizedBox(height: 4),
           for (var i = 0; i < OrganizerPerm.values.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+            if (i > 0) const Divider(height: 1, color: Color(0xFFD9D9D9)),
             _PermRow(
               perm: OrganizerPerm.values[i],
               on: perms.can(OrganizerPerm.values[i]),
@@ -364,7 +364,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
         ] else if (_open) ...[
           const SizedBox(height: 4),
           for (var i = 0; i < OrganizerPerm.values.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+            if (i > 0) const Divider(height: 1, color: Color(0xFFD9D9D9)),
             _PermRow(perm: OrganizerPerm.values[i], on: perms.can(OrganizerPerm.values[i]), onTap: null),
           ],
         ],
@@ -415,7 +415,7 @@ class _Preset extends StatelessWidget {
           ),
           child: Text(label,
               style: TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
+                  fontSize: 15, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
         ),
       );
 }
@@ -437,8 +437,8 @@ class _PermRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(perm.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              Text(perm.description, style: const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.inkMuted)),
+              Text(perm.label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(perm.description, style: const TextStyle(fontSize: 14, height: 1.35, color: AppTheme.inkMuted)),
             ]),
           ),
           const SizedBox(width: 10),
@@ -473,12 +473,12 @@ class PermissionGate extends ConsumerWidget {
               const SizedBox(height: 14),
               Text('Sem acesso a ${perm.label.toLowerCase()}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 8),
               const Text(
                 'O organizador principal não te deu esta permissão. Pede-lhe em Definições › Organizadores.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
+                style: TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted),
               ),
               const SizedBox(height: 20),
               TextButton(
@@ -564,30 +564,30 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
       padding: const EdgeInsets.all(18),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Text('Convidar para organizar',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
         Text(
             hasFriends
                 ? 'Convida amigos que já segues na app, ou envia um link a quem quiseres.'
                 : 'Envia o link a quem vai organizar contigo. Cada link serve para uma pessoa.',
-            style: const TextStyle(fontSize: 13, height: 1.45, color: AppTheme.inkMuted)),
+            style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
         if (hasFriends) ...[
           const SizedBox(height: 16),
           _caps('AMIGOS QUE SEGUES'),
           const SizedBox(height: 2),
           for (var i = 0; i < candidates.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: Color(0xFFECE7DC)),
+            if (i > 0) const Divider(height: 1, color: Color(0xFFD9D9D9)),
             _FriendInviteRow(
               candidate: candidates[i],
               invited: _invited.contains(candidates[i].id),
               onInvite: () => _inviteFriend(candidates[i]),
             ),
           ],
-          const Divider(height: 28, color: Color(0xFFECE7DC)),
+          const Divider(height: 28, color: Color(0xFFD9D9D9)),
           _caps('OU POR LINK'),
           const SizedBox(height: 2),
           const Text('Para quem ainda não está na app. Cada link serve para uma pessoa.',
-              style: TextStyle(fontSize: 13, height: 1.45, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
         ],
         const SizedBox(height: 14),
         Row(children: [
@@ -595,7 +595,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
             child: FilledButton.icon(
               onPressed: _busy ? null : _share,
               icon: const Icon(Hi.arrowUpOnSquare, size: 18),
-              label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+              label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
@@ -616,7 +616,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 shape: const StadiumBorder(),
               ),
-              child: const FittedBox(child: Text('Copiar link', maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+              child: const FittedBox(child: Text('Copiar link', maxLines: 1, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
             ),
           ),
         ]),
@@ -644,12 +644,12 @@ class _FriendInviteRow extends StatelessWidget {
             Text(candidate.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             Text(
                 candidate.username != null && candidate.username!.isNotEmpty ? '@${candidate.username}' : 'Já se seguem',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
           ]),
         ),
         const SizedBox(width: 10),
@@ -657,7 +657,7 @@ class _FriendInviteRow extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 6),
             child: Text('Convidado',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           )
         else
           SizedBox(
@@ -670,7 +670,7 @@ class _FriendInviteRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 minimumSize: const Size(0, 36),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
+                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
               ),
               child: const Text('Convidar'),
             ),

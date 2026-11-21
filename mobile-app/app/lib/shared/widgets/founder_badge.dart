@@ -25,7 +25,7 @@ class FounderBadge extends ConsumerWidget {
           const LineIcon(LineIcon.star, size: 11, fill: true, color: Color(0xFF3F7A4F)),
           const SizedBox(width: 4),
           Text(long ? 'Parceiro fundador' : 'Fundador',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
         ]),
       ),
     );

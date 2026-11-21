@@ -65,9 +65,9 @@ class DateSticker extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('${date.day}',
-                style: const TextStyle(fontSize: 15, height: 16 / 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 16, height: 16 / 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             Text(_mesesCurtos[date.month - 1],
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: monthColor)),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: monthColor)),
           ],
         ),
       ),
