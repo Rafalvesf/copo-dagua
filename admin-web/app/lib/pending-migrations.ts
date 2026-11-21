@@ -438,6 +438,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Os parceiros novos e os fundadores pagam a taxa desde a primeira reserva: os meses sem taxa passam a 0. Fica só o cliente trazido pelo próprio parceiro (a cada 5, sem comissão do parceiro).",
     check: { kind: "marker", id: "208" },
   },
+  {
+    file: "209_pro_free_trial.sql",
+    date: "2026-11-21",
+    title: "Premium grátis 3 meses com cartão",
+    what: "O parceiro põe o cartão e fica Premium já, sem pagar nada durante 3 meses (uma só vez); depois a subscrição é cobrada nesse cartão, até cancelar. Os meses ajustam-se em Definições › Premium. Depois de aplicar, publicar a função partner-pro.",
+    check: { kind: "marker", id: "209" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
