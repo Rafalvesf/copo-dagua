@@ -27,6 +27,9 @@ class EventTable {
   /// Menu igual para todos e cada um paga: total ÷ pessoas.
   final double? shareAmount;
 
+  /// Total da reserva (para a percentagem dos escalões da taxa).
+  final double? totalAmount;
+
   /// Menu escolhido pelo organizador (cópia do pedido).
   final Map<String, dynamic>? package;
   final List<Map<String, dynamic>> extras;
@@ -47,6 +50,7 @@ class EventTable {
     this.eventDate,
     this.choiceDeadline,
     this.shareAmount,
+    this.totalAmount,
     this.package,
     this.extras = const [],
     this.myChoice,
@@ -81,6 +85,7 @@ class EventTable {
         eventDate: j['event_date'] == null ? null : DateTime.tryParse(j['event_date'] as String),
         choiceDeadline: j['choice_deadline'] == null ? null : DateTime.tryParse(j['choice_deadline'] as String),
         shareAmount: (j['share_amount'] as num?)?.toDouble(),
+        totalAmount: (j['total_amount'] as num?)?.toDouble(),
         package: j['package'] is Map ? Map<String, dynamic>.from(j['package'] as Map) : null,
         extras: j['extras'] is List
             ? [for (final e in j['extras'] as List) if (e is Map) Map<String, dynamic>.from(e)]

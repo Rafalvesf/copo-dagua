@@ -449,6 +449,15 @@ final platformDepositPercentageProvider = FutureProvider<double>((ref) async {
 /// `supabase/functions/create-payment-intent/index.ts` — tem de dar
 /// exatamente o mesmo valor que a Stripe vai mostrar a seguir, nunca só
 /// uma aproximação.
+/// Percentagem da taxa na parte de um convidado (190): a mesma conta que
+/// `create-payment-intent` — os escalões do organizador para este parceiro
+/// sobre o total da reserva (ex.: 4 % até 2 000 €), não a percentagem
+/// geral antiga.
+Future<double> guestShareFeePct(WidgetRef ref, String partnerId, double bookingTotal, double share) async {
+  final cfg = await ref.read(organizerFeeForPartnerProvider(partnerId).future);
+  return cfg.effectivePct(bookingTotal > share ? bookingTotal : share);
+}
+
 /// Valor de um pagamento com a taxa de serviço: a percentagem mais o valor
 /// fixo por transação ([kFixedFee], 1 €, 2026-11-08). Igual ao que a Stripe
 /// cobra (`create-payment-intent`).
