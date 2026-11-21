@@ -340,6 +340,12 @@ Deno.serve(async (req) => {
     card_region: region,
     fee_discount_pct: payerDiscountPct,
     fee_discount_points: payerCredit.points,
+    // A taxa que fica nesta transação (percentagem + fixo), para a app a
+    // mostrar tal como é («2 % + 1 €»), não só o desconto.
+    fee_pct_now: partnerAmountCents > 0
+      ? Math.round(((applicationFeeCents - fixedCents) / partnerAmountCents) * 1000) / 10
+      : 0,
+    fee_fixed_cents: fixedCents,
     email: user.email ?? null,
     status: intent.status,
     ...(mbNew ? { multibanco: { entity: mbNew.entity, reference: mbNew.reference, expires_at: mbNew.expires_at } } : {}),

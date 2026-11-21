@@ -55,6 +55,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   double _discountPct = 0;
   // Prémio de convites (migração 210): pontos a menos na percentagem.
   double _discountPoints = 0;
+  // A taxa desta transação, como fica (ex.: «2 % + 1 €»).
+  String? _feeNow;
   MultibancoRef? _mb;
   Timer? _poll;
 
@@ -155,6 +157,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
       _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
           setState(() {
             _mb = info.multibanco;
             _step = info.multibanco == null ? _Step.select : _Step.multibanco;
@@ -224,6 +227,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
       _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
       if (pmId != null && info.cardRegion != null && info.cardRegion != 'EEA' && info.amountCents > before) {
         final ok = await _confirmCardFee(info);
         if (!mounted) return;
@@ -270,6 +274,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
       _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
         return info.clientSecret;
       } catch (e) {
         _fail(e, _Step.select);
@@ -299,6 +304,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       _amountCents = info.amountCents;
       _discountPct = info.feeDiscountPct;
       _discountPoints = info.feeDiscountPoints;
+      _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
       if (info.status == 'succeeded') return _done();
       setState(() => _step = _Step.mbWayWaiting);
       _startPolling();
@@ -479,7 +485,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           line(_discountPct > 0
                   ? 'Taxa de serviço (−${_discountPct.toStringAsFixed(0)} %)'
                   : _discountPoints > 0
-                      ? 'Taxa de serviço (−${_pts(_discountPoints)} % · oferta)'
+                      ? 'Taxa de serviço (${_feeNow ?? '−${_pts(_discountPoints)} %'} · oferta)'
                       : 'Taxa de serviço',
               euros(total - base, cents: true)),
           const Divider(height: 8, color: Color(0xFFECE7DC)),
@@ -495,6 +501,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     );
   }
 
+  static String _eur(double v) => v == v.roundToDouble() ? '${v.toStringAsFixed(0)} €' : '${v.toStringAsFixed(2).replaceAll('.', ',')} €';
+
   static String _pts(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
 
   /// Oferta de convites (pedido 2026-11-21): quantas pessoas convidou e em
@@ -503,7 +511,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
     final s = ref.watch(myInviteStatsProvider).value;
     final times = s == null ? 0 : s.credits;
     final who = s == null || s.counted <= 0 ? '' : 'Convidaste ${s.counted} ${s.counted == 1 ? 'pessoa' : 'pessoas'} que já ${s.counted == 1 ? 'pagou' : 'pagaram'} na app. ';
-    final when = times > 1 ? 'Tens a taxa −${_pts(_discountPoints)} % em $times transações, esta incluída.' : 'A taxa desce ${_pts(_discountPoints)} % nesta transação.';
+    final fee = _feeNow ?? '${_pts(_discountPoints)} % mais baixa';
+    final when = times > 1 ? 'Tens a taxa a $fee em $times transações, esta incluída.' : 'Nesta transação a taxa fica a $fee.';
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
