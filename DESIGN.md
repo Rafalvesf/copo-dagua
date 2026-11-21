@@ -227,7 +227,8 @@ ecrãs. O resto da app mantém a tabela acima.
 - **Barra de progresso** (`AppProgressBar`, `shared/widgets/app_progress.dart`,
   pedido do Rafael 2026-11-21): **em toda a app**, a barra é **verde clarinho `#A9C79A`** (`AppTheme.progress`, pedido 2026-11-21) sobre o trilho `#E0E0E0` e leva **a
   estrela (o ícone novo da app) em cima da ponta**, como quem anda nela —
-  **sem sombra**, com a ponta de baixo da estrela a assentar na barra e
+  **sem sombra**, com a barra a passar pelo meio da estrela e o meio da
+  estrela na ponta do progresso (no início, bem no começo da barra), e
   animada como as outras mascotes (3 vezes ao aparecer) —, e é **animada quando o progresso
   muda** — a barra cresce e a estrela dá um saltinho até ao sítio novo (e
   enche desde o início ao aparecer). Com «reduzir movimento» muda sem
