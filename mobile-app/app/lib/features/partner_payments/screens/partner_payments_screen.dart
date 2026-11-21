@@ -399,7 +399,7 @@ class _ToReceive extends ConsumerWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _Rows([
         _RowData('Sinais por pagar', 'Os clientes ainda não pagaram', euros(b?.pendingDeposits ?? 0)),
-        _RowData('Restante por cobrar', 'Pago até 30 dias antes do evento', euros(b?.uncollectedBalance ?? 0)),
+        _RowData('Restante por cobrar', 'Pago até 14 dias antes do evento', euros(b?.uncollectedBalance ?? 0)),
       ]),
       const SizedBox(height: 8),
       Text(

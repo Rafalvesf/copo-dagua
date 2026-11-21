@@ -188,6 +188,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
   String? _window;
   String? _returnTime;
   int _seats = 0;
+  int _seatsAsked = 0;
   final _departure = TextEditingController();
   late final _message = TextEditingController(text: widget.initialMessage ?? '');
 
@@ -237,11 +238,21 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     if (_loadedFor == _event.id) return;
     setState(() => _loadingPeople = true);
     final (a, c, t) = await eventPeople(_event);
+    // Transporte: as cadeirinhas que os convidados pediram na resposta
+    // ao convite (migração 211).
+    var seats = 0;
+    if (widget.kind == ReserveKind.transporte) {
+      try {
+        seats = ((await supabase.rpc('event_child_seats', params: {'p_wedding_id': _event.id})) as num?)?.toInt() ?? 0;
+      } catch (_) {}
+    }
     if (!mounted) return;
     setState(() {
       _adults = a;
       _children = c;
       _eventTotal = t;
+      _seatsAsked = seats;
+      _seats = seats.clamp(0, c);
       _loadedFor = _event.id;
       _loadingPeople = false;
     });
@@ -487,7 +498,8 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         _counter('Adultos', '13 anos ou mais', _adults, (v) => setState(() => _adults = v)),
         _counter('Crianças', 'Até 12 anos', _children, (v) => setState(() => _children = v)),
         if (widget.kind == ReserveKind.transporte)
-          _counter('Cadeirinhas', 'Para crianças pequenas', _seats, (v) => setState(() => _seats = v), max: _children),
+          _counter('Cadeirinhas', _seatsAsked > 0 ? 'Pedidas pelos convidados · $_seatsAsked' : 'Para crianças pequenas', _seats,
+              (v) => setState(() => _seats = v), max: _children),
       ]),
       const SizedBox(height: 12),
       // Mais do que no evento: avisa e pergunta qual está certo. Menos é
