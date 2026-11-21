@@ -140,7 +140,7 @@ class GuestListItem extends StatelessWidget {
               decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: StickerIcon.shadow),
               child: Text(
                 _initials,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
               ),
             ),
             const SizedBox(width: 12),
@@ -218,7 +218,7 @@ class ConversationListItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.ink,
                       ),
@@ -228,7 +228,7 @@ class ConversationListItem extends StatelessWidget {
                       conversation.lastMessage ?? 'Sem mensagens ainda.',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                     ),
                   ],
                 ),
@@ -241,7 +241,7 @@ class ConversationListItem extends StatelessWidget {
                     Text(
                       _timeLabel!,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: unread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
                         fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
                       ),
@@ -259,7 +259,7 @@ class ConversationListItem extends StatelessWidget {
                       ),
                       child: Text(
                         '${conversation.unreadCount}',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
@@ -339,7 +339,7 @@ class ConversationListItem extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                              fontSize: 15,
                               color: AppTheme.ink,
                             ),
                           ),
@@ -367,7 +367,7 @@ class ConversationListItem extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: AppTheme.inkMuted,
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -387,7 +387,7 @@ class ConversationListItem extends StatelessWidget {
                               '${conversation.unreadCount}',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),

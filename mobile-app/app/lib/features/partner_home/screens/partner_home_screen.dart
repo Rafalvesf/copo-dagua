@@ -114,7 +114,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                                 child: Text(
                                   business,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                 ),
                               ),
                               if (isPro) ...[
@@ -157,7 +157,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                   newRequests.isEmpty
                       ? 'Sem pedidos à espera. Avisamos-te quando chegar um.'
                       : 'Tens ${newRequests.length} ${newRequests.length == 1 ? 'pedido' : 'pedidos'} à espera de resposta.',
-                  style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
+                  style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
                 ),
                 const SizedBox(height: 20),
                 // Rearranjo 2026-11-07 ("tem muitos botões"): o que precisa de
@@ -275,11 +275,11 @@ class _RespondFirstCard extends StatelessWidget {
         Row(children: [
           const Expanded(
             child: Text('RESPONDER PRIMEIRO',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: Color(0xFFC2553D))),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: Color(0xFFC2553D))),
           ),
           GestureDetector(
             onTap: () => context.push('/partner-requests'),
-            child: Text('Ver todos', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+            child: Text('Ver todos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
           ),
         ]),
         for (final (i, b) in shown.indexed) ...[
@@ -295,15 +295,15 @@ class _RespondFirstCard extends StatelessWidget {
                   Text('${b.clientName} · ${b.eventType.label}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   Text([requestDateLabel(b.eventDate), if (b.city.isNotEmpty) b.city].join(' · '),
-                      style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
                 ]),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(color: const Color(0xFFFBEFD3), borderRadius: BorderRadius.circular(999)),
-                child: const Text('Novo', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF8A5A00))),
+                child: const Text('Novo', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF8A5A00))),
               ),
             ]),
           ),
@@ -344,7 +344,7 @@ class _RespondFirstCard extends StatelessWidget {
         if (requests.length > 1) ...[
           const SizedBox(height: 10),
           const Text('Responder em menos de 24 h ajuda-te a aparecer mais acima.',
-              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
         ],
       ]),
     );
@@ -381,19 +381,19 @@ class _WeekStrip extends StatelessWidget {
                   : softCard(radius: 16),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${_wd[day.weekday - 1]} ${day.day}',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: b == null ? AppTheme.inkMuted : AppTheme.ink)),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: b == null ? AppTheme.inkMuted : AppTheme.ink)),
                 const SizedBox(height: 3),
                 Text(b == null ? 'Livre' : b.eventType.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: b == null ? FontWeight.w700 : FontWeight.w700,
                       color: b == null ? AppTheme.inkMuted : AppTheme.ink,
                     )),
                 if (b != null)
                   Text(b.city.isEmpty ? b.clientName : b.city,
-                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
               ]),
             ),
           ),
@@ -432,12 +432,12 @@ class _BizGrid extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
-                        child: Text('$badge', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                        child: Text('$badge', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
                       ),
                   ]),
                   const Spacer(),
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                 ]),
               ),
             ),
@@ -464,14 +464,14 @@ class _ValueList extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                   child: Row(children: [
-                    Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+                    Expanded(child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink))),
                     warn
                         ? Container(
                             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                             decoration: BoxDecoration(color: const Color(0xFFFBEFD3), borderRadius: BorderRadius.circular(999)),
-                            child: Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFF8A5A00))),
+                            child: Text(value, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF8A5A00))),
                           )
-                        : Text(value, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                        : Text(value, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   ]),
                 ),
               ),
@@ -512,7 +512,7 @@ class _ProBadge extends StatelessWidget {
         children: [
           Icon(Hi.trophy, size: 12, color: fg),
           const SizedBox(width: 3),
-          Text('PREMIUM', style: TextStyle(fontSize: 11, letterSpacing: 1, fontWeight: FontWeight.w700, color: fg)),
+          Text('PREMIUM', style: TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: fg)),
         ],
       ),
     );
@@ -545,7 +545,7 @@ class _ProHero extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text('VENDAS ESTE MÊS',
-                    style: TextStyle(fontSize: 13, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _gold)),
+                    style: TextStyle(fontSize: 12, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _gold)),
               ),
               if (change != null)
                 Container(
@@ -556,7 +556,7 @@ class _ProHero extends StatelessWidget {
                   ),
                   child: Text(
                     '${change >= 0 ? '+' : '−'}${_num(change.abs().roundToDouble())}% que o mês passado',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _proText),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _proText),
                   ),
                 ),
             ],
@@ -569,7 +569,7 @@ class _ProHero extends StatelessWidget {
             s == null
                 ? ''
                 : '${s.bookings} ${s.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'} · $pending ${pending == 1 ? 'pendente' : 'pendentes'}',
-            style: const TextStyle(fontSize: 15, color: _proMuted),
+            style: const TextStyle(fontSize: 14, color: _proMuted),
           ),
           if (last.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -603,7 +603,7 @@ class _ProHero extends StatelessWidget {
                       _months[p.start.month - 1],
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: i == last.length - 1 ? FontWeight.w700 : FontWeight.w600,
                         color: i == last.length - 1 ? _gold : _proMuted,
                       ),
@@ -639,10 +639,10 @@ class _ProStatsRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 12, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                Text(label, style: const TextStyle(fontSize: 11, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                 const SizedBox(height: 4),
-                Text(value, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                if (sub != null) Text(sub, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
+                Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                if (sub != null) Text(sub, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
               ],
             ),
           ),

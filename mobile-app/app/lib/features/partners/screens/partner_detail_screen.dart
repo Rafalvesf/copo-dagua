@@ -396,11 +396,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
             const SizedBox(height: 16),
             Text(title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 6),
             Text(body,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 15, height: 1.45, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
             if (recapTitle != null) ...[
               const SizedBox(height: 16),
               Container(
@@ -412,17 +412,17 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                       Text(recapTitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       if (recapMeta != null && recapMeta.isNotEmpty)
                         Text(recapMeta,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                     ]),
                   ),
                   if (recapValue != null) ...[
                     const SizedBox(width: 10),
-                    Text(recapValue, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    Text(recapValue, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ],
                 ]),
               ),
@@ -659,11 +659,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     Widget sectionTitle(String t, {String? action, VoidCallback? onAction}) => Padding(
           padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
           child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Expanded(child: Text(t, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: ink))),
+            Expanded(child: Text(t, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink))),
             if (action != null)
               SnappyTap(
                 onTap: onAction,
-                child: Text(action, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                child: Text(action, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
               ),
           ]),
         );
@@ -750,7 +750,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 relationshipStatus == PartnerRelationshipStatus.booked
                     ? 'Já reservaste ${partner.name} para este evento.'
                     : 'Já pediste orçamento a ${partner.name} para este evento.',
-                style: const TextStyle(fontSize: 14, color: ink, height: 1.35),
+                style: const TextStyle(fontSize: 13, color: ink, height: 1.35),
               ),
             ),
           ]),
@@ -807,12 +807,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         ? Padding(
                             padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
                             child: Row(children: [
-                              const Expanded(child: Text('Menus', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: ink))),
+                              const Expanded(child: Text('Menus', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink))),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
                                 child: const Text('Escolhes depois de reservares',
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
                               ),
                             ]),
                           )
@@ -846,7 +846,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                       padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 0),
                       child: Text(
                         'Só para veres e decidires. Depois de reservares, cada convidado escolhe o seu na app (e tu o teu). Ninguém escolhe pelos outros.',
-                        style: TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.4),
+                        style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4),
                       ),
                     ),
                   if (!widget.selectionMode && canReserve)
@@ -904,9 +904,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         child: VenueMap(label: partner.name, address: partner.location, height: 140),
                       ),
                       const SizedBox(height: 12),
-                      Text(partner.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: ink)),
+                      Text(partner.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
                       const SizedBox(height: 2),
-                      Text(partner.location, style: const TextStyle(fontSize: 14, color: muted)),
+                      Text(partner.location, style: const TextStyle(fontSize: 13, color: muted)),
                       const SizedBox(height: 12),
                       ProfileButton('Abrir mapa', onTap: () => showNavigationSheet(context, label: partner.name, address: partner.location)),
                     ]),
@@ -924,7 +924,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     child: Text(
                       '"Seguir" e "Pedir orçamento" pedem para entrar ou criar conta, e voltam a esta página.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+                      style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                     ),
                   ),
               ],
@@ -1117,7 +1117,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
           child: const Text('Ainda sem avaliações.',
-              style: TextStyle(fontSize: 15, color: Color(0xFF57534E))),
+              style: TextStyle(fontSize: 14, color: Color(0xFF57534E))),
         )
       else ...[
         Container(
@@ -1128,9 +1128,9 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
             Row(children: [
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Experiência geral', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  const Text('Experiência geral', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   Text('Com base em $count ${count == 1 ? 'avaliação' : 'avaliações'}',
-                      style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ]),
               ),
               Container(
@@ -1157,7 +1157,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
                     SizedBox(
                       width: 72,
                       child: Text('$star ${star == 1 ? 'estrela' : 'estrelas'}',
-                          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                     ),
                     Expanded(
                       child: Container(
@@ -1176,7 +1176,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
                       width: 28,
                       child: Text('$n',
                           textAlign: TextAlign.right,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                   ]);
                 }),
@@ -1224,7 +1224,7 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (followers > 0) ...[
             Text('Seguido por $followers ${followers == 1 ? 'pessoa' : 'pessoas'} na À Nossa!',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
             const SizedBox(height: 12),
           ],
           Row(children: [
@@ -1308,7 +1308,7 @@ class _PartnerUnavailable extends StatelessWidget {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const Text('Este parceiro não está disponível.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 16),
               ProfileButton('Ir para a À Nossa!', dark: true, onTap: () => context.go('/welcome')),
             ]),
@@ -1356,30 +1356,30 @@ class PackageChoiceCard extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Expanded(child: Text(package.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: fg))),
+                  Expanded(child: Text(package.name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: fg))),
                   const SizedBox(width: 10),
-                  Text(price, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: fg)),
+                  Text(price, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: fg)),
                 ]),
                 if (package.description.trim().isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text(package.description.trim(), style: TextStyle(fontSize: 14, height: 1.4, color: mu)),
+                  Text(package.description.trim(), style: TextStyle(fontSize: 13, height: 1.4, color: mu)),
                 ],
                 // «Inclui / Não inclui» do parceiro, no pacote escolhido (188).
                 if (selected && package.includes.isNotEmpty) ...[
                   Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 10), color: Colors.white.withValues(alpha: 0.3)),
-                  const Text('INCLUI', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
+                  const Text('INCLUI', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
                   const SizedBox(height: 4),
                   for (final l in package.includes)
                     Padding(
                       padding: const EdgeInsets.only(top: 3),
                       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         const Padding(padding: EdgeInsets.only(top: 7, right: 8), child: CircleAvatar(radius: 2.5, backgroundColor: Colors.white)),
-                        Expanded(child: Text(l, style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.white))),
+                        Expanded(child: Text(l, style: const TextStyle(fontSize: 13, height: 1.4, color: Colors.white))),
                       ]),
                     ),
                   if (package.excludes != null) ...[
                     const SizedBox(height: 6),
-                    Text('NÃO INCLUI: ${package.excludes}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: mu)),
+                    Text('NÃO INCLUI: ${package.excludes}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: mu)),
                   ],
                 ],
               ]),
@@ -1411,14 +1411,14 @@ class ExtraChoiceRow extends StatelessWidget {
             child: Row(children: [
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(extra.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text(extra.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   if (extra.details.isNotEmpty)
-                    Text(extra.details.join(' · '), style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                    Text(extra.details.join(' · '), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ]),
               ),
               const SizedBox(width: 10),
               Text('+${euros(extra.price)}${priceUnitSuffix(extra.priceUnit)}',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(width: 10),
               Container(
                 width: 36,
@@ -1453,7 +1453,7 @@ class _EventPickerSheet extends StatelessWidget {
         ),
         child: Text(owner ? 'Organizo' : 'Posso contratar',
             style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: owner ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
       );
@@ -1489,10 +1489,10 @@ class _EventPickerSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             const Text('Reservar — para qual evento?',
-                style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 4),
             Text('$partnerName vai ficar reservado no evento que escolheres.',
-                style: const TextStyle(fontSize: 14, color: Color(0xFF57534E))),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF57534E))),
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
@@ -1523,13 +1523,13 @@ class _EventPickerSheet extends StatelessWidget {
                                   Text(events[i].displayNames,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                   if (_meta(events[i]).isNotEmpty) ...[
                                     const SizedBox(height: 2),
                                     Text(_meta(events[i]),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 14, color: Color(0xFF57534E))),
+                                        style: const TextStyle(fontSize: 13, color: Color(0xFF57534E))),
                                   ],
                                 ],
                               ),
@@ -1547,7 +1547,7 @@ class _EventPickerSheet extends StatelessWidget {
             const SizedBox(height: 12),
             const Text('Só aparecem os eventos que organizas ou onde podes contratar.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Color(0xFF57534E))),
+                style: TextStyle(fontSize: 13, color: Color(0xFF57534E))),
           ],
         ),
       ),
@@ -1738,7 +1738,7 @@ class _PartnerHero extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                      child: const Text('À Nossa!', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      child: const Text('À Nossa!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     )
                   else
                     _GlassButton(
@@ -1757,11 +1757,11 @@ class _PartnerHero extends StatelessWidget {
                             Text(partner.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
                             Text(metaLine,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.88))),
+                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.88))),
                           ]),
                         ),
                       ),
@@ -1780,7 +1780,7 @@ class _PartnerHero extends StatelessWidget {
                           alignment: Alignment.center,
                           decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(22)),
                           child: const Text('Abrir na app',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
                       ),
                   ] else ...[
@@ -1840,7 +1840,7 @@ class _PartnerHeadCardState extends State<_PartnerHeadCard> {
   Widget _line(Widget icon, Widget text) => Row(children: [
         SizedBox(width: 18, child: icon),
         const SizedBox(width: 10),
-        Expanded(child: DefaultTextStyle.merge(style: const TextStyle(fontSize: 15, color: AppTheme.ink), child: text)),
+        Expanded(child: DefaultTextStyle.merge(style: const TextStyle(fontSize: 14, color: AppTheme.ink), child: text)),
       ]);
 
   @override
@@ -1892,7 +1892,7 @@ class _PartnerHeadCardState extends State<_PartnerHeadCard> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text('${p.yearsExperience} ${p.yearsExperience == 1 ? 'ano' : 'anos'} de experiência',
-                    style: const TextStyle(fontSize: 15, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.ink)),
               ),
             ] else
               const Spacer(),
@@ -1905,7 +1905,7 @@ class _PartnerHeadCardState extends State<_PartnerHeadCard> {
               maxLines: _more || !long ? null : 4,
               overflow: _more || !long ? null : TextOverflow.ellipsis,
               textAlign: TextAlign.justify,
-              style: const TextStyle(fontSize: 15, height: 1.45, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
           if (long && !_more)
             Align(
               alignment: Alignment.centerLeft,
@@ -1913,7 +1913,7 @@ class _PartnerHeadCardState extends State<_PartnerHeadCard> {
                 onTap: () => setState(() => _more = true),
                 child: const Padding(
                   padding: EdgeInsets.only(top: 4),
-                  child: Text('Ler mais', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  child: Text('Ler mais', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
               ),
             ),
@@ -1977,15 +1977,15 @@ class _PackageRow extends StatelessWidget {
             ],
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Text(p.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(p.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 if (meta.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(meta, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  Text(meta, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ],
               ]),
             ),
             const SizedBox(width: 12),
-            Text(price, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(price, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
         ),
       ),
@@ -2008,19 +2008,19 @@ class _ReferenceCard extends StatelessWidget {
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('VALOR DE REFERÊNCIA',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
           const SizedBox(height: 6),
           Text('≈ ${euros(price)}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1.1)),
           if (note != null && note!.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(note!, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            Text(note!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ],
           const SizedBox(height: 12),
           const Divider(height: 1, thickness: 1, color: Color(0xFFD9D9D9)),
           const SizedBox(height: 12),
           const Text(
             'Indicado pelo parceiro. O valor final depende do teu evento: pedes orçamento e recebes uma proposta.',
-            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.4),
+            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4),
           ),
         ]),
       );
@@ -2055,11 +2055,11 @@ class _BottomBar extends StatelessWidget {
               Text(box.$1,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 10, height: 1.2, letterSpacing: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 9, height: 1.2, letterSpacing: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
               Text(box.$2,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 17, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ]),
           ),
           const SizedBox(width: 12),
@@ -2075,7 +2075,7 @@ class _BottomBar extends StatelessWidget {
                   textStyle: const TextStyle(
                       fontFamily: AppTheme.fontFamily,
                       fontFamilyFallback: AppTheme.fontFamilyFallback,
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700),
                 ),
                 child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),

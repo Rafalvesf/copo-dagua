@@ -97,7 +97,7 @@ class GuestHero extends StatelessWidget {
     ].join(' · ');
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(wedding.eventType.label.toUpperCase(),
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
       const SizedBox(height: 6),
       Text(wedding.displayNames,
           style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -105,7 +105,7 @@ class GuestHero extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           [when, if (days != null && days > 0) days == 1 ? 'falta 1 dia' : 'faltam $days dias', ?goingWith].join(' · '),
-          style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
         ),
       ],
     ]);
@@ -156,11 +156,11 @@ class GuestShortcutsRow extends StatelessWidget {
                 Text(it.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 Text(it.sub,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
           ),
@@ -178,11 +178,11 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Row(children: [
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
           if (action != null)
             GestureDetector(
               onTap: onAction,
-              child: Text(action!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: guestButtonGreen)),
+              child: Text(action!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: guestButtonGreen)),
             ),
         ]),
       );
@@ -206,15 +206,15 @@ class GuestAnswerCard extends ConsumerWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(declined ? 'Disseste que não vais' : 'Ainda não respondeste',
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 2),
               Text(declined ? 'Podes mudar a resposta.' : 'Diz aos anfitriões se vais.',
-                  style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
           FilledButton(
             onPressed: edit,
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, foregroundColor: Colors.white, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700), ),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, foregroundColor: Colors.white, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: Text(declined ? 'Mudar' : 'Responder'),
           ),
         ]),
@@ -234,7 +234,7 @@ class GuestAnswerCard extends ConsumerWidget {
         top: 10,
         trailing: GestureDetector(
           onTap: edit,
-          child: const Text('Alterar', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: guestButtonGreen)),
+          child: const Text('Alterar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: guestButtonGreen)),
         ),
       ),
       KitGroup([
@@ -273,16 +273,16 @@ class GuestDayStrip extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: guestCard(radius: 18),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(items[i].time, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: guestButtonGreen)),
+              Text(items[i].time, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: guestButtonGreen)),
               const SizedBox(height: 4),
               Text(items[i].title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               Text(items[i].place,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
             ]),
           ),
         ),
@@ -319,9 +319,9 @@ class GuestPlaceCard extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         // Mockup «Páginas do convidado»: nome 16, local 13 e «Como chegar» 44.
-        Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (address?.isNotEmpty == true && address != title)
-          Text(address!, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+          Text(address!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         const SizedBox(height: 12),
         Row(children: [
           Expanded(
@@ -337,7 +337,7 @@ class GuestPlaceCard extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 side: const BorderSide(color: AppTheme.ink, width: 1.5),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
               ),
               child: const Text('Copiar morada', maxLines: 1),
             ),
@@ -352,7 +352,7 @@ class GuestPlaceCard extends ConsumerWidget {
                 minimumSize: const Size(0, 44),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
+                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
               ),
               child: const Text('Abrir mapa', maxLines: 1),
             ),
@@ -443,9 +443,9 @@ class GuestGroupRow extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('Conversa dos convidados',
                     maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 SizedBox(height: 2),
-                Text('Fala com quem também vai', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                Text('Fala com quem também vai', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
             const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
@@ -476,11 +476,11 @@ class GuestTodayHero extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(wedding.displayNames.toUpperCase(),
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: Color(0xCCFFFFFF))),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: Color(0xCCFFFFFF))),
             const SizedBox(height: 4),
             Text('É hoje!', style: AppTypography.displaySerif(fontSize: 40, fontWeight: FontWeight.w800, color: Colors.white)),
             Text([weekday, if (place.isNotEmpty) place].join(' · '),
-                style: const TextStyle(fontSize: 15, color: Color(0xE6FFFFFF))),
+                style: const TextStyle(fontSize: 14, color: Color(0xE6FFFFFF))),
           ]),
         ),
       ]),
@@ -540,16 +540,16 @@ class _GuestNowCardState extends State<GuestNowCard> {
       decoration: guestCard(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(current == null ? 'AINDA NÃO COMEÇOU' : 'A DECORRER',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1.1, color: guestButtonGreen)),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.1, color: guestButtonGreen)),
         const SizedBox(height: 4),
         if (current != null) ...[
-          Text(current.$1.title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          Text(current.$1.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           Text(
             [
               next == null ? 'Desde as ${hm(current.$2)}' : '${hm(current.$2)} – ${hm(next.$2)}',
               if (current.$1.place.isNotEmpty) current.$1.place,
             ].join(' · '),
-            style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
           ),
           const SizedBox(height: 12),
           AppProgressBar(value: progress, height: 7, track: const Color(0xFFE9E8E4)),
@@ -557,14 +557,14 @@ class _GuestNowCardState extends State<GuestNowCard> {
         if (next != null) ...[
           const SizedBox(height: 12),
           Row(children: [
-            const Text('A SEGUIR  ', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
+            const Text('A SEGUIR  ', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
             Expanded(
               child: Text('${next.$1.title} · ${hm(next.$2)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
-            Text(inLabel(next.$2), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: guestButtonGreen)),
+            Text(inLabel(next.$2), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: guestButtonGreen)),
           ]),
         ],
       ]),
@@ -589,10 +589,10 @@ class GuestBigTableCard extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('A TUA MESA',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1.1, color: AppTheme.inkMuted)),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.1, color: AppTheme.inkMuted)),
                 const SizedBox(height: 4),
                 Text(table == null ? 'Ainda não atribuída' : (mates > 0 ? '$mates pessoas' : 'Vê quem está contigo'),
-                    style: const TextStyle(fontSize: 15, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 14, color: AppTheme.ink)),
               ]),
             ),
             if (table != null)
@@ -616,7 +616,7 @@ class GuestPhotosCta extends StatelessWidget {
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16.5, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15.5, fontWeight: FontWeight.w700),
         ),
       );
 }
@@ -650,7 +650,7 @@ class GuestTimeline extends StatelessWidget {
                 width: 46,
                 child: Text(program[i].time,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: i == cur ? guestButtonGreen : AppTheme.inkMuted,
                     )),
@@ -680,13 +680,13 @@ class GuestTimeline extends StatelessWidget {
                     Text(
                       i == cur ? '${program[i].title} · agora' : program[i].title,
                       style: TextStyle(
-                        fontSize: 15.5,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
                         color: i == cur ? guestButtonGreen : AppTheme.ink,
                       ),
                     ),
                     if (program[i].place.isNotEmpty)
-                      Text(program[i].place, style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
+                      Text(program[i].place, style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
                   ]),
                 ),
               ),
@@ -801,12 +801,12 @@ class GuestTablesAlerts extends ConsumerWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(caps, style: TextStyle(fontSize: 12, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: capsColor)),
+              Text(caps, style: TextStyle(fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: capsColor)),
               Text(title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 15, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
           const SizedBox(width: 10),
@@ -815,7 +815,7 @@ class GuestTablesAlerts extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             alignment: Alignment.center,
             decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
-            child: Text(cta, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+            child: Text(cta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
           ),
         ]),
       ),

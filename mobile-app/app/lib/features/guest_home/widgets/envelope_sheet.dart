@@ -98,9 +98,9 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
               child: Row(children: [
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                    Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                     const SizedBox(height: 2),
-                    Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ]),
                 ),
                 Icon(Hi.documentDuplicate, size: 18, color: AppTheme.accentOliveDark, semanticLabel: 'Copiar $what'),
@@ -135,7 +135,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
           ],
           Expanded(
             child: Text(_step2 ? 'Faz a transferência' : 'Envelope digital',
-                style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           ),
         ]),
         const SizedBox(height: 4),
@@ -143,7 +143,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
           _step2
               ? 'No teu banco (ou MB WAY para IBAN), transfere para ${widget.wedding.displayNames}. Toca para copiar.'
               : 'O dinheiro vai diretamente para a conta de ${widget.wedding.displayNames}, por transferência.',
-          style: const TextStyle(fontSize: 14.5, height: 1.4, color: AppTheme.inkMuted),
+          style: const TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 16),
         if (!_step2) ...[
@@ -198,11 +198,11 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
           const SizedBox(height: 4),
           const Text(
             'Depois de fazeres a transferência, confirma aqui para os anfitriões saberem que o envelope é teu.',
-            style: TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.inkMuted),
+            style: TextStyle(fontSize: 12.5, height: 1.4, color: AppTheme.inkMuted),
           ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 14)),
+            Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
           ],
           const SizedBox(height: 12),
           FilledButton(

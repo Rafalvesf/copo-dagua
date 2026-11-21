@@ -54,7 +54,7 @@ class InfoTag extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: green ? const Color(0xFF3F7A4F) : (onPhoto ? AppTheme.ink : const Color(0xFF3A3733)),
             )),
@@ -73,7 +73,7 @@ class RatingPill extends StatelessWidget {
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Hi.star, size: 13, color: AppTheme.ink),
           const SizedBox(width: 4),
-          Text(rating, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(rating, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
       );
 }
@@ -241,7 +241,7 @@ class PartnerBigCard extends ConsumerWidget {
                       child: Text(capFirst(partner.name),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     if (badges != null) ...[const SizedBox(width: 6), badges!],
                     const Spacer(),
@@ -250,13 +250,13 @@ class PartnerBigCard extends ConsumerWidget {
                   Text(partner.primaryCategoryLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   if (meta.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(meta,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                        style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   ],
                 ]),
               ),
@@ -277,7 +277,7 @@ class PartnerBigCard extends ConsumerWidget {
                             ? Text(foot,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted))
+                                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))
                             : const SizedBox.shrink(),
                   ),
                 ),
@@ -344,7 +344,7 @@ class PartnerListRow extends StatelessWidget {
                   child: Text(partner.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
                 if (badges != null) ...[const SizedBox(width: 6), badges!],
               ]),
@@ -352,7 +352,7 @@ class PartnerListRow extends StatelessWidget {
               Text([_meta(partner), if (rating != null) '★ $rating'].join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
           const SizedBox(width: 10),
@@ -418,13 +418,13 @@ class SectionHeading extends StatelessWidget {
             child: Text(title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           if (action != null)
             SnappyTap(
               onTap: onAction,
               child: Text(action!,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
         ]),
       );
@@ -498,7 +498,7 @@ class CategoryTile extends StatelessWidget {
               child: Text(label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
             ),
           ]),
         ),

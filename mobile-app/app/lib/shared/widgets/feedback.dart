@@ -141,7 +141,7 @@ class InfoNote extends StatelessWidget {
             Icon(icon, size: 18, color: AppTheme.inkMuted),
             const SizedBox(width: 10),
           ],
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 14, color: AppTheme.ink, height: 1.4))),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: AppTheme.ink, height: 1.4))),
         ],
       ),
     );

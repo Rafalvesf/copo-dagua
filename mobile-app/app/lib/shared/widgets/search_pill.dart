@@ -43,10 +43,10 @@ class SearchPill extends StatelessWidget {
             child: TextField(
               controller: controller,
               textInputAction: TextInputAction.search,
-              style: TextStyle(fontSize: 16, fontWeight: flat ? FontWeight.w600 : null, color: AppTheme.ink),
+              style: TextStyle(fontSize: 15, fontWeight: flat ? FontWeight.w600 : null, color: AppTheme.ink),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: TextStyle(fontSize: 16, fontWeight: flat ? FontWeight.w600 : null, color: const Color(0xFF6E6A63)),
+                hintStyle: TextStyle(fontSize: 15, fontWeight: flat ? FontWeight.w600 : null, color: const Color(0xFF6E6A63)),
                 isDense: true,
                 filled: false,
                 border: InputBorder.none,

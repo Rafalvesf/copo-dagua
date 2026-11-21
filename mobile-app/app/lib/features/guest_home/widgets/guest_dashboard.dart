@@ -20,9 +20,9 @@ import 'guest_home_sections.dart' show programMinutes;
 // DESIGN.md §6.4): sem caixas brancas, só o destaque (resumo / agora / a tua
 // resposta) numa caixa branca com contorno; uma linha antes de cada bloco.
 
-const _caps = TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted);
-const _meta = TextStyle(fontSize: 14, color: AppTheme.inkMuted);
-const _title17 = TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink);
+const _caps = TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted);
+const _meta = TextStyle(fontSize: 13, color: AppTheme.inkMuted);
+const _title17 = TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink);
 
 /// Caixa branca de destaque: contorno preto 1,5, cantos 22, sem sombra.
 BoxDecoration dashHighlight() =>
@@ -48,7 +48,7 @@ class DashButton36 extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
           ),
           child: Text(label,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: outlined ? AppTheme.ink : Colors.white)),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: outlined ? AppTheme.ink : Colors.white)),
         ),
       );
 }
@@ -126,7 +126,7 @@ class DashCover extends StatelessWidget {
                             border: Border.all(color: AppTheme.ink, width: 2),
                           ),
                           child: Text(groupUnread > 99 ? '99+' : '$groupUnread',
-                              style: const TextStyle(fontSize: 13, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              style: const TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                         ),
                       ),
                     ),
@@ -141,7 +141,7 @@ class DashCover extends StatelessWidget {
             bottom: 22,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(wedding.eventType.label.toUpperCase(),
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2, color: Color(0xE6FFFFFF))),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: Color(0xE6FFFFFF))),
               const SizedBox(height: 4),
               Text(title,
                   maxLines: 2,
@@ -149,7 +149,7 @@ class DashCover extends StatelessWidget {
                   style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: Colors.white)),
               if (meta.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(meta, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: Color(0xEBFFFFFF))),
+                Text(meta, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Color(0xEBFFFFFF))),
               ],
             ]),
           ),
@@ -275,7 +275,7 @@ class _DashNowState extends State<DashNow> {
       padding: const EdgeInsets.all(18),
       decoration: dashHighlight(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(current.$1.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(current.$1.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         Text(
           [
             next == null ? 'Desde as ${hm(current.$2)}' : '${hm(current.$2)} – ${hm(next.$2)}',
@@ -324,7 +324,7 @@ class DashTable extends StatelessWidget {
                   height: 56,
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(color: Color(0xFFE6E6E6), shape: BoxShape.circle),
-                  child: Text('$table', style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  child: Text('$table', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
               ),
               for (final (i, n) in people.indexed)
@@ -337,7 +337,7 @@ class DashTable extends StatelessWidget {
                           height: 26,
                           alignment: Alignment.center,
                           decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                          child: const Text('T', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+                          child: const Text('T', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
                         )
                       : V2Avatar(n, size: 26),
                 ),
@@ -416,7 +416,7 @@ class DashProgram extends StatelessWidget {
           KitRow(
             lead: SizedBox(
               width: 52,
-              child: Text(p.time, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              child: Text(p.time, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
             title: p.title,
             sub: p.place.isEmpty ? null : p.place,
@@ -475,16 +475,16 @@ class DashDressCode extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             if (style != null) ...[
-              Text(style, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(style, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 2),
-              Text(dressStyleHints[style]!, style: const TextStyle(fontSize: 15, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(dressStyleHints[style]!, style: const TextStyle(fontSize: 14, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ],
             if (note.isNotEmpty) ...[
               if (style != null) const SizedBox(height: 6),
               Text(note,
                   style: style == null
-                      ? const TextStyle(fontSize: 17, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink)
-                      : const TextStyle(fontSize: 14, height: 1.35, color: AppTheme.inkMuted)),
+                      ? const TextStyle(fontSize: 16, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink)
+                      : const TextStyle(fontSize: 13, height: 1.35, color: AppTheme.inkMuted)),
             ],
           ]),
         ),
@@ -582,7 +582,7 @@ Widget _big(String label, VoidCallback onTap, {bool outlined = false}) => Snappy
           border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
           borderRadius: BorderRadius.circular(26),
         ),
-        child: Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: outlined ? AppTheme.ink : Colors.white)),
+        child: Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: outlined ? AppTheme.ink : Colors.white)),
       ),
     );
 

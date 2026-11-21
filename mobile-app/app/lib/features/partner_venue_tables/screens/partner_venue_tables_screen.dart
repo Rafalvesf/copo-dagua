@@ -63,7 +63,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
               child: Text(
                 'Ainda não configuraste nenhum tipo de mesa. Os clientes só veem um número real de mesas depois de adicionares pelo menos um tipo.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.inkMuted, fontSize: 15),
+                style: TextStyle(color: AppTheme.inkMuted, fontSize: 14),
               ),
             )
           else ...[

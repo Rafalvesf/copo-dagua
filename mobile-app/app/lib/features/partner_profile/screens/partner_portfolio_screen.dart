@@ -139,10 +139,10 @@ class _PartnerPortfolioScreenState extends ConsumerState<PartnerPortfolioScreen>
                             SizedBox(height: 16),
                             Text('Ainda não tens fotos',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             SizedBox(height: 4),
                             Text('São a primeira coisa que os clientes veem.',
-                                textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                           ]),
                         )
                       else ...[
@@ -244,7 +244,7 @@ class _ActionPill extends StatelessWidget {
         style: TextStyle(
           color: outlined ? AppTheme.ink : Colors.white,
           fontWeight: FontWeight.w700,
-          fontSize: 16,
+          fontSize: 15,
         ),
       ),
     );

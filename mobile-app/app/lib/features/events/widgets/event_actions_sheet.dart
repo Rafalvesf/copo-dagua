@@ -68,8 +68,8 @@ class _EventActionsState extends State<_EventActions> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(16)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text(label, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: color)),
-            if (sub != null) Text(sub, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+            if (sub != null) Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ]),
         ),
       );
@@ -80,7 +80,7 @@ class _EventActionsState extends State<_EventActions> {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(widget.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 14),
         if (!_confirmDelete) ...[
           _row('Arquivar evento',
@@ -95,7 +95,7 @@ class _EventActionsState extends State<_EventActions> {
           ],
         ] else ...[
           Text('Apagar «${widget.name}»? Deixa de aparecer a ti, aos convidados e no Descobrir. Fica nas Definições, de onde o podes restaurar.',
-              style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink)),
           const SizedBox(height: 16),
           Row(children: [
             Expanded(
@@ -129,7 +129,7 @@ class _EventActionsState extends State<_EventActions> {
         ],
         if (_error != null) ...[
           const SizedBox(height: 12),
-          Text(_error!, style: const TextStyle(fontSize: 14, color: AppStatusColors.declined)),
+          Text(_error!, style: const TextStyle(fontSize: 13, color: AppStatusColors.declined)),
         ],
       ]),
     );

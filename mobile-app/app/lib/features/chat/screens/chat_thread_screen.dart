@@ -625,7 +625,7 @@ class _QuickReply extends StatelessWidget {
             borderRadius: BorderRadius.circular(17),
             border: Border.all(color: const Color(0xFFD6D0C2), width: 1.5),
           ),
-          child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
       );
 }
@@ -668,13 +668,13 @@ class _PayOrLaterSheet extends StatelessWidget {
             ),
           ),
           Text(canPayNow ? 'Paga para confirmar' : 'Reservado!',
-              style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 6),
           Text(
             canPayNow
                 ? 'Falta pouco para o prazo. Paga para confirmar.'
                 : 'Guardámos a tua reserva. Ainda não é preciso pagar.',
-            style: const TextStyle(fontSize: 15, height: 1.5, color: AppTheme.inkMuted),
+            style: const TextStyle(fontSize: 14, height: 1.5, color: AppTheme.inkMuted),
           ),
           const SizedBox(height: 14),
           Container(
@@ -684,15 +684,15 @@ class _PayOrLaterSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(22),
             ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 2),
-              Text('Total ${euros(total)}', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              Text('Total ${euros(total)}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               if (sinal != null) ...[
                 const Divider(height: 22, color: Color(0xFFD9D9D9)),
                 Row(children: [
                   const Expanded(
-                      child: Text('Sinal para confirmar', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
-                  Text(euros(sinal!), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      child: Text('Sinal para confirmar', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+                  Text(euros(sinal!), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ]),
               ],
             ]),
@@ -706,7 +706,7 @@ class _PayOrLaterSheet extends StatelessWidget {
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
               ),
               child: Text(canPayNow ? 'Pagar ${euros(payAmount)}' : 'OK'),
             ),
@@ -717,14 +717,14 @@ class _PayOrLaterSheet extends StatelessWidget {
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.ink,
               minimumSize: const Size(0, 36),
-              textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
+              textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
             ),
             child: const Text('Pagar depois'),
           ),
           if (!canPayNow) ...[
             const SizedBox(height: 6),
             const Text('Avisamos-te 3 dias antes do prazo para pagares!',
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 14, height: 1.5, color: AppTheme.inkMuted)),
+                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, height: 1.5, color: AppTheme.inkMuted)),
           ],
         ]),
       ),

@@ -103,7 +103,7 @@ class AuthHeading extends StatelessWidget {
           const SizedBox(height: 28),
         Text(title, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 8),
-        Text(subtitle, style: const TextStyle(fontSize: 16, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
+        Text(subtitle, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
       ],
     );
   }
@@ -166,7 +166,7 @@ class _AuthFieldState extends State<AuthField> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (widget.label.isNotEmpty) ...[
-            Text(widget.label, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+            Text(widget.label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             const SizedBox(height: 8),
           ],
           AnimatedContainer(
@@ -195,10 +195,10 @@ class _AuthFieldState extends State<AuthField> {
                     keyboardType: widget.keyboardType,
                     onChanged: widget.onChanged,
                     autofillHints: widget.autofillHints,
-                    style: const TextStyle(fontSize: 18, color: AppTheme.ink),
+                    style: const TextStyle(fontSize: 17, color: AppTheme.ink),
                     decoration: InputDecoration(
                       hintText: widget.hint,
-                      hintStyle: const TextStyle(fontSize: 18, color: _placeholder),
+                      hintStyle: const TextStyle(fontSize: 17, color: _placeholder),
                       filled: false,
                       isDense: true,
                       border: InputBorder.none,
@@ -222,7 +222,7 @@ class _AuthFieldState extends State<AuthField> {
           ),
           if (error) ...[
             const SizedBox(height: 6),
-            Text(widget.errorText!, style: const TextStyle(fontSize: 13, color: AppStatusColors.declined)),
+            Text(widget.errorText!, style: const TextStyle(fontSize: 12, color: AppStatusColors.declined)),
           ],
         ],
       ),
@@ -251,7 +251,7 @@ class AuthPrimaryButton extends StatelessWidget {
           textStyle: const TextStyle(
             fontFamily: AppTheme.fontFamily,
             fontFamilyFallback: AppTheme.fontFamilyFallback,
-            fontSize: 17,
+            fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -288,7 +288,7 @@ class AuthSocialButton extends StatelessWidget {
             textStyle: const TextStyle(
               fontFamily: AppTheme.fontFamily,
               fontFamilyFallback: AppTheme.fontFamilyFallback,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -324,7 +324,7 @@ class AuthOrDivider extends StatelessWidget {
           Expanded(child: Divider(color: AppTheme.borderMuted, height: 1)),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Text('ou', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            child: Text('ou', style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
           ),
           Expanded(child: Divider(color: AppTheme.borderMuted, height: 1)),
         ],

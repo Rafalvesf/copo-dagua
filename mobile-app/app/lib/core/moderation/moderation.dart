@@ -107,12 +107,12 @@ Future<void> _report(BuildContext context, ReportKind kind, String targetId) asy
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
             child: Text('Porque queres denunciar esta ${kind.noun}?',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           const Padding(
             padding: EdgeInsets.fromLTRB(20, 0, 20, 6),
             child: Text('A equipa À Nossa! revê todas as denúncias em menos de 24 horas. Quem publicou não sabe que foste tu.',
-                style: TextStyle(fontSize: 14, color: AppTheme.inkMuted, height: 1.35)),
+                style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35)),
           ),
           for (final r in _reasons)
             ListTile(title: Text(r.$2), onTap: () => Navigator.of(ctx).pop(r.$1)),
@@ -194,10 +194,10 @@ Future<void> showReportPicker(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Que mensagem queres denunciar?',
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 4),
           const Text('Também podes tocar sem largar numa mensagem.',
-              style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+              style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
           Flexible(
             child: ListView(shrinkWrap: true, children: [

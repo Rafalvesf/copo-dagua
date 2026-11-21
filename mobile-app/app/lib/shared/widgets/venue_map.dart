@@ -163,7 +163,7 @@ class _Tiles extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               color: const Color(0xCCFFFFFF),
-              child: const Text('© OpenStreetMap', style: TextStyle(fontSize: 10, color: AppTheme.inkMuted)),
+              child: const Text('© OpenStreetMap', style: TextStyle(fontSize: 9, color: AppTheme.inkMuted)),
             ),
           ),
         ],

@@ -46,8 +46,8 @@ class GuestOrganizersCard extends ConsumerWidget {
                             Text(o.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                            const Text('Organizador', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            const Text('Organizador', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                           ],
                         ),
                       ),
@@ -75,7 +75,7 @@ class RowPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700);
+    const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700);
     const pad = EdgeInsets.symmetric(horizontal: 16);
     if (secondary) {
       return OutlinedButton(

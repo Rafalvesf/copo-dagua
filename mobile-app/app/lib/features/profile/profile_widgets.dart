@@ -69,7 +69,7 @@ class FollowedByRow extends StatelessWidget {
         child: Text(text,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       ),
     ]);
   }
@@ -120,8 +120,8 @@ class ProfileCard_Users extends StatelessWidget {
   });
 
   Widget _stat(int n, String label) => Column(children: [
-        Text('$n', style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+        Text('$n', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       ]);
 
   @override
@@ -143,7 +143,7 @@ class ProfileCard_Users extends StatelessWidget {
           Row(children: [
             Expanded(
               child: Row(children: [
-                Flexible(child: Text(name, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+                Flexible(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink))),
                 ?nameBadge,
               ]),
             ),
@@ -151,13 +151,13 @@ class ProfileCard_Users extends StatelessWidget {
           ]),
           if (handleLine.isNotEmpty) ...[
             const SizedBox(height: 2),
-            Text(handleLine, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            Text(handleLine, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           ],
           if (bio != null && bio!.trim().isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(bio!.trim(),
                 textAlign: TextAlign.justify,
-                style: const TextStyle(fontSize: 15, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.ink)),
           ],
           if (extra != null) ...[const SizedBox(height: 12), extra!],
           if (followedBy != null) ...[const SizedBox(height: 14), followedBy!],
@@ -219,12 +219,12 @@ class ProfileCard_Partners extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(number, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(number, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           Text(label,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
         ]),
       );
 
@@ -245,13 +245,13 @@ class ProfileCard_Partners extends StatelessWidget {
                     child: Text(name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ),
                   ?nameBadge,
                 ]),
                 if (handleLine.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(handleLine, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                  Text(handleLine, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ],
               ]),
             ),
@@ -261,7 +261,7 @@ class ProfileCard_Partners extends StatelessWidget {
             const SizedBox(height: 12),
             Text(bio!.trim(),
                 textAlign: TextAlign.justify,
-                style: const TextStyle(fontSize: 15, height: 1.45, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
           ],
           if (stats.isNotEmpty) ...[
             const SizedBox(height: 14),
@@ -289,11 +289,11 @@ class ProfileSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 22, AppTheme.screenMargin, 10),
         child: Row(children: [
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
           if (action != null)
             SnappyTap(
               onTap: onAction,
-              child: Text(action!, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+              child: Text(action!, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
             ),
         ]),
       );
@@ -326,7 +326,7 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
             borderRadius: BorderRadius.circular(20),
             
           ),
-          child: Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+          child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
         ),
       );
 
@@ -371,7 +371,7 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin + 2),
           child: Text(_partners ? 'Ainda não segue parceiros.' : 'Ainda não segue ninguém.',
-              style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         )
       else
         Padding(
@@ -398,12 +398,12 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
                               Text(shown[i].name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                               if (shown[i].subtitle.isNotEmpty)
                                 Text(shown[i].subtitle,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                             ]),
                           ),
                         ]),
@@ -439,7 +439,7 @@ Future<void> showEditProfileSheet(BuildContext context, WidgetRef ref, PublicPro
       padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.viewInsetsOf(ctx).bottom + 24),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Editar perfil', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Editar perfil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 12),
           // O @ edita-se só aqui, no perfil (pedido 2026-11-12).
           UsernameEditRow(onTap: () {
@@ -493,10 +493,10 @@ class UsernameEditRow extends ConsumerWidget {
         decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(16)),
         child: Row(children: [
           const Expanded(
-            child: Text('Nome de utilizador', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            child: Text('Nome de utilizador', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           Text(u == null ? 'Escolher' : '@$u',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           const SizedBox(width: 8),
           const Icon(Icons.chevron_right_rounded, size: 18, color: AppTheme.inkMuted),
         ]),
@@ -512,7 +512,7 @@ Future<void> showPartnerEditProfileSheet(BuildContext context) async {
     builder: (ctx) => Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('Editar perfil', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const Text('Editar perfil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 12),
         UsernameEditRow(onTap: () => Navigator.of(ctx).pop('/username')),
         const SizedBox(height: 8),
@@ -538,7 +538,7 @@ class _SheetLink extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(16)),
           child: Row(children: [
-            Expanded(child: Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            Expanded(child: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
             const Icon(Icons.chevron_right_rounded, size: 18, color: AppTheme.inkMuted),
           ]),
         ),

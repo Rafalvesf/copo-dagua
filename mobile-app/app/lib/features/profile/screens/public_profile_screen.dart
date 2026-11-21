@@ -182,7 +182,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                             const Padding(
                               padding: EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 12, AppTheme.screenMargin, 0),
                               child: Text('Só aparecem eventos públicos ou a que foste convidado.',
-                                  style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                             ),
                           ],
                           FollowingSection(profileId: p.id, people: p.followingPeople, partners: p.followingPartners),

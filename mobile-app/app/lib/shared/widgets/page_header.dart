@@ -37,7 +37,7 @@ class PageHeader extends StatelessWidget {
         padding: const EdgeInsets.only(top: 6),
         child: Text(
           subtitle!,
-          style: const TextStyle(color: AppTheme.inkMuted, fontSize: 14, height: 1.4),
+          style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13, height: 1.4),
         ),
       );
 

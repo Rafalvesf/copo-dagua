@@ -93,7 +93,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                         padding: EdgeInsets.symmetric(horizontal: 4),
                         child: Text(
                           '"Partilhar perfil" abre a partilha do telemóvel com este link. Quem o abrir vê a tua página pública, mesmo sem a app.',
-                          style: TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+                          style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
                         ),
                       ),
                     ],
@@ -311,7 +311,7 @@ class _PaymentsRequiredCard extends ConsumerWidget {
           const SizedBox(width: 8),
           FilledButton(
             onPressed: () => context.push('/partner-payments'),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700), ),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: const Text('Ativar'),
           ),
         ]),
@@ -351,12 +351,12 @@ class _MyLinkCard extends StatelessWidget {
       child: Row(children: [
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            const Text('O teu link', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const Text('O teu link', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 2),
             Text(shown,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           ]),
         ),
         const SizedBox(width: 12),
@@ -376,7 +376,7 @@ class _MyLinkCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppTheme.ink, width: 1.5),
             ),
-            child: const Text('Copiar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            child: const Text('Copiar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
         ),
       ]),
