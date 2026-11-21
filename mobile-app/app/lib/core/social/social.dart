@@ -203,6 +203,9 @@ class PartnerPublicStats {
 }
 
 final partnerPublicStatsProvider = FutureProvider.autoDispose.family<PartnerPublicStats?, String>((ref, id) async {
+  // Fica em memória: os cartões da página Parceiros entram e saem da
+  // lista ao fazer scroll e não voltam a pedir os números.
+  ref.keepAlive();
   try {
     final r = await supabase.rpc('partner_public_stats', params: {'p_partner': id});
     if (r is! Map) return null;
