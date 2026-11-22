@@ -186,13 +186,8 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
     final layout = ref.watch(currentMenuStyleProvider).layout;
 
     return GradientScaffold(
-      // Cinzento claro → branco, para os cartões e botões sobressaírem
-      // (pedido 2026-11-07).
-      gradientOverride: const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFFE9E8E4), Colors.white],
-      ),
+      // Fundo liso #F2F2F2, sem o degradê para branco (pedido 2026-11-22).
+      gradientOverride: const LinearGradient(colors: [AppTheme.background, AppTheme.background]),
       body: wedding == null
           ? const _WeddingSkeleton()
           : PopScope(

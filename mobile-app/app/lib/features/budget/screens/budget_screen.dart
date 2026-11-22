@@ -138,6 +138,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           ? const Center(child: CircularProgressIndicator())
           : KitPage(
               pinnedBack: true,
+              rotateBack: false,
               children: [
                 KitHeader(actions: [KitAddButton(tooltip: 'Nova despesa', onTap: _addExpense)]),
                 const KitTitle('Orçamento'),

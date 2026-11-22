@@ -151,9 +151,8 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
               children: [
                 SafeArea(top: false, 
                   bottom: false,
+                  // Sem o desvanecer nas páginas do evento (pedido 2026-11-22).
                   child: EdgeFade(
-                    topFadeHeight: 8,
-                    bottomFadeHeight: 32,
                     child: ListView(
                       padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                       children: [
