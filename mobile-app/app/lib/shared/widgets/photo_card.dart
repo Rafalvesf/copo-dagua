@@ -78,7 +78,7 @@ class PhotoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final info = Padding(
-      padding: EdgeInsets.fromLTRB(4, avatar != null ? 28 : 12, 4, 0),
+      padding: EdgeInsets.fromLTRB(12, avatar != null ? 28 : 12, 12, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
         // O título e os selos ocupam o espaço que houver; a ação (coração,
         // partilhar) fica sempre encostada à direita, seja o nome curto ou
@@ -114,7 +114,7 @@ class PhotoCard extends StatelessWidget {
     final footer = !hasFooter
         ? null
         : Padding(
-            padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const Divider(height: 1, thickness: 1, color: divider),
               const SizedBox(height: 10),
@@ -128,7 +128,9 @@ class PhotoCard extends StatelessWidget {
     final cover = SizedBox(
       height: photoHeight,
       child: Stack(clipBehavior: Clip.none, fit: StackFit.expand, children: [
-        ClipRRect(borderRadius: BorderRadius.circular(22), child: photo),
+        // A foto vai até à linha da moldura (proposta B, 2026-11-22), com
+        // os quatro cantos redondos por dentro da linha.
+        ClipRRect(borderRadius: BorderRadius.circular(21), child: photo),
         if (leftTag != null) Positioned(left: 12, top: 12, child: leftTag!),
         if (rightTag != null) Positioned(right: 12, top: 12, child: rightTag!),
         if (photoAction != null) Positioned(right: 12, bottom: 12, child: photoAction!),
@@ -150,25 +152,28 @@ class PhotoCard extends StatelessWidget {
             cover,
             Expanded(child: Align(alignment: Alignment.topLeft, child: info)),
             if (footer != null) footer,
-            if (below != null) ...[const SizedBox(height: 10), below!],
+            if (below != null) ...[const SizedBox(height: 10), Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: below!)],
+            const SizedBox(height: 8),
           ])
         : Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             cover,
             info,
             if (footer != null) footer,
-            if (below != null) ...[const SizedBox(height: 10), below!],
+            if (below != null) ...[const SizedBox(height: 10), Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: below!)],
+            const SizedBox(height: 8),
           ]);
 
-    final framed = Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        border: frameTone == null
-            ? Border.all(color: AppTheme.line)
-            : Border.all(color: alertColor(frameTone!), width: 1.5),
-      ),
-      child: body,
-    );
+    // Moldura: cinzenta 1 sem nada por fazer; com coisas por fazer, a linha
+    // 1,5 da cor do tom, com o brilho só na linha (para dentro).
+    final framed = frameTone == null
+        ? Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppTheme.line),
+            ),
+            child: body,
+          )
+        : AlertOutline(tone: frameTone!, radius: 22, fill: Colors.transparent, child: body);
     final card = SizedBox(width: width, height: height, child: framed);
     if (onTap == null && onLongPress == null) return card;
     return GestureDetector(
