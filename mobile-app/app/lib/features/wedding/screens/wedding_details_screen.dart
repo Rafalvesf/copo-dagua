@@ -3874,8 +3874,8 @@ class _OrgBody extends ConsumerWidget {
   }
 }
 
-/// Números em quadrados, como «A tua mesa» no convidado (pedido do Rafael,
-/// 2026-11-22): orçamento, convidados, parceiros e mesas — as mesas só num
+/// Números em caixas (pedido do Rafael, 2026-11-22, mockup «Números do
+/// painel», B): orçamento, convidados, parceiros e mesas — as mesas só num
 /// espaço com mesas separadas (os restaurantes juntam mesas para o grupo).
 class _OrgNumbers extends ConsumerWidget {
   final Wedding wedding;
@@ -3896,55 +3896,58 @@ class _OrgNumbers extends ConsumerWidget {
     final reserved = bookings.where((b) => b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido).length;
     final seating = ref.watch(seatingControllerProvider);
     final tiles = <Widget>[];
-    void add(IconData icon, String label, String value, String sub, String route) {
+    void add(String label, String value, String sub, String route) {
       if (!_routeAllowed(route, perms)) return;
-      tiles.add(_OrgTile(icon: icon, label: label, value: value, sub: sub, onTap: () => context.push(route)));
+      tiles.add(_OrgTile(label: label, value: value, sub: sub, onTap: () => context.push(route)));
     }
 
     final spent = budget?.spent ?? 0;
     final total = budget?.total ?? 0;
     if (spent > 0) {
-      add(Hi.banknotes, 'Orçamento', euros(spent), total > 0 ? 'de ${euros(total)}' : 'gastos', '/budget');
+      add('Orçamento', euros(spent), total > 0 ? 'de ${euros(total)}' : 'gastos', '/budget');
     } else if (total > 0) {
-      add(Hi.banknotes, 'Orçamento', euros(total), 'por gastar', '/budget');
+      add('Orçamento', euros(total), 'por gastar', '/budget');
     } else if ((w.estimatedBudget ?? 0) > 0) {
-      add(Hi.banknotes, 'Orçamento', euros(w.estimatedBudget!), 'estimativa', '/budget');
+      add('Orçamento', euros(w.estimatedBudget!), 'estimativa', '/budget');
     }
     if (guests.isNotEmpty) {
-      add(Hi.userGroup, 'Convidados', '$going / ${guests.length}', pending > 0 ? '${going == 1 ? 'vai' : 'vão'} · $pending por responder' : going == 1 ? 'vai' : 'vão', '/guests');
+      add('Convidados', '$going / ${guests.length}', pending > 0 ? '${going == 1 ? 'vai' : 'vão'} · $pending por responder' : going == 1 ? 'vai' : 'vão', '/guests');
     }
     if (bookings.isNotEmpty) {
       final others = bookings.length - reserved;
-      add(Hi.briefcase, 'Parceiros', '$reserved', [reserved == 1 ? 'reservado' : 'reservados', if (others > 0) '$others por fechar'].join(' · '), '/bookings');
+      add('Parceiros', '$reserved', [reserved == 1 ? 'reservado' : 'reservados', if (others > 0) '$others por fechar'].join(' · '), '/bookings');
     }
     // Mesas: só num espaço com mesas separadas, e já com mesas feitas.
     if (seating.hasVenue && seating.venueTypes.isNotEmpty && seating.tables.isNotEmpty) {
       final seated = seating.tables.fold<int>(0, (n, t) => n + t.guestIds.length);
-      add(Hi.tableCells, 'Mesas', '${seating.tables.length}', '$seated de ${going == 0 ? guests.length : going} sentados', '/seating');
+      add('Mesas', '${seating.tables.length}', '$seated de ${going == 0 ? guests.length : going} sentados', '/seating');
     }
     if (tiles.isEmpty) return const SizedBox.shrink();
     final rows = <Widget>[];
     for (var i = 0; i < tiles.length; i += 2) {
-      if (i > 0) rows.add(const Divider(height: 9, thickness: 1, color: AppTheme.line));
-      rows.add(Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(child: tiles[i]),
-        const SizedBox(width: 12),
-        Expanded(child: i + 1 < tiles.length ? tiles[i + 1] : const SizedBox.shrink()),
-      ]));
+      if (i > 0) rows.add(const SizedBox(height: 10));
+      // As duas caixas de cada fila com a mesma altura.
+      rows.add(IntrinsicHeight(
+        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Expanded(child: tiles[i]),
+          const SizedBox(width: 10),
+          Expanded(child: i + 1 < tiles.length ? tiles[i + 1] : const SizedBox.shrink()),
+        ]),
+      ));
     }
     return SectionFrame(title: 'Números', children: rows);
   }
 }
 
-/// Um quadrado dos números: ícone 24 num quadrado 48 #E6E6E6, rótulo 12 em
-/// maiúsculas, valor 22 e uma linha 13 — tudo ao centro.
+/// Uma caixa dos números: a linha da moldura (1,5 #CFCFCF, cantos 16), sem
+/// ícone; rótulo 12 em maiúsculas, valor 28 negrito e uma linha 13 — tudo ao
+/// centro, na horizontal e na vertical.
 class _OrgTile extends StatelessWidget {
-  final IconData icon;
   final String label;
   final String value;
   final String sub;
   final VoidCallback onTap;
-  const _OrgTile({required this.icon, required this.label, required this.value, required this.sub, required this.onTap});
+  const _OrgTile({required this.label, required this.value, required this.sub, required this.onTap});
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -3952,21 +3955,24 @@ class _OrgTile extends StatelessWidget {
         label: '$label: $value, $sub',
         child: SnappyTap(
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(color: const Color(0xFFE6E6E6), borderRadius: BorderRadius.circular(16)),
-                child: Icon(icon, size: 24, color: AppTheme.ink),
-              ),
-              const SizedBox(height: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: SectionFrame.lineColor, width: 1.5),
+            ),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(label.toUpperCase(),
+                  textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-              const SizedBox(height: 2),
-              Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(value, maxLines: 1, style: const TextStyle(fontSize: 28, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
+              const SizedBox(height: 4),
+              Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13, height: 1.3, color: AppTheme.inkMuted)),
             ]),
           ),
         ),

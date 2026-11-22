@@ -701,13 +701,15 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   todo o lado).
   Depois do evento, o programa, os números, o convite e os parceiros em
   destaque saem.
-- **Números em quadrados** (pedido 2026-11-22, como «A tua mesa» no
-  convidado): 2 por linha, sem caixa — ícone 24 num quadrado 48 `#E6E6E6`,
-  rótulo 12 em maiúsculas, valor 22 e uma linha 13, tudo ao centro:
-  orçamento, convidados, parceiros e mesas (só num espaço com mesas
-  separadas e já com mesas).
+- **Números em caixas** (pedido 2026-11-22, mockup «Números do painel»,
+  B): 2 por linha, 10 entre elas, **cada número na sua caixa com a linha da
+  moldura** (1,5 `#CFCFCF`, cantos 16, interior 14×12, sem fundo), **sem
+  ícones**; rótulo 12 em maiúsculas, valor **28** negrito e uma linha 13,
+  tudo **ao centro na horizontal e na vertical**; as duas caixas de cada
+  fila com a mesma altura: orçamento, convidados, parceiros e mesas (só
+  num espaço com mesas separadas e já com mesas).
 - **Gerir:** Presentes e Página dos convidados (os convidados e as mesas
-  estão nos quadrados); por baixo de uma linha grossa (2 px), **Definições
+  estão nos números); por baixo de uma linha grossa (2 px), **Definições
   do evento** à parte, com o botão redondo preto 44 (roda dentada).
 
 ## 6.6 Menus por pessoa (pedido do Rafael, 2026-11-22, migração 216; mockup «Escolher o menu · popup»)
