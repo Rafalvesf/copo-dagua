@@ -55,6 +55,7 @@ import '../features/gallery/screens/gallery_screen.dart' deferred as l26;
 import '../features/guests/screens/guest_detail_screen.dart' deferred as l27;
 import '../features/guests/screens/guests_list_screen.dart' deferred as l28;
 import '../features/guests/screens/invite_screen.dart' deferred as l28b;
+import '../features/guests/screens/join_requests_screen.dart' deferred as l28d;
 import '../features/guest_home/screens/choose_menu_screen.dart' deferred as l28c;
 import 'guest_home/event_tables.dart' show EventTable;
 import '../features/home/screens/home_feed_screen.dart' as l29;
@@ -610,6 +611,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/guests/convidar',
         builder: (context, state) =>lazyPage([l28b.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.convidados, child: l28b.InviteScreen())),
+      ),
+      // «Pedidos para entrar» (2026-11-22) — antes de /guests/:id.
+      GoRoute(
+        path: '/guests/pedidos',
+        builder: (context, state) => lazyPage([l28d.loadLibrary],
+            () => PermissionGate(perm: OrganizerPerm.convidados, child: l28d.JoinRequestsScreen(initialId: state.uri.queryParameters['id']))),
       ),
       // «O teu menu» (190): cada convidado escolhe (e paga) o seu.
       GoRoute(

@@ -1,7 +1,8 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
-import '../widgets/join_requests_card.dart';
+import '../../../core/events/events_providers.dart';
+import '../../../shared/widgets/section_frame.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +38,9 @@ class GuestsListScreen extends ConsumerStatefulWidget {
 class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
   final _search = TextEditingController();
   String? _groupFilter;
+
+  /// Grupos abertos em «Ver todos».
+  final Set<String> _expanded = {};
 
   @override
   void initState() {
@@ -74,7 +78,6 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
         );
   }
 
-  Future<void> _shareInvite(Wedding wedding) => shareWeddingInvite(context, wedding);
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +103,37 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
 
     int countIn(String g) => state.guests.where((x) => x.group == g).length;
 
-    // Mockup «Páginas do evento» → Convidados (2026-11-14).
+    // Mockup «Páginas do evento · com molduras» → Convidados (2026-11-22):
+    // o teto no resumo, os pedidos para entrar e os grupos por resposta,
+    // cada um numa moldura.
+    final cap = wedding?.estimatedGuests;
+    final requests = wedding == null ? const <JoinRequest>[] : (ref.watch(joinRequestsProvider(wedding.id)).value ?? const <JoinRequest>[]);
+    Widget guestRow(Guest guest) => KitRow(
+          lead: V2Avatar(guest.name, size: 44),
+          title: guest.name,
+          sub: [
+            guest.group.isEmpty ? 'Convidado' : guest.group,
+            if (guest.maxCompanions > 0) 'pode trazer ${guest.maxCompanions}',
+          ].join(' · '),
+          trailing: switch (guest.rsvpStatus) {
+            RsvpStatus.confirmed => const KitTag('Vai'),
+            RsvpStatus.declined => const KitTag('Não vai', kind: KitTagKind.neutral),
+            _ => const KitTag('Por responder', kind: KitTagKind.pending),
+          },
+          onTap: () => context.push('/guests/${guest.id}'),
+        );
+    Widget group(String key, String title, List<Guest> list) {
+      final open = _expanded.contains(key);
+      final shown = open ? list : list.take(_groupLimit).toList();
+      return SectionFrame(title: '$title · ${list.length}', children: [
+        KitGroup([for (final g in shown) guestRow(g)]),
+        if (list.length > _groupLimit)
+          FrameButton44(open ? 'Ver menos' : 'Ver todos (${list.length})', outlined: true, onTap: () => setState(() {
+            open ? _expanded.remove(key) : _expanded.add(key);
+          })),
+      ]);
+    }
+
     return GradientScaffold(
       background: AppBackground.feed,
       body: state.loading && state.guests.isEmpty
@@ -109,85 +142,156 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
               pinnedBack: true,
               rotateBack: false,
               children: [
-                KitHeader(actions: [KitAddButton(tooltip: 'Adicionar convidado', onTap: _addGuest)]),
-                const KitTitle('Convidados'),
-                KitSummary(
-                  kicker: 'A vossa lista',
-                  value: '$total',
-                  unit: total == 1 ? 'convidado' : 'convidados',
-                  progress: total == 0 ? 0 : state.confirmedCount / total,
-                  legend: [
-                    KitLegend(AppTheme.accentOliveDark, '${state.confirmedCount}', 'sim'),
-                    KitLegend(const Color(0xFFF2A01B), '${state.pendingCount}', 'por responder'),
-                    KitLegend(const Color(0xFFC8553D), '${state.declinedCount}', 'não'),
-                  ],
-                ),
-                if (wedding != null) KitBleed(JoinRequestsCard(weddingId: wedding.id)),
-                if (state.guests.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 24),
-                    child: IllustratedEmptyState(
-                      mascot: MascotPose.wave,
-                      title: 'Quem vem celebrar convosco?',
-                      message: 'Comecem pela família mais próxima. A lista pode crescer aos poucos, e cada convidado confirma pelo link do convite.',
-                      primaryLabel: 'Adicionar o primeiro convidado',
-                      onPrimary: _addGuest,
-                      secondaryLabel: wedding == null ? null : 'Partilhar convite',
-                      onSecondary: wedding == null ? null : () => _shareInvite(wedding),
-                    ),
-                  )
-                else ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: Row(children: [
-                      Expanded(child: SearchPill(controller: _search, hint: 'Pesquisar convidados')),
-                      if (wedding != null) ...[
-                        const SizedBox(width: 10),
-                        V2RoundButton(icon: Hi.arrowUpOnSquare, tooltip: 'Convidar', onTap: () => context.push('/guests/convidar')),
-                      ],
-                    ]),
-                  ),
+                KitHeader(actions: [
+                  if (wedding != null) V2RoundButton(icon: Hi.arrowUpOnSquare, tooltip: 'Convidar', onTap: () => context.push('/guests/convidar')),
+                  KitAddButton(tooltip: 'Adicionar convidado', onTap: _addGuest),
+                ]),
+                KitTitle('Convidados',
+                    subtitle: total == 0 ? 'Ainda sem convidados' : '$total ${total == 1 ? 'convidado' : 'convidados'} · ${state.confirmedCount} ${state.confirmedCount == 1 ? 'vai' : 'vão'}'),
+                if (total > 0) ...[
+                  Padding(padding: const EdgeInsets.only(top: 16), child: SearchPill(controller: _search, hint: 'Pesquisar convidados')),
                   if (groups.isNotEmpty)
                     KitPills([
-                      KitPill(
-                        label: 'Todos',
-                        count: total,
-                        selected: _groupFilter == null,
-                        onTap: () => setState(() => _groupFilter = null),
-                      ),
+                      KitPill(label: 'Todos', count: total, selected: _groupFilter == null, onTap: () => setState(() => _groupFilter = null)),
                       for (final g in groups)
-                        KitPill(
-                          label: g,
-                          count: countIn(g),
-                          selected: _groupFilter == g,
-                          onTap: () => setState(() => _groupFilter = g),
-                        ),
+                        KitPill(label: g, count: countIn(g), selected: _groupFilter == g, onTap: () => setState(() => _groupFilter = g)),
                     ]),
-                  if (visible.isEmpty)
-                    const KitGroup([KitRow(title: 'Sem convidados aqui.')], top: 16)
-                  else
-                    KitGroup(top: 16, [
-                      for (final guest in visible)
-                        KitRow(
-                          lead: V2Avatar(guest.name, size: 44),
-                          title: guest.name,
-                          sub: [
-                            guest.group.isEmpty ? 'Convidado' : guest.group,
-                            if (guest.maxCompanions > 0) 'pode trazer ${guest.maxCompanions}',
-                          ].join(' · '),
-                          trailing: switch (guest.rsvpStatus) {
-                            RsvpStatus.confirmed => const KitTag('Confirmado'),
-                            RsvpStatus.declined => const KitTag('Não vem', kind: KitTagKind.neutral),
-                            _ => const KitTag('Por responder', kind: KitTagKind.pending),
-                          },
-                          onTap: () => context.push('/guests/${guest.id}'),
+                ],
+                // Tocar no resumo muda o teto de convidados (o do
+                // onboarding); sem ele, «Definir o teto».
+                SnappyTap(
+                  onTap: wedding == null ? () {} : () => _editCap(wedding),
+                  semanticLabel: 'Teto de convidados',
+                  child: KitSummary(
+                    kicker: 'A vossa lista',
+                    value: '$total',
+                    unit: cap != null && cap > 0
+                        ? 'de $cap convidados'
+                        : '${total == 1 ? 'convidado' : 'convidados'} · sem teto',
+                    progress: total == 0 ? 0 : state.confirmedCount / total,
+                    legend: total == 0
+                        ? const []
+                        : [
+                            KitLegend(AppTheme.accentOliveDark, '${state.confirmedCount}', 'sim'),
+                            KitLegend(const Color(0xFFF2A01B), '${state.pendingCount}', 'por responder'),
+                            KitLegend(const Color(0xFFC8553D), '${state.declinedCount}', 'não'),
+                          ],
+                    footer: cap != null && cap > 0 ? null : 'Quantos convidados no máximo? Ajuda a contar lugares e menus.',
+                    extra: wedding == null
+                        ? null
+                        : cap != null && cap > 0
+                            ? const Padding(
+                                padding: EdgeInsets.only(top: 8),
+                                child: Text('Mudar o teto ›', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              )
+                            : FrameButton44('Definir o teto', outlined: true, onTap: () => _editCap(wedding)),
+                  ),
+                ),
+                // Pedidos para entrar: até 4 com «Ver»; mais, «+X pedidos».
+                if (requests.isNotEmpty)
+                  SectionFrame(
+                    title: 'Pedidos para entrar · ${requests.length}',
+                    trailing: SnappyTap(
+                      onTap: () => context.push('/guests/pedidos'),
+                      semanticLabel: 'Ver todos os pedidos',
+                      child: const Text('Ver todos', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ),
+                    children: [
+                      for (final r in requests.take(4))
+                        FrameTaskRow(
+                          lead: V2Avatar(r.name, size: 44),
+                          title: r.name,
+                          sub: [_ago(r.createdAt), if ((r.bringing ?? 0) > 0) 'traz ${r.bringing}'].join(' · '),
+                          action: 'Ver',
+                          onTap: () => context.push('/guests/pedidos?id=${r.id}'),
                         ),
-                    ]),
+                      if (requests.length > 4)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Row(children: [
+                            SizedBox(
+                              width: 32 + (requests.skip(4).take(3).length - 1) * 22,
+                              height: 32,
+                              child: Stack(children: [
+                                for (final (i, r) in requests.skip(4).take(3).indexed)
+                                  Positioned(
+                                    left: i * 22.0,
+                                    child: Container(
+                                      decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.background, width: 2)),
+                                      child: V2Avatar(r.name, size: 28),
+                                    ),
+                                  ),
+                              ]),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text('+${requests.length - 4} ${requests.length - 4 == 1 ? 'pedido' : 'pedidos'}',
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            ),
+                            FrameButton36('Ver', onTap: () => context.push('/guests/pedidos')),
+                          ]),
+                        ),
+                    ],
+                  ),
+                if (total == 0)
+                  SectionFrame(title: 'Convidados', children: [
+                    FrameEmpty(
+                      title: 'Ainda sem convidados',
+                      text: 'Partilha o convite ou junta-os à mão.',
+                      actions: [
+                        if (wedding != null) FrameButton44('Convidar', onTap: () => context.push('/guests/convidar')),
+                        FrameButton44('+ Juntar à mão', outlined: true, onTap: _addGuest),
+                      ],
+                    ),
+                  ])
+                else if (visible.isEmpty)
+                  SectionFrame(title: 'Convidados', children: const [FrameNote('Sem convidados aqui.', top: 4)])
+                else ...[
+                  for (final (key, title, list) in [
+                    ('pending', 'Por responder', [for (final g in visible) if (g.rsvpStatus != RsvpStatus.confirmed && g.rsvpStatus != RsvpStatus.declined) g]),
+                    ('going', 'Vão', [for (final g in visible) if (g.rsvpStatus == RsvpStatus.confirmed) g]),
+                    ('declined', 'Não vão', [for (final g in visible) if (g.rsvpStatus == RsvpStatus.declined) g]),
+                  ])
+                    if (list.isNotEmpty) group(key, title, list),
                 ],
               ],
             ),
     );
   }
+
+  /// Teto de convidados (o do onboarding, `estimated_guests`).
+  Future<void> _editCap(Wedding wedding) async {
+    final controller = TextEditingController(text: (wedding.estimatedGuests ?? 0) > 0 ? '${wedding.estimatedGuests}' : '');
+    final v = await showIslandDialog<int>(
+      context: context,
+      builder: (d) => IslandAlert(
+        title: Text((wedding.estimatedGuests ?? 0) > 0 ? 'Mudar o teto' : 'Teto de convidados'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(suffixText: 'convidados'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(d).pop(), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.of(d).pop(int.tryParse(controller.text.trim())), child: const Text('Guardar')),
+        ],
+      ),
+    );
+    if (v == null || v < 0) return;
+    try {
+      await ref.read(weddingControllerProvider.notifier).update(wedding.copyWith(estimatedGuests: v));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar o teto.')));
+    }
+  }
+}
+
+const _groupLimit = 5;
+
+String _ago(DateTime d) {
+  final days = DateTime.now().difference(d).inDays;
+  return days <= 0 ? 'Pediu hoje' : days == 1 ? 'Pediu ontem' : 'Pediu há $days dias';
 }
 
 /// "Partilhar convite": abre logo a partilha do telemóvel (WhatsApp,
