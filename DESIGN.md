@@ -404,10 +404,15 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   justificado). «Ver todas (N)» mostra o resto no mesmo cartão.
 - **Topo do perfil do parceiro** (pedido do Rafael; foto 200 desde
   2026-11-22): a foto tem **200**, sem texto por cima, e **encolhe com o
-  scroll** até à faixa dos botões, que fica **sempre visível**. Reduzida: ao
-  lado da seta fica o nome 16 e a meta 13 a branco, e os cantos de baixo
-  ficam iguais aos de cima (40). Voltar, partilhar e favorito ficam sempre
-  no mesmo sítio e são os pretos 44 do §2. **Exceção ao «voltar ao topo» do
+  scroll** até à faixa dos botões, que fica **sempre visível**. **Reduzida**
+  (mockup «Topo reduzido», **D**, 2026-11-22): a foto dá lugar a uma **barra
+  branca** (cantos 35 em baixo, sombra da navbar) com o logótipo 32, o nome
+  16 com o visto e a meta 13 `#57534E` («Fotografia · Porto»); fica só o
+  favorito (o partilhar está no topo aberto); por baixo, **atalhos para as
+  secções** (Pacotes/Menus, Portfólio, Onde fica, Avaliações — só as que
+  existem) em pílulas 32 brancas, a da secção onde estás a preto, que levam
+  à secção. Voltar e favorito ficam sempre no mesmo sítio e são os pretos
+  44 do §2. **Exceção ao «voltar ao topo» do
   §6:** aqui a seta é sempre «voltar» (não roda para ↑).
 - **Perfil do parceiro** por baixo da foto (pedido 2026-11-22, mockup
   «Perfil do parceiro · a página toda», **B**): **sem caixa branca** — as
