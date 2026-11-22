@@ -1859,19 +1859,20 @@ class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
           const SizedBox(height: 2),
           Text(meta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
         ],
-        if (p.yearsExperience != null || widget.responds != null) ...[
-          const SizedBox(height: 8),
-          Row(children: [
-            if (p.yearsExperience != null)
-              Expanded(
-                child: Text('${p.yearsExperience} ${p.yearsExperience == 1 ? 'ano' : 'anos'} de experiência',
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              )
-            else
-              const Spacer(),
-            if (widget.responds != null) InfoTag(widget.responds!, green: true),
-          ]),
-        ],
+        // Anos de experiência e, ao lado, o mesmo destaque do rodapé do
+        // cartão (amigos que seguem · eventos · tempo de resposta · até onde
+        // se desloca) — pedido 2026-11-22.
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(
+            child: p.yearsExperience != null
+                ? Text('${p.yearsExperience} ${p.yearsExperience == 1 ? 'ano' : 'anos'} de experiência',
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))
+                : const SizedBox.shrink(),
+          ),
+          const SizedBox(width: 8),
+          Flexible(child: Align(alignment: Alignment.centerRight, child: PartnerHighlight(p))),
+        ]),
         if (bio.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(bio,

@@ -415,7 +415,9 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   nada), o **logótipo 76** e os três números em colunas (nota, seguidores,
   eventos: 20 negrito + 12), o nome 20 com o visto verde (**sem preço** ao
   lado: já está na barra de baixo), «categoria · zona» 13, anos de
-  experiência 13 e «Responde em ~1 h», descrição justificada com «Ler
+  experiência 13 e, à direita, **o mesmo destaque do rodapé do cartão**
+  (`PartnerHighlight`: amigos que seguem · N eventos na À Nossa! ·
+  «Responde em ~1 h» · «Desloca-se até X km» / «Todo o país»), descrição justificada com «Ler
   mais», etiquetas e «Seguir» + «Mensagem» com contorno.
 - **A página do parceiro toda sem caixas brancas** (B): pacotes, «Quanto
   pode custar», «Onde fica» e avaliações direto no fundo, com linhas finas
