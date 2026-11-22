@@ -67,7 +67,7 @@ security definer
 set search_path = public, pg_temp
 as $$
   with org as (
-    select w.owner_id as uid from public.weddings w where w.id = p_wedding_id
+    select w.owner_id as uid from public.events w where w.id = p_wedding_id
     union
     select wc.user_id from public.wedding_collaborators wc
     where wc.wedding_id = p_wedding_id and wc.status = 'active'
@@ -110,7 +110,7 @@ security definer
 set search_path = public, pg_temp
 as $$
   select auth.uid() is not null and (
-    exists (select 1 from public.weddings w where w.id = p_wedding_id and w.owner_id = auth.uid())
+    exists (select 1 from public.events w where w.id = p_wedding_id and w.owner_id = auth.uid())
     or exists (select 1 from public.wedding_collaborators wc
                where wc.wedding_id = p_wedding_id and wc.user_id = auth.uid() and wc.status = 'active')
   );
