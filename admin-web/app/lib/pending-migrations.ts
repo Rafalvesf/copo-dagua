@@ -473,6 +473,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Os cartões de parceiro mostram as conquistas no canto da foto. Esta migração calcula «Mais ativo»: os 10 % de parceiros com mais reservas confirmadas nos últimos 30 dias. Sem ela, a app mostra só Fundador e Modo Pro.",
     check: { kind: "marker", id: "213" },
   },
+  {
+    file: "214_event_people_preview.sql",
+    date: "2026-11-22",
+    title: "Quem confirmou e quem criou, nos cartões de evento",
+    what: "Os cartões de evento mostram as fotos de quem confirmou (amigos primeiro; só quem segues ou tem perfil público) e, no círculo, a foto de quem criou o evento. Sem a migração, os cartões mostram só o número e as iniciais.",
+    check: { kind: "marker", id: "214" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

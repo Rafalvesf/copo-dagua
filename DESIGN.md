@@ -121,7 +121,8 @@ ecrãs. O resto da app mantém a tabela acima.
   por cima da foto a etiqueta à esquerda («Novo», «Organizas»,
   «Convidado» — **nunca «Em destaque»**, que já é o título da secção) e uma pílula branca à direita (nota, dia);
   círculo **44** com aro branco 3 a sobrepor o canto de baixo da foto
-  (logótipo do parceiro, iniciais do evento); título **19** com os selos
+  (logótipo do parceiro; nos eventos, a **foto de quem criou o evento**,
+  ou as iniciais se não houver — pedido 2026-11-22); título **19** com os selos
   (§6) e a ação à direita (coração, partilhar); meta **13**; divisória
   `#D9D9D9` e o rodapé — uma etiqueta à esquerda e, à direita, rótulo 9 +
   valor 16 **sem caixa nem linha** (`DESDE €900`, `ENTRADA Grátis`,
@@ -132,11 +133,17 @@ ecrãs. O resto da app mantém a tabela acima.
     ordem): amigos que seguem («Ana e mais 2 seguem», com as fotos 20) ·
     «N eventos na À Nossa!» · «Responde em ~1 h» · «Desloca-se até X km» /
     «Todo o país».
-  - **Rodapé do evento:** organizador — «48 confirmados» (verde), «Ninguém
+  - **Quem confirmou** (pedido 2026-11-22, mockup «Quem vai nos eventos»,
+    forma D; `AttendeesLine`): fotos 24 sobrepostas (como o «Seguido por»),
+    **amigos primeiro e com o nome a negrito** — «**Ana e João** + 10
+    confirmados»; sem amigos, «12 confirmados» com as fotos que se podem
+    ver (só de quem segues ou tem perfil público, migração 214); ninguém
+    ainda: três círculos tracejados + «Sê o primeiro a ir!».
+  - **Rodapé do evento:** organizador — quem confirmou (acima), «Ninguém
     respondeu ainda» ou «Ainda sem convidados»; convidado — «Ainda não
     respondeste», «Vais» (verde) ou «Está tudo tratado» (verde) — o que
     falta fazer vai no sinal da foto (§7);
-    Descobrir — quem vai («12 vão») ou «Sê o primeiro a ir!».
+    Descobrir — quem confirmou (acima).
 - **Outros cartões** (perfil, resumos): brancos, cantos 22,
   interior 18, com a sombra suave do §5 e **sem linha à volta**. A **linha
   preta 1,5 só no destaque dos painéis do evento** — convidado (o resumo

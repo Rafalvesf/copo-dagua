@@ -7,6 +7,8 @@ import '../../../shared/text_case.dart';
 import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/dense_card.dart';
+import '../../../core/events/event_people.dart';
+import '../../../shared/widgets/attendees_line.dart';
 import '../../../shared/widgets/photo_card.dart';
 import '../../partners/widgets/partner_cards.dart' show InfoTag;
 import '../../../core/tasks/task_models.dart' show taskPriorityWeight, taskPriorityFromDb;
@@ -369,7 +371,7 @@ class _PosterCard extends StatelessWidget {
       photoAction: busy
           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
           : null,
-      avatar: V2Avatar(e.displayNames, size: 44),
+      avatar: _HostAvatar(eventId: e.weddingId, fallbackName: e.displayNames),
       title: capFirst(e.displayNames),
       // Partilhar o evento por link (2026-11).
       titleAction: SnappyTap(
@@ -384,23 +386,13 @@ class _PosterCard extends StatelessWidget {
           if (e.venue?.isNotEmpty == true && e.location?.isNotEmpty == true) e.location!,
         ].join(' · '),
       ],
-      footerLeft: e.goingCount > 0
-          ? Row(mainAxisSize: MainAxisSize.min, children: [
-              AvatarDots(e.goingCount),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                    [
-                      e.goingCount == 1 ? '1 vai' : '${e.goingCount} vão',
-                      // Limite (migração 182): poucos lugares ou esgotado.
-                      if (e.isFull) 'esgotado' else if ((e.spotsLeft ?? 99) <= 10) 'restam ${e.spotsLeft}',
-                    ].join(' · '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              ),
-            ])
-          : const InfoTag('Sê o primeiro a ir!'),
+      // Quem confirmou (mockup «Quem vai nos eventos», D, 2026-11-22).
+      footerLeft: _Attendees(
+        eventId: e.weddingId,
+        total: e.goingCount,
+        // Limite (migração 182): poucos lugares ou esgotado.
+        suffix: e.isFull ? 'esgotado' : ((e.spotsLeft ?? 99) <= 10 ? 'restam ${e.spotsLeft}' : null),
+      ),
       footerRight: PriceBox('ENTRADA', price, outlined: true),
     );
   }
@@ -711,6 +703,36 @@ int? _daysTo(DateTime? d) {
   return DateTime(d.year, d.month, d.day).difference(DateTime(now.year, now.month, now.day)).inDays;
 }
 
+
+/// Foto de quem criou o evento no círculo do cartão, como o logótipo dos
+/// parceiros (pedido 2026-11-22, migração 214); sem ela, as iniciais.
+class _HostAvatar extends ConsumerWidget {
+  final String eventId;
+  final String fallbackName;
+  const _HostAvatar({required this.eventId, required this.fallbackName});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final host = ref.watch(eventHostProvider(eventId)).value;
+    final name = host?.name.isNotEmpty == true ? host!.name : fallbackName;
+    return V2Avatar(name, size: 44, imageUrl: host?.avatarUrl);
+  }
+}
+
+/// Rodapé com quem confirmou (forma D do mockup «Quem vai nos eventos»).
+class _Attendees extends ConsumerWidget {
+  final String eventId;
+  final int total;
+  final String? suffix;
+  const _Attendees({required this.eventId, required this.total, this.suffix});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final people = total > 0 ? ref.watch(eventAttendeesProvider(eventId)).value ?? const <EventPerson>[] : const <EventPerson>[];
+    return AttendeesLine(people: people, total: total, suffix: suffix);
+  }
+}
+
 /// Evento que organizo: abre o painel desse evento.
 class _MyEventCard extends ConsumerWidget {
   final Wedding wedding;
@@ -748,7 +770,7 @@ class _MyEventCard extends ConsumerWidget {
       photo: _coverImage(wedding.id, wedding.eventType, wedding.coverPhotoUrl),
       leftTag: const InfoTag('Organizas', green: true),
       rightTag: _datePill(wedding.weddingDate),
-      avatar: V2Avatar(wedding.displayNames, size: 44),
+      avatar: _HostAvatar(eventId: wedding.id, fallbackName: wedding.displayNames),
       title: capFirst(wedding.displayNames),
       meta: [
         wedding.eventType.label,
@@ -758,7 +780,7 @@ class _MyEventCard extends ConsumerWidget {
         ].join(' · '),
       ],
       footerLeft: summary.confirmed > 0
-          ? InfoTag('${summary.confirmed} ${summary.confirmed == 1 ? 'confirmado' : 'confirmados'}', green: true)
+          ? _Attendees(eventId: wedding.id, total: summary.confirmed)
           : summary.guests > 0
               ? const InfoTag('Ninguém respondeu ainda')
               : const InfoTag('Ainda sem convidados'),
@@ -807,7 +829,7 @@ class _InvitedEventCard extends ConsumerWidget {
       photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
       leftTag: const InfoTag('Convidado', onPhoto: true),
       rightTag: _datePill(wedding.weddingDate),
-      avatar: V2Avatar(wedding.displayNames, size: 44),
+      avatar: _HostAvatar(eventId: wedding.weddingId, fallbackName: wedding.displayNames),
       title: capFirst(wedding.displayNames),
       meta: [
         wedding.eventType.label,
