@@ -251,13 +251,8 @@ ecrãs. O resto da app mantém a tabela acima.
   se ler). Nunca "Por orçamento" numa só linha.
 - **Cabeça do perfil:** `ProfileCard_Users` (amigos, organizadores, o meu
   perfil: avatar e os três números em colunas no topo). No **parceiro**
-  (mockups «Parceiros e perfis», 2026-11-20) o logótipo e o nome estão na
-  foto do topo (§6.2) e por baixo vem o cartão de dados: categoria, nota
-  (n.º de avaliações) e zona com o preço (§6, sem caixa) à direita; anos de
-  experiência e «Responde em ~1 h»; descrição justificada com «Ler mais»;
-  etiquetas; os três números (nota, seguidores, eventos) em **caixas com
-  contorno** (`MiniStats`); e «Seguir» + «Mensagem» com contorno (o botão
-  preto é o da barra de baixo). O estado ("Reservado", "Pedido enviado")
+  (página que os organizadores abrem) é o cartão do §6.2 — o mesmo
+  desenho, com as conquistas por cima e o preço ao lado do nome. O estado ("Reservado", "Pedido enviado")
   não é uma etiqueta solta: é dito uma só vez no aviso (§7), por baixo da
   cabeça.
 - **Navbar:** branca, flutuante, margens **20 laterais** (a mesma largura das
@@ -405,15 +400,21 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   estrelas e, por baixo de uma linha `#D9D9D9`, os comentários (avatar 40,
   nome 16, «zona · mês ano» 13, nota 12 com estrela preta, texto 14
   justificado). «Ver todas (N)» mostra o resto no mesmo cartão.
-- **Topo do perfil do parceiro** (pedido do Rafael): a foto tem 300 e
-  **encolhe com o scroll** até à faixa dos botões, que fica **sempre
-  visível**. Aberta: as **conquistas** (as mesmas do canto dos cartões, §6;
-  sem nenhuma, «Em destaque»), o **logótipo 56 com aro branco 3** (a foto do
-  parceiro, nunca só iniciais quando há foto) e o nome 28 a branco com o
-  visto de verificado, sobre um véu escuro (2026-11-22). Reduzida: ao lado da seta fica o nome 16 e a meta 13 a branco,
-  e os cantos de baixo ficam iguais aos de cima (40). Voltar, partilhar e
-  favorito ficam sempre no mesmo sítio e são os pretos 44 do §2. **Exceção ao «voltar ao topo» do §6:** aqui a seta é
-  sempre «voltar» (não roda para ↑).
+- **Topo do perfil do parceiro** (pedido do Rafael; foto 200 desde
+  2026-11-22): a foto tem **200**, sem texto por cima, e **encolhe com o
+  scroll** até à faixa dos botões, que fica **sempre visível**. Reduzida: ao
+  lado da seta fica o nome 16 e a meta 13 a branco, e os cantos de baixo
+  ficam iguais aos de cima (40). Voltar, partilhar e favorito ficam sempre
+  no mesmo sítio e são os pretos 44 do §2. **Exceção ao «voltar ao topo» do
+  §6:** aqui a seta é sempre «voltar» (não roda para ↑).
+- **Cartão do parceiro** por baixo da foto (pedido 2026-11-22, o design do
+  mockup «Perfil do parceiro · conquistas»): cartão branco, cantos 22,
+  interior 18 — as **conquistas** por cima (pílulas `#F2F2F2`, §6; sem
+  nenhuma, nada), o **logótipo 76** e os três números em colunas (nota,
+  seguidores, eventos: 20 negrito + 12), o nome 20 com o visto verde e o
+  preço (§6, sem caixa) à direita, «categoria · zona» 13, anos de
+  experiência 13 e «Responde em ~1 h», descrição justificada com «Ler
+  mais», etiquetas e «Seguir» + «Mensagem» com contorno.
 - **Pacotes:** linhas num grupo com um círculo que fica verde com o visto
   quando escolhido, nome 16, meta 13 e o preço à direita.
 - **Barra fixa de reserva:** branca, cantos 35, a largura das caixas de
