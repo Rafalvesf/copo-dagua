@@ -117,7 +117,10 @@ ecrãs. O resto da app mantém a tabela acima.
   2026-11-22; `PhotoCard`, `shared/widgets/photo_card.dart`, em toda a
   app: «Os meus eventos», Descobrir, perfil de amigos, Parceiros,
   parceiros em destaque): **sem caixa e sem sombra** — o texto fica direto
-  no fundo `#F2F2F2`; foto **150** com os **quatro cantos redondos (22)**;
+  no fundo `#F2F2F2`; foto **150** com os **quatro cantos redondos (22)**,
+  **até à linha da moldura** em cima e dos lados (proposta B do mockup «Foto
+  até à linha», 2026-11-22) — o texto, o rodapé e a tarefa ficam 12 da
+  linha e 8 em baixo;
   por cima da foto a etiqueta à esquerda («Novo», «Organizas»,
   «Convidado» — **nunca «Em destaque»**, que já é o título da secção) e uma pílula branca à direita (nota, dia);
   círculo **44** com aro branco 3 a sobrepor o canto de baixo da foto
@@ -133,9 +136,9 @@ ecrãs. O resto da app mantém a tabela acima.
   entre cartões. **Todos os cartões com foto** (eventos e parceiros, em
   todo o lado) vão numa **moldura** (forma A do mockup «Alerta com ação nos
   cartões», 2026-11-22; `PhotoCard.frameTone`): linha à volta do cartão,
-  cantos 22, interior 8, sem fundo e **sem brilho** — sempre **cinzenta
-  subtil 1 px `#E3E3E3`**; o amarelo e o vermelho ficam **só na tarefa
-  «Para fazer»** por baixo do rodapé (§7). Nos carrosséis de eventos («Os meus eventos», perfil) **vê-se
+  cantos 22, sem fundo — **cinzenta subtil 1 px `#E3E3E3`** sem nada por
+  fazer; **1,5 da cor do tom** (amarelo / vermelho, §7) com coisas por
+  fazer, com o brilho só na linha (para dentro). Nos carrosséis de eventos («Os meus eventos», perfil) **vê-se
   a ponta do cartão seguinte** (`SnapCarousel(peek: true)`, 86 % da
   largura); 16 a mais até «Descobrir».
   Os eventos já não levam as caixas de números
@@ -651,9 +654,9 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   (1,4 s). Nunca a piscar sem parar.
 - **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
   «Alerta com ação nos cartões», forma A; sem o sinal «!» na foto desde
-  2026-11-22): a moldura do cartão fica cinzenta (§4) e só a tarefa, por
-  baixo do rodapé, leva a cor do tom — pílula branca com a linha 1,5 do
-  tom, com o brilho só na linha (para dentro): o ponto, a tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
+  2026-11-22): a linha à volta do cartão (a moldura do §4) fica na cor
+  do tom, com o brilho só na linha (para dentro), e por baixo do rodapé
+  vem a tarefa **sem pílula nem fundo**: o ponto, a tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
   fotógrafo · +1») e o botão preto 36 com a ação — «Pagar» (pagamentos),
   «Ver» (propostas, presente), «Responder» («Diz se vais»), «Fazer» (o
   resto). **Cor pelo prazo de cada coisa**: vermelho a **3 dias ou menos**
