@@ -130,9 +130,11 @@ ecrãs. O resto da app mantém a tabela acima.
   `FALTAM 203 dias`, pedido 2026-11-22). **Empilhados na vertical**
   (Descobrir, lista de parceiros): uma **linha grossa 2 px `#CFCFCF`** entre
   cartões, 16 acima e abaixo (`CardsDivider`); nos carrosséis não há linha
-  entre cartões, mas nos cartões de «Os meus eventos» vai uma **linha fina 1 px
-  `#E3E3E3` logo por baixo do cartão** (16 abaixo do rodapé, antes dos
-  pontos do carrossel), e 16 a mais até «Descobrir».
+  entre cartões. Os cartões de «Os meus eventos» vão numa **moldura**
+  (forma A do mockup «Alerta com ação nos cartões», 2026-11-22): linha à
+  volta do cartão, cantos 22, interior 8, sem fundo — **cinzenta subtil
+  1 px `#E3E3E3`** sem nada urgente, **1,5 da cor do tom** (§7) com coisas
+  por fazer; 16 a mais até «Descobrir».
   Os eventos já não levam as caixas de números
   (`MiniStats`) nem a barra de planeamento no cartão. **Nunca** voltar a
   pôr caixa branca ou sombra nestes cartões.
@@ -656,12 +658,13 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   tempo: **um só sinal, na cor da mais urgente, com o total**. Brilha ao aparecer
   como os outros alertas. Tocar abre o «Para fazer» (organizador: o painel
   do evento; convidado: a página do evento). **Por baixo do rodapé, a
-  pílula da tarefa** (pedido 2026-11-22, mockup «Alerta com ação nos
-  cartões»): branca, linha 1,5 da cor do tom (a mesma do sinal), ponto, a
+  tarefa** (pedido 2026-11-22, mockup «Alerta com ação nos cartões», forma
+  A): a linha da cor do tom dá a volta a todo o cartão (a moldura do §4,
+  que brilha ao aparecer) e por baixo do rodapé, sem linha própria, o ponto, a
   tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
   fotógrafo · +1») e o botão preto 36 com a ação — «Pagar» (pagamentos),
   «Ver» (propostas, presente), «Responder» («Diz se vais»), «Fazer» (o
-  resto). Brilha ao aparecer como os outros alertas.
+  resto).
 - Convite: uma linha fina (envelope num círculo verde claro, "CONVITE POR
   RESPONDER" 11, frase 15 negrito, data 13, e por baixo «Não vou» com contorno + «Vou» preto, 36), nunca um
   bloco verde cheio.

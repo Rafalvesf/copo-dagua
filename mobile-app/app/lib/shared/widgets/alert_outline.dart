@@ -31,12 +31,16 @@ class AlertOutline extends StatefulWidget {
   final double radius;
   final EdgeInsetsGeometry padding;
 
+  /// Fundo dentro da linha (branco; transparente na moldura dos cartões).
+  final Color fill;
+
   const AlertOutline({
     super.key,
     required this.tone,
     required this.child,
     this.radius = 14,
     this.padding = EdgeInsets.zero,
+    this.fill = Colors.white,
   });
 
   @override
@@ -85,7 +89,7 @@ class _AlertOutlineState extends State<AlertOutline> with SingleTickerProviderSt
         return Container(
           padding: widget.padding,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: widget.fill,
             borderRadius: BorderRadius.circular(widget.radius),
             border: Border.all(color: color, width: 1.5),
             boxShadow: v <= 0.01
