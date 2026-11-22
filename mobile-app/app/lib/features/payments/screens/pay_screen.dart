@@ -765,7 +765,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         return [
           const SizedBox(height: 8),
           // Estrela a festejar (2026-11-14), no lugar do visto verde.
-          const Center(child: EstrelaMascot(Estrela.parabens, size: 120)),
+          // Pagamento feito → a piscar o olho, animada (pedido 2026-11-22).
+          const Center(child: EstrelaMascot(Estrela.piscar, size: 120)),
           const SizedBox(height: 12),
           Text(
             a.isGuestShare
