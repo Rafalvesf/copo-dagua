@@ -254,7 +254,7 @@ ecrãs. O resto da app mantém a tabela acima.
   branca**, direto no fundo `#F2F2F2` (pedido 2026-11-22, mockup «Perfil do
   parceiro · a página toda», B). No **parceiro**
   (página que os organizadores abrem) é o cartão do §6.2 — o mesmo
-  desenho, com as conquistas por cima e o preço ao lado do nome. O estado ("Reservado", "Pedido enviado")
+  desenho, com as conquistas por cima e sem preço ao lado do nome. O estado ("Reservado", "Pedido enviado")
   não é uma etiqueta solta: é dito uma só vez no aviso (§7), por baixo da
   cabeça.
 - **Navbar:** branca, flutuante, margens **20 laterais** (a mesma largura das
