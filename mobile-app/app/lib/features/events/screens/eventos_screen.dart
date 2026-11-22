@@ -605,8 +605,18 @@ class _OrgSummary {
 
   /// Prazos das tarefas por fazer que já abriram (null = sem prazo).
   final List<DateTime?> dues;
+
+  /// Título da tarefa aberta mais urgente (a pílula do cartão).
+  final String? firstOpen;
   const _OrgSummary(
-      {this.guests = 0, this.confirmed = 0, this.bookings = 0, this.done = 0, this.total = 0, this.next, this.dues = const []});
+      {this.guests = 0,
+      this.confirmed = 0,
+      this.bookings = 0,
+      this.done = 0,
+      this.total = 0,
+      this.next,
+      this.dues = const [],
+      this.firstOpen});
 }
 
 final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, String>((ref, id) async {
@@ -643,6 +653,11 @@ final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, Strin
         for (final t in active)
           if (_isOpen(t['available_at'] as String?)) t['due_date'] == null ? null : DateTime.tryParse(t['due_date'] as String),
       ],
+      firstOpen: _mostUrgent([
+        for (final t in active)
+          if (_isOpen(t['available_at'] as String?))
+            (t['title'] as String, t['due_date'] == null ? null : DateTime.tryParse(t['due_date'] as String)),
+      ]),
     );
   } catch (_) {
     return const _OrgSummary();
@@ -709,6 +724,72 @@ bool _isOpen(String? availableAt) {
 AlertTone _toneForAll(Iterable<DateTime?> dues, DateTime? eventDate) =>
     dues.any((d) => toneForDue(d ?? eventDate) == AlertTone.urgent) ? AlertTone.urgent : AlertTone.pending;
 
+/// A tarefa com o prazo mais perto (as sem prazo ficam no fim).
+String? _mostUrgent(List<(String, DateTime?)> tasks) {
+  if (tasks.isEmpty) return null;
+  final sorted = [...tasks]..sort((a, b) {
+      if (a.$2 == null && b.$2 == null) return 0;
+      if (a.$2 == null) return 1;
+      if (b.$2 == null) return -1;
+      return a.$2!.compareTo(b.$2!);
+    });
+  return sorted.first.$1;
+}
+
+/// Ação do botão da pílula pela tarefa: pagamentos «Pagar», propostas
+/// «Ver», o resto «Fazer».
+String _actionFor(String task) {
+  final t = task.toLowerCase();
+  if (t.contains('pagar') || t.contains('sinal') || t.contains('pagamento')) return 'Pagar';
+  if (t.contains('proposta')) return 'Ver';
+  if (t.contains('pedido') && t.contains('entrar')) return 'Aceitar';
+  return 'Fazer';
+}
+
+/// Pílula de alerta por baixo do rodapé do cartão (mockup «Alerta com ação
+/// nos cartões», 2026-11-22): branca, linha 1,5 da cor do tom, ponto, a
+/// tarefa mais urgente (+N) e o botão preto 36 com a ação.
+class _TaskPill extends StatelessWidget {
+  final AlertTone tone;
+  final String task;
+  final int more;
+  final String action;
+  final VoidCallback onTap;
+  const _TaskPill({required this.tone, required this.task, required this.more, required this.action, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => AlertOutline(
+        tone: tone,
+        radius: 999,
+        padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+        child: Row(children: [
+          AlertDot(tone),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(more > 0 ? '$task · +$more' : task,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: onTap,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.ink,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(0, 36),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              shape: const StadiumBorder(),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(
+                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+            child: Text(action),
+          ),
+        ]),
+      );
+}
+
 /// Dias até ao prazo (hoje = 0; negativo = já passou).
 int? _daysTo(DateTime? d) {
   if (d == null) return null;
@@ -772,6 +853,10 @@ class _MyEventCard extends ConsumerWidget {
         ? [for (final t in engine.systemActive) if (!t.availableAt.isAfter(now)) t.dueDate]
         : summary.dues;
     final todo = dues.length;
+    final firstTask = engine != null
+        ? _mostUrgent([for (final t in engine.systemActive) if (!t.availableAt.isAfter(now)) (t.title, t.dueDate)])
+        : summary.firstOpen;
+    final tone = _toneForAll(dues, wedding.weddingDate);
     // Cartão com foto (DESIGN.md §4, 2026-11-22): sem caixa nem sombra,
     // como os parceiros. Toque longo: arquivar ou apagar (185).
     return PhotoCard(
@@ -802,9 +887,19 @@ class _MyEventCard extends ConsumerWidget {
       // cartões», B1, 2026-11-22): vermelho a 3 dias ou menos do evento.
       photoAction: todo > 0
           ? AlertBadge(
-              tone: _toneForAll(dues, wedding.weddingDate),
+              tone: tone,
               count: todo,
               semanticLabel: '$todo ${todo == 1 ? 'coisa' : 'coisas'} para fazer',
+              onTap: () => _open(context, ref),
+            )
+          : null,
+      // A tarefa mais urgente com o botão da ação (2026-11-22).
+      below: todo > 0 && firstTask != null
+          ? _TaskPill(
+              tone: tone,
+              task: firstTask,
+              more: todo - 1,
+              action: _actionFor(firstTask),
               onTap: () => _open(context, ref),
             )
           : null,
@@ -837,6 +932,19 @@ class _InvitedEventCard extends ConsumerWidget {
         if (t.needsAction && ((t.eachChooses && !t.chose) || (_daysTo(t.choiceDeadline) ?? 0) <= 6)) t.choiceDeadline,
     ];
     final todo = dues.length;
+    final tone = _toneForAll(dues, wedding.weddingDate);
+    // A tarefa da pílula: responder primeiro; depois as mesas (escolher e
+    // pagar); depois o presente.
+    final tableTodo = tables
+        .where((t) => t.needsAction && ((t.eachChooses && !t.chose) || (_daysTo(t.choiceDeadline) ?? 0) <= 6))
+        .toList();
+    final (String, String)? first = next?.$1 == 'rsvp'
+        ? ('Diz se vais', 'Responder')
+        : tableTodo.isNotEmpty
+            ? (tableTodo.first.eachChooses && !tableTodo.first.chose ? 'Escolher o menu e pagar a tua parte' : 'Pagar a tua parte', 'Pagar')
+            : next?.$1 == 'gift'
+                ? ('Oferece um presente', 'Ver')
+                : null;
     return PhotoCard(
       onTap: () => context.go(open),
       photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
@@ -860,11 +968,14 @@ class _InvitedEventCard extends ConsumerWidget {
       // Alerta no canto da foto (B1, 2026-11-22).
       photoAction: todo > 0
           ? AlertBadge(
-              tone: _toneForAll(dues, wedding.weddingDate),
+              tone: tone,
               count: todo,
               semanticLabel: '$todo ${todo == 1 ? 'passo' : 'passos'} por fazer',
               onTap: () => context.go(open),
             )
+          : null,
+      below: todo > 0 && first != null
+          ? _TaskPill(tone: tone, task: first.$1, more: todo - 1, action: first.$2, onTap: () => context.go(open))
           : null,
     );
   }

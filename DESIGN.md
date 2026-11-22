@@ -644,8 +644,7 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   depois fica parada. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
   (1,4 s). Nunca a piscar sem parar.
 - **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
-  «Alertas nos cartões», B1; `AlertBadge`, `alert_outline.dart`): nunca uma
-  faixa por baixo do cartão. No **canto de baixo à direita da foto** (12 de
+  «Alertas nos cartões», B1; `AlertBadge`, `alert_outline.dart`): no **canto de baixo à direita da foto** (12 de
   margem), um círculo **36** na cor do tom (32 + aro branco 2) com «!» branco 17, e o número de
   coisas por fazer num contador branco 18 com aro preto 2 (como o das
   mensagens por ler). **Cor pelo prazo de cada coisa** (pedido
@@ -656,8 +655,13 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   ficam vermelhos nos últimos 3. Com tarefas amarelas e vermelhas ao mesmo
   tempo: **um só sinal, na cor da mais urgente, com o total**. Brilha ao aparecer
   como os outros alertas. Tocar abre o «Para fazer» (organizador: o painel
-  do evento; convidado: a página do evento). O rodapé do cartão não repete
-  o alerta.
+  do evento; convidado: a página do evento). **Por baixo do rodapé, a
+  pílula da tarefa** (pedido 2026-11-22, mockup «Alerta com ação nos
+  cartões»): branca, linha 1,5 da cor do tom (a mesma do sinal), ponto, a
+  tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
+  fotógrafo · +1») e o botão preto 36 com a ação — «Pagar» (pagamentos),
+  «Ver» (propostas, presente), «Responder» («Diz se vais»), «Fazer» (o
+  resto). Brilha ao aparecer como os outros alertas.
 - Convite: uma linha fina (envelope num círculo verde claro, "CONVITE POR
   RESPONDER" 11, frase 15 negrito, data 13, e por baixo «Não vou» com contorno + «Vou» preto, 36), nunca um
   bloco verde cheio.
