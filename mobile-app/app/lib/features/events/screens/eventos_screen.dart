@@ -162,15 +162,12 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         const _Title('Os meus eventos'),
         SnapCarousel(
           itemCount: own.length + guest.length,
-          // Linha fina logo por baixo de cada cartão, antes dos pontos
-          // (pedido do Rafael, 2026-11-22).
-          itemBuilder: (context, i) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            i < own.length
-                ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
-                : _InvitedEventCard(wedding: guest[i - own.length]),
-            const SizedBox(height: 16),
-            const SizedBox(height: 1, child: ColoredBox(color: AppTheme.line)),
-          ]),
+          // Cada cartão numa moldura (mockup «Alerta com ação», A,
+          // 2026-11-22): linha da cor do tom com coisas por fazer, cinzenta
+          // subtil sem urgência.
+          itemBuilder: (context, i) => i < own.length
+              ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
+              : _InvitedEventCard(wedding: guest[i - own.length]),
         ),
         // Mais espaço até «Descobrir».
         const SizedBox(height: 16),
@@ -758,10 +755,9 @@ class _TaskPill extends StatelessWidget {
   const _TaskPill({required this.tone, required this.task, required this.more, required this.action, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => AlertOutline(
-        tone: tone,
-        radius: 999,
-        padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+  Widget build(BuildContext context) => Padding(
+        // Sem linha própria: a linha é a moldura do cartão (forma A).
+        padding: const EdgeInsets.fromLTRB(4, 2, 0, 0),
         child: Row(children: [
           AlertDot(tone),
           const SizedBox(width: 8),
@@ -788,6 +784,30 @@ class _TaskPill extends StatelessWidget {
           ),
         ]),
       );
+}
+
+/// Moldura dos cartões de «Os meus eventos» (mockup «Alerta com ação nos
+/// cartões», forma A, 2026-11-22): linha à volta do cartão, cantos 22,
+/// sem fundo. Com coisas por fazer, 1,5 da cor do tom (e brilha ao
+/// aparecer); sem urgência, cinzenta subtil 1 `#E3E3E3`.
+class _CardFrame extends StatelessWidget {
+  final AlertTone? tone;
+  final Widget child;
+  const _CardFrame({required this.tone, required this.child});
+
+  static const _pad = EdgeInsets.all(8);
+
+  @override
+  Widget build(BuildContext context) => tone == null
+      ? Container(
+          padding: _pad,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppTheme.line),
+          ),
+          child: child,
+        )
+      : AlertOutline(tone: tone!, radius: 22, padding: _pad, fill: Colors.transparent, child: child);
 }
 
 /// Dias até ao prazo (hoje = 0; negativo = já passou).
@@ -858,8 +878,9 @@ class _MyEventCard extends ConsumerWidget {
         : summary.firstOpen;
     final tone = _toneForAll(dues, wedding.weddingDate);
     // Cartão com foto (DESIGN.md §4, 2026-11-22): sem caixa nem sombra,
-    // como os parceiros. Toque longo: arquivar ou apagar (185).
-    return PhotoCard(
+    // como os parceiros, dentro da moldura. Toque longo: arquivar ou
+    // apagar (185).
+    return _CardFrame(tone: todo > 0 ? tone : null, child: PhotoCard(
       onTap: () => _open(context, ref),
       onLongPress: () => showEventActionsSheet(context, ref,
           weddingId: wedding.id,
@@ -903,7 +924,7 @@ class _MyEventCard extends ConsumerWidget {
               onTap: () => _open(context, ref),
             )
           : null,
-    );
+    ));
   }
 }
 
@@ -945,7 +966,7 @@ class _InvitedEventCard extends ConsumerWidget {
             : next?.$1 == 'gift'
                 ? ('Oferece um presente', 'Ver')
                 : null;
-    return PhotoCard(
+    return _CardFrame(tone: todo > 0 ? tone : null, child: PhotoCard(
       onTap: () => context.go(open),
       photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
       leftTag: const InfoTag('Convidado', onPhoto: true),
@@ -977,7 +998,7 @@ class _InvitedEventCard extends ConsumerWidget {
       below: todo > 0 && first != null
           ? _TaskPill(tone: tone, task: first.$1, more: todo - 1, action: first.$2, onTap: () => context.go(open))
           : null,
-    );
+    ));
   }
 }
 
