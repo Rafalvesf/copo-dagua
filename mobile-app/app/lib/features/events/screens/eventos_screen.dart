@@ -567,7 +567,7 @@ Widget _coverImage(String id, EventType type, String? photo) => photo != null
 /// Pílula branca com o dia, por cima da foto («12 jun»).
 Widget? _datePill(DateTime? d) => d == null ? null : PhotoPill('${d.day} ${_monthsShort[d.month - 1]}');
 
-/// Caixa do rodapé com quanto falta (a mesma forma do preço dos parceiros).
+/// Rodapé com quanto falta: «FALTAM» 9 + «203 dias» 16, sem caixa.
 Widget? _countdownBox(DateTime? d) {
   if (d == null) return null;
   final now = DateTime.now();
@@ -578,7 +578,13 @@ Widget? _countdownBox(DateTime? d) {
     1 => ('É', 'Amanhã'),
     _ => ('FALTAM', '$n dias'),
   };
-  return PriceBox(label, value, outlined: true);
+  // Sem caixa branca nem linha preta (pedido 2026-11-22): só o rótulo 9 e
+  // o valor 16, alinhados à direita.
+  return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
+    Text(label,
+        style: const TextStyle(fontSize: 9, height: 1.2, letterSpacing: 0.4, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
+    Text(value, style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+  ]);
 }
 
 /// Números de um evento que organizo, para o cartão (cartões densos,
