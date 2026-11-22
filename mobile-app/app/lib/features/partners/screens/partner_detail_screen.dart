@@ -33,6 +33,7 @@ import '../../../core/wedding/organizers.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../partner_style.dart';
 import '../widgets/partner_cards.dart';
+import '../../../core/profile/username.dart' show usernameOfProvider;
 import '../../payments/open_payment.dart' show openPaymentFlow;
 import '../widgets/reserve_flow.dart';
 import '../../../shared/widgets/dense_card.dart' show PriceBox;
@@ -1863,7 +1864,10 @@ class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
   Widget build(BuildContext context) {
     final p = widget.partner;
     final travel = p.maxTravelDistanceKm;
+    // O @ do parceiro, como nos perfis dos organizadores (2026-11-22).
+    final handle = ref.watch(usernameOfProvider(p.id)).value;
     final meta = [
+      if (handle != null && handle.isNotEmpty) '@$handle',
       p.primaryCategoryLabel,
       if (p.location.isNotEmpty) p.location,
       if (travel != null && travel > 0) 'até $travel km',

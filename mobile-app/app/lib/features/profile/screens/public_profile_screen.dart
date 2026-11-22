@@ -13,6 +13,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../events/screens/eventos_screen.dart' show EventPosterCard;
 import '../profile_widgets.dart';
+import '../../../shared/widgets/reviews_left.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:share_plus/share_plus.dart';
@@ -158,7 +159,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         ),
                       ),
                       Transform.translate(
-                        offset: const Offset(0, -56),
+                        offset: Offset.zero,
                         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                           if (p.upcoming.isNotEmpty) ...[
                             ProfileSectionTitle(
@@ -188,6 +189,10 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                             ),
                           ],
                           FollowingSection(profileId: p.id, people: p.followingPeople, partners: p.followingPartners),
+                          // Avaliações que deixou (mockup «Avaliações · resposta do
+                          // parceiro», 2026-11-22): as avaliações já são públicas
+                          // na página de cada parceiro.
+                          ReviewsLeftSection(profileId: p.id),
                         ]),
                       ),
                     ],

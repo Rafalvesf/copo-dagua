@@ -2,6 +2,7 @@ import 'organizers_card.dart' show RowPillButton;
 import 'snappy_tap.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'line_icon.dart';
 
 import '../../core/models/models.dart';
@@ -73,16 +74,33 @@ class ReviewTile extends StatelessWidget {
           : BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          V2Avatar(r.coupleDisplayName, size: partnerSide ? 44 : 40, imageUrl: r.coupleAvatarUrl, flat: true),
-          const SizedBox(width: 10),
+          // Tocar em quem avaliou abre o perfil desse organizador (mockup
+          // «Avaliações · resposta do parceiro», 2026-11-22).
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(r.coupleDisplayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ]),
+            child: SnappyTap(
+              onTap: !partnerSide && r.coupleId != null ? () => context.push('/u/${r.coupleId}') : null,
+              child: Row(children: [
+                V2Avatar(r.coupleDisplayName, size: partnerSide ? 44 : 40, imageUrl: r.coupleAvatarUrl, flat: true),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      Flexible(
+                        child: Text(r.coupleDisplayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      ),
+                      if (!partnerSide && r.coupleId != null) ...[
+                        const SizedBox(width: 2),
+                        const Icon(Hi.chevronRight, size: 14, color: AppTheme.inkMuted),
+                      ],
+                    ]),
+                    Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  ]),
+                ),
+              ]),
+            ),
           ),
           // Do lado do parceiro as estrelas já estão por baixo (mockup).
           if (!partnerSide) ...[const SizedBox(width: 8), _RatingChip(r.rating, ink: embedded)],
@@ -121,6 +139,14 @@ class ReviewTile extends StatelessWidget {
         ],
         if (r.response != null && r.response!.trim().isNotEmpty) ...[
           const SizedBox(height: 12),
+          if (embedded && !partnerSide)
+            _ReplyBalloon(
+              partnerName: partnerName,
+              partnerAvatarUrl: partnerAvatarUrl,
+              text: r.response!.trim(),
+              date: r.responseAt,
+            )
+          else
           _Reply(
             partnerName: partnerName,
             partnerAvatarUrl: partnerAvatarUrl,
@@ -304,4 +330,48 @@ class ReviewSummaryCard extends StatelessWidget {
       ]),
     );
   }
+}
+
+
+/// Resposta do parceiro em balão (mockup «Avaliações · resposta do
+/// parceiro», B, 2026-11-22): branco, cantos 18, logótipo 24, nome 13
+/// negrito, etiqueta verde «Parceiro», texto 14 e «Respondeu em …» 12.
+class _ReplyBalloon extends StatelessWidget {
+  final String partnerName;
+  final String? partnerAvatarUrl;
+  final String text;
+  final DateTime? date;
+  const _ReplyBalloon({required this.partnerName, required this.partnerAvatarUrl, required this.text, required this.date});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            V2Avatar(partnerName, size: 24, imageUrl: partnerAvatarUrl, flat: true),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(partnerName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+              child: const Text('Parceiro', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+            ),
+          ]),
+          const SizedBox(height: 6),
+          Text(text, textAlign: TextAlign.justify, style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink)),
+          if (date != null) ...[
+            const SizedBox(height: 6),
+            Text('Respondeu em ${_months[date!.month - 1]} ${date!.year}',
+                style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+          ],
+        ]),
+      );
 }
