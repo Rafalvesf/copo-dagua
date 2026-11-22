@@ -465,7 +465,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   conversa» + «OK»); pagamento feito → estrela de parabéns.
   **Com sinal** (pedido do Rafael, 2026-11-22, mockup «Reserva: quem paga e
   pagar o sinal»): o último passo é só «Pedir reserva»; depois vem
-  **«Reserva feita!»** (estrela contente, resumo, «Continuar») e logo a
+  **«Reserva feita!»** (estrela **a piscar o olho**, animada; resumo, «Continuar») e logo a
   seguir o popup **«Pagar o sinal»** — resumo (reserva, sinal), «A pagar
   agora», «+ taxa de serviço no passo seguinte», a nota (cativo até o
   parceiro aceitar; aceite, cancela-se com devolução até 48 h depois de
