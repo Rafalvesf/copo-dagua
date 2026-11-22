@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../profile/username.dart' show setMyUsername;
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -98,7 +99,10 @@ class PendingSignup {
   final String? phone;
   final String password;
   final UserRole role;
-  const PendingSignup({required this.fullName, required this.email, this.phone, required this.password, required this.role});
+
+  /// O @ escolhido no registo (aplicado quando a conta já tem sessão).
+  final String? username;
+  const PendingSignup({required this.fullName, required this.email, this.phone, required this.password, required this.role, this.username});
 }
 
 /// Erro legível ao criar a conta no fim do onboarding.
@@ -122,8 +126,9 @@ class AuthController extends Notifier<AuthState> {
     String? phone,
     required String password,
     required UserRole role,
+    String? username,
   }) {
-    _pendingSignup = PendingSignup(fullName: fullName, email: email, phone: phone, password: password, role: role);
+    _pendingSignup = PendingSignup(fullName: fullName, email: email, phone: phone, password: password, role: role, username: username);
     state = AuthState(
       status: AuthStatus.onboardingIncomplete,
       profile: Profile(id: '', fullName: fullName, email: email, password: '', role: role),
@@ -208,6 +213,7 @@ class AuthController extends Notifier<AuthState> {
           'role': p.role.name,
           'full_name': p.fullName,
           if (p.phone != null && p.phone!.isNotEmpty) 'phone': p.phone,
+          if (p.username != null && p.username!.isNotEmpty) 'username': p.username,
           if (p.role == UserRole.couple && ref.read(pendingPartnerInviteProvider) != null)
             'partner_invite': ref.read(pendingPartnerInviteProvider),
         },
@@ -232,6 +238,7 @@ class AuthController extends Notifier<AuthState> {
       );
       throw const SignupFailed('Confirma o teu email para terminar.');
     }
+    await _applyPendingUsername(user);
     await _applyPendingPartnerInvite(user);
     final profile = await _loadProfile(user);
     _pendingSignup = null;
@@ -248,8 +255,9 @@ class AuthController extends Notifier<AuthState> {
     required String email,
     String? phone,
     required String password,
+    String? username,
   }) async {
-    _pendingSignup = PendingSignup(fullName: fullName, email: email, phone: phone, password: password, role: UserRole.partner);
+    _pendingSignup = PendingSignup(fullName: fullName, email: email, phone: phone, password: password, role: UserRole.partner, username: username);
     BrindeGate.pending = true;
     state = const AuthState(status: AuthStatus.authenticating);
     try {
@@ -467,6 +475,7 @@ class AuthController extends Notifier<AuthState> {
     // (`register_screen.dart`), para nunca criar uma conta presa a um
     // código inválido. Ver `050_wedding_guest_code.sql`.
     String? weddingCode,
+    String? username,
   }) async {
     BrindeGate.pending = true;
     await _setKeepSignedIn(true);
@@ -482,6 +491,7 @@ class AuthController extends Notifier<AuthState> {
           'role': role.name,
           'full_name': fullName,
           if (phone != null && phone.isNotEmpty) 'phone': phone,
+          if (username != null && username.isNotEmpty) 'username': username,
           // Guardado na conta para ser aplicado no primeiro login quando
           // o email ainda tem de ser confirmado (sem sessão aqui, o
           // `join_wedding_by_code` não pode correr já) — antes o código
@@ -520,6 +530,7 @@ class AuthController extends Notifier<AuthState> {
         // para testes — ver ROADMAP.md) — `signUp` já devolve sessão ativa,
         // não há "verifica o teu email" nenhum para mostrar. Lê o perfil
         // real de volta em vez de construir um localmente.
+        await _applyPendingUsername(user);
         if (role == UserRole.guest &&
             weddingCode != null &&
             weddingCode.isNotEmpty) {
@@ -728,6 +739,7 @@ class AuthController extends Notifier<AuthState> {
   /// conta) e ainda não aplicado — liga o convidado ao casamento e limpa
   /// o código para não repetir. Nunca bloqueia o login.
   Future<void> _applyPendingWeddingCode(User user) async {
+    await _applyPendingUsername(user);
     await _applyPendingPartnerInvite(user);
     final code = user.userMetadata?['wedding_code'] as String?;
     if (code == null || code.trim().isEmpty) return;
@@ -741,6 +753,20 @@ class AuthController extends Notifier<AuthState> {
     }
     try {
       await supabase.auth.updateUser(UserAttributes(data: {'wedding_code': null}));
+    } catch (_) {}
+  }
+
+  /// O @ escolhido no registo (pedido 2026-11-22), guardado na conta até
+  /// haver sessão; aplica-se uma vez e limpa. Se entretanto ficou ocupado,
+  /// escolhe-se depois em «Editar perfil». Nunca bloqueia o login.
+  Future<void> _applyPendingUsername(User user) async {
+    final u = user.userMetadata?['username'] as String?;
+    if (u == null || u.trim().isEmpty) return;
+    try {
+      await setMyUsername(u);
+    } catch (_) {}
+    try {
+      await supabase.auth.updateUser(UserAttributes(data: {'username': null}));
     } catch (_) {}
   }
 
