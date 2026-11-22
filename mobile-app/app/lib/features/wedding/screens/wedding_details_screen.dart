@@ -2364,12 +2364,13 @@ String _shortDay(DateTime d) => '${d.day} ${_monthsShort[d.month - 1]}';
 
 /// Pagamentos por fazer (despesas com data e sinais/restantes das
 /// reservas), por ordem de data — o mesmo cálculo de "Pagamentos próximos".
+/// Só os pagamentos das reservas (pagam-se na app). As despesas escritas à
+/// mão no Orçamento não entram no «Para fazer» nem nos alertas: não há
+/// parceiro a quem pagar (pedido do Rafael, 2026-11-22).
 List<(Expense, String?)> _duePayments(WidgetRef ref) {
-  final pending = ref.watch(expenseControllerProvider).pending;
   final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
   final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
   final out = <(Expense, String?)>[
-    for (final e in pending.where((e) => e.dueDate != null)) (e, null),
     for (final b in bookings.where((b) => b.status != BookingStatus.recusado)) ...[
       if (b.pendingDepositPaymentId != null)
         (

@@ -645,7 +645,9 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   sem convidados» + «Convidar» (preto); depois do evento → «FOI HÁ N dias»,
   «108 foram» + as fotos. No dia, a decorrer, o destaque é o **«Agora»**.
 - **Para fazer** (os três estados do §4): **sem tarefas pré-feitas** — só o
-  que existe mesmo: pagamentos com prazo («Pagar»; numa reserva com menus
+  que existe mesmo: pagamentos com prazo **das reservas** (as despesas
+  escritas à mão no Orçamento não entram: não se pagam na app, pedido
+  2026-11-22) («Pagar»; numa reserva com menus
   que o organizador escolhe — restaurante ou catering — os menus escolhem-se
   ao pagar: o nome do parceiro, «Menus e o sinal (300 €)» e «Escolher e
   pagar», como no convidado), propostas dos parceiros («Ver») e pedidos
