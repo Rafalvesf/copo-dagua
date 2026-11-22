@@ -14,7 +14,9 @@ import '../../../shared/text_case.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/partner_suggestion_card.dart';
-import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard;
+import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard, V2Avatar;
+import '../../../shared/widgets/section_frame.dart';
+import '../../../shared/widgets/reduced_top_bar.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -127,6 +129,11 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
   // (DESIGN.md §6) lê o scroll e sobe ao topo por ele.
   final ScrollController _scroll = ScrollController();
 
+  /// Secções do painel, para os atalhos do topo reduzido (pedido 2026-11-22).
+  final Map<String, GlobalKey> _sectionKeys = {
+    for (final k in const ['todo', 'program', 'numbers', 'bookings', 'invite', 'manage']) k: GlobalKey(),
+  };
+
   @override
   void initState() {
     super.initState();
@@ -228,8 +235,42 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
             child: EdgeFade(
               topFadeHeight: layout == MenuLayout.classic ? 0 : 8,
               bottomFadeHeight: 140,
-              child: _PageBody(wedding: wedding, layout: layout, controller: _scroll),
+              child: _PageBody(wedding: wedding, layout: layout, controller: _scroll, sectionKeys: _sectionKeys),
             ),
+          ),
+        ),
+        // Topo reduzido como nos parceiros (pedido 2026-11-22): a barra
+        // branca com a capa, o nome e a data, e os atalhos para as secções.
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          child: ReducedTopBar(
+            scroll: _scroll,
+            showAfter: layout == MenuLayout.classic ? 170 : 110,
+            thumb: hasCover
+                ? Image.network(wedding.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => V2Avatar(capFirst(wedding.displayNames), size: 32))
+                : V2Avatar(capFirst(wedding.displayNames), size: 32),
+            title: capFirst(wedding.displayNames),
+            meta: [
+              wedding.eventType.label,
+              if (wedding.weddingDate != null) formatShortDatePt(wedding.weddingDate!),
+            ].join(' · '),
+            actions: [
+              ReducedTopAction(Hi.ellipsisHorizontal, label: 'Mais opções', onTap: () => showEventActionsSheet(context, ref,
+                  weddingId: wedding.id,
+                  name: capFirst(wedding.displayNames),
+                  isOwner: wedding.ownerId == ref.read(authControllerProvider).profile?.id)),
+            ],
+            sections: [
+              ('Para fazer', _sectionKeys['todo']!),
+              ('Programa', _sectionKeys['program']!),
+              ('Números', _sectionKeys['numbers']!),
+              ('Reservas', _sectionKeys['bookings']!),
+              ('Convite', _sectionKeys['invite']!),
+              ('Gerir', _sectionKeys['manage']!),
+            ],
           ),
         ),
         // DESIGN.md §6: seta fixa que roda ←→↑ e sobe ao topo; translúcida só
@@ -452,7 +493,8 @@ class _PageBody extends ConsumerWidget {
   final MenuLayout layout;
   final bool scrollable;
   final ScrollController? controller;
-  const _PageBody({required this.wedding, required this.layout, this.scrollable = true, this.controller});
+  final Map<String, GlobalKey>? sectionKeys;
+  const _PageBody({required this.wedding, required this.layout, this.scrollable = true, this.controller, this.sectionKeys});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -476,7 +518,7 @@ class _PageBody extends ConsumerWidget {
       // para fazer, sugestões, programa, números, reservas, convite e gerir.
       // As tarefas pré-feitas («Próximos passos») e o carrossel de
       // sugestões de parceiros saíram.
-      _OrgBody(wedding: wedding),
+      _OrgBody(wedding: wedding, sectionKeys: sectionKeys),
     ];
     final padding = EdgeInsets.fromLTRB(0, classic ? 0 : 40 + MediaQuery.paddingOf(context).top, 0, 140);
     if (!scrollable) {
@@ -3580,21 +3622,59 @@ Future<void> _pickCoverPhoto(BuildContext context, WidgetRef ref) async {
 }
 
 /// Uma linha do «Para fazer»: ponto da cor do prazo, título, meta e o botão.
-Widget _orgTaskRow(BuildContext context, {required String title, required String sub, required String action, required VoidCallback onTap, bool urgent = false}) =>
-    KitRow(
-      lead: Container(
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(color: urgent ? const Color(0xFFC8553D) : const Color(0xFFF2A01B), shape: BoxShape.circle),
+/// Um aviso do «Para fazer» (mockup «Painel do organizador · secções com
+/// moldura», 2026-11-22): a sua própria linha amarela ou vermelha (pelo
+/// prazo), com o brilho só na linha e sem fundo; à esquerda a imagem do
+/// parceiro ou do que se trata (sem bolinha); título e meta numa linha só.
+Widget _orgTaskRow(BuildContext context,
+        {required String title,
+        required String sub,
+        required String action,
+        required VoidCallback onTap,
+        required Widget lead,
+        bool urgent = false}) =>
+    Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: SnappyTap(
+        onTap: onTap,
+        child: AlertOutline(
+          tone: urgent ? AlertTone.urgent : AlertTone.pending,
+          fill: Colors.transparent,
+          radius: 22,
+          padding: const EdgeInsets.all(10),
+          child: Row(children: [
+            lead,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ]),
+            ),
+            const SizedBox(width: 8),
+            DashButton36(action, onTap: onTap),
+          ]),
+        ),
       ),
-      title: title,
-      sub: sub,
-      trailing: DashButton36(action, onTap: onTap),
+    );
+
+/// Ícone 24 num círculo cinzento 44 (sugestões, pedidos para entrar).
+Widget _roundIcon(IconData icon) => Container(
+      width: 44,
+      height: 44,
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFE6E6E6)),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 22, color: AppTheme.ink),
     );
 
 class _OrgBody extends ConsumerWidget {
   final Wedding wedding;
-  const _OrgBody({required this.wedding});
+
+  /// Chaves das secções, para os atalhos do topo reduzido.
+  final Map<String, GlobalKey>? sectionKeys;
+  const _OrgBody({required this.wedding, this.sectionKeys});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -3627,7 +3707,8 @@ class _OrgBody extends ConsumerWidget {
       whoSub = 'Partilha o convite ou junta-os à mão';
       change = 'Convidar';
       filled = true;
-      onChange = () => shareWeddingInvite(context, w);
+      // A página «Convidar» que já temos (pedido 2026-11-22).
+      onChange = () => context.push('/guests/convidar');
     } else if (isPast) {
       who = '${going.length} ${going.length == 1 ? 'foi' : 'foram'}';
       whoSub = photos.isEmpty ? 'De ${guests.length} convidados' : '${photos.length} ${photos.length == 1 ? 'foto partilhada' : 'fotos partilhadas'} pelos convidados';
@@ -3662,18 +3743,19 @@ class _OrgBody extends ConsumerWidget {
         final menus = booking != null && (booking.organizerChoosesMenus || table != null);
         // Restaurantes não têm sinal: paga-se tudo de uma vez (191).
         final what = parts.length == 3 && parts[2] == 'final'
-            ? 'o restante'
+            ? 'O restante'
             : booking?.depositIsFull == true
-                ? 'o pagamento'
-                : 'o sinal';
+                ? 'O pagamento'
+                : 'Sinal';
+        final name = booking?.partnerName ?? e.title;
         tasks.add(_orgTaskRow(
           context,
-          title: menus ? booking.partnerName : e.title,
-          sub: menus
-              ? 'Menus e $what (${euros(e.amount, cents: payId != null)}) · $when'
-              : '${euros(e.amount, cents: payId != null)} · $when',
-          action: menus ? 'Escolher e pagar' : 'Pagar',
+          title: name,
+          // Numa linha só (pedido 2026-11-22): «Sinal 1 386 € · até 30 nov».
+          sub: menus ? 'Menus e pagar · $when' : '$what ${euros(e.amount, cents: payId != null)} · $when',
+          action: menus ? 'Escolher' : 'Pagar',
           urgent: toneForDue(e.dueDate) == AlertTone.urgent,
+          lead: V2Avatar(name, size: 44, imageUrl: booking?.partnerLogoUrl),
           // Popups por cima do painel (pedido 2026-11-22): extras e pagar,
           // como depois de aceitar uma proposta.
           onTap: () => table != null
@@ -3688,15 +3770,17 @@ class _OrgBody extends ConsumerWidget {
         if (!t.needsAction || withPayRow.contains(t.bookingId)) continue;
         final d = t.choiceDeadline;
         final pays = t.myPayment?['status'] == 'pending' || (t.eachPays && !t.chose);
+        final booking = allBookings.where((b) => b.id == t.bookingId).firstOrNull;
         tasks.add(_orgTaskRow(
           context,
           title: t.partnerName,
           sub: [
-            !t.chose ? ((t.menuPeople ?? 1) > 1 ? 'Os menus do teu convite' : 'O teu menu') : 'A tua parte · ${euros(t.myAmount ?? 0)}',
+            !t.chose ? (pays ? 'Menus e pagar' : 'Menus') : 'A tua parte ${euros(t.myAmount ?? 0)}',
             if (d != null) 'até ${_shortDay(d)}',
           ].join(' · '),
-          action: !t.chose ? (pays ? 'Escolher e pagar' : 'Escolher') : 'Pagar',
+          action: !t.chose ? 'Escolher' : 'Pagar',
           urgent: d != null && toneForDue(d) == AlertTone.urgent,
+          lead: V2Avatar(t.partnerName, size: 44, imageUrl: booking?.partnerLogoUrl),
           onTap: () => chooseMenuAndPay(context, ref, w.id, t),
         ));
       }
@@ -3704,9 +3788,10 @@ class _OrgBody extends ConsumerWidget {
         if (p.weddingId != w.id) continue;
         tasks.add(_orgTaskRow(
           context,
-          title: 'Proposta de ${p.partnerName}',
-          sub: [euros(p.price), if (p.category?.isNotEmpty == true) p.category!].join(' · '),
+          title: p.partnerName,
+          sub: ['Proposta ${euros(p.price)}', if (p.category?.isNotEmpty == true) p.category!].join(' · '),
           action: 'Ver',
+          lead: V2Avatar(p.partnerName, size: 44),
           onTap: () => context.push('/bookings'),
         ));
       }
@@ -3714,9 +3799,10 @@ class _OrgBody extends ConsumerWidget {
       if (requests > 0) {
         tasks.add(_orgTaskRow(
           context,
-          title: '$requests ${requests == 1 ? 'pedido para entrar' : 'pedidos para entrar'}',
-          sub: 'Responderam pelo link do convite',
+          title: '$requests ${requests == 1 ? 'pedido' : 'pedidos'}',
+          sub: 'Para entrar · pelo link do convite',
           action: 'Aceitar',
+          lead: _roundIcon(Hi.userPlus),
           onTap: () => context.push('/guests'),
         ));
       }
@@ -3742,28 +3828,29 @@ class _OrgBody extends ConsumerWidget {
         changeFilled: filled,
       ));
     }
+    // Cada secção numa moldura cinzenta (pedido 2026-11-22); no «Para
+    // fazer», cada aviso com a sua linha amarela ou vermelha.
     if (perms.can(OrganizerPerm.tarefas)) {
-      if (tasks.isNotEmpty) {
-        body.addAll([KitCaps('Para fazer · ${tasks.length}'), KitGroup(tasks)]);
-      } else if (bookings.isNotEmpty || guests.isNotEmpty) {
-        body.addAll([const KitCaps('Para fazer'), const DashAllDone(done: 'Pagamentos em dia e propostas respondidas.')]);
-      } else {
-        body.addAll([const KitCaps('Para fazer'), const DashTasksEmpty(what: 'Pagamentos, pedidos para entrar e propostas dos parceiros.')]);
-      }
+      body.add(KeyedSubtree(
+        key: sectionKeys?['todo'],
+        child: SectionFrame(
+          title: tasks.isNotEmpty ? 'Para fazer · ${tasks.length}' : 'Para fazer',
+          children: [
+            if (tasks.isNotEmpty)
+              ...tasks
+            else if (bookings.isNotEmpty || guests.isNotEmpty)
+              const DashAllDone(done: 'Pagamentos em dia e propostas respondidas.')
+            else
+              const DashTasksEmpty(what: 'Pagamentos, pedidos para entrar e propostas dos parceiros.'),
+          ],
+        ),
+      ));
     }
     body.add(OrgSuggestions(wedding: w, past: isPast, onCover: () => _pickCoverPhoto(context, ref)));
     if ((isToday || isPast) && photos.isNotEmpty) {
-      body.addAll([
-        const KitCaps('Fotos'),
+      body.add(SectionFrame(title: 'Fotos', children: [
         DashPhotos(onOpen: () => context.push('/gallery'), urls: [for (final p in photos) p.imageUrl], count: photos.length),
-      ]);
-    }
-
-    // Sem linha logo a seguir ao destaque (DESIGN.md §4).
-    final hi = body.indexWhere((x) => x is DashSummary || x is DashNow);
-    if (hi >= 0 && hi + 1 < body.length && body[hi + 1] is KitCaps) {
-      final c = body[hi + 1] as KitCaps;
-      body[hi + 1] = KitCaps(c.text, top: 20, trailing: c.trailing, line: false);
+      ]));
     }
 
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -3771,14 +3858,14 @@ class _OrgBody extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: body),
       ),
-      if (!isPast) EventProgramSection(weddingId: w.id),
+      if (!isPast) KeyedSubtree(key: sectionKeys?['program'], child: EventProgramSection(weddingId: w.id)),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (!isPast && !isToday) _OrgNumbers(wedding: w),
-          _OrgBookings(bookings: bookings),
-          if (!isPast) _OrgInvite(wedding: w),
-          _OrgManage(wedding: w),
+          if (!isPast && !isToday) KeyedSubtree(key: sectionKeys?['numbers'], child: _OrgNumbers(wedding: w)),
+          KeyedSubtree(key: sectionKeys?['bookings'], child: _OrgBookings(bookings: bookings)),
+          if (!isPast) KeyedSubtree(key: sectionKeys?['invite'], child: _OrgInvite(wedding: w)),
+          KeyedSubtree(key: sectionKeys?['manage'], child: _OrgManage(wedding: w)),
         ]),
       ),
       // Parceiros em destaque no fim (pedido do Rafael, 2026-11-22).
@@ -3845,7 +3932,7 @@ class _OrgNumbers extends ConsumerWidget {
         Expanded(child: i + 1 < tiles.length ? tiles[i + 1] : const SizedBox.shrink()),
       ]));
     }
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const KitCaps('Números'), ...rows]);
+    return SectionFrame(title: 'Números', children: rows);
   }
 }
 
@@ -3887,29 +3974,58 @@ class _OrgTile extends StatelessWidget {
 }
 
 /// Reservas: uma linha por parceiro com o estado numa etiqueta.
-class _OrgBookings extends StatelessWidget {
+class _OrgBookings extends ConsumerWidget {
   final List<CoupleBooking> bookings;
   const _OrgBookings({required this.bookings});
 
+  /// O pagamento por fazer desta reserva → os popups de pagar (extras e
+  /// pagar), como no «Para fazer»; sem nenhum, a página das reservas.
+  Future<void> _pay(BuildContext context, WidgetRef ref, CoupleBooking b) async {
+    String? payId;
+    try {
+      final row = await supabase
+          .from('payments')
+          .select('id')
+          .eq('booking_id', b.id)
+          .eq('status', 'pending')
+          .order('due_at')
+          .limit(1)
+          .maybeSingle();
+      payId = row?['id'] as String?;
+    } catch (_) {}
+    if (!context.mounted) return;
+    if (payId == null) {
+      context.push('/bookings');
+      return;
+    }
+    await payBookingFlow(context, ref, paymentId: payId, bookingId: b.id, partnerName: b.partnerName);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (bookings.isEmpty) return const SizedBox.shrink();
-    // Restaurantes não têm sinal (191): «Por pagar».
-    KitTag tagFor(CoupleBooking b) => switch (b.status) {
+    String day(CoupleBooking b) => '${b.serviceDate.day} ${monthNamesPt[b.serviceDate.month - 1].substring(0, 3).toLowerCase()}';
+    // Por pagar: botão preto «Pagar» em vez da etiqueta (pedido
+    // 2026-11-22); restaurantes não têm sinal (191): «por pagar».
+    Widget trailing(CoupleBooking b) => switch (b.status) {
           BookingStatus.confirmado => const KitTag('Confirmada'),
           BookingStatus.concluido => const KitTag('Concluída'),
-          BookingStatus.aceite => KitTag(b.depositIsFull ? 'Por pagar' : 'Falta o sinal', kind: KitTagKind.pending),
+          BookingStatus.aceite => DashButton36('Pagar', onTap: () => _pay(context, ref, b)),
           BookingStatus.emAnalise => const KitTag('Em análise', kind: KitTagKind.neutral),
           _ => const KitTag('Pedido enviado', kind: KitTagKind.neutral),
         };
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const KitCaps('Reservas'),
+    return SectionFrame(title: 'Reservas', children: [
       KitGroup([
         for (final b in bookings)
           KitRow(
+            lead: V2Avatar(b.partnerName, size: 44, imageUrl: b.partnerLogoUrl),
             title: b.partnerName,
-            sub: [if (b.category?.isNotEmpty == true) b.category!, '${b.serviceDate.day} ${monthNamesPt[b.serviceDate.month - 1].substring(0, 3).toLowerCase()}'].join(' · '),
-            trailing: tagFor(b),
+            sub: [
+              if (b.category?.isNotEmpty == true) b.category!,
+              day(b),
+              if (b.status == BookingStatus.aceite) b.depositIsFull ? 'por pagar' : 'falta o sinal',
+            ].join(' · '),
+            trailing: trailing(b),
             onTap: () => context.push('/bookings'),
           ),
       ]),
@@ -3925,8 +4041,7 @@ class _OrgInvite extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final code = wedding.guestCode;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const KitCaps('Convite'),
+    return SectionFrame(title: 'Convite', children: [
       KitGroup([
         KitRow(
           title: code ?? 'O convite',
@@ -3964,8 +4079,7 @@ class _OrgManage extends ConsumerWidget {
       if (_routeAllowed('/guest-page', perms))
         KitRow(title: 'Página dos convidados', sub: 'O que os convidados veem', chevron: true, onTap: () => context.push('/guest-page')),
     ];
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const KitCaps('Gerir'),
+    return SectionFrame(title: 'Gerir', children: [
       if (rows.isNotEmpty) ...[
         KitGroup(rows),
         const SizedBox(height: 12),

@@ -18,6 +18,10 @@ import '../../../core/seating/seating_controller.dart';
 import '../../../core/wedding/guest_facing.dart';
 import '../../../core/wedding/organizers.dart';
 import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/section_frame.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../guest_home/widgets/guest_dashboard.dart' show DashButton36;
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../../core/partners/partner_providers.dart' show PartnerPickerArgs;
 import '../../guests/screens/guests_list_screen.dart' show shareWeddingInvite;
 
@@ -139,12 +143,13 @@ class OrgSuggestions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final w = wedding;
-    final rows = <Widget>[];
+    final rows = <_Sug>[];
+    final sales = <_Sug>[];
     if (past) {
-      rows.add(KitRow(
+      rows.add(_Sug(
+        icon: Hi.chatBubbleOvalLeft,
         title: 'Agradecer aos convidados',
         sub: 'Uma mensagem no grupo do evento',
-        chevron: true,
         // O grupo do evento nasce com o evento, com toda a gente (212).
         onTap: () async {
           final messenger = ScaffoldMessenger.of(context);
@@ -167,10 +172,10 @@ class OrgSuggestions extends ConsumerWidget {
           if (ref.watch(reviewForBookingProvider(b.id)).hasValue && ref.watch(reviewForBookingProvider(b.id)).value == null) b,
       ];
       if (toReview.isNotEmpty) {
-        rows.add(KitRow(
+        rows.add(_Sug(
+          icon: Hi.star,
           title: 'Avaliar os parceiros',
           sub: _join([for (final b in toReview.take(2)) b.partnerName]) + (toReview.length > 2 ? ' e mais ${toReview.length - 2}' : ''),
-          chevron: true,
           onTap: () => context.push('/bookings'),
         ));
       }
@@ -196,68 +201,73 @@ class OrgSuggestions extends ConsumerWidget {
       ];
       if (groups.isEmpty) {
         if (bookings.isEmpty) {
-          rows.add(KitRow(
+          sales.add(_Sug(
+            icon: Hi.sparkles,
+            sale: true,
             title: 'Ver parceiros',
             sub: 'Procura o que precisas para o evento',
-            chevron: true,
             onTap: () => context.push('/partners'),
           ));
         }
-      } else if (missing.isNotEmpty) {
-        final names = [for (final m in missing.take(2)) m.$2.toLowerCase()];
-        rows.add(KitRow(
-          title: 'Ver parceiros',
-          sub: bookings.isEmpty ? 'Começa por ${_join(names)}' : 'Ainda falta ${_join(names)}',
-          chevron: true,
-          onTap: () => context.push('/partners', extra: PartnerPickerArgs(categorySlug: missing.first.$1)),
-        ));
+      } else {
+        // Uma sugestão por categoria em falta (de venda: vão mudando de
+        // tempos a tempos — pedido do Rafael, 2026-11-22).
+        for (final m in missing) {
+          sales.add(_Sug(
+            icon: _categoryIcon(m.$1),
+            sale: true,
+            title: m.$2,
+            sub: bookings.isEmpty ? 'Começa por aqui · ver parceiros' : 'Ainda sem ${m.$2.toLowerCase()} · ver parceiros',
+            onTap: () => context.push('/partners', extra: PartnerPickerArgs(categorySlug: m.$1)),
+          ));
+        }
       }
 
       final guests = ref.watch(guestsControllerProvider).guests;
       // 2 · Partilhar o convite: há convidados mas ninguém respondeu.
       if (guests.isNotEmpty && guests.every((g) => g.rsvpRespondedAt == null)) {
-        rows.add(KitRow(
+        rows.add(_Sug(
+        icon: Hi.paperAirplane,
           title: 'Partilhar o convite',
           sub: 'Ainda ninguém respondeu',
-          chevron: true,
           onTap: () => shareWeddingInvite(context, w),
         ));
       }
       // Convidar quem segues: pessoas que sigo e ainda não estão no evento.
       final followed = ref.watch(orgFollowedCountProvider(w.id)).value ?? 0;
       if (followed > 0) {
-        rows.add(KitRow(
+        rows.add(_Sug(
+        icon: Hi.userPlus,
           title: 'Convidar quem segues',
           sub: '$followed ${followed == 1 ? 'pessoa que segues ainda não está' : 'pessoas que segues ainda não estão'} no evento',
-          chevron: true,
           onTap: () => context.push('/guests/convidar'),
         ));
       }
       if (info != null) {
         // 3 · Juntar o local.
         if (w.venue?.trim().isNotEmpty != true && info.venueAddress?.trim().isNotEmpty != true) {
-          rows.add(KitRow(
+          rows.add(_Sug(
+        icon: Hi.mapPin,
             title: 'Juntar o local',
             sub: 'Sem ele, os convidados não têm «Como chegar»',
-            chevron: true,
             onTap: () => context.push('/guest-page'),
           ));
         }
         // Juntar a hora de início.
         if (info.ceremonyTime?.trim().isNotEmpty != true) {
-          rows.add(KitRow(
+          rows.add(_Sug(
+        icon: Hi.clock,
             title: 'Juntar a hora',
             sub: 'Os convidados veem a que horas começa',
-            chevron: true,
             onTap: () => context.push('/guest-page'),
           ));
         }
         // Escrever as boas-vindas.
         if (info.welcomeMessage?.trim().isNotEmpty != true) {
-          rows.add(KitRow(
+          rows.add(_Sug(
+        icon: Hi.pencilSquare,
             title: 'Escrever as boas-vindas',
             sub: 'A primeira coisa que os convidados leem',
-            chevron: true,
             onTap: () => context.push('/guest-page'),
           ));
         }
@@ -265,10 +275,10 @@ class OrgSuggestions extends ConsumerWidget {
         // pede quando está vazia (sem repetir, 2026-11-21).
         // 6 · Dress code.
         if (info.dressCode?.trim().isNotEmpty != true && info.themeColors.isEmpty) {
-          rows.add(KitRow(
+          rows.add(_Sug(
+        icon: Hi.swatch,
             title: 'Dress code',
             sub: 'Ainda sem estilo nem cores',
-            chevron: true,
             onTap: () => context.push('/guest-page'),
           ));
         }
@@ -277,10 +287,10 @@ class OrgSuggestions extends ConsumerWidget {
       // Definir o orçamento.
       final budget = ref.watch(budgetControllerProvider).budget;
       if ((budget?.total ?? 0) <= 0 && (budget?.spent ?? 0) <= 0 && (w.estimatedBudget ?? 0) <= 0) {
-        rows.add(KitRow(
+        rows.add(_Sug(
+        icon: Hi.banknotes,
           title: 'Definir o orçamento',
           sub: 'Para saberes quanto já gastaste',
-          chevron: true,
           onTap: () => context.push('/budget'),
         ));
       }
@@ -291,10 +301,10 @@ class OrgSuggestions extends ConsumerWidget {
           seatingNow.venueTypes.isNotEmpty &&
           seatingNow.tables.isEmpty &&
           guests.any((g) => g.rsvpStatus == RsvpStatus.confirmed)) {
-        rows.add(KitRow(
+        rows.add(_Sug(
+        icon: Hi.tableCells,
           title: 'Sentar os convidados',
           sub: 'O espaço tem mesas separadas',
-          chevron: true,
           onTap: () => context.push('/seating'),
         ));
       }
@@ -302,10 +312,10 @@ class OrgSuggestions extends ConsumerWidget {
       if (sections.shows(GuestSection.estadia) && (ref.watch(guestOffersEnabledProvider).value ?? false)) {
         final offers = ref.watch(guestOffersProvider(w.id)).value;
         if (offers != null && offers.isEmpty) {
-          rows.add(KitRow(
+          rows.add(_Sug(
+        icon: Hi.homeModern,
             title: 'Onde ficar e como lá chegar',
             sub: 'A «Estadia» está ligada, mas sem opções',
-            chevron: true,
             onTap: () => context.push('/guest-stay/${w.id}'),
           ));
         }
@@ -315,10 +325,10 @@ class OrgSuggestions extends ConsumerWidget {
       if (ticketed.contains(w.eventType)) {
         final entry = ref.watch(eventEntryProvider(w.id)).value;
         if (entry != null && !entry.paid) {
-          rows.add(KitRow(
+          rows.add(_Sug(
+        icon: Hi.ticket,
             title: 'Pôr bilhetes à venda',
             sub: 'A entrada ainda é livre',
-            chevron: true,
             onTap: () => context.push('/bilhetes'),
           ));
         }
@@ -333,10 +343,10 @@ class OrgSuggestions extends ConsumerWidget {
           going.isNotEmpty &&
           going.every(seated.contains) &&
           !sections.tableVisible(w.weddingDate)) {
-        rows.add(KitRow(
+        rows.add(_Sug(
+        icon: Hi.eye,
           title: 'Revelar as mesas',
           sub: 'Já estão todos sentados',
-          chevron: true,
           onTap: () => _revealTables(context, ref, w.id, sections),
         ));
       }
@@ -345,38 +355,85 @@ class OrgSuggestions extends ConsumerWidget {
         final items = ref.watch(giftListProvider(w.id)).value;
         final hasOther = info != null && (info.giftListUrl?.isNotEmpty == true || info.giftIban?.isNotEmpty == true);
         if (items != null && items.isEmpty && !hasOther) {
-          rows.add(KitRow(
+          rows.add(_Sug(
+        icon: Hi.gift,
             title: 'Lista de presentes',
             sub: 'Está ligada, mas ainda vazia',
-            chevron: true,
             onTap: () => context.push('/gift-list'),
           ));
         }
       }
       // 8 · Pôr foto de capa.
       if (w.coverPhotoUrl?.isNotEmpty != true) {
-        rows.add(KitRow(
+        rows.add(_Sug(
+        icon: Hi.photo,
           title: 'Pôr foto de capa',
           sub: 'É a primeira coisa que os convidados veem',
-          chevron: true,
           onTap: onCover,
         ));
       }
       // 9 · Convidar quem organiza contigo: só um organizador.
       final organizers = ref.watch(weddingOrganizersProvider(w.id)).value;
       if (organizers != null && organizers.length <= 1) {
-        rows.add(KitRow(
+        rows.add(_Sug(
+        icon: Hi.userGroup,
           title: 'Convidar quem organiza contigo',
           sub: 'Para dividirem as tarefas',
-          chevron: true,
           onTap: () => context.push('/organizadores'),
         ));
       }
     }
-    if (rows.isEmpty) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const KitCaps('Sugestões'),
-      KitGroup(rows),
-    ]);
+    // No máximo 4 (pedido do Rafael, 2026-11-22): primeiro até 2 de venda
+    // (a rodar de 4 em 4 horas), depois as outras; sobrando lugar, mais de
+    // venda.
+    final slot = DateTime.now().millisecondsSinceEpoch ~/ const Duration(hours: 4).inMilliseconds;
+    final rotated = sales.isEmpty ? <_Sug>[] : [for (var i = 0; i < sales.length; i++) sales[(i + slot) % sales.length]];
+    final shown = <_Sug>[
+      ...rotated.take(2),
+      ...rows.take(4 - rotated.take(2).length),
+    ];
+    if (shown.length < 4) shown.addAll(rotated.skip(2).take(4 - shown.length));
+    if (shown.isEmpty) return const SizedBox.shrink();
+    return SectionFrame(title: 'Sugestões', children: [KitGroup(shown)]);
   }
 }
+
+/// Uma sugestão (mockup «Painel do organizador · secções com moldura»): o
+/// ícone num círculo cinzento 44, título 16, meta 13 e «Ver» (de venda) ou
+/// «Fazer» com contorno 36.
+class _Sug extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String sub;
+  final VoidCallback? onTap;
+  final bool sale;
+  const _Sug({required this.icon, required this.title, required this.sub, this.onTap, this.sale = false});
+
+  @override
+  Widget build(BuildContext context) => KitRow(
+        lead: Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFE6E6E6)),
+          alignment: Alignment.center,
+          child: Icon(icon, size: 22, color: AppTheme.ink),
+        ),
+        title: title,
+        sub: sub,
+        trailing: DashButton36(sale ? 'Ver' : 'Fazer', outlined: true, onTap: onTap ?? () {}),
+        onTap: onTap,
+      );
+}
+
+IconData _categoryIcon(String slug) => switch (slug) {
+      'venue' => Hi.buildingLibrary,
+      'restaurants' => Hi.buildingStorefront,
+      'catering' => Hi.cake,
+      'photography' => Hi.camera,
+      'music_dj' => Hi.musicalNote,
+      'cake' => Hi.cake,
+      'flowers_decor' => Hi.sparkles,
+      'photobooth_entertainment' || 'kids_entertainment' => Hi.faceSmile,
+      'transport' => Hi.truck,
+      _ => Hi.sparkles,
+    };

@@ -10,6 +10,7 @@ import '../../../core/social/social.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/reduced_top_bar.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../events/screens/eventos_screen.dart' show EventPosterCard;
 import '../profile_widgets.dart';
@@ -32,6 +33,17 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
 
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   bool _busy = false;
+  // Topo reduzido como nos parceiros (pedido 2026-11-22).
+  final _scroll = ScrollController();
+  final _eventsKey = GlobalKey();
+  final _followingKey = GlobalKey();
+  final _reviewsKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   Future<void> _follow(PublicProfile p) async {
     setState(() => _busy = true);
@@ -107,6 +119,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
               ? const Center(child: Text('Perfil indisponível.'))
               : Stack(children: [
                   ListView(
+                    controller: _scroll,
                     padding: EdgeInsets.only(bottom: p.isMe ? 60 : bottom + 130),
                     children: [
                       Container(
@@ -163,6 +176,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                           if (p.upcoming.isNotEmpty) ...[
                             ProfileSectionTitle(
+                              key: _eventsKey,
                               'Próximos eventos',
                               action: '${p.upcoming.length} ${p.upcoming.length == 1 ? 'evento' : 'eventos'}',
                             ),
@@ -188,14 +202,40 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                                   style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                             ),
                           ],
-                          FollowingSection(profileId: p.id, people: p.followingPeople, partners: p.followingPartners),
+                          KeyedSubtree(
+                            key: _followingKey,
+                            child: FollowingSection(profileId: p.id, people: p.followingPeople, partners: p.followingPartners),
+                          ),
                           // Avaliações que deixou (mockup «Avaliações · resposta do
                           // parceiro», 2026-11-22): as avaliações já são públicas
                           // na página de cada parceiro.
-                          ReviewsLeftSection(profileId: p.id),
+                          KeyedSubtree(key: _reviewsKey, child: ReviewsLeftSection(profileId: p.id)),
                         ]),
                       ),
                     ],
+                  ),
+                  // Topo reduzido (barra branca + atalhos), como nos parceiros.
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    child: ReducedTopBar(
+                      scroll: _scroll,
+                      showAfter: 170,
+                      leading: ReducedTopAction(Hi.chevronLeft, label: 'Voltar', onTap: () => Navigator.of(context).maybePop()),
+                      thumb: V2Avatar(p.name, size: 32, imageUrl: p.avatarUrl, flat: true),
+                      title: p.name,
+                      meta: [
+                        if (p.username?.isNotEmpty == true) '@${p.username}',
+                        if (p.city?.isNotEmpty == true) p.city!,
+                      ].join(' · '),
+                      actions: [ReducedTopAction(Hi.arrowUpOnSquare, label: 'Partilhar perfil', onTap: () => _share(p))],
+                      sections: [
+                        if (p.upcoming.isNotEmpty) ('Próximos eventos', _eventsKey),
+                        ('A seguir', _followingKey),
+                        ('Avaliações', _reviewsKey),
+                      ],
+                    ),
                   ),
                   if (!p.isMe)
                     Positioned(

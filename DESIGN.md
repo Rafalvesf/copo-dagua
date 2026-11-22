@@ -603,6 +603,39 @@ nunca só o desconto («−2 %»), quando se sabe o valor.
 
 Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 
+- **Painel novo** (pedido do Rafael, 2026-11-22, mockup «Painel do
+  organizador · secções com moldura»): **cada secção numa moldura cinzenta**
+  (`SectionFrame`, `shared/widgets/section_frame.dart`: linha 1,5
+  `#CFCFCF`, cantos 22, interior 16, sem fundo; o título em maiúsculas lá
+  dentro) — Para fazer, Sugestões, Fotos, Programa, Números, Reservas,
+  Convite e Gerir; as linhas grossas entre secções saem.
+  - **Para fazer:** a moldura cinzenta e **cada aviso com a sua linha**
+    amarela ou vermelha pelo prazo (como no cartão da página Eventos), o
+    brilho só na linha e sem fundo; **sem bolinha** — à esquerda a imagem
+    do parceiro (logótipo 44) ou do que se trata (pedidos para entrar: o
+    ícone num círculo cinzento); título 16 e meta 13 **numa linha só**
+    («Sinal 1 386 € · até 30 nov», «Menus e pagar · até 9 jun»); botões
+    «Pagar», «Escolher», «Ver», «Aceitar».
+  - **Sugestões: no máximo 4**, cada uma com o ícone num círculo cinzento
+    44 e «Ver» (de venda) ou «Fazer» com contorno 36. As de venda (ver
+    parceiros, uma por categoria em falta) **vão mudando de 4 em 4 horas**;
+    primeiro até 2 de venda, depois as outras.
+  - **Programa:** o programa todo e «+ Adicionar momento» (contorno 44);
+    vazio, a estrela a dormir, «Ainda sem programa» e o mesmo botão.
+  - **Reservas:** por pagar, o botão preto «Pagar» (abre os popups de
+    pagar) em vez da etiqueta; «falta o sinal» / «por pagar» vai na meta;
+    as etiquetas numa linha só (neutra a `#E6E6E6`).
+  - **«Convidar»** (sem convidados) abre a página «Convidar»
+    (`/guests/convidar`).
+- **Topo reduzido** (pedido 2026-11-22): o mesmo dos parceiros (§6.2) nos
+  eventos (organizador e convidado) e nos perfis — `ReducedTopBar`
+  (`shared/widgets/reduced_top_bar.dart`): depois da capa, a barra branca
+  com a foto 32, o nome 16 e a meta 13 («Casamento · Sáb, 12 jun»), ⋯ (no
+  convidado, o grupo do evento; no perfil, partilhar) e os atalhos —
+  organizador: Para fazer · Programa · Números · Reservas · Convite · Gerir;
+  convidado: Para fazer · A tua mesa · Programa · Dress code · Como chegar;
+  perfil: Próximos eventos · A seguir · Avaliações.
+
 - **Capa:** a foto com o véu, o tipo, o nome 28 e a data/local a branco em
   baixo; a seta fixa de voltar (§6) à esquerda; **partilhar** e **⋯** pretos
   44 à direita. Tocar na foto muda a capa.

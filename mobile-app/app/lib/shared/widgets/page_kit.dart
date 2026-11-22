@@ -618,7 +618,8 @@ class KitTag extends StatelessWidget {
     };
     final bg = switch (kind) {
       KitTagKind.green => const Color(0xFFE6EDE1),
-      KitTagKind.neutral => AppTheme.background,
+      // Etiqueta neutra: #E6E6E6 (DESIGN.md §1), visível no fundo da página.
+      KitTagKind.neutral => const Color(0xFFE6E6E6),
       _ => Colors.white,
     };
     final fg = switch (kind) {
@@ -638,7 +639,8 @@ class KitTag extends StatelessWidget {
           Container(width: 6, height: 6, decoration: BoxDecoration(color: line, shape: BoxShape.circle)),
           const SizedBox(width: 6),
         ],
-        Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
+        // Numa linha só (pedido 2026-11-22: «Pedido enviado» ficava torto).
+        Text(text, maxLines: 1, softWrap: false, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
       ]),
     );
   }

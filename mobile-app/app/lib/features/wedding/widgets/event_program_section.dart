@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/budget/booked_partners.dart';
 import '../../../core/models/models.dart';
-import '../../../shared/widgets/page_kit.dart' show KitCaps;
+import '../../../shared/widgets/section_frame.dart';
+import '../../../shared/widgets/estrela.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/guest_facing.dart';
 import '../../../shared/widgets/v2_kit.dart';
@@ -31,10 +32,6 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
   List<ProgramItem> _items = [];
   bool _loading = true;
 
-  // Verde da marca (DESIGN.md §1). Literal porque AppTheme.accentOliveDark
-  // é temável (não const).
-  static const _green = Color(0xFF4F6B4A);
-  static const _shadow = [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))];
   // Altura fixa de cada linha. É o que torna a lista determinística: com uma
   // altura total conhecida (linhas × _rowHeight) a ReorderableListView vive
   // numa caixa limitada e deixa de medir mal / sobrepor as linhas.
@@ -152,59 +149,44 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
     // ainda não está aqui fica "à espera que aceite".
     final confirmed = ref.watch(confirmedPartnerIdsProvider(widget.weddingId)).value ?? const <String>{};
 
+    // Mockup «Painel do organizador · secções com moldura» (2026-11-22):
+    // o programa todo numa moldura cinzenta e «+ Adicionar momento» em
+    // baixo; vazio, a estrela a dormir.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+      child: SectionFrame(
+        title: 'Programa',
         children: [
-          // Título como grupo em maiúsculas (a força de "O EVENTO" nas
-          // Definições), sem o botão "+" (adicionar é o botão em baixo).
-          // Título de secção com a linha de 2 px (painel novo, 2026-11-21).
-          const KitCaps('Programa'),
-          const Text('O dia ao minuto. Arrasta para reordenar.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-          const SizedBox(height: 12),
           if (_items.isEmpty)
             _EmptyCard(onAdd: _add)
-          else
-            Container(
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: _shadow),
-              clipBehavior: Clip.antiAlias,
-              // Caixa com altura exata (linhas × _rowHeight): dá à
-              // ReorderableListView limites fixos, por isso não precisa de
-              // shrinkWrap e as linhas deixam de se sobrepor.
-              child: SizedBox(
-                height: _items.length * _rowHeight,
-                child: ReorderableListView.builder(
-                  padding: EdgeInsets.zero,
-                  physics: const NeverScrollableScrollPhysics(),
-                  buildDefaultDragHandles: false,
-                  itemCount: _items.length,
-                  onReorder: _reorder,
-                  itemBuilder: (context, i) {
-                    final it = _items[i];
-                    return _ProgramRow(
-                      // Identidade estável por instância: sobrevive ao reordenar
-                      // (as mesmas instâncias são movidas na lista).
-                      key: ValueKey(identityHashCode(it)),
-                      index: i,
-                      item: it,
-                      first: i == 0,
-                      height: _rowHeight,
-                      // Pendente = tem parceiro escolhido que ainda não aceitou.
-                      pending: it.partnerId.trim().isNotEmpty && !confirmed.contains(it.partnerId.trim()),
-                      onTap: () => _editExisting(i),
-                    );
-                  },
-                ),
+          else ...[
+            // Altura exata (linhas × _rowHeight): limites fixos para a
+            // ReorderableListView, sem linhas sobrepostas.
+            SizedBox(
+              height: _items.length * _rowHeight,
+              child: ReorderableListView.builder(
+                padding: EdgeInsets.zero,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                itemCount: _items.length,
+                onReorder: _reorder,
+                itemBuilder: (context, i) {
+                  final it = _items[i];
+                  return _ProgramRow(
+                    key: ValueKey(identityHashCode(it)),
+                    index: i,
+                    item: it,
+                    first: i == 0,
+                    height: _rowHeight,
+                    pending: it.partnerId.trim().isNotEmpty && !confirmed.contains(it.partnerId.trim()),
+                    onTap: () => _editExisting(i),
+                  );
+                },
               ),
             ),
-          const SizedBox(height: 10),
-          if (_items.isNotEmpty)
-            TextButton.icon(
-              onPressed: _add,
-              icon: const Icon(Icons.add, size: 18, color: _green),
-              label: const Text('Adicionar etapa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _green)),
-            ),
+            const SizedBox(height: 12),
+            FrameOutlineButton('+ Adicionar momento', onTap: _add),
+          ],
         ],
       ),
     );
@@ -242,9 +224,8 @@ class _ProgramRow extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            border: first ? null : const Border(top: BorderSide(color: Color(0xFFD9D9D9), width: 1)),
+            border: first ? null : const Border(top: BorderSide(color: AppTheme.line, width: 1)),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
               ReorderableDragStartListener(
@@ -324,24 +305,17 @@ class _EmptyCard extends StatelessWidget {
   final VoidCallback onAdd;
   const _EmptyCard({required this.onAdd});
   @override
-  Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22),
-            boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))]),
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          children: [
-            const Text('Ainda sem programa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 4),
-            const Text('Adiciona a primeira etapa — com um parceiro ou à tua maneira.',
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            const SizedBox(height: 14),
-            SizedBox(
-              height: 44,
-              width: double.infinity,
-              child: ElevatedButton(onPressed: onAdd, child: const Text('Adicionar etapa')),
-            ),
-          ],
-        ),
+  Widget build(BuildContext context) => Column(
+        children: [
+          const EstrelaMascot(Estrela.dormir, size: 76),
+          const SizedBox(height: 8),
+          const Text('Ainda sem programa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 4),
+          const Text('Junta os momentos do dia: a cerimónia, o jantar, a festa. Os convidados veem-no no painel deles.',
+              textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          const SizedBox(height: 14),
+          FrameOutlineButton('+ Adicionar momento', onTap: onAdd),
+        ],
       );
 }
 

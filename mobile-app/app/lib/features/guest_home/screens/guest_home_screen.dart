@@ -23,6 +23,7 @@ import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import '../../../shared/widgets/reduced_top_bar.dart';
 import 'guest_table_screen.dart';
 import '../widgets/guest_home_sections.dart';
 import '../widgets/guest_dashboard.dart';
@@ -192,6 +193,19 @@ class _GuestHomeBody extends ConsumerStatefulWidget {
 
 class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
   final _placeKey = GlobalKey();
+  // Topo reduzido como nos parceiros (pedido 2026-11-22): o scroll e as
+  // secções para os atalhos.
+  final _scroll = ScrollController();
+  final _todoKey = GlobalKey();
+  final _tableKey = GlobalKey();
+  final _programKey = GlobalKey();
+  final _dressKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -361,11 +375,11 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       // «Para fazer» sempre (regra 2026-11-21): as tarefas, «Está tudo
       // tratado» ou «Aparecem aqui as tuas tarefas».
       if (going && hasTodo) {
-        body.addAll([KitCaps(isToday ? 'Para fazer' : 'Para fazer · ${tables.where((t) => t.needsAction).length}'), GuestTablesAlerts(weddingId: id)]);
+        body.addAll([KeyedSubtree(key: _todoKey, child: KitCaps(isToday ? 'Para fazer' : 'Para fazer · ${tables.where((t) => t.needsAction).length}')), GuestTablesAlerts(weddingId: id)]);
       } else if (going && tables.isNotEmpty) {
-        body.addAll([const KitCaps('Para fazer'), const DashAllDone()]);
+        body.addAll([KeyedSubtree(key: _todoKey, child: const KitCaps('Para fazer')), const DashAllDone()]);
       } else {
-        body.addAll([const KitCaps('Para fazer'), DashTasksEmpty(star: !nothing)]);
+        body.addAll([KeyedSubtree(key: _todoKey, child: const KitCaps('Para fazer')), DashTasksEmpty(star: !nothing)]);
       }
       if (nothing) {
         // Linha antes da estrela «à espera» (2026-11-21).
@@ -381,17 +395,17 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
         body.addAll([
           const SizedBox(height: 12),
           const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
-          DashTable(table: table, mates: mates, onTap: openTable),
+          KeyedSubtree(key: _tableKey, child: DashTable(table: table, mates: mates, onTap: openTable)),
         ]);
       }
       if (program.isNotEmpty) {
         body.addAll([
-          KitCaps(isToday ? 'Programa de hoje' : 'Programa'),
+          KeyedSubtree(key: _programKey, child: KitCaps(isToday ? 'Programa de hoje' : 'Programa')),
           DashProgram(program: program, live: isToday, onAll: () => context.push('/guest-wedding-details', extra: wedding)),
         ]);
       }
       if (dress.isNotEmpty || wedding.themeColors.isNotEmpty) {
-        body.addAll([const KitCaps('Dress code'), DashDressCode(text: dress, colors: wedding.themeColors)]);
+        body.addAll([KeyedSubtree(key: _dressKey, child: const KitCaps('Dress code')), DashDressCode(text: dress, colors: wedding.themeColors)]);
       }
       if (more.isNotEmpty) body.addAll([const KitCaps('Mais'), KitGroup(more)]);
       body.add(hosts);
@@ -407,14 +421,16 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       body.removeAt(hi + 2);
     }
 
-    return ListView(
+    void exit() => context.canPop() ? context.pop() : context.go('/eventos?tab=meus');
+    final list = ListView(
+      controller: _scroll,
       padding: const EdgeInsets.only(bottom: 130),
       children: [
         DashCover(
           wedding: wedding,
           title: title,
           meta: meta,
-          onExit: () => context.canPop() ? context.pop() : context.go('/eventos?tab=meus'),
+          onExit: exit,
           onGroup: groupOn ? openGroup : null,
           groupUnread: unread,
           onMap: hasPlace && !declined && !isPast ? goToPlace : null,
@@ -425,6 +441,36 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
         ),
       ],
     );
+    final cover = wedding.coverPhotoUrl;
+    return Stack(children: [
+      list,
+      Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        child: ReducedTopBar(
+          scroll: _scroll,
+          showAfter: 190,
+          leading: ReducedTopAction(Hi.arrowLeft, label: 'Sair do evento', onTap: exit),
+          thumb: cover != null && cover.isNotEmpty
+              ? Image.network(cover, fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => V2Avatar(wedding.displayNames, size: 32))
+              : V2Avatar(wedding.displayNames, size: 32),
+          title: wedding.displayNames,
+          meta: date == null ? '' : formatShortDatePt(date),
+          actions: [
+            if (groupOn) ReducedTopAction(Hi.chatBubbleOvalLeft, label: 'Grupo do evento', onTap: openGroup),
+          ],
+          sections: [
+            ('Para fazer', _todoKey),
+            ('A tua mesa', _tableKey),
+            ('Programa', _programKey),
+            ('Dress code', _dressKey),
+            ('Como chegar', _placeKey),
+          ],
+        ),
+      ),
+    ]);
   }
 }
 
