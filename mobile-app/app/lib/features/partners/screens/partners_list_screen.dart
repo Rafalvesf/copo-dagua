@@ -28,6 +28,7 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
 import '../../../core/partner_profile/partner_location.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/photo_card.dart' show CardsDivider;
 import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
 
 class PartnersListScreen extends ConsumerStatefulWidget {
@@ -600,13 +601,18 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           itemBuilder: (context, i) {
                             if (i < head.length) return head[i];
                             final partner = partners[i - head.length];
+                            final last = i - head.length == partners.length - 1;
+                            // Linha grossa entre cartões empilhados (2026-11-22).
                             return Padding(
-                              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
-                              child: PartnerBigCard(
-                                partner: partner,
-                                width: null,
-                                onTap: () => _openDetails(context, partner),
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                                PartnerBigCard(
+                                  partner: partner,
+                                  width: null,
+                                  onTap: () => _openDetails(context, partner),
+                                ),
+                                if (!last) const CardsDivider() else const SizedBox(height: 10),
+                              ]),
                             );
                           },
                         ),

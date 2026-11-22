@@ -9,7 +9,7 @@ import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/dense_card.dart';
 import '../../../core/events/event_people.dart';
 import '../../../shared/widgets/attendees_line.dart';
-import '../../../shared/widgets/photo_card.dart';
+import '../../../shared/widgets/photo_card.dart' show CardsDivider, PhotoCard;
 import '../../partners/widgets/partner_cards.dart' show InfoTag;
 import '../../../core/tasks/task_models.dart' show taskPriorityWeight, taskPriorityFromDb;
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart';
@@ -201,10 +201,15 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             ? 'Nenhum evento público com estes filtros.'
             : 'Ainda não há eventos abertos. Cria o teu e abre-o a todos: aparece aqui para quem procura.'))
       else
-        for (final e in publicEvents)
+        // Cartões empilhados: linha grossa (2 px #CFCFCF) entre eles
+        // (pedido 2026-11-22; só nas listas na vertical, não nos carrosséis).
+        for (final (i, e) in publicEvents.indexed)
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 22),
-            child: _PublicEventCard(event: e),
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _PublicEventCard(event: e),
+              if (i < publicEvents.length - 1) const CardsDivider() else const SizedBox(height: 22),
+            ]),
           ),
     ];
 
