@@ -29,14 +29,15 @@ class PartnerBadges extends StatelessWidget {
       ]);
 }
 
-/// Visto verde de «Parceiro verificado»: perfil aprovado pela equipa. Nas
-/// listas públicas só aparecem parceiros publicados (o estado pode vir
-/// vazio nessas consultas).
+/// Visto verde de «Parceiro verificado»: perfil aprovado pela equipa. Um
+/// [Partner] só chega à app (listas, perfil, sugestões) depois de
+/// publicado — `status = 'published'`, aprovado no admin — por isso todos
+/// os parceiros que se veem são verificados.
 class VerifiedBadge extends StatelessWidget {
   final Partner partner;
   const VerifiedBadge(this.partner, {super.key});
 
-  static bool isVerified(Partner p) => p.partnerProfileStatus == null || p.partnerProfileStatus == 'published';
+  static bool isVerified(Partner p) => true;
 
   @override
   Widget build(BuildContext context) {

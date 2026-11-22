@@ -151,20 +151,3 @@ class PhotoCard extends StatelessWidget {
     );
   }
 }
-
-/// Pílula branca por cima da foto (data, nota…), 12 negrito.
-class PhotoPill extends StatelessWidget {
-  final String text;
-  final IconData? icon;
-  const PhotoPill(this.text, {super.key, this.icon});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (icon != null) ...[Icon(icon, size: 13, color: AppTheme.ink), const SizedBox(width: 4)],
-          Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        ]),
-      );
-}
