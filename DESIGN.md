@@ -124,9 +124,8 @@ ecrãs. O resto da app mantém a tabela acima.
   (logótipo do parceiro, iniciais do evento); título **19** com os selos
   (§6) e a ação à direita (coração, partilhar); meta **13**; divisória
   `#D9D9D9` e o rodapé — uma etiqueta à esquerda e, à direita, rótulo 9 +
-  valor 16: numa caixa com contorno para o preço (`DESDE €900`, `ENTRADA
-  Grátis`); **sem caixa nem linha** para o tempo (`FALTAM 203 dias`,
-  pedido 2026-11-22). Os eventos já não levam as caixas de números
+  valor 16 **sem caixa nem linha** (`DESDE €900`, `ENTRADA Grátis`,
+  `FALTAM 203 dias`, pedido 2026-11-22). Os eventos já não levam as caixas de números
   (`MiniStats`) nem a barra de planeamento no cartão. **Nunca** voltar a
   pôr caixa branca ou sombra nestes cartões.
   - **Rodapé do parceiro** (no lugar de «Responde em ~1 h», por esta
@@ -215,15 +214,18 @@ ecrãs. O resto da app mantém a tabela acima.
   do parceiro 13, «×»; uma linha por conquista com o ícone branco num
   círculo 44 da sua cor, nome 16 e o que quer dizer 13, e a linha
   «Verificado»; «OK» preto 52).
-- **Preço:** caixa com contorno e **duas linhas** — rótulo 9 em cima + valor 16
-  por baixo: `DESDE` + `€X`, ou, para quem trabalha por orçamento, `POR` +
-  `Orçamento`. A mesma caixa no topo do parceiro e nos cartões de evento e de
-  parceiro (`PriceBox`). Nunca "Por orçamento" numa só linha.
+- **Preço:** **duas linhas, sem caixa nem linha** (pedido do Rafael,
+  2026-11-22) — rótulo 9 `#57534E` em cima + valor 16 negrito por baixo,
+  alinhados à direita: `DESDE` + `€X`, ou, para quem trabalha por
+  orçamento, `POR` + `Orçamento`; também `ENTRADA` + `Grátis` e `FALTAM` +
+  `203 dias`. O mesmo no topo do parceiro, na barra de reserva e nos
+  cartões (`PriceBox`). Só por cima de uma foto leva a caixa branca (para
+  se ler). Nunca "Por orçamento" numa só linha.
 - **Cabeça do perfil:** `ProfileCard_Users` (amigos, organizadores, o meu
   perfil: avatar e os três números em colunas no topo). No **parceiro**
   (mockups «Parceiros e perfis», 2026-11-20) o logótipo e o nome estão na
   foto do topo (§6.2) e por baixo vem o cartão de dados: categoria, nota
-  (n.º de avaliações) e zona com a caixa de preço à direita; anos de
+  (n.º de avaliações) e zona com o preço (§6, sem caixa) à direita; anos de
   experiência e «Responde em ~1 h»; descrição justificada com «Ler mais»;
   etiquetas; os três números (nota, seguidores, eventos) em **caixas com
   contorno** (`MiniStats`); e «Seguir» + «Mensagem» com contorno (o botão
@@ -363,7 +365,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
     etiqueta «Novo» (branca) e nota na foto (sem «Em destaque»: a secção já o diz); logótipo
     44 a sobrepor o canto; nome 19 com os selos (§6) e o coração; categoria
     13; «zona · N anos de experiência» 13; divisória `#D9D9D9`; rodapé do
-    §4 e a caixa de preço.
+    §4 e o preço (sem caixa).
   - **Secções em carrossel:** «Em destaque (perto de ti)», «Mais bem
     avaliados», «Novos na À Nossa!» e as 3 categorias com mais parceiros
     («Ver todos» escolhe a categoria). Cartões de **330**, 10 entre eles,
@@ -385,7 +387,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 - **Pacotes:** linhas num grupo com um círculo que fica verde com o visto
   quando escolhido, nome 16, meta 13 e o preço à direita.
 - **Barra fixa de reserva:** branca, cantos 35, a largura das caixas de
-  conteúdo, sombra da navbar; a caixa de preço à esquerda e o botão preto
+  conteúdo, sombra da navbar; o preço (sem caixa) à esquerda e o botão preto
   52. Sem pacote escolhido: «DESDE €X» + «Escolher pacote» (vai aos
   pacotes); com pacote: o nome e o valor + «Reservar» (abre o popup); só
   orçamento: «REFERÊNCIA ≈ €X» (ou «POR Orçamento») + «Pedir orçamento»;
