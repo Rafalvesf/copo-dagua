@@ -22,6 +22,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../payments/open_payment.dart';
 import '../../payments/booking_extras_sheet.dart' show payBookingFlow;
+import '../../guest_home/widgets/choose_menu_sheet.dart' show chooseMenuAndPay;
+import '../../../core/guest_home/event_tables.dart' show EventTable, myEventTablesProvider;
 import '../../tasks/task_actions.dart';
 import '../../../core/budget/budget_controller.dart';
 import '../../../core/budget/expense_controller.dart';
@@ -3643,6 +3645,10 @@ class _OrgBody extends ConsumerWidget {
     final tasks = <Widget>[];
     if (perms.can(OrganizerPerm.tarefas)) {
       final allBookings = ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[];
+      // Mesas em que cada um escolhe o menu (216): o organizador escolhe o
+      // seu, o de quem vem com ele e o de quem paga.
+      final tables = ref.watch(myEventTablesProvider(w.id)).value ?? const <EventTable>[];
+      final withPayRow = <String>{};
       for (final (e, payId) in _duePayments(ref).where((p) => p.$1.weddingId == w.id).take(3)) {
         final left = e.dueDate!.difference(now).inDays;
         final when = left < 0 ? 'o prazo já passou' : left == 0 ? 'até hoje' : left <= 3 ? 'faltam $left ${left == 1 ? 'dia' : 'dias'}' : 'até ${_shortDay(e.dueDate!)}';
@@ -3651,7 +3657,9 @@ class _OrgBody extends ConsumerWidget {
         // (pedido do Rafael, 2026-11-21).
         final parts = e.id.split(':');
         final booking = parts.length == 3 && parts.first == 'booking' ? allBookings.where((b) => b.id == parts[1]).firstOrNull : null;
-        final menus = booking != null && booking.organizerChoosesMenus;
+        final table = booking == null ? null : tables.where((t) => t.bookingId == booking.id).firstOrNull;
+        if (table != null) withPayRow.add(table.bookingId);
+        final menus = booking != null && (booking.organizerChoosesMenus || table != null);
         // Restaurantes não têm sinal: paga-se tudo de uma vez (191).
         final what = parts.length == 3 && parts[2] == 'final'
             ? 'o restante'
@@ -3668,10 +3676,28 @@ class _OrgBody extends ConsumerWidget {
           urgent: toneForDue(e.dueDate) == AlertTone.urgent,
           // Popups por cima do painel (pedido 2026-11-22): extras e pagar,
           // como depois de aceitar uma proposta.
-          onTap: () => payId != null
-              ? payBookingFlow(context, ref,
-                  paymentId: payId, bookingId: booking?.id, partnerName: booking?.partnerName ?? e.title)
-              : context.push('/budget'),
+          onTap: () => table != null
+              ? chooseMenuAndPay(context, ref, w.id, table)
+              : payId != null
+                  ? payBookingFlow(context, ref,
+                      paymentId: payId, bookingId: booking?.id, partnerName: booking?.partnerName ?? e.title)
+                  : context.push('/budget'),
+        ));
+      }
+      for (final t in tables) {
+        if (!t.needsAction || withPayRow.contains(t.bookingId)) continue;
+        final d = t.choiceDeadline;
+        final pays = t.myPayment?['status'] == 'pending' || (t.eachPays && !t.chose);
+        tasks.add(_orgTaskRow(
+          context,
+          title: t.partnerName,
+          sub: [
+            !t.chose ? ((t.menuPeople ?? 1) > 1 ? 'Os menus do teu convite' : 'O teu menu') : 'A tua parte · ${euros(t.myAmount ?? 0)}',
+            if (d != null) 'até ${_shortDay(d)}',
+          ].join(' · '),
+          action: !t.chose ? (pays ? 'Escolher e pagar' : 'Escolher') : 'Pagar',
+          urgent: d != null && toneForDue(d) == AlertTone.urgent,
+          onTap: () => chooseMenuAndPay(context, ref, w.id, t),
         ));
       }
       for (final p in ref.watch(pendingProposalsProvider).value ?? const <ReceivedProposal>[]) {

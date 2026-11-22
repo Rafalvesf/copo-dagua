@@ -8,7 +8,7 @@ import '../../../shared/money.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
 import '../../../shared/widgets/alert_outline.dart' show AlertTone, toneForDue;
 import '../../../shared/widgets/pay_later_sheet.dart';
-import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, IslandCloseButton;
+import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, IslandCloseButton, showIslandSheet;
 import '../../../shared/widgets/snappy_tap.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
@@ -59,6 +59,10 @@ class ReserveFlowResult {
   /// «Pagar o sinal» no fim do pedido (migração 207): o sinal paga-se já e
   /// fica cativo até o parceiro responder. `false` = «Pagar mais tarde».
   final bool payNow;
+
+  /// «Nós pagamos por» (216): as pessoas cuja comida os organizadores
+  /// pagam quando cada convite paga o seu (chave → nome).
+  final Map<String, String> paidFor;
   const ReserveFlowResult({
     required this.event,
     required this.adults,
@@ -68,6 +72,7 @@ class ReserveFlowResult {
     this.extras = const [],
     this.message,
     this.payNow = false,
+    this.paidFor = const {},
   });
 
   int get people => adults + children;
@@ -77,6 +82,7 @@ class ReserveFlowResult {
         '$people ${people == 1 ? 'pessoa' : 'pessoas'} ($adults ${adults == 1 ? 'adulto' : 'adultos'}${children > 0 ? ' + $children ${children == 1 ? 'criança' : 'crianças'}' : ''})',
         for (final (k, v) in details) '$k: $v',
         if (eachPays) 'cada convite paga o seu',
+        if (eachPays && paidFor.isNotEmpty) 'nós pagamos por ${paidFor.values.join(', ')}',
       ].join(' · ');
 }
 
@@ -177,6 +183,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
   String? _loadedFor;
 
   bool _eachPays = false;
+  final Map<String, String> _paidFor = {};
   final Set<String> _extras = {};
 
   // O que falta saber (passo «quando»).
@@ -267,6 +274,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         extras: widget.extras.where((e) => _extras.contains(e.id)).toList(),
         message: _message.text.trim().isEmpty ? null : _message.text.trim(),
         payNow: payNow,
+        paidFor: _asksWhoPays && _eachPays ? Map.of(_paidFor) : const {},
       );
 
   /// «Pagar mais tarde» no fim do pedido: o aviso de que sem o sinal se pode
@@ -543,7 +551,98 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         _option('Pagamos nós', 'Uma só conta, paga por quem reserva', !_eachPays, () => setState(() => _eachPays = false)),
         _option('Cada convite paga o seu', 'Quem recebe o convite paga por si e por quem leva (acompanhantes e filhos), na app, 3 dias antes',
             _eachPays, () => setState(() => _eachPays = true)),
+        if (_eachPays) ...[
+          const SizedBox(height: 8),
+          _caps('NÓS PAGAMOS POR (SE QUISERES)'),
+          _group([
+            Container(
+              constraints: const BoxConstraints(minHeight: 56),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(children: [
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                    const Text('Pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    Text(
+                      _paidFor.isEmpty
+                          ? 'Escolhe pelo nome'
+                          : 'Escolhe pelo nome · ${_paidFor.length} ${_paidFor.length == 1 ? 'escolhida' : 'escolhidas'}',
+                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                    ),
+                  ]),
+                ),
+                SnappyTap(
+                  onTap: _pickPaidFor,
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.center,
+                    decoration: const ShapeDecoration(
+                      shape: StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
+                    ),
+                    child: const Text('Escolher', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+          if (_paidFor.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              for (final e in _paidFor.entries)
+                SnappyTap(
+                  onTap: () => setState(() => _paidFor.remove(e.key)),
+                  child: Container(
+                    height: 38,
+                    padding: const EdgeInsets.only(left: 16, right: 12),
+                    decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(19)),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Text(e.value.split(' ').first,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      const SizedBox(width: 6),
+                      Icon(Hi.xMark, size: 16, color: AppTheme.inkMuted),
+                    ]),
+                  ),
+                ),
+            ]),
+          ],
+          const SizedBox(height: 10),
+          _note(_paidFor.isEmpty
+              ? 'Os outros pagam como sempre: cada convite por si e por quem traz.'
+              : 'Os outros pagam como sempre: cada convite por si e por quem traz. Pagas a parte '
+                  '${_paidFor.length == 1 ? 'desta pessoa' : 'destas ${_paidFor.length} pessoas'} numa só conta, no mesmo prazo dos convidados.'),
+        ],
       ];
+
+  /// «Por quem pagamos?»: os convidados que vão e quem trazem.
+  Future<void> _pickPaidFor() async {
+    List<Map<String, dynamic>> people;
+    try {
+      final res = await supabase.rpc('event_people_for_paying', params: {'p_wedding_id': _event.id});
+      people = [for (final r in (res as List? ?? const [])) if (r is Map) Map<String, dynamic>.from(r)];
+    } catch (_) {
+      people = const [];
+    }
+    if (!mounted) return;
+    people = [for (final p in people) if (p['is_organizer'] != true) p];
+    if (people.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ainda não há convidados confirmados. Podes escolher depois.')),
+      );
+      return;
+    }
+    final chosen = await showIslandSheet<Map<String, String>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _PaidForSheet(people: people, initial: _paidFor),
+    );
+    if (chosen != null && mounted) {
+      setState(() {
+        _paidFor
+          ..clear()
+          ..addAll(chosen);
+      });
+    }
+  }
 
   List<Widget> _whenStep() {
     const gap = SizedBox(height: 16);
@@ -980,4 +1079,124 @@ class _Btn extends StatelessWidget {
           ),
         ),
       );
+}
+
+
+/// «Por quem pagamos?» (mockup «Quem paga?», 2026-11-22): os convidados que
+/// vão e quem cada um traz, com procurar; toca para escolher.
+class _PaidForSheet extends StatefulWidget {
+  final List<Map<String, dynamic>> people;
+  final Map<String, String> initial;
+  const _PaidForSheet({required this.people, required this.initial});
+
+  @override
+  State<_PaidForSheet> createState() => _PaidForSheetState();
+}
+
+class _PaidForSheetState extends State<_PaidForSheet> {
+  late final Map<String, String> _on = Map.of(widget.initial);
+  String _q = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final q = _q.trim().toLowerCase();
+    final shown = [
+      for (final p in widget.people)
+        if (q.isEmpty ||
+            '${p['name']}'.toLowerCase().contains(q) ||
+            '${p['owner_name'] ?? ''}'.toLowerCase().contains(q))
+          p,
+    ];
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Por quem pagamos?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 4),
+              Text(_on.isEmpty ? 'Ninguém escolhido' : '${_on.length} ${_on.length == 1 ? 'pessoa escolhida' : 'pessoas escolhidas'}',
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const SizedBox(width: 12),
+          const IslandCloseButton(),
+        ]),
+        const SizedBox(height: 16),
+        Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          alignment: Alignment.centerLeft,
+          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+          child: TextField(
+            style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+            decoration: const InputDecoration(
+              isCollapsed: true,
+              border: InputBorder.none,
+              hintText: 'Procurar convidado',
+              hintStyle: TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+            ),
+            onChanged: (v) => setState(() => _q = v),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+          child: Column(children: [
+            for (final (i, p) in shown.indexed)
+              Container(
+                decoration: i == 0 ? null : const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFD9D9D9)))),
+                child: _row(p),
+              ),
+          ]),
+        ),
+        const SizedBox(height: 20),
+        SnappyTap(
+          onTap: () => Navigator.of(context).pop(Map.of(_on)),
+          child: Container(
+            height: 52,
+            alignment: Alignment.center,
+            decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
+            child: Text(_on.isEmpty ? 'Guardar' : 'Guardar · ${_on.length} ${_on.length == 1 ? 'pessoa' : 'pessoas'}',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _row(Map<String, dynamic> p) {
+    final key = p['key'] as String;
+    final name = '${p['name']}';
+    final owner = p['owner_name'] as String?;
+    final on = _on.containsKey(key);
+    return SnappyTap(
+      onTap: () => setState(() => on ? _on.remove(key) : _on[key] = name),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(children: [
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: on ? AppTheme.accentOliveDark : Colors.white,
+              border: on ? null : Border.all(color: AppTheme.inkMuted, width: 1.5),
+            ),
+            child: on ? Icon(Hi.check, size: 13, color: Colors.white) : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(on ? 'Pagas tu' : owner != null ? 'Vem com ${owner.split(' ').first}' : 'Paga por si',
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
 }

@@ -303,7 +303,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     setState(() => _requestingQuote = true);
     Funnel.track('quote_request_start', ref: widget.partner.id);
     try {
-      await supabase.rpc('request_table', params: {
+      final quoteId = await supabase.rpc('request_table', params: {
         'p_partner_id': widget.partner.id,
         'p_wedding_id': wedding.id,
         'p_people': people,
@@ -311,6 +311,17 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         'p_message': note.isEmpty ? null : note,
         'p_payer_mode': _eachPays ? 'each' : 'organizer',
       });
+      // «Nós pagamos por» (216): as pessoas cuja comida pagamos nós.
+      final paidFor = flow?.paidFor ?? const <String, String>{};
+      if (_eachPays && paidFor.isNotEmpty && quoteId is String) {
+        try {
+          await supabase.rpc('set_paid_for', params: {
+            'p_quote_request_id': quoteId,
+            'p_booking_id': null,
+            'p_keys': paidFor.keys.toList(),
+          });
+        } catch (_) {}
+      }
       try {
         await sendQuoteRequestMessage(
           weddingId: wedding.id,

@@ -99,9 +99,9 @@ ecrãs. O resto da app mantém a tabela acima.
 
 ## 4. Espaços e formas
 
-- Margem lateral das páginas: **20** (`AppTheme.screenMargin`). A navbar, as
-  barras flutuantes e os popups usam a mesma: **têm sempre a largura das
-  caixas de conteúdo**.
+- Margem lateral das páginas: **20** (`AppTheme.screenMargin`). A navbar e as
+  barras flutuantes usam a mesma: **têm sempre a largura das caixas de
+  conteúdo**. Os popups não: encostam aos lados e ao fundo (§6.1).
 - **Sem caixas brancas nas listas** (pedido do Rafael, 2026-11-21): o
   conteúdo fica direto no fundo `#F2F2F2`. **Linha mais grossa (2 px
   `#CFCFCF`) entre secções diferentes** — os títulos de secção e de grupo já
@@ -331,10 +331,11 @@ ecrãs. O resto da app mantém a tabela acima.
 Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 (organizador, parceiro e convidado), sem exceções.
 
-- **Sempre em ilha, com o tamanho da navbar:** 20 de margem dos lados (a
-  largura das caixas de conteúdo e da navbar), 20 em baixo (ou a margem segura do telemóvel, se for maior), cantos **35**,
-  fundo branco e sombra da ilha. **Nunca** de canto a canto nem colado ao
-  fundo do ecrã. Com o teclado aberto, a ilha sobe por cima dele.
+- **Colados aos lados e ao fundo** (pedido do Rafael, 2026-11-22, mockup
+  «Escolher o menu · popup»; substitui a ilha com margem de 2026-11-20):
+  sem margem dos lados nem em baixo, **cantos 35 só em cima**, fundo
+  branco e sombra; a margem segura do telemóvel fica dentro do popup. Com
+  o teclado aberto, o popup sobe por cima dele.
 - **Uma só forma de abrir:** `showIslandSheet` / `showIslandDialog`
   (`shared/widgets/island_sheet.dart`); diálogos com `IslandAlert`; menus
   «⋯» com `IslandMenuButton` (mesma forma de usar que o `PopupMenuButton`,
@@ -349,8 +350,8 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   ou margem à volta do popup — a ilha já trata disso. Cartões e caixas
   dentro do popup ficam a `#F2F2F2`, sem sombra (o popup é branco).
 - **Animação — a onda da navbar:** ao abrir, uma onda no verde da marca
-  `#4F6B4A` nasce no centro da navbar e cresce em círculo até encher o
-  popup; depois a cor desfaz-se no branco enquanto o conteúdo entra (cerca
+  `#4F6B4A` nasce no centro da navbar (o popup vem da navbar) e cresce em
+  círculo até encher o popup; depois a cor desfaz-se no branco enquanto o conteúdo entra (cerca
   de 0,56 s). Ao fechar, a onda volta a encolher para a navbar (0,32 s).
   Com «reduzir movimento» o popup só aparece e desaparece. Esta é a única
   exceção à regra «verde nunca em botões/fundos»: o verde só existe durante
@@ -611,8 +612,8 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   (pedido 2026-11-22), nunca a página das reservas: o mesmo fluxo de
   depois de aceitar uma proposta — «Queres juntar alguma coisa?» (1 DE 2,
   só se o parceiro tiver extras por juntar) → pagar (2 DE 2, com o voltar
-  aos extras). No convidado, «Escolher e pagar» é «Escolhe o teu menu» →
-  extras (se o menu os tiver) → «A tua parte». Feito: «Pagamentos em dia e propostas respondidas.»; vazio:
+  aos extras). Nas mesas com menus, «Escolher e pagar» é o popup dos
+  menus (§6.6). Feito: «Pagamentos em dia e propostas respondidas.»; vazio:
   «Pagamentos, pedidos para entrar e propostas dos parceiros.»
 - **Sugestões:** **nunca repetem o «Para fazer»** nem o resto do painel; cada
   uma só aparece quando se aplica; sem nenhuma, a secção não aparece:
@@ -666,6 +667,30 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 - **Gerir:** Presentes e Página dos convidados (os convidados e as mesas
   estão nos quadrados); por baixo de uma linha grossa (2 px), **Definições
   do evento** à parte, com o botão redondo preto 44 (roda dentada).
+
+## 6.6 Menus por pessoa (pedido do Rafael, 2026-11-22, migração 216; mockup «Escolher o menu · popup»)
+
+- **Já não há menu igual para todos:** cada pessoa tem o seu menu.
+- **Quem escolhe:** cada pessoa escolhe o seu e o de quem vem no seu
+  convite (acompanhantes e filhos) — igual para convidados e
+  organizadores. Escolhes também por quem pagas a comida: com «Pagamos
+  nós», os organizadores podem escolher por qualquer pessoa do evento;
+  quando cada convite paga o seu, pelas pessoas de «Nós pagamos por». Só é
+  obrigatório escolher por ti e por quem vem contigo; os outros podem
+  escolher o seu.
+- **Popup** (`chooseMenuAndPay`, `choose_menu_sheet.dart`): 1 «Escolhe os
+  menus» — «PARA QUEM» com uma pílula 38 por pessoa («Tu · Carne», a aberta
+  a verde), «MENU DO TOMÁS · 4» com os menus num grupo, «ALERGIAS DO TOMÁS»
+  (caixa 52 + pílula «Nenhuma»; **pedem-se sempre**), «3 de 4 menus» + o
+  valor 20 e o botão que diz o que falta («Falta o menu da Rita») → 2
+  «Queres juntar alguma coisa?» (os extras do convite, **depois dos
+  menus**; «Sem extras» + «Continuar · 98 €») → 3 pagar.
+- **«Quem paga?» na reserva:** «Pagamos nós» ou «Cada convite paga o seu»
+  e, neste, «NÓS PAGAMOS POR (SE QUISERES)» — «Escolher» abre «Por quem
+  pagamos?» (procurar, os convidados e quem trazem, «Pagas tu» / «Vem com
+  João» / «Paga por si»); os escolhidos ficam em pílulas com «×».
+- **Pagar:** só cartão, Apple Pay e Google Pay em toda a app — sem
+  Multibanco nem MB WAY (pedido 2026-11-22).
 
 ## 7. Alertas
 

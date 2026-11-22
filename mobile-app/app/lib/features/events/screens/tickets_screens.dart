@@ -68,7 +68,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
     });
     try {
       // Pagamento dentro da app (2026-11-09: nunca com link): o mesmo ecrã
-      // das reservas — cartão, Apple Pay, Google Pay, MB WAY, Multibanco.
+      // das reservas — cartão, Apple Pay e Google Pay.
       final e = widget.event;
       final qty = _qty;
       String? ticketId;
@@ -243,7 +243,7 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
                         ? 'Já estás no evento. Mostra este QR à entrada; também o encontras no início do evento.'
                         : 'Já estás no evento. Vês o programa, a galeria e as novidades.')
                     : _status == 'pending'
-                        ? 'Se pagaste com Multibanco ou MB WAY, pode demorar uns minutos. Avisamos quando ficar confirmado.'
+                        ? 'O pagamento pode demorar uns minutos a ficar confirmado. Avisamos quando estiver.'
                         : '',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 15, height: 1.4, color: AppTheme.inkMuted),
