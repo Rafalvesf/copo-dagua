@@ -2064,7 +2064,12 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
 const _heroGreen = Color(0xFF3F5A3B);
 
 // Cartão branco liso, cantos 22, sem linha nem sombra (DESIGN.md §4).
-BoxDecoration _whiteCard() => BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22));
+/// Cada bloco numa moldura cinzenta, sem fundo (mockup «Páginas do evento ·
+/// com molduras», 2026-11-22).
+BoxDecoration _whiteCard() => BoxDecoration(
+      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: const Color(0xFFCFCFCF), width: 1.5),
+    );
 
 /// Cartão verde: código em grande, Partilhar convite e Ver como convidado.
 class _CodeHero extends ConsumerWidget {

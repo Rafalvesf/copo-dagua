@@ -2886,27 +2886,23 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
               const SizedBox(height: 4),
               const Text('Tudo sobre este evento, organizado por tema.',
                   style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              for (final (title, rows) in groups) if (rows.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.only(top: 18, bottom: 8, left: 2),
-                  child: Text(title.toUpperCase(),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
-                ),
-                Container(
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                  clipBehavior: Clip.antiAlias,
-                  child: Material(
+              // Cada tema numa moldura cinzenta com o título lá dentro
+              // (mockup «Páginas do evento · com molduras», 2026-11-22).
+              for (final (title, rows) in groups) if (rows.isNotEmpty)
+                SectionFrame(
+                  title: title,
+                  children: [Material(
                     type: MaterialType.transparency,
                     child: Column(
                       children: [
                         for (final (i, (label, value, onTap)) in rows.indexed) ...[
-                          if (i > 0) const Divider(height: 1, color: Color(0xFFD9D9D9)),
+                          if (i > 0) const Divider(height: 1, color: AppTheme.line),
                           InkWell(
                             onTap: onTap,
                             child: ConstrainedBox(
                               constraints: const BoxConstraints(minHeight: 56),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
                                 child: Row(
                                   children: [
                                     Expanded(
@@ -2929,9 +2925,8 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
                         ],
                       ],
                     ),
-                  ),
+                  )],
                 ),
-              ],
             ],
           ),
           Positioned(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/auth/auth_controller.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
@@ -15,6 +16,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/organizers_card.dart' show RowPillButton;
 import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/search_pill.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'guests_list_screen.dart' show shareWeddingInvite;
@@ -88,9 +90,12 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     final all = _followed ?? const <_Followed>[];
     if (all.isEmpty) {
       return const [
-        SizedBox(height: 24),
-        Text('Ainda não segues ninguém na app. Quem seguires aparece aqui para convidares sem link.',
-            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+        SectionFrame(title: 'Quem segues', children: [
+          FrameEmpty(
+            title: 'Ainda não segues ninguém',
+            text: 'Segue amigos na app para os convidares com um toque, sem link.',
+          ),
+        ]),
       ];
     }
     final q = _search.text.trim().toLowerCase();
@@ -123,29 +128,16 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     return [
       const SizedBox(height: 16),
       SearchPill(controller: _search, hint: 'Pesquisar quem segues'),
-      if (mutual.isNotEmpty) ...[
-        KitCaps('Seguem-se um ao outro · ${mutual.length}'),
-        KitGroup([for (final p in mutual) row(p)]),
-      ],
-      if (onlyMe.isNotEmpty) ...[
-        KitCaps('Só tu segues · ${onlyMe.length}'),
-        KitGroup([for (final p in onlyMeShown) row(p)]),
-        if (onlyMeShown.length < onlyMe.length) ...[
-          const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: () => setState(() => _showAllFollowed = true),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.ink,
-              minimumSize: const Size.fromHeight(44),
-              side: const BorderSide(color: AppTheme.ink, width: 1.5),
-              shape: const StadiumBorder(),
-              textStyle: const TextStyle(
-                  fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
-            ),
-            child: Text('Ver todos (${onlyMe.length})'),
-          ),
-        ],
-      ],
+      if (mutual.isNotEmpty)
+        SectionFrame(title: 'Seguem-se um ao outro · ${mutual.length}', children: [
+          KitGroup([for (final p in mutual) row(p)]),
+        ]),
+      if (onlyMe.isNotEmpty)
+        SectionFrame(title: 'Só tu segues · ${onlyMe.length}', children: [
+          KitGroup([for (final p in onlyMeShown) row(p)]),
+          if (onlyMeShown.length < onlyMe.length)
+            FrameButton44('Ver todos (${onlyMe.length})', outlined: true, onTap: () => setState(() => _showAllFollowed = true)),
+        ]),
       if (list.isEmpty) ...[
         const SizedBox(height: 24),
         const Text('Ninguém com esse nome.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
@@ -189,99 +181,76 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
         };
 
     return GradientScaffold(
-      background: AppBackground.subtle,
+      background: AppBackground.feed,
       body: KitPage(
         pinnedBack: true,
               rotateBack: false,
         onBack: () => context.canPop() ? context.pop() : context.go('/guests'),
         children: [
           const KitHeader(),
-          KitTitle('Convidar',
-              subtitle: 'Convida amigos que segues na app (ou por link). Quem aceitar entra como convidado e diz só se vai.'),
+          KitTitle('Convidar', subtitle: wedding == null ? null : _eventMeta(wedding)),
+          // Convidados | Organizadores (mockup «Páginas do evento», 2026-11-22):
+          // os organizadores convidam-se na página deles.
+          if (wedding != null && wedding.ownerId == ref.watch(authControllerProvider).profile?.id)
+            KitPills([
+              const KitPill(label: 'Convidados', selected: true),
+              KitPill(label: 'Organizadores', selected: false, onTap: () => context.push('/organizadores')),
+            ]),
 
-          // Contexto do evento
+          // Por link — o link do evento, com o RSVP
           if (wedding != null)
-            KitGroup([
-              KitRow(lead: _calBox(), title: wedding.displayNames, sub: _eventMeta(wedding)),
+            SectionFrame(title: 'Por link', children: [
+              const FrameNote('Para quem ainda não está na app. Quem entra por aqui aparece em «Pedidos para entrar».'),
+              if (wedding.guestCode != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  child: Row(children: [
+                    Expanded(
+                      child: Text(wedding.guestCode!,
+                          style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ),
+                    FrameButton36('Copiar', outlined: true, onTap: () async {
+                      await copyText(wedding.guestCode!);
+                      if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Código copiado')));
+                    }),
+                  ]),
+                ),
+              ],
+              FrameButton44('Enviar link', onTap: () => shareWeddingInvite(context, wedding)),
+              if (wedding.inviteUrl != null) FrameButton44('Copiar link', outlined: true, onTap: () => _copyEventLink(wedding)),
             ]),
 
           // Amigos que segues (migração 189) — convidar na app
           if (_followed != null) ..._followedTab(wedding),
 
-          // Por link — o link do evento, com o RSVP
-          if (wedding != null) ...[
-            const KitSection('Por link'),
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                const Text('Para quem ainda não está na app',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                const SizedBox(height: 4),
-                const Text('Abre o convite do evento com o RSVP. Quem entra por aqui aparece em «Pedidos para entrar».',
-                    style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                const SizedBox(height: 14),
-                Row(children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => shareWeddingInvite(context, wedding),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.ink,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 52),
-                        shape: const StadiumBorder(),
-                        textStyle: const TextStyle(
-                            fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
-                      ),
-                      child: const Text('Enviar link'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: wedding.inviteUrl == null ? null : () => _copyEventLink(wedding),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.ink,
-                        minimumSize: const Size(0, 52),
-                        side: const BorderSide(color: AppTheme.ink, width: 1.5),
-                        shape: const StadiumBorder(),
-                        textStyle: const TextStyle(
-                            fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
-                      ),
-                      child: const Text('Copiar link'),
-                    ),
-                  ),
-                ]),
-              ]),
-            ),
-          ],
-
           // Já convidados — só o RSVP
-          if (toSend.isNotEmpty) ...[
-            KitCaps('Por enviar · ${toSend.length}'),
-            KitGroup([
-              for (final g in toSend)
-                KitRow(
-                  lead: V2Avatar(g.name, size: 44),
-                  title: g.name,
-                  sub: meta(g),
-                  trailing: RowPillButton(label: 'Enviar', onTap: () => _openSendSheet(context, wedding, g)),
-                ),
+          if (toSend.isNotEmpty)
+            SectionFrame(title: 'Por enviar · ${toSend.length}', children: [
+              KitGroup([
+                for (final g in toSend)
+                  KitRow(
+                    lead: V2Avatar(g.name, size: 44),
+                    title: g.name,
+                    sub: meta(g),
+                    trailing: FrameButton36('Enviar', onTap: () => _openSendSheet(context, wedding, g)),
+                  ),
+              ]),
             ]),
-          ],
-          if (done.isNotEmpty) ...[
-            KitCaps('Já convidados · ${done.length}'),
-            KitGroup([
-              for (final g in done)
-                KitRow(
-                  lead: V2Avatar(g.name, size: 44),
-                  title: g.name,
-                  sub: doneMeta(g),
-                  trailing: doneTag(g),
-                  onTap: () => context.push('/guests/${g.id}'),
-                ),
+          if (done.isNotEmpty)
+            SectionFrame(title: 'Já convidados · ${done.length}', children: [
+              KitGroup([
+                for (final g in done)
+                  KitRow(
+                    lead: V2Avatar(g.name, size: 44),
+                    title: g.name,
+                    sub: doneMeta(g),
+                    trailing: doneTag(g),
+                    onTap: () => context.push('/guests/${g.id}'),
+                  ),
+              ]),
             ]),
-          ],
           if (guests.isEmpty && (_followed == null || _followed!.isEmpty)) ...[
             const SizedBox(height: 24),
             const Text('Ainda não há convidados. Convida quem segues, ou partilha o link do evento.',
@@ -291,15 +260,6 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       ),
     );
   }
-
-  /// Caixa do ícone do evento no chip de contexto (verde claro, cantos 12).
-  Widget _calBox() => Container(
-        width: 44,
-        height: 44,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(12)),
-        child: const Icon(Icons.event, size: 22, color: Color(0xFF4F6B4A)),
-      );
 
   String _eventMeta(Wedding w) {
     final parts = <String>[];
