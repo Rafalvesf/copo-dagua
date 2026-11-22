@@ -15,7 +15,11 @@ import '../../core/supabase/supabase_config.dart';
 /// [onPaid]: o que fazer quando fica pago, em vez do ecrã «Pago» (ex.: o
 /// sinal pago ao pedir volta ao perfil do parceiro, que mostra o fim do
 /// pedido com a estrela de parabéns).
-Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String paymentId, {void Function(BuildContext context)? onPaid}) async {
+/// [step]: passo do popup quando o pagamento vem depois de outro passo
+/// (p. ex. «2 DE 2» depois dos extras); devolve `'back'` se se tocou no
+/// voltar.
+Future<Object?> openPaymentFlow(BuildContext context, WidgetRef ref, String paymentId,
+    {void Function(BuildContext context)? onPaid, (int, int)? step}) async {
   Map<String, dynamic>? row;
   try {
     row = await supabase
@@ -24,17 +28,20 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
         .eq('id', paymentId)
         .maybeSingle();
   } catch (_) {}
-  if (!context.mounted) return;
+  if (!context.mounted) return null;
   if (row == null) {
-    context.push('/bookings');
-    return;
+    // Nunca a página das reservas (pedido 2026-11-22): fica onde está.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Não foi possível abrir o pagamento. Tenta outra vez.')),
+    );
+    return null;
   }
   if (row['status'] != 'pending') {
     ref.invalidate(coupleBookingsProvider);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Este pagamento já está feito.')),
     );
-    return;
+    return null;
   }
   // Percentagem efetiva da reserva (escalões do organizador, migração 127).
   double pct = 0;
@@ -46,9 +53,9 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
         : await ref.read(organizerFeeForPartnerProvider(pid).future);
     pct = cfg.effectivePct(total);
   } catch (_) {}
-  if (!context.mounted) return;
+  if (!context.mounted) return null;
   final partner = (row['partner_profiles'] as Map?)?['business_name'] as String? ?? 'Parceiro';
-  await context.push(
+  final r = await context.push<Object?>(
     '/pay',
     extra: PayArgs(
       paymentId: paymentId,
@@ -57,6 +64,7 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
       amount: amountWithCommission((row['amount'] as num).toDouble(), pct),
       baseAmount: (row['amount'] as num).toDouble(),
       onPaid: onPaid,
+      step: step,
       onChat: _chatOpener(
         weddingId: (row['bookings'] as Map?)?['wedding_id'] as String?,
         partnerId: row['partner_id'] as String?,
@@ -65,6 +73,7 @@ Future<void> openPaymentFlow(BuildContext context, WidgetRef ref, String payment
     ),
   );
   ref.invalidate(coupleBookingsProvider);
+  return r;
 }
 
 /// Tarefas "Pagar sinal/pagamento final — …" guardam o `payments.id` em

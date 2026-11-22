@@ -612,7 +612,12 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   ao pagar: o nome do parceiro, «Menus e o sinal (300 €)» e «Escolher e
   pagar», como no convidado), propostas dos parceiros («Ver») e pedidos
   para entrar («Aceitar»), com o ponto da cor do prazo
-  (§7). Feito: «Pagamentos em dia e propostas respondidas.»; vazio:
+  (§7). **«Pagar» e «Escolher e pagar» abrem popups** por cima do painel
+  (pedido 2026-11-22), nunca a página das reservas: o mesmo fluxo de
+  depois de aceitar uma proposta — «Queres juntar alguma coisa?» (1 DE 2,
+  só se o parceiro tiver extras por juntar) → pagar (2 DE 2, com o voltar
+  aos extras). No convidado, «Escolher e pagar» é «Escolhe o teu menu» →
+  extras (se o menu os tiver) → «A tua parte». Feito: «Pagamentos em dia e propostas respondidas.»; vazio:
   «Pagamentos, pedidos para entrar e propostas dos parceiros.»
 - **Sugestões:** **nunca repetem o «Para fazer»** nem o resto do painel; cada
   uma só aparece quando se aplica; sem nenhuma, a secção não aparece:

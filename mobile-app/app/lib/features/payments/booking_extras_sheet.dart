@@ -1,11 +1,14 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/supabase/supabase_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/money.dart';
 import '../../shared/widgets/island_sheet.dart';
 import '../../shared/widgets/snappy_tap.dart';
+import '../../shared/widgets/step_sheet_head.dart';
+import 'open_payment.dart';
 
 /// «Queres juntar alguma coisa?» depois de aceitar uma proposta, antes de
 /// pagar (mockups «Reservar por categoria» · Só orçamento, 2026-11-21;
@@ -14,28 +17,76 @@ import '../../shared/widgets/snappy_tap.dart';
 /// coisa; `null` se não. (Nas reservas de pacotes os extras escolhem-se
 /// antes de pedir, no `ReserveFlowSheet`.)
 Future<(double, double)?> offerBookingExtras(BuildContext context, String bookingId, {required String partnerName}) async {
-  List<Map<String, dynamic>> options;
-  double total, deposit;
-  try {
-    final r = await supabase.rpc('booking_extra_options', params: {'p_booking_id': bookingId});
-    options = [for (final o in (r as List? ?? const [])) (o as Map).cast<String, dynamic>()];
-    if (options.isEmpty) return null;
-    final b = await supabase.from('bookings').select('total_amount, deposit_amount').eq('id', bookingId).single();
-    total = (b['total_amount'] as num).toDouble();
-    deposit = (b['deposit_amount'] as num).toDouble();
-  } catch (_) {
-    // Antes da migração 206: segue direto para pagar.
-    return null;
-  }
-  if (!context.mounted) return null;
+  final data = await _loadExtras(bookingId);
+  if (data == null || !context.mounted) return null;
   final chosen = await showIslandSheet<Set<String>>(
     // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
     confirmExit: true,
     context: context,
     isScrollControlled: true,
-    builder: (_) => _ExtrasSheet(options: options, total: total, deposit: deposit, partnerName: partnerName),
+    builder: (_) => _ExtrasSheet(options: data.$1, total: data.$2, deposit: data.$3, partnerName: partnerName),
   );
-  if (chosen == null || chosen.isEmpty) return null;
+  if (chosen == null || chosen.isEmpty || !context.mounted) return null;
+  return _addExtras(context, bookingId, chosen);
+}
+
+/// «Para fazer» → «Pagar» (pedido do Rafael, 2026-11-22): o mesmo fluxo de
+/// quando se aceita uma proposta — «Queres juntar alguma coisa?» (1 DE 2,
+/// só se o parceiro tiver extras por juntar) e depois pagar (2 DE 2), em
+/// popups por cima da página, nunca a página das reservas. O voltar do
+/// pagamento regressa aos extras.
+Future<void> payBookingFlow(BuildContext context, WidgetRef ref,
+    {required String paymentId, String? bookingId, required String partnerName}) async {
+  var data = bookingId == null ? null : await _loadExtras(bookingId);
+  if (!context.mounted) return;
+  if (data == null) {
+    await openPaymentFlow(context, ref, paymentId);
+    return;
+  }
+  while (context.mounted && data != null) {
+    final d = data;
+    final chosen = await showIslandSheet<Set<String>>(
+      confirmExit: true,
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _ExtrasSheet(
+        options: d.$1,
+        total: d.$2,
+        deposit: d.$3,
+        partnerName: partnerName,
+        step: (1, 2),
+        subtitle: '$partnerName tem extras para a tua reserva.',
+      ),
+    );
+    if (chosen == null || !context.mounted) return;
+    if (chosen.isNotEmpty) await _addExtras(context, bookingId!, chosen);
+    if (!context.mounted) return;
+    final r = await openPaymentFlow(context, ref, paymentId, step: (2, 2));
+    if (r != 'back' || !context.mounted) return;
+    data = await _loadExtras(bookingId!);
+    // Já sem extras por juntar: volta ao pagamento sozinho.
+    if (data == null && context.mounted) {
+      await openPaymentFlow(context, ref, paymentId);
+      return;
+    }
+  }
+}
+
+/// Extras por juntar + (total, sinal) da reserva; `null` sem extras.
+Future<(List<Map<String, dynamic>>, double, double)?> _loadExtras(String bookingId) async {
+  try {
+    final r = await supabase.rpc('booking_extra_options', params: {'p_booking_id': bookingId});
+    final options = [for (final o in (r as List? ?? const [])) (o as Map).cast<String, dynamic>()];
+    if (options.isEmpty) return null;
+    final b = await supabase.from('bookings').select('total_amount, deposit_amount').eq('id', bookingId).single();
+    return (options, (b['total_amount'] as num).toDouble(), (b['deposit_amount'] as num).toDouble());
+  } catch (_) {
+    // Antes da migração 206: segue direto para pagar.
+    return null;
+  }
+}
+
+Future<(double, double)?> _addExtras(BuildContext context, String bookingId, Set<String> chosen) async {
   try {
     final r = await supabase.rpc('add_booking_extras', params: {'p_booking_id': bookingId, 'p_extra_ids': chosen.toList()});
     final m = (r as Map).cast<String, dynamic>();
@@ -53,7 +104,16 @@ class _ExtrasSheet extends StatefulWidget {
   final double total;
   final double deposit;
   final String partnerName;
-  const _ExtrasSheet({required this.options, required this.total, required this.deposit, required this.partnerName});
+  final String? subtitle;
+  final (int, int)? step;
+  const _ExtrasSheet({
+    required this.options,
+    required this.total,
+    required this.deposit,
+    required this.partnerName,
+    this.subtitle,
+    this.step,
+  });
 
   @override
   State<_ExtrasSheet> createState() => _ExtrasSheetState();
@@ -72,18 +132,11 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Queres juntar alguma coisa?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 4),
-              Text('Aceitaste a proposta. ${widget.partnerName} tem extras para o teu pedido.',
-                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ]),
-          ),
-          const SizedBox(width: 12),
-          const IslandCloseButton(),
-        ]),
+        StepSheetHead(
+          step: widget.step,
+          title: 'Queres juntar alguma coisa?',
+          subtitle: widget.subtitle ?? 'Aceitaste a proposta. ${widget.partnerName} tem extras para o teu pedido.',
+        ),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

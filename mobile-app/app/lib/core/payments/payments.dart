@@ -70,6 +70,10 @@ class PayArgs {
   /// cartão, migração 209: «Começar 3 meses grátis»).
   final String? actionLabel;
 
+  /// Passo do popup quando o pagamento vem depois de outro passo (extras,
+  /// menus): mostra a barra «2 DE 2» e o voltar, que fecha com `'back'`.
+  final (int, int)? step;
+
   const PayArgs({
     required this.paymentId,
     required this.partnerName,
@@ -85,6 +89,7 @@ class PayArgs {
     this.errorText,
     this.cardFee = false,
     this.actionLabel,
+    this.step,
   });
 
   /// Reserva (sinal ou restante) — tem regra de cancelamento.
