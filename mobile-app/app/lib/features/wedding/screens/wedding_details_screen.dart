@@ -39,7 +39,6 @@ import '../../../core/wedding/menu_style.dart';
 import '../../../core/wedding/organizers.dart';
 import '../../guests/screens/guests_list_screen.dart' show shareWeddingInvite;
 import '../../../shared/widgets/sticker_icon.dart';
-import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/scroll_aware_back_button.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -232,11 +231,8 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onLongPress: _startEditing,
-            child: EdgeFade(
-              topFadeHeight: layout == MenuLayout.classic ? 0 : 8,
-              bottomFadeHeight: 140,
-              child: _PageBody(wedding: wedding, layout: layout, controller: _scroll, sectionKeys: _sectionKeys),
-            ),
+            // Sem o desvanecer branco em cima e em baixo (pedido 2026-11-22).
+            child: _PageBody(wedding: wedding, layout: layout, controller: _scroll, sectionKeys: _sectionKeys),
           ),
         ),
         // Topo reduzido como nos parceiros (pedido 2026-11-22): a barra
@@ -273,8 +269,8 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
             ],
           ),
         ),
-        // DESIGN.md §6: seta fixa que roda ←→↑ e sobe ao topo; translúcida só
-        // enquanto a capa (foto) está por trás dela.
+        // Seta fixa de voltar: nos eventos é sempre «voltar», não roda para ↑
+        // (como nos parceiros, pedido 2026-11-22).
         Positioned(
           left: 16,
           top: topInset + 12,
@@ -283,6 +279,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
             onBack: () => context.go('/eventos'),
             backLabel: 'Voltar a Eventos',
             imageExtent: layout == MenuLayout.classic && hasCover ? 174 : 0,
+            rotate: false,
           ),
         ),
         const Positioned(
@@ -2948,6 +2945,7 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
             child: ScrollAwareBackButton(
               controller: _scroll,
               onBack: () => Navigator.of(context).maybePop(),
+              rotate: false,
             ),
           ),
         ],
