@@ -130,8 +130,9 @@ ecrãs. O resto da app mantém a tabela acima.
   `FALTAM 203 dias`, pedido 2026-11-22). **Empilhados na vertical**
   (Descobrir, lista de parceiros): uma **linha grossa 2 px `#CFCFCF`** entre
   cartões, 16 acima e abaixo (`CardsDivider`); nos carrosséis não há linha
-  entre cartões, mas por baixo do carrossel «Os meus eventos» vai uma **linha
-  fina 1 px `#E3E3E3`** (16 acima, 8 abaixo) antes de «Descobrir».
+  entre cartões, mas nos cartões de «Os meus eventos» vai uma **linha fina 1 px
+  `#E3E3E3` logo por baixo do cartão** (16 abaixo do rodapé, antes dos
+  pontos do carrossel), e 16 a mais até «Descobrir».
   Os eventos já não levam as caixas de números
   (`MiniStats`) nem a barra de planeamento no cartão. **Nunca** voltar a
   pôr caixa branca ou sombra nestes cartões.
