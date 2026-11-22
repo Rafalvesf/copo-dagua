@@ -285,8 +285,8 @@ ecrãs. O resto da app mantém a tabela acima.
   piscar o olho, surpresa, a dormir, a pensar, contente, triste, zangada,
   ideia). Anima 3 vezes ao aparecer e fica parada; só «a pensar» pode
   continuar enquanto carrega; parada com «reduzir movimento». Onde:
-  listas vazias → a dormir; erros → triste; evento criado e pagamento
-  feito → parabéns; convites e «vou» → apaixonada; aceitar/juntar →
+  listas vazias → a dormir; erros → triste; evento criado → parabéns;
+  pagamento feito e «Reserva feita!» → piscar o olho (pedido 2026-11-22); convites e «vou» → apaixonada; aceitar/juntar →
   contente; sugestões → ideia; conversas vazias e «Está tudo tratado» → piscar o olho; Premium → fixe
   (de óculos, pedido 2026-11-21). Substitui
   as duas taças.
@@ -462,7 +462,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   coisa? (extras; «Sem extras» + «Continuar») · Pedir reserva. A reserva só
   é pedida depois dos extras. Nunca se volta a perguntar o dia, o local nem
   as pessoas. Fim: «Reserva pedida» (estrela contente, resumo, «Ver
-  conversa» + «OK»); pagamento feito → estrela de parabéns.
+  conversa» + «OK»); pagamento feito → estrela a piscar o olho.
   **Com sinal** (pedido do Rafael, 2026-11-22, mockup «Reserva: quem paga e
   pagar o sinal»): o último passo é só «Pedir reserva»; depois vem
   **«Reserva feita!»** (estrela **a piscar o olho**, animada; resumo, «Continuar») e logo a
@@ -471,7 +471,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   parceiro aceitar; aceite, cancela-se com devolução até 48 h depois de
   pagar; depois, sem reembolso; recusado ou sem resposta em 48 h, é
   libertado) e **«Pagar mais tarde» + «Pagar agora»**. Pago → «Sinal pago»
-  (parabéns).
+  (a piscar o olho).
 - **Pedir orçamento:** o mesmo fluxo — evento, pessoas, «O que procuras?»
   (hora e mensagem), Tudo certo? → «Pedir orçamento» → «Orçamento pedido».
   Na proposta: «Recusar» (pergunta o motivo, que segue para o parceiro na
@@ -526,8 +526,8 @@ perguntar antes.
    («Pagar mais tarde» + «Pagar · 511,00 €»). Nunca «Voltar» aqui.
 
 **Popup de fim** («Reserva pedida», «Pagamento feito», «És Premium»):
-estrela **120** ao centro (contente para pedidos; parabéns para pagamentos
-e Premium), título **22** ao centro, frase **14** `#57534E` ao centro,
+estrela **120** ao centro (contente para pedidos; a piscar o olho para
+pagamentos; parabéns no Premium), título **22** ao centro, frase **14** `#57534E` ao centro,
 resumo se houver, e «OK» preto (ou «Ver conversa» + «OK»). Sem «×».
 
 **Página (fundo `#F2F2F2`, margem 20):** voltar preto **44** · título

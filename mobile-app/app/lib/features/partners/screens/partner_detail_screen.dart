@@ -492,10 +492,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Pedido → contente; pagamento feito → parabéns (DESIGN.md §6).
-            // «Reserva feita!» → a piscar o olho, animada (pedido 2026-11-22).
+            // «Reserva feita!» e pagamento feito → a piscar o olho, animada
+            // (pedido 2026-11-22).
             Center(
               child: EstrelaMascot(
-                paid ? Estrela.parabens : continueLabel != null ? Estrela.piscar : Estrela.contente,
+                paid || continueLabel != null ? Estrela.piscar : Estrela.contente,
                 size: 96,
               ),
             ),
