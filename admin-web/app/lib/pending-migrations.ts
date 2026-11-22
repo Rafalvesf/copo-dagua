@@ -502,6 +502,14 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "216_menus_per_person.sql",
     check: { kind: "marker", id: "217" },
   },
+  {
+    file: "218_paid_for_after_booking.sql",
+    date: "2026-11-22",
+    title: "«Nós pagamos por» depois da reserva",
+    what: "Corre depois da 217. O popup dos menus fica a saber se organizas o evento e por quem pagam, para mudar «Nós pagamos por» depois de a reserva estar feita.",
+    after: "217_payer_chooses_menu.sql",
+    check: { kind: "marker", id: "218" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
