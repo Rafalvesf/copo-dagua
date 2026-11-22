@@ -162,16 +162,18 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         const _Title('Os meus eventos'),
         SnapCarousel(
           itemCount: own.length + guest.length,
-          itemBuilder: (context, i) => i < own.length
-              ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
-              : _InvitedEventCard(wedding: guest[i - own.length]),
+          // Linha fina logo por baixo de cada cartão, antes dos pontos
+          // (pedido do Rafael, 2026-11-22).
+          itemBuilder: (context, i) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            i < own.length
+                ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
+                : _InvitedEventCard(wedding: guest[i - own.length]),
+            const SizedBox(height: 16),
+            const SizedBox(height: 1, child: ColoredBox(color: AppTheme.line)),
+          ]),
         ),
-        // Linha fina por baixo dos cartões e mais espaço até «Descobrir»
-        // (pedido do Rafael, 2026-11-22).
-        const Padding(
-          padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 8),
-          child: SizedBox(height: 1, child: ColoredBox(color: AppTheme.line)),
-        ),
+        // Mais espaço até «Descobrir».
+        const SizedBox(height: 16),
       ],
       // O programa saiu daqui (pedido do Rafael, 2026-11-20): fica só no
       // painel do evento.
