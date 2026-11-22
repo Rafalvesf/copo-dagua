@@ -175,6 +175,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     if (bookable.length == 1) return bookable.first;
     if (!mounted) return null;
     return showIslandSheet<Wedding>(
+      // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
+      confirmExit: true,
       context: context,
       isScrollControlled: true,
       builder: (_) => _EventPickerSheet(
@@ -482,6 +484,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     // mesmo fluxo da reserva — evento, pessoas, o que procuras e «Pedir
     // orçamento». O dia, o local e as pessoas vêm do evento.
     final result = await showIslandSheet<ReserveFlowResult>(
+      // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
+      confirmExit: true,
       context: context,
       isScrollControlled: true,
       builder: (context) => ReserveFlowSheet(
@@ -1026,6 +1030,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     } catch (_) {}
     if (!mounted) return;
     final result = await showIslandSheet<ReserveFlowResult>(
+      // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
+      confirmExit: true,
       context: context,
       isScrollControlled: true,
       builder: (ctx) => ReserveFlowSheet(
@@ -1051,6 +1057,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final events = await _eventsForSheet();
     if (!mounted || events.isEmpty) return;
     final result = await showIslandSheet<ReserveFlowResult>(
+      // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
+      confirmExit: true,
       context: context,
       isScrollControlled: true,
       builder: (ctx) => ReserveFlowSheet(

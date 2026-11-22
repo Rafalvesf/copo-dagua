@@ -33,7 +33,9 @@ Future<T?> showIslandSheet<T>({
   Color? backgroundColor,
   ShapeBorder? shape,
   bool isDismissible = true,
-  bool confirmExit = true,
+  // «Tens a certeza que queres sair?» só nos fluxos de reserva e de
+  // pagamento (pedido do Rafael, 2026-11-22; DESIGN.md §6.1).
+  bool confirmExit = false,
 }) {
   final navigator = Navigator.of(context);
   return navigator.push<T>(

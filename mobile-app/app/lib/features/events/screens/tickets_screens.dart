@@ -24,6 +24,8 @@ import 'ticket_pass_screens.dart' show TicketPassCard;
 /// privado vai com o [code] ou o [inviteToken] com que a pessoa entrou (153).
 Future<void> showBuyTicketSheet(BuildContext context, PublicEvent e, {String? code, String? inviteToken}) {
   return showIslandSheet<void>(
+    // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
+    confirmExit: true,
     context: context,
     isScrollControlled: true,
     builder: (_) => _BuyTicketSheet(event: e, code: code, inviteToken: inviteToken),

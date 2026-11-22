@@ -64,6 +64,8 @@ Future<void> maybeShowPaymentDue(BuildContext context, WidgetRef ref) async {
   } catch (_) {}
   if (!context.mounted) return;
   final pay = await showIslandSheet<bool>(
+    // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
+    confirmExit: true,
     context: context,
     isScrollControlled: true,
     builder: (_) => _PaymentDueSheet(due: d, total: amountWithCommission(d.amount, pct)),
