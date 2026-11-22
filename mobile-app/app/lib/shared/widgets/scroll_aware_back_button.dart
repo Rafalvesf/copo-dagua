@@ -33,6 +33,10 @@ class ScrollAwareBackButton extends StatefulWidget {
 
   final String backLabel;
 
+  /// `false`: a seta é sempre «voltar» e não roda (eventos e parceiros,
+  /// pedido do Rafael 2026-11-22).
+  final bool rotate;
+
   const ScrollAwareBackButton({
     super.key,
     required this.controller,
@@ -40,6 +44,7 @@ class ScrollAwareBackButton extends StatefulWidget {
     this.imageExtent = 0,
     this.rotateAfter = 80,
     this.backLabel = 'Voltar',
+    this.rotate = true,
   });
 
   @override
@@ -78,7 +83,7 @@ class _ScrollAwareBackButtonState extends State<ScrollAwareBackButton> {
 
   @override
   Widget build(BuildContext context) {
-    final scrolled = _offset > widget.rotateAfter;
+    final scrolled = widget.rotate && _offset > widget.rotateAfter;
 
     return Semantics(
       button: true,
