@@ -127,7 +127,10 @@ ecrãs. O resto da app mantém a tabela acima.
   nome curto ou comprido; meta **13**; divisória
   `#D9D9D9` e o rodapé — uma etiqueta à esquerda e, à direita, rótulo 9 +
   valor 16 **sem caixa nem linha** (`DESDE €900`, `ENTRADA Grátis`,
-  `FALTAM 203 dias`, pedido 2026-11-22). Os eventos já não levam as caixas de números
+  `FALTAM 203 dias`, pedido 2026-11-22). **Empilhados na vertical**
+  (Descobrir, lista de parceiros): uma **linha grossa 2 px `#CFCFCF`** entre
+  cartões, 16 acima e abaixo (`CardsDivider`); nos carrosséis não há linha.
+  Os eventos já não levam as caixas de números
   (`MiniStats`) nem a barra de planeamento no cartão. **Nunca** voltar a
   pôr caixa branca ou sombra nestes cartões.
   - **Rodapé do parceiro** (no lugar de «Responde em ~1 h», por esta

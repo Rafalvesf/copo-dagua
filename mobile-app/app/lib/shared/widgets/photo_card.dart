@@ -160,3 +160,16 @@ class PhotoCard extends StatelessWidget {
     );
   }
 }
+
+/// Linha grossa entre cartões com foto empilhados na vertical (2 px
+/// `#CFCFCF`, 16 acima e abaixo — DESIGN.md §4, pedido 2026-11-22). Nunca
+/// nos carrosséis.
+class CardsDivider extends StatelessWidget {
+  const CardsDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: SizedBox(height: 2, child: ColoredBox(color: AppTheme.sectionLine)),
+      );
+}
