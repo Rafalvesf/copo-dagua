@@ -904,16 +904,6 @@ class _MyEventCard extends ConsumerWidget {
               ? const InfoTag('Ninguém respondeu ainda')
               : const InfoTag('Ainda sem convidados'),
       footerRight: _countdownBox(wedding.weddingDate),
-      // Alerta no canto de baixo à direita da foto (mockup «Alertas nos
-      // cartões», B1, 2026-11-22): vermelho a 3 dias ou menos do evento.
-      photoAction: todo > 0
-          ? AlertBadge(
-              tone: tone,
-              count: todo,
-              semanticLabel: '$todo ${todo == 1 ? 'coisa' : 'coisas'} para fazer',
-              onTap: () => _open(context, ref),
-            )
-          : null,
       // A tarefa mais urgente com o botão da ação (2026-11-22).
       below: todo > 0 && firstTask != null
           ? _TaskPill(
@@ -986,15 +976,6 @@ class _InvitedEventCard extends ConsumerWidget {
                   ? const InfoTag('Ainda não respondeste')
                   : const InfoTag('Vais', green: true),
       footerRight: _countdownBox(wedding.weddingDate),
-      // Alerta no canto da foto (B1, 2026-11-22).
-      photoAction: todo > 0
-          ? AlertBadge(
-              tone: tone,
-              count: todo,
-              semanticLabel: '$todo ${todo == 1 ? 'passo' : 'passos'} por fazer',
-              onTap: () => context.go(open),
-            )
-          : null,
       below: todo > 0 && first != null
           ? _TaskPill(tone: tone, task: first.$1, more: todo - 1, action: first.$2, onTap: () => context.go(open))
           : null,

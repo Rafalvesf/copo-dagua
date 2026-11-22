@@ -152,7 +152,7 @@ ecrãs. O resto da app mantém a tabela acima.
   - **Rodapé do evento:** organizador — quem confirmou (acima), «Ninguém
     respondeu ainda» ou «Ainda sem convidados»; convidado — «Ainda não
     respondeste», «Vais» (verde) ou «Está tudo tratado» (verde) — o que
-    falta fazer vai no sinal da foto (§7);
+    falta fazer vai na tarefa por baixo do rodapé (§7);
     Descobrir — quem confirmou (acima).
 - **Outros cartões** (perfil, resumos): brancos, cantos 22,
   interior 18, com a sombra suave do §5 e **sem linha à volta**. A **linha
@@ -646,25 +646,19 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   depois fica parada. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
   (1,4 s). Nunca a piscar sem parar.
 - **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
-  «Alertas nos cartões», B1; `AlertBadge`, `alert_outline.dart`): no **canto de baixo à direita da foto** (12 de
-  margem), um círculo **36** na cor do tom (32 + aro branco 2) com «!» branco 17, e o número de
-  coisas por fazer num contador branco 18 com aro preto 2 (como o das
-  mensagens por ler). **Cor pelo prazo de cada coisa** (pedido
-  2026-11-22): vermelho a **3 dias ou menos** do prazo (ou já passado),
-  amarelo antes disso; sem prazo, conta a data do evento. Pagamentos: o
-  sinal conta logo (amarelo); o resto, o pagamento único (sem sinal) e a
-  parte do convidado **só aparecem nos 6 dias antes do prazo** (amarelo) e
-  ficam vermelhos nos últimos 3. Com tarefas amarelas e vermelhas ao mesmo
-  tempo: **um só sinal, na cor da mais urgente, com o total**. Brilha ao aparecer
-  como os outros alertas. Tocar abre o «Para fazer» (organizador: o painel
-  do evento; convidado: a página do evento). **Por baixo do rodapé, a
-  tarefa** (pedido 2026-11-22, mockup «Alerta com ação nos cartões», forma
-  A): a linha da cor do tom dá a volta a todo o cartão (a moldura do §4,
-  que brilha ao aparecer) e por baixo do rodapé, sem linha própria, o ponto, a
-  tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
+  «Alerta com ação nos cartões», forma A; sem o sinal «!» na foto desde
+  2026-11-22): a linha da cor do tom dá a volta a todo o cartão (a moldura
+  do §4, que brilha ao aparecer) e, por baixo do rodapé, sem linha própria,
+  o ponto, a tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
   fotógrafo · +1») e o botão preto 36 com a ação — «Pagar» (pagamentos),
   «Ver» (propostas, presente), «Responder» («Diz se vais»), «Fazer» (o
-  resto).
+  resto). **Cor pelo prazo de cada coisa**: vermelho a **3 dias ou menos**
+  do prazo (ou já passado), amarelo antes disso; sem prazo, conta a data do
+  evento; com amarelas e vermelhas ao mesmo tempo, a cor da mais urgente.
+  Pagamentos: o sinal conta logo (amarelo); o resto, o pagamento único (sem
+  sinal) e a parte do convidado **só aparecem nos 6 dias antes do prazo**
+  (amarelo) e ficam vermelhos nos últimos 3. Tocar abre o «Para fazer»
+  (organizador: o painel do evento; convidado: a página do evento).
 - Convite: uma linha fina (envelope num círculo verde claro, "CONVITE POR
   RESPONDER" 11, frase 15 negrito, data 13, e por baixo «Não vou» com contorno + «Vou» preto, 36), nunca um
   bloco verde cheio.
