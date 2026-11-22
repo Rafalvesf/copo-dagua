@@ -13,6 +13,7 @@ import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/estrela.dart';
 import '../../shared/widgets/gradient_scaffold.dart';
 import '../../shared/widgets/page_kit.dart';
+import '../../shared/widgets/partner_badges.dart' show PremiumBadge;
 import '../../shared/widgets/premium_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
@@ -308,22 +309,12 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
   }
 }
 
-/// Selo "Premium" (migração 161; era "Pro" até 2026-11-07).
-class ProBadge extends ConsumerWidget {
+/// Selo Premium ao lado do nome (agora é o [PremiumBadge]; o visto verde
+/// passou a ser «verificado» — 2026-11-22).
+class ProBadge extends StatelessWidget {
   final String partnerId;
   const ProBadge(this.partnerId, {super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isPro = ref.watch(proPartnerIdsProvider).value?.contains(partnerId) ?? false;
-    if (!isPro) return const SizedBox.shrink();
-    return Tooltip(
-      message: 'Parceiro verificado',
-      child: Container(
-        margin: const EdgeInsets.only(left: 4),
-        // Visto de verificado (antes era o mesmo troféu do Fundador).
-        child: Icon(Hi.checkBadge, size: 18, color: AppTheme.accentOliveDark, semanticLabel: 'Verificado'),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => PremiumBadge(partnerId);
 }

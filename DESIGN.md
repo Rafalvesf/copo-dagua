@@ -113,7 +113,30 @@ ecrãs. O resto da app mantém a tabela acima.
 - **Grupos de linhas** (listas, definições, «Mais»): sem caixa e sem
   interior lateral — as linhas alinham com a margem 20 (`KitGroup`,
   `V2Group`, `SettingsGroup`).
-- **Cartões** (evento, parceiro, perfil, resumos): brancos, cantos 22,
+- **Cartões com foto — eventos e parceiros** (pedido do Rafael,
+  2026-11-22; `PhotoCard`, `shared/widgets/photo_card.dart`, em toda a
+  app: «Os meus eventos», Descobrir, perfil de amigos, Parceiros,
+  parceiros em destaque): **sem caixa e sem sombra** — o texto fica direto
+  no fundo `#F2F2F2`; foto **150** com os **quatro cantos redondos (22)**;
+  por cima da foto a etiqueta à esquerda («Em destaque», «Novo»,
+  «Organizas», «Convidado») e uma pílula branca à direita (nota, dia);
+  círculo **44** com aro branco 3 a sobrepor o canto de baixo da foto
+  (logótipo do parceiro, iniciais do evento); título **19** com os selos
+  (§6) e a ação à direita (coração, partilhar); meta **13**; divisória
+  `#D9D9D9` e o rodapé — uma etiqueta à esquerda e uma caixa com contorno
+  à direita (rótulo 9 + valor 16: `DESDE €900`, `FALTAM 203 dias`,
+  `ENTRADA Grátis`). Os eventos já não levam as caixas de números
+  (`MiniStats`) nem a barra de planeamento no cartão. **Nunca** voltar a
+  pôr caixa branca ou sombra nestes cartões.
+  - **Rodapé do parceiro** (no lugar de «Responde em ~1 h», por esta
+    ordem): amigos que seguem («Ana e mais 2 seguem», com as fotos 20) ·
+    «N eventos na À Nossa!» · «Responde em ~1 h» · «Desloca-se até X km» /
+    «Todo o país».
+  - **Rodapé do evento:** organizador — «48 confirmados» (verde), «Ninguém
+    respondeu ainda» ou «Ainda sem convidados»; convidado — o próximo passo
+    («Diz se vais», «Escolhe o teu menu») ou «Está tudo tratado» (verde);
+    Descobrir — quem vai («12 vão») ou «Sê o primeiro a ir!».
+- **Outros cartões** (perfil, resumos): brancos, cantos 22,
   interior 18, com a sombra suave do §5 e **sem linha à volta**. A **linha
   preta 1,5 só no destaque dos painéis do evento** — convidado (o resumo
   «Faltam…», o «Agora» e «A tua resposta», §6.4) e organizador (o resumo e o
@@ -164,9 +187,20 @@ ecrãs. O resto da app mantém a tabela acima.
 - **Fotos de perfil:** redondas, **planas** (cor suave fixa por nome, sem aro
   nem sombra) — `V2Avatar` (`flat` é o padrão). Lista de mensagens 52, perfil
   76, listas 44, avaliações 40, "seguido por" 24 sobrepostas.
-- **Números nos cartões de evento** (`MiniStats`: "2 convidados", "2 confirmados"):
-  fundo branco, linha preta 1,5 px à volta, cantos 12, conteúdo ao centro
-  (número 16 negrito, rótulo 11). Exceção pedida à regra "sem linha".
+- **Caixas de números** (`MiniStats`: nota, seguidores, eventos no perfil
+  do parceiro): fundo branco, linha preta 1,5 px à volta, cantos 12,
+  conteúdo ao centro (número 16 negrito, rótulo 11). Exceção pedida à regra
+  "sem linha". Já não vão nos cartões de evento (§4, 2026-11-22).
+- **Selos do parceiro** (pedido do Rafael, 2026-11-22; `PartnerBadges`,
+  `shared/widgets/partner_badges.dart`): ao lado do nome, em todo o lado
+  onde aparece um parceiro (cartões, linhas de lista, topo do perfil),
+  por esta ordem:
+  - **Verificado** — visto verde `#4F6B4A` 18 (`checkBadge`): todo o
+    parceiro aprovado pela equipa (perfil publicado).
+  - **Premium** — círculo preto 18 com a estrela branca 11: quem tem a
+    subscrição Premium. Nunca o visto verde para o Premium.
+  - **Fundador** — a etiqueta verde com a estrela, onde houver espaço.
+  Sobre a foto escura do topo do perfil, os selos vão numa pílula branca.
 - **Preço:** caixa com contorno e **duas linhas** — rótulo 9 em cima + valor 16
   por baixo: `DESDE` + `€X`, ou, para quem trabalha por orçamento, `POR` +
   `Orçamento`. A mesma caixa no topo do parceiro e nos cartões de evento e de
@@ -305,13 +339,12 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   cartões novos»): o **topo não muda** (título, localidade, Empresas/Lojas,
   pesquisa, categorias em pílulas **sem imagens**). Mudam os cartões e as
   secções:
-  - **Cartão de parceiro** (`PartnerBigCard`, `partner_cards.dart`): branco,
-    cantos 22, sombra suave; foto 150 em cima com a etiqueta à esquerda
-    («Em destaque» verde, «Novo» branca) e a nota (pílula branca com
-    estrela) à direita; logótipo redondo 44 com aro branco 3 a sobrepor o
-    canto da foto; nome 19 + coração; categoria 13; «zona · N anos de
-    experiência» 13; divisória `#D9D9D9`; rodapé com «Responde em ~1 h»
-    (ou «Desloca-se até X km» / «Todo o país») e a caixa de preço.
+  - **Cartão de parceiro** (`PartnerBigCard`, `partner_cards.dart`): o
+    cartão com foto do §4 (**sem caixa nem sombra**, foto toda redonda) —
+    etiqueta («Em destaque» verde, «Novo» branca) e nota na foto; logótipo
+    44 a sobrepor o canto; nome 19 com os selos (§6) e o coração; categoria
+    13; «zona · N anos de experiência» 13; divisória `#D9D9D9`; rodapé do
+    §4 e a caixa de preço.
   - **Secções em carrossel:** «Em destaque (perto de ti)», «Mais bem
     avaliados», «Novos na À Nossa!» e as 3 categorias com mais parceiros
     («Ver todos» escolhe a categoria). Cartões de **330**, 10 entre eles,

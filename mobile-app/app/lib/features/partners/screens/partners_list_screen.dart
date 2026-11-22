@@ -1,6 +1,5 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 
-import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
@@ -9,7 +8,7 @@ import '../../../shared/widgets/permissions_step.dart' show ensurePermission, Ap
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import '../../gifts/screens/gift_list_screens.dart' show GiftShopView;
-import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
+import '../../../shared/widgets/partner_badges.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/partner_profile/partner_profile_controller.dart';
@@ -614,11 +613,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               child: PartnerBigCard(
                                 partner: partner,
                                 width: null,
-                                badges: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  ProBadge(partner.id),
-                                  const SizedBox(width: 6),
-                                  FounderBadge(partner.id),
-                                ]),
+                                badges: PartnerBadges(partner, founder: true),
                                 onTap: () => _openDetails(context, partner),
                               ),
                             );
