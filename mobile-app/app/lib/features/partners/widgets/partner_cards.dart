@@ -6,14 +6,17 @@ import '../../../core/chat/presence.dart' show responseLabel;
 import '../../../core/models/models.dart';
 import '../../../core/partners/promotions.dart' show trackInterest;
 import '../../../core/partners/favorite_partners_controller.dart';
-import '../../../core/social/social.dart' show partnerPublicStatsProvider;
+import '../../../core/social/social.dart'
+    show MiniPerson, PartnerFollowInfo, PartnerPublicStats, partnerFollowInfoProvider, partnerPublicStatsProvider;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/text_case.dart';
 import '../../../shared/widgets/dense_card.dart' show PriceBox;
+import '../../../shared/widgets/partner_badges.dart';
+import '../../../shared/widgets/photo_card.dart';
 import '../../../shared/widgets/sized_network_image.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/v2_kit.dart' show V2Avatar, softShadow;
+import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
 import '../partner_style.dart';
 
 /// Peças da página Parceiros e do perfil do parceiro (mockups «Parceiros e
@@ -165,11 +168,12 @@ class FavoriteHeart extends ConsumerWidget {
   }
 }
 
-/// Cartão de parceiro da página Parceiros (mockup «Parceiros · cartões
-/// novos», 2026-11-20): foto com a etiqueta («Em destaque», «Novo») e a
-/// nota; logótipo redondo a sobrepor o canto da foto; nome 19 com o
-/// coração; categoria e «zona · N anos de experiência» a 13; divisória e
-/// rodapé com «Responde em ~1 h» (ou a zona que serve) e a caixa de preço.
+/// Cartão de parceiro (mockup «Parceiros · cartões novos», 2026-11-20; sem
+/// caixa nem sombra e foto toda redonda desde 2026-11-22 — [PhotoCard]):
+/// foto com a etiqueta («Em destaque», «Novo») e a nota; logótipo redondo
+/// a sobrepor o canto da foto; nome 19 com os selos e o coração; categoria
+/// e «zona · N anos de experiência» a 13; divisória e rodapé (amigos que
+/// seguem, eventos na À Nossa!, resposta ou zona) com a caixa de preço.
 /// O mesmo cartão nos carrosséis ([width] 330) e na lista (toda a largura).
 class PartnerBigCard extends ConsumerWidget {
   final Partner partner;
@@ -194,6 +198,7 @@ class PartnerBigCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
+    final follow = ref.watch(partnerFollowInfoProvider(partner.id)).value;
     final rating = ratingLabel(partner);
     final price = partnerPrice(partner);
     final area = partner.location.split(', ').first;
@@ -202,104 +207,72 @@ class PartnerBigCard extends ConsumerWidget {
       if (area.isNotEmpty) area,
       if (years != null && years > 0) '$years ${years == 1 ? 'ano' : 'anos'} de experiência',
     ].join(' · ');
-    final response = responseLabel(stats?.responseMinutes);
-    final travel = partner.maxTravelDistanceKm;
-    final foot = partner.location == 'Âmbito nacional'
-        ? 'Todo o país'
-        : travel != null && travel > 0
-            ? 'Desloca-se até $travel km'
-            : null;
     final badge = highlighted || partner.featured
         ? const InfoTag('Em destaque', green: true)
         : isNew(partner)
             ? const InfoTag('Novo', onPhoto: true)
             : null;
 
-    return SnappyTap(
+    return PhotoCard(
+      width: width,
+      height: height,
       onTap: onTap,
-      child: Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: softShadow),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(children: [
-          Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            SizedBox(
-              height: _photo,
-              child: Stack(fit: StackFit.expand, children: [
-                PartnerPhoto(partner),
-                if (badge != null) Positioned(left: 12, top: 12, child: badge),
-                if (rating != null) Positioned(right: 12, top: 12, child: RatingPill(rating)),
-              ]),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 28, 10, 0),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Flexible(
-                      child: Text(capFirst(partner.name),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    ),
-                    if (badges != null) ...[const SizedBox(width: 6), badges!],
-                    const Spacer(),
-                    FavoriteHeart(partner),
-                  ]),
-                  Text(partner.primaryCategoryLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                  if (meta.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(meta,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                  ],
-                ]),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Divider(height: 1, thickness: 1, color: Color(0xFFD9D9D9)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-              child: Row(children: [
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: response != null
-                        ? InfoTag(response, green: true)
-                        : foot != null
-                            ? Text(foot,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))
-                            : const SizedBox.shrink(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                PriceBox(price.$1, price.$2, outlined: true),
-              ]),
-            ),
-          ]),
-          // Logótipo redondo a sobrepor o canto da foto (aro branco para se
-          // destacar da foto).
-          Positioned(
-            left: 12,
-            top: _photo - 22,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-              child: V2Avatar(partner.name, size: 44, imageUrl: partner.imageUrl),
-            ),
-          ),
-        ]),
-      ),
+      photo: PartnerPhoto(partner),
+      leftTag: badge,
+      rightTag: rating != null ? RatingPill(rating) : null,
+      avatar: V2Avatar(partner.name, size: 44, imageUrl: partner.imageUrl),
+      title: capFirst(partner.name),
+      titleBadges: badges ?? PartnerBadges(partner),
+      titleAction: FavoriteHeart(partner),
+      meta: [partner.primaryCategoryLabel, meta],
+      footerLeft: _footer(stats, follow),
+      footerRight: PriceBox(price.$1, price.$2, outlined: true),
     );
+  }
+
+  /// No lugar de «Responde em ~1 h» (pedido do Rafael, 2026-11-22), por
+  /// esta ordem: amigos que seguem · eventos feitos na À Nossa! · tempo de
+  /// resposta · até onde se desloca.
+  Widget _footer(PartnerPublicStats? stats, PartnerFollowInfo? follow) {
+    final friends = follow?.friends ?? const <MiniPerson>[];
+    if (friends.isNotEmpty) {
+      final first = friends.first.name.split(' ').first;
+      final others = (follow!.friendsCount > friends.length ? follow.friendsCount : friends.length) - 1;
+      final text = others <= 0 ? '$first segue' : '$first e mais $others seguem';
+      final shown = friends.take(2).toList();
+      return Row(mainAxisSize: MainAxisSize.min, children: [
+        SizedBox(
+          width: 24 + (shown.length - 1) * 16,
+          height: 24,
+          child: Stack(children: [
+            for (var i = 0; i < shown.length; i++)
+              Positioned(
+                left: i * 16,
+                child: Container(
+                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.background, width: 2)),
+                  child: V2Avatar(shown[i].name, size: 20, imageUrl: shown[i].avatarUrl, flat: true),
+                ),
+              ),
+          ]),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        ),
+      ]);
+    }
+    final done = stats?.eventsDone ?? 0;
+    if (done > 0) return InfoTag('$done ${done == 1 ? 'evento' : 'eventos'} na À Nossa!');
+    final response = responseLabel(stats?.responseMinutes);
+    if (response != null) return InfoTag(response, green: true);
+    final travel = partner.maxTravelDistanceKm;
+    final foot = partner.location == 'Âmbito nacional'
+        ? 'Todo o país'
+        : travel != null && travel > 0
+            ? 'Desloca-se até $travel km'
+            : null;
+    if (foot == null) return const SizedBox.shrink();
+    return Text(foot, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted));
   }
 }
 
@@ -346,7 +319,8 @@ class PartnerListRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
-                if (badges != null) ...[const SizedBox(width: 6), badges!],
+                const SizedBox(width: 4),
+                badges ?? PartnerBadges(partner),
               ]),
               const SizedBox(height: 2),
               Text([_meta(partner), if (rating != null) '★ $rating'].join(' · '),

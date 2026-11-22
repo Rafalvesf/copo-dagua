@@ -44,7 +44,8 @@ import '../../../core/partners/category_figure.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
-import '../../partner_pro/partner_pro_screen.dart' show ProBadge;
+import '../../../shared/widgets/partner_badges.dart';
+import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 
 
 /// Eventos onde ainda dá para reservar este parceiro: elegíveis (sou dono, ou
@@ -1711,12 +1712,15 @@ class _PartnerHero extends StatelessWidget {
                                 Row(children: [
                                   V2Avatar(partner.name, size: 56),
                                   const SizedBox(width: 12),
-                                  Expanded(
+                                  Flexible(
                                     child: Text(partner.name,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white, height: 1.1)),
                                   ),
+                                  // Verificado e Premium ao lado do nome (DESIGN.md §6, 2026-11-22).
+                                  const SizedBox(width: 6),
+                                  _HeroBadges(partner),
                                 ]),
                               ]),
                             ),
@@ -1920,7 +1924,6 @@ class _PartnerHeadCardState extends State<_PartnerHeadCard> {
         ],
         const SizedBox(height: 14),
         Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-          ProBadge(p.id),
           FounderBadge(p.id, long: true),
           for (final c in p.categoryLabels.skip(1)) InfoTag(c),
           if (widget.figureText != null) InfoTag(widget.figureText!),
@@ -2086,3 +2089,21 @@ class _BottomBar extends StatelessWidget {
       );
 }
 
+
+
+/// Selos sobre a foto escura: num círculo branco para se verem.
+class _HeroBadges extends ConsumerWidget {
+  final Partner partner;
+  const _HeroBadges(this.partner);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pro = ref.watch(proPartnerIdsProvider).value?.contains(partner.id) ?? false;
+    if (!VerifiedBadge.isVerified(partner) && !pro) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.fromLTRB(2, 3, 4, 3),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+      child: PartnerBadges(partner),
+    );
+  }
+}

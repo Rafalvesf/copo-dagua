@@ -7,6 +7,8 @@ import '../../../shared/text_case.dart';
 import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/dense_card.dart';
+import '../../../shared/widgets/photo_card.dart';
+import '../../partners/widgets/partner_cards.dart' show InfoTag;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/tasks/task_models.dart' show taskPriorityWeight, taskPriorityFromDb;
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart';
@@ -339,8 +341,6 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
   }
 }
 
-const _months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-
 /// Evento aberto em "Descobrir" (cartões densos, 2026-11-11): foto mais
 /// baixa com a data e o preço por cima; por baixo, nome, quando e onde,
 /// tipo, quantos vão e "Ver".
@@ -358,111 +358,50 @@ class _PosterCard extends StatelessWidget {
         ? null
         : '${_weekdaysShort[date.weekday - 1]} ${date.day} ${_monthsShort[date.month - 1]}${e.time?.isNotEmpty == true ? ' · ${e.time}' : ''}';
     final price = e.isPaid ? e.priceLabel.replaceAll(' por pessoa', '') : 'Grátis';
-    final cta = e.mine ? 'O teu evento' : (e.joined ? 'Abrir' : (e.isFull ? 'Esgotado' : 'Ver evento'));
-    return SnappyTap(
+    // Cartão com foto (DESIGN.md §4, 2026-11-22): sem caixa nem sombra.
+    return PhotoCard(
       onTap: onTap ?? () {},
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: softCard(radius: 22),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          SizedBox(
-            height: 144,
-            child: Stack(fit: StackFit.expand, children: [
-              e.coverPhotoUrl == null
-                  ? _PosterPlaceholder(type: e.eventType, seed: e.weddingId.hashCode)
-                  : SizedNetworkImage(e.coverPhotoUrl!, fit: BoxFit.cover),
-              if (date != null)
-                Positioned(
-                  left: 12,
-                  top: 12,
-                  // Mais pequeno e da mesma altura do preço (2026-11-12).
-                  child: Container(
-                    width: 40,
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-                    child: Column(children: [
-                      Text(_months[date.month - 1],
-                          style: const TextStyle(fontSize: 9, height: 1.2, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
-                      Text('${date.day}',
-                          style: const TextStyle(fontSize: 16, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    ]),
-                  ),
-                ),
-              Positioned(right: 12, top: 12, child: PriceBox('ENTRADA', price)),
-              // Partilhar o evento por link (2026-11).
-              Positioned(
-                right: 8,
-                bottom: 8,
-                child: Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(),
-                  child: IconButton(
-                    tooltip: 'Partilhar',
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Hi.arrowUpOnSquare, size: 18, color: AppTheme.ink),
-                    onPressed: () => sharePublicEvent(context, e),
-                  ),
-                ),
-              ),
-            ]),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(capFirst(e.displayNames),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  // Mesmo título que "Os meus eventos" (DESIGN.md: 19 negrito).
-                  style: const TextStyle(fontSize: 19, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const SizedBox(height: 3),
-              MetaRow([
-                if (when != null) (Hi.calendar, when),
-                if (e.place != null) (Hi.mapPin, e.place!),
-              ]),
-              const SizedBox(height: 10),
-              Wrap(spacing: 6, runSpacing: 6, children: [
-                DenseChip(e.eventType.label),
-                if (e.venue?.isNotEmpty == true && e.location?.isNotEmpty == true) DenseChip(e.location!),
-              ]),
-              const SizedBox(height: 12),
-              Row(children: [
-                if (e.goingCount > 0) ...[
-                  AvatarDots(e.goingCount),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                        [
-                          e.goingCount == 1 ? '1 vai' : '${e.goingCount} vão',
-                          // Limite (migração 182): poucos lugares ou esgotado.
-                          if (e.isFull) 'esgotado' else if ((e.spotsLeft ?? 99) <= 10) 'restam ${e.spotsLeft}',
-                        ].join(' · '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  ),
-                ] else ...[
-                  // Ainda ninguém vai: lugares livres (mockup B, 2026-11-11).
-                  const GhostDots(),
-                  const SizedBox(width: 8),
-                  // Em duas linhas se não couber (cortava "Sê o prime…").
-                  const Expanded(
-                    child: Text('Sê o primeiro a ir!',
-                        maxLines: 2,
-                        softWrap: true,
-                        style: TextStyle(fontSize: 13, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                  ),
-                ],
-                // O texto ocupa o meio (Expanded): o botão fica sempre
-                // encostado à direita.
-                const SizedBox(width: 8),
-                busy
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : CtaPill(cta),
-              ]),
-            ]),
-          ),
-        ]),
+      photo: e.coverPhotoUrl == null
+          ? _PosterPlaceholder(type: e.eventType, seed: e.weddingId.hashCode)
+          : SizedNetworkImage(e.coverPhotoUrl!, fit: BoxFit.cover),
+      leftTag: InfoTag(e.mine ? 'O teu evento' : (e.joined ? 'Vais' : e.eventType.label), green: e.mine || e.joined, onPhoto: true),
+      rightTag: date == null ? null : PhotoPill('${date.day} ${_monthsShort[date.month - 1]}'),
+      photoAction: busy
+          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          : null,
+      avatar: V2Avatar(e.displayNames, size: 44),
+      title: capFirst(e.displayNames),
+      // Partilhar o evento por link (2026-11).
+      titleAction: SnappyTap(
+        onTap: () => sharePublicEvent(context, e),
+        semanticLabel: 'Partilhar',
+        child: const SizedBox(width: 32, height: 32, child: Icon(Hi.arrowUpOnSquare, size: 20, color: AppTheme.ink)),
       ),
+      meta: [
+        ?when,
+        [
+          ?e.place,
+          if (e.venue?.isNotEmpty == true && e.location?.isNotEmpty == true) e.location!,
+        ].join(' · '),
+      ],
+      footerLeft: e.goingCount > 0
+          ? Row(mainAxisSize: MainAxisSize.min, children: [
+              AvatarDots(e.goingCount),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                    [
+                      e.goingCount == 1 ? '1 vai' : '${e.goingCount} vão',
+                      // Limite (migração 182): poucos lugares ou esgotado.
+                      if (e.isFull) 'esgotado' else if ((e.spotsLeft ?? 99) <= 10) 'restam ${e.spotsLeft}',
+                    ].join(' · '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ),
+            ])
+          : const InfoTag('Sê o primeiro a ir!'),
+      footerRight: PriceBox('ENTRADA', price, outlined: true),
     );
   }
 }
@@ -614,46 +553,34 @@ class _InviteTile extends StatelessWidget {
       );
 }
 
-String? _daysLeft(DateTime? d) {
+
+
+
+/// Foto do evento (ou o símbolo do tipo, sem foto) para o [PhotoCard].
+Widget _coverImage(String id, EventType type, String? photo) => photo != null
+    ? SizedNetworkImage(photo, fit: BoxFit.cover)
+    : Container(
+        color: const Color(0xFFE7D9C3),
+        alignment: Alignment.center,
+        child: StickerIcon(_typeIcon(type), turns: StickerIcon.tilt(id.hashCode)),
+      );
+
+/// Pílula branca com o dia, por cima da foto («12 jun»).
+Widget? _datePill(DateTime? d) => d == null ? null : PhotoPill('${d.day} ${_monthsShort[d.month - 1]}');
+
+/// Caixa do rodapé com quanto falta (a mesma forma do preço dos parceiros).
+Widget? _countdownBox(DateTime? d) {
   if (d == null) return null;
   final now = DateTime.now();
   final n = DateTime(d.year, d.month, d.day).difference(DateTime(now.year, now.month, now.day)).inDays;
-  if (n < 0) return 'Já foi';
-  if (n == 0) return 'É hoje';
-  if (n == 1) return 'É amanhã';
-  return 'Faltam $n dias';
+  final (label, value) = switch (n) {
+    < 0 => ('FOI HÁ', '${-n} ${n == -1 ? 'dia' : 'dias'}'),
+    0 => ('É', 'Hoje'),
+    1 => ('É', 'Amanhã'),
+    _ => ('FALTAM', '$n dias'),
+  };
+  return PriceBox(label, value, outlined: true);
 }
-
-class _Cover extends StatelessWidget {
-  final String id;
-  final EventType type;
-  final String? photo;
-  final double height;
-  final List<Widget> badges;
-  const _Cover({required this.id, required this.type, required this.photo, required this.height, required this.badges});
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-        height: height,
-        child: Stack(fit: StackFit.expand, children: [
-          if (photo != null)
-            SizedNetworkImage(photo!, fit: BoxFit.cover)
-          else
-            Container(
-              color: const Color(0xFFE7D9C3),
-              alignment: Alignment.center,
-              child: StickerIcon(_typeIcon(type), turns: StickerIcon.tilt(id.hashCode)),
-            ),
-          Positioned(left: 12, right: 12, top: 12, child: Row(children: badges)),
-        ]),
-      );
-}
-
-Widget _pill(String text, {bool dark = false}) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: dark ? AppTheme.ink : Colors.white, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
-    );
 
 /// Números de um evento que organizo, para o cartão (cartões densos,
 /// 2026-11-11): convidados, confirmados, reservas e o planeamento.
@@ -773,22 +700,6 @@ class _SeenAlerts extends Notifier<Set<String>> {
 
 final _seenAlertsProvider = NotifierProvider<_SeenAlerts, Set<String>>(_SeenAlerts.new);
 
-Widget _cardTitle(String text) => Text(capFirst(text),
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink));
-
-List<(IconData, String)> _cardMeta(DateTime? date, String? time, String? place) => [
-      if (date != null)
-        (
-          Hi.calendar,
-          '${_weekdaysShort[date.weekday - 1]} ${date.day} ${_monthsShort[date.month - 1]}'
-              '${date.year != DateTime.now().year ? ' ${date.year}' : ''}'
-              '${time?.isNotEmpty == true ? ' · $time' : ''}',
-        ),
-      if (place != null) (Hi.mapPin, place),
-    ];
-
 /// Evento que organizo: abre o painel desse evento.
 class _MyEventCard extends ConsumerWidget {
   final Wedding wedding;
@@ -805,73 +716,51 @@ class _MyEventCard extends ConsumerWidget {
     final place = wedding.venue?.isNotEmpty == true
         ? wedding.venue
         : (wedding.location?.isNotEmpty == true ? wedding.location : null);
-    final left = _daysLeft(wedding.weddingDate);
     final summary = ref.watch(_orgSummaryProvider(wedding.id)).value ?? const _OrgSummary();
     // No evento aberto, o motor de tarefas é a fonte mais fresca.
     final engine = active ? ref.watch(taskEngineControllerProvider) : null;
-    final engineTotal = engine == null ? 0 : engine.systemDone.length + engine.systemActive.length;
-    final done = engineTotal > 0 ? engine!.systemDone.length : summary.done;
-    final total = engineTotal > 0 ? engineTotal : summary.total;
     final engineNext = engine?.systemActive.firstOrNull;
     final next = engineNext != null ? (id: engineNext.id, title: engineNext.title) : summary.next;
     final seen = ref.watch(_seenAlertsProvider);
     final showAlert = next != null && !seen.contains('task:${next.id}');
-    final stats = [
-      if (summary.guests > 0) ('${summary.guests}', summary.guests == 1 ? 'convidado' : 'convidados'),
-      if (summary.confirmed > 0) ('${summary.confirmed}', summary.confirmed == 1 ? 'confirmado' : 'confirmados'),
-      if (summary.bookings > 0) ('${summary.bookings}', summary.bookings == 1 ? 'reserva' : 'reservas'),
-    ];
-    // Toque longo: arquivar ou apagar (185).
-    return GestureDetector(
+    // Cartão com foto (DESIGN.md §4, 2026-11-22): sem caixa nem sombra,
+    // como os parceiros. Toque longo: arquivar ou apagar (185).
+    return PhotoCard(
+      onTap: () => _open(context, ref),
       onLongPress: () => showEventActionsSheet(context, ref,
           weddingId: wedding.id,
           name: capFirst(wedding.displayNames),
           isOwner: wedding.ownerId == ref.read(authControllerProvider).profile?.id),
-      child: SnappyTap(
-      onTap: () => _open(context, ref),
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: softCard(radius: 22),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          _Cover(
-            id: wedding.id,
-            type: wedding.eventType,
-            photo: wedding.coverPhotoUrl,
-            height: 140,
-            badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Organizador')],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              _cardTitle(wedding.displayNames),
-              const SizedBox(height: 3),
-              MetaRow(_cardMeta(wedding.weddingDate, null, place)),
-              if (stats.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                MiniStats(stats),
-              ],
-              if (total > 0) ...[
-                const SizedBox(height: 10),
-                ProgressLine(label: 'Planeamento', value: '${(done * 100 / total).round()}%', progress: done / total),
-              ],
-              if (showAlert) ...[
-                const SizedBox(height: 10),
-                AlertStrip(
-                  // Vermelho a 3 dias ou menos do evento (DESIGN.md).
-                  tone: toneForDue(wedding.weddingDate),
-                  text: 'Para fazer: ${next!.title}',
-                  cta: 'Fazer',
-                  onTap: () {
-                    ref.read(_seenAlertsProvider.notifier).add('task:${next!.id}');
-                    _open(context, ref);
-                  },
-                ),
-              ],
-            ]),
-          ),
-        ]),
-      ),
-    ),
+      photo: _coverImage(wedding.id, wedding.eventType, wedding.coverPhotoUrl),
+      leftTag: const InfoTag('Organizas', green: true),
+      rightTag: _datePill(wedding.weddingDate),
+      avatar: V2Avatar(wedding.displayNames, size: 44),
+      title: capFirst(wedding.displayNames),
+      meta: [
+        wedding.eventType.label,
+        [
+          ?place,
+          if (summary.guests > 0) '${summary.guests} ${summary.guests == 1 ? 'convidado' : 'convidados'}',
+        ].join(' · '),
+      ],
+      footerLeft: summary.confirmed > 0
+          ? InfoTag('${summary.confirmed} ${summary.confirmed == 1 ? 'confirmado' : 'confirmados'}', green: true)
+          : summary.guests > 0
+              ? const InfoTag('Ninguém respondeu ainda')
+              : const InfoTag('Ainda sem convidados'),
+      footerRight: _countdownBox(wedding.weddingDate),
+      below: showAlert
+          ? AlertStrip(
+              // Vermelho a 3 dias ou menos do evento (DESIGN.md).
+              tone: toneForDue(wedding.weddingDate),
+              text: 'Para fazer: ${next!.title}',
+              cta: 'Fazer',
+              onTap: () {
+                ref.read(_seenAlertsProvider.notifier).add('task:${next!.id}');
+                _open(context, ref);
+              },
+            )
+          : null,
     );
   }
 }
@@ -887,66 +776,52 @@ class _InvitedEventCard extends ConsumerWidget {
     final place = wedding.venue?.isNotEmpty == true
         ? wedding.venue
         : (wedding.location?.isNotEmpty == true ? wedding.location : null);
-    final left = _daysLeft(wedding.weddingDate);
     final open = '/guest-home/${wedding.weddingId}';
     final stepsAsync = ref.watch(_guestStepsProvider(wedding.weddingId));
     final steps = stepsAsync.value?.steps ?? const <(String, String, bool)>[];
-    final done = steps.where((s) => s.$3).length;
     final next = steps.where((s) => !s.$3).firstOrNull;
     final seen = ref.watch(_seenAlertsProvider);
     final alertKey = next == null ? null : 'guest:${wedding.weddingId}:${next.$1}';
     final showAlert = alertKey != null && !seen.contains(alertKey);
-    return SnappyTap(
+    final pending = next == null
+        ? null
+        : switch (next.$1) {
+            'rsvp' => 'Diz se vais',
+            'menu' => 'Escolhe o teu menu',
+            _ => 'Escolhe um presente',
+          };
+    return PhotoCard(
       onTap: () => context.go(open),
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: softCard(radius: 22),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          _Cover(
-            id: wedding.weddingId,
-            type: wedding.eventType,
-            photo: wedding.coverPhotoUrl,
-            height: 140,
-            badges: [if (left != null) _pill(left, dark: true), const Spacer(), _pill('Convidado')],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              _cardTitle(wedding.displayNames),
-              const SizedBox(height: 3),
-              MetaRow(_cardMeta(wedding.weddingDate, wedding.ceremonyTime, place)),
-              if (steps.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                ProgressLine(label: 'Os teus passos', value: '$done de ${steps.length}', progress: done / steps.length),
-                const SizedBox(height: 10),
-                Wrap(spacing: 6, runSpacing: 6, children: [
-                  for (final s in steps) DenseChip(s.$2, done: s.$3),
-                ]),
-              ],
-              if (showAlert) ...[
-                const SizedBox(height: 10),
-                AlertStrip(
-                  tone: toneForDue(wedding.weddingDate),
-                  text: switch (next!.$1) {
-                    'rsvp' => 'Diz se vais',
-                    'menu' => 'Escolhe o teu menu',
-                    _ => 'Escolhe um presente',
-                  },
-                  cta: switch (next!.$1) {
-                    'rsvp' => 'Responder',
-                    'menu' => 'Escolher',
-                    _ => 'Ver',
-                  },
-                  onTap: () {
-                    ref.read(_seenAlertsProvider.notifier).add(alertKey!);
-                    context.go(open);
-                  },
-                ),
-              ],
-            ]),
-          ),
-        ]),
-      ),
+      photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
+      leftTag: const InfoTag('Convidado', onPhoto: true),
+      rightTag: _datePill(wedding.weddingDate),
+      avatar: V2Avatar(wedding.displayNames, size: 44),
+      title: capFirst(wedding.displayNames),
+      meta: [
+        wedding.eventType.label,
+        [?place, if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!].join(' · '),
+      ],
+      footerLeft: steps.isEmpty
+          ? null
+          : pending != null
+              ? InfoTag(pending)
+              : const InfoTag('Está tudo tratado', green: true),
+      footerRight: _countdownBox(wedding.weddingDate),
+      below: showAlert
+          ? AlertStrip(
+              tone: toneForDue(wedding.weddingDate),
+              text: pending!,
+              cta: switch (next!.$1) {
+                'rsvp' => 'Responder',
+                'menu' => 'Escolher',
+                _ => 'Ver',
+              },
+              onTap: () {
+                ref.read(_seenAlertsProvider.notifier).add(alertKey!);
+                context.go(open);
+              },
+            )
+          : null,
     );
   }
 }
