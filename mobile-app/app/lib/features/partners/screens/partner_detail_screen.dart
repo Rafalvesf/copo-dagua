@@ -833,7 +833,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                   ),
                   // Pessoas e «Quem paga» perguntam-se no pedido de reserva
                   // (mockups «Reservar por categoria», 2026-11-20).
-                  RowGroup(children: [
+                  RowGroup(flat: true, children: [
                     for (var i = 0; i < packages.length; i++)
                       _PackageRow(
                         package: packages[i],
@@ -904,10 +904,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 ],
                 if (partner.location.isNotEmpty) ...[
                   sectionTitle('Onde fica'),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                  // Sem caixa branca (B, 2026-11-22); o mapa é o do Google.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
@@ -1126,18 +1125,14 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
         () => setState(() => _all = true),
       ),
       if (reviews.isEmpty)
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-          child: const Text('Ainda sem avaliações.',
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Text('Ainda sem avaliações.',
               style: TextStyle(fontSize: 14, color: Color(0xFF57534E))),
         )
       else ...[
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Row(children: [
               Expanded(
@@ -1832,14 +1827,13 @@ class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
       for (final c in p.categoryLabels.skip(1)) InfoTag(c),
       if (widget.figureText != null) InfoTag(widget.figureText!),
     ];
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    // Sem fundo branco e sem o preço ao lado do nome (já está na barra de
+    // baixo) — mockup «Perfil do parceiro · a página toda», B (2026-11-22).
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         if (hasAchievements) ...[
           Align(
             alignment: Alignment.centerLeft,
-            child: AchievementsCorner(partnerId: p.id, partnerName: capFirst(p.name), background: AppTheme.background),
+            child: AchievementsCorner(partnerId: p.id, partnerName: capFirst(p.name), background: Colors.white),
           ),
           const SizedBox(height: 14),
         ],
@@ -1860,8 +1854,6 @@ class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
               VerifiedBadge(p),
             ]),
           ),
-          const SizedBox(width: 10),
-          widget.priceBox,
         ]),
         if (meta.isNotEmpty) ...[
           const SizedBox(height: 2),
@@ -1904,8 +1896,7 @@ class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
           Wrap(spacing: 6, runSpacing: 6, children: tags),
         ],
         if (widget.buttons != null) ...[const SizedBox(height: 14), widget.buttons!],
-      ]),
-    );
+      ]);
   }
 }
 
@@ -1935,7 +1926,7 @@ class _PackageRow extends StatelessWidget {
         child: Container(
           constraints: const BoxConstraints(minHeight: 72),
           padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(border: first ? null : const Border(top: BorderSide(color: Color(0xFFD9D9D9)))),
+          decoration: BoxDecoration(border: first ? null : const Border(top: BorderSide(color: AppTheme.line))),
           child: Row(children: [
             if (!viewOnly) ...[
             AnimatedContainer(
@@ -1978,10 +1969,9 @@ class _ReferenceCard extends StatelessWidget {
   const _ReferenceCard({required this.price, this.note});
 
   @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+  // Sem caixa branca (B, 2026-11-22).
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('VALOR DE REFERÊNCIA',
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),

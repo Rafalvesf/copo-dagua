@@ -237,10 +237,10 @@ ecrãs. O resto da app mantém a tabela acima.
   do parceiro 13, «×»; uma linha por conquista com o ícone branco num
   círculo 44 da sua cor, nome 16 e o que quer dizer 13, e a linha
   «Verificado»; «OK» preto 52).
-  No **Perfil do parceiro** (o cartão `ProfileCard_Users`, mockup «Perfil do
-  parceiro · conquistas», 2026-11-22) as mesmas conquistas vão **por cima do
-  cartão**, 14 acima da foto 76, com as pílulas e os discos a `#F2F2F2` (o
-  cartão é branco); sem conquistas, nada. Ao lado do nome, o visto verde
+  Nos **perfis** (o meu Perfil de parceiro e a página do parceiro, mockup
+  «Perfil do parceiro · conquistas», 2026-11-22) as mesmas conquistas vão
+  **por cima do perfil**, 14 acima da foto 76, nas **mesmas pílulas e discos
+  brancos** (o perfil já não tem caixa branca); sem conquistas, nada. Ao lado do nome, o visto verde
   de verificado (perfil publicado).
 - **Preço:** **duas linhas, sem caixa nem linha** (pedido do Rafael,
   2026-11-22) — rótulo 9 `#57534E` em cima + valor 16 negrito por baixo,
@@ -250,7 +250,9 @@ ecrãs. O resto da app mantém a tabela acima.
   cartões (`PriceBox`). Só por cima de uma foto leva a caixa branca (para
   se ler). Nunca "Por orçamento" numa só linha.
 - **Cabeça do perfil:** `ProfileCard_Users` (amigos, organizadores, o meu
-  perfil: avatar e os três números em colunas no topo). No **parceiro**
+  perfil: avatar e os três números em colunas no topo) — **sem caixa
+  branca**, direto no fundo `#F2F2F2` (pedido 2026-11-22, mockup «Perfil do
+  parceiro · a página toda», B). No **parceiro**
   (página que os organizadores abrem) é o cartão do §6.2 — o mesmo
   desenho, com as conquistas por cima e o preço ao lado do nome. O estado ("Reservado", "Pedido enviado")
   não é uma etiqueta solta: é dito uma só vez no aviso (§7), por baixo da
@@ -407,14 +409,21 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   ficam iguais aos de cima (40). Voltar, partilhar e favorito ficam sempre
   no mesmo sítio e são os pretos 44 do §2. **Exceção ao «voltar ao topo» do
   §6:** aqui a seta é sempre «voltar» (não roda para ↑).
-- **Cartão do parceiro** por baixo da foto (pedido 2026-11-22, o design do
-  mockup «Perfil do parceiro · conquistas»): cartão branco, cantos 22,
-  interior 18 — as **conquistas** por cima (pílulas `#F2F2F2`, §6; sem
-  nenhuma, nada), o **logótipo 76** e os três números em colunas (nota,
-  seguidores, eventos: 20 negrito + 12), o nome 20 com o visto verde e o
-  preço (§6, sem caixa) à direita, «categoria · zona» 13, anos de
+- **Perfil do parceiro** por baixo da foto (pedido 2026-11-22, mockup
+  «Perfil do parceiro · a página toda», **B**): **sem caixa branca** — as
+  **conquistas** por cima (pílulas e discos brancos, §6; sem nenhuma,
+  nada), o **logótipo 76** e os três números em colunas (nota, seguidores,
+  eventos: 20 negrito + 12), o nome 20 com o visto verde (**sem preço** ao
+  lado: já está na barra de baixo), «categoria · zona» 13, anos de
   experiência 13 e «Responde em ~1 h», descrição justificada com «Ler
   mais», etiquetas e «Seguir» + «Mensagem» com contorno.
+- **A página do parceiro toda sem caixas brancas** (B): pacotes, «Quanto
+  pode custar», «Onde fica» e avaliações direto no fundo, com linhas finas
+  `#E3E3E3` entre as linhas dos pacotes. Só a barra fixa de reserva fica
+  branca.
+- **«Onde fica»:** a **imagem do Google Maps** com o pino (`VenueMap`, ação
+  `staticmap` da função `places`, cantos 16); sem ela, os mosaicos do
+  OpenStreetMap.
 - **Pacotes:** linhas num grupo com um círculo que fica verde com o visto
   quando escolhido, nome 16, meta 13 e o preço à direita.
 - **Barra fixa de reserva:** branca, cantos 35, a largura das caixas de
@@ -449,8 +458,8 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   outros vão na mesma). A taxa de serviço só entra no passo de pagar e
   diz-se antes: «+ taxa de serviço no passo seguinte».
 - **Perfil do organizador:** faixa de cor 200 no topo (botões
-  pretos 44 do §2 — voltar, partilhar, ⋯), a `ProfileCard_Users` por cima
-  dela, «Próximos eventos» em carrossel, «A seguir», e a barra fixa com
+  pretos 44 do §2 — voltar, partilhar, ⋯), a `ProfileCard_Users` por baixo
+  dela (sem caixa branca, já não a sobrepõe), «Próximos eventos» em carrossel, «A seguir», e a barra fixa com
   «Mensagem» (contorno) e «Seguir» (preto) a 52.
 - **Moradas:** todos os campos de local (criar evento, local do evento,
   morada para convidados, cidade no registo, localização do parceiro,
