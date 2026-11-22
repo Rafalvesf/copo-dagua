@@ -649,8 +649,8 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
     (ou já acabou). `toneForDue(prazo)` decide.
   - **Verde** `#4F6B4A` — convite para um evento.
 - **Brilho:** ao aparecer (entrar na aba), a linha brilha uns segundos e
-  depois fica parada. O brilho fica **só na linha e uns pixéis para dentro**
-  (pedido 2026-11-22) — nunca à volta da caixa toda. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
+  depois fica parada. O brilho **pulsa só na linha e uns pixéis para dentro**
+  (pedido 2026-11-22) — nunca à volta da caixa nem por cima do cartão todo. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
   (1,4 s). Nunca a piscar sem parar.
 - **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
   «Alerta com ação nos cartões», forma A; sem o sinal «!» na foto desde
