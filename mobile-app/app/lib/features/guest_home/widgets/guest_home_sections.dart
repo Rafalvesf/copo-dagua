@@ -1,3 +1,4 @@
+import 'choose_menu_sheet.dart' show chooseMenuAndPay;
 import '../../../shared/widgets/venue_map.dart' show VenueMap;
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar, softCard;
@@ -732,7 +733,7 @@ class GuestTablesAlerts extends ConsumerWidget {
     final id = t.myPayment?['id'] as String?;
     final amount = (t.myPayment?['amount'] as num?)?.toDouble();
     if (id == null || amount == null) {
-      context.push('/mesa/$weddingId', extra: t);
+      await chooseMenuAndPay(context, ref, weddingId, t);
       return;
     }
     final pct = await guestShareFeePct(ref, t.partnerId, t.totalAmount ?? 0, amount);
@@ -777,7 +778,7 @@ class GuestTablesAlerts extends ConsumerWidget {
       title = t.eachPays ? 'Menus e a tua parte' : 'Escolhe o teu menu';
       sub = [?until, t.partnerName].join(' · ');
       cta = t.eachPays ? 'Escolher e pagar' : 'Escolher';
-      onTap = () => context.push('/mesa/$weddingId', extra: t);
+      onTap = () => chooseMenuAndPay(context, ref, weddingId, t);
     } else if (t.eachChooses) {
       caps = 'FALTA PAGAR';
       title = 'A tua parte · ${euros(t.myAmount ?? 0)}';

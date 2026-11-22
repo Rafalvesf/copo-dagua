@@ -21,6 +21,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../payments/open_payment.dart';
+import '../../payments/booking_extras_sheet.dart' show payBookingFlow;
 import '../../tasks/task_actions.dart';
 import '../../../core/budget/budget_controller.dart';
 import '../../../core/budget/expense_controller.dart';
@@ -2382,7 +2383,15 @@ List<_TodoItem> _todoItems(WidgetRef ref) {
       e.title,
       '${euros(e.amount, cents: payId != null)} até ${_shortDay(e.dueDate!)}${due.length > 1 ? ' · mais ${due.length - 1}' : ''}',
       'Pagar',
-      (context, ref) => payId != null ? openPaymentFlow(context, ref, payId) : context.push('/budget'),
+      (context, ref) {
+        final parts = e.id.split(':');
+        if (payId == null) {
+          context.push('/budget');
+        } else {
+          payBookingFlow(context, ref,
+              paymentId: payId, bookingId: parts.length == 3 && parts.first == 'booking' ? parts[1] : null, partnerName: e.title);
+        }
+      },
       // Vermelho só quando o prazo acaba em 3 dias ou menos (DESIGN.md).
       urgent: toneForDue(e.dueDate) == AlertTone.urgent,
       primary: true,
@@ -3657,7 +3666,12 @@ class _OrgBody extends ConsumerWidget {
               : '${euros(e.amount, cents: payId != null)} · $when',
           action: menus ? 'Escolher e pagar' : 'Pagar',
           urgent: toneForDue(e.dueDate) == AlertTone.urgent,
-          onTap: () => payId != null ? openPaymentFlow(context, ref, payId) : context.push('/budget'),
+          // Popups por cima do painel (pedido 2026-11-22): extras e pagar,
+          // como depois de aceitar uma proposta.
+          onTap: () => payId != null
+              ? payBookingFlow(context, ref,
+                  paymentId: payId, bookingId: booking?.id, partnerName: booking?.partnerName ?? e.title)
+              : context.push('/budget'),
         ));
       }
       for (final p in ref.watch(pendingProposalsProvider).value ?? const <ReceivedProposal>[]) {
