@@ -139,7 +139,8 @@ ecrãs. O resto da app mantém a tabela acima.
     **amigos primeiro e com o nome a negrito** — «**Ana e João** + 10
     confirmados»; sem amigos, «12 confirmados» com as fotos que se podem
     ver (só de quem segues ou tem perfil público, migração 214); ninguém
-    ainda: três círculos tracejados + «Sê o primeiro a ir!».
+    ainda: três círculos cinzentos `#E0E0E0` com a forma das fotos (20 + aro
+    2 da cor do fundo, sobrepostos) + «Sê o primeiro a ir!».
   - **Rodapé do evento:** organizador — quem confirmou (acima), «Ninguém
     respondeu ainda» ou «Ainda sem convidados»; convidado — «Ainda não
     respondeste», «Vais» (verde) ou «Está tudo tratado» (verde) — o que
