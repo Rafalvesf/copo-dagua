@@ -90,24 +90,19 @@ class _AlertOutlineState extends State<AlertOutline> with SingleTickerProviderSt
       builder: (context, child) {
         // 0 → 1 → 0 em cada ciclo; parado (0) quando acaba.
         final v = _c.isAnimating ? math.sin(math.pi * _c.value) : 0.0;
-        return Container(
-          padding: widget.padding,
-          decoration: BoxDecoration(
-            color: widget.fill,
-            borderRadius: BorderRadius.circular(widget.radius),
-            border: Border.all(color: color, width: 1.5),
+        // O brilho pulsa só na linha e uns pixéis para dentro (pedido
+        // 2026-11-22) — nunca o cartão todo.
+        return CustomPaint(
+          foregroundPainter: _LineGlow(color: color, radius: widget.radius, v: v),
+          child: Container(
+            padding: widget.padding,
+            decoration: BoxDecoration(
+              color: widget.fill,
+              borderRadius: BorderRadius.circular(widget.radius),
+              border: Border.all(color: color, width: 1.5),
+            ),
+            child: child,
           ),
-          // O brilho fica só na linha e uns pixéis para dentro (pedido
-          // 2026-11-22) — nunca à volta da caixa toda.
-          foregroundDecoration: v <= 0.01
-              ? null
-              : BoxDecoration(
-                  borderRadius: BorderRadius.circular(widget.radius),
-                  boxShadow: [
-                    BoxShadow(color: color.withValues(alpha: 0.35 + 0.45 * v), blurRadius: 2 + 6 * v, blurStyle: BlurStyle.inner),
-                  ],
-                ),
-          child: child,
         );
       },
       child: widget.child,
@@ -246,4 +241,35 @@ class _AlertBadgeState extends State<AlertBadge> with SingleTickerProviderStateM
       ),
     );
   }
+}
+
+
+/// Brilho da linha: um traço desfocado sobre a própria linha, cortado pela
+/// caixa, para só se ver para dentro (uns pixéis) e nunca por cima do resto.
+class _LineGlow extends CustomPainter {
+  final Color color;
+  final double radius;
+  final double v;
+  const _LineGlow({required this.color, required this.radius, required this.v});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (v <= 0.01) return;
+    final rect = Offset.zero & size;
+    final rr = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    canvas.save();
+    canvas.clipRRect(rr);
+    canvas.drawRRect(
+      rr,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3 + 5 * v
+        ..color = color.withValues(alpha: 0.25 + 0.45 * v)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 1 + 3 * v),
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_LineGlow old) => old.v != v || old.color != color || old.radius != radius;
 }
