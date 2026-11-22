@@ -205,8 +205,6 @@ class PartnerBigCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
-    final follow = ref.watch(partnerFollowInfoProvider(partner.id)).value;
     final rating = ratingLabel(partner);
     final price = partnerPrice(partner);
     final area = partner.location.split(', ').first;
@@ -238,15 +236,26 @@ class PartnerBigCard extends ConsumerWidget {
       titleBadges: badges ?? PartnerBadges(partner),
       titleAction: FavoriteHeart(partner),
       meta: [partner.primaryCategoryLabel, meta],
-      footerLeft: _footer(stats, follow),
+      footerLeft: PartnerHighlight(partner),
       footerRight: PriceBox(price.$1, price.$2, outlined: true),
     );
   }
+}
+
+/// O destaque do parceiro (rodapé do cartão e, no perfil, ao lado dos anos
+/// de experiência — pedido 2026-11-22), por esta ordem: amigos que seguem ·
+/// eventos feitos na À Nossa! · tempo de resposta · até onde se desloca.
+class PartnerHighlight extends ConsumerWidget {
+  final Partner partner;
+  const PartnerHighlight(this.partner, {super.key});
 
   /// No lugar de «Responde em ~1 h» (pedido do Rafael, 2026-11-22), por
   /// esta ordem: amigos que seguem · eventos feitos na À Nossa! · tempo de
   /// resposta · até onde se desloca.
-  Widget _footer(PartnerPublicStats? stats, PartnerFollowInfo? follow) {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stats = ref.watch(partnerPublicStatsProvider(partner.id)).value;
+    final follow = ref.watch(partnerFollowInfoProvider(partner.id)).value;
     final friends = follow?.friends ?? const <MiniPerson>[];
     if (friends.isNotEmpty) {
       final first = friends.first.name.split(' ').first;
