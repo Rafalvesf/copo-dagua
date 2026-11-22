@@ -15,7 +15,11 @@ class AttendeesLine extends StatelessWidget {
   final int total;
   final String emptyText;
   final String? suffix;
-  const AttendeesLine({super.key, required this.people, required this.total, this.emptyText = 'Sê o primeiro a ir!', this.suffix});
+
+  /// Cor do aro das fotos: a do fundo por trás (branco nos cartões
+  /// brancos de «Os meus eventos»).
+  final Color ring;
+  const AttendeesLine({super.key, required this.people, required this.total, this.emptyText = 'Sê o primeiro a ir!', this.suffix, this.ring = AppTheme.background});
 
   static const _muted = TextStyle(fontSize: 13, color: AppTheme.inkMuted);
 
@@ -23,7 +27,7 @@ class AttendeesLine extends StatelessWidget {
   Widget build(BuildContext context) {
     if (total <= 0) {
       return Row(mainAxisSize: MainAxisSize.min, children: [
-        const _Ghosts(),
+        _Ghosts(ring: ring),
         const SizedBox(width: 8),
         Flexible(child: Text(emptyText, maxLines: 1, overflow: TextOverflow.ellipsis, style: _muted)),
       ]);
@@ -55,7 +59,7 @@ class AttendeesLine extends StatelessWidget {
               Positioned(
                 left: i * 16,
                 child: Container(
-                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.background, width: 2)),
+                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: ring, width: 2)),
                   child: V2Avatar(shown[i].name, size: 20, imageUrl: shown[i].avatarUrl, flat: true),
                 ),
               ),
@@ -72,7 +76,8 @@ class AttendeesLine extends StatelessWidget {
 /// fotos (círculo 20 com o aro 2 da cor do fundo, sobrepostos a 16), mas
 /// cinzentos (pedido 2026-11-22).
 class _Ghosts extends StatelessWidget {
-  const _Ghosts();
+  final Color ring;
+  const _Ghosts({required this.ring});
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -88,7 +93,7 @@ class _Ghosts extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: const Color(0xFFE0E0E0),
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.background, width: 2),
+                  border: Border.all(color: ring, width: 2),
                 ),
               ),
             ),

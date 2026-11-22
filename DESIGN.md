@@ -142,8 +142,12 @@ ecrãs. O resto da app mantém a tabela acima.
   a ponta do cartão seguinte** (`SnapCarousel(peek: true)`, 86 % da
   largura); 16 a mais até «Descobrir».
   Os eventos já não levam as caixas de números
-  (`MiniStats`) nem a barra de planeamento no cartão. **Nunca** voltar a
-  pôr caixa branca ou sombra nestes cartões.
+  (`MiniStats`) nem a barra de planeamento no cartão. **Exceção — «Os meus
+  eventos»** (pedido do Rafael, 2026-11-22, mockup «Os meus eventos ·
+  cartões brancos»): estes cartões têm **fundo branco** dentro da moldura
+  (`PhotoCard(filled: true)`), em **duas linhas separadas** — «ORGANIZAS ·
+  N» e «CONVIDADO · N», cada uma no seu carrossel. Os outros cartões
+  (Descobrir, parceiros) ficam sem caixa; **nunca** sombra.
   - **Rodapé do parceiro** (no lugar de «Responde em ~1 h», por esta
     ordem): amigos que seguem («Ana e mais 2 seguem», com as fotos 20) ·
     «N eventos na À Nossa!» · «Responde em ~1 h» · «Desloca-se até X km» /
@@ -155,11 +159,13 @@ ecrãs. O resto da app mantém a tabela acima.
     ver (só de quem segues ou tem perfil público, migração 214); ninguém
     ainda: três círculos cinzentos `#E0E0E0` com a forma das fotos (20 + aro
     2 da cor do fundo, sobrepostos) + «Sê o primeiro a ir!».
-  - **Rodapé do evento:** organizador — quem confirmou (acima), «Ninguém
-    respondeu ainda» ou «Ainda sem convidados»; convidado — «Ainda não
-    respondeste», «Vais» (verde) ou «Está tudo tratado» (verde) — o que
-    falta fazer vai na tarefa por baixo do rodapé (§7);
-    Descobrir — quem confirmou (acima).
+  - **Rodapé do evento:** **sempre as 3 fotos** (pedido 2026-11-22) —
+    organizador: quem confirmou ou os 3 círculos cinzentos com «Ninguém
+    respondeu ainda» / «Ainda sem convidados»; convidado: quem confirmou
+    («**Ana** + 30 confirmados», migração 220) ou os círculos com «Ninguém
+    confirmou ainda» — o que falta fazer vai na tarefa por baixo do rodapé
+    (§7); Descobrir — quem confirmou (acima). Nos cartões brancos o aro das
+    fotos é branco.
 - **Outros cartões** (perfil, resumos): brancos, cantos 22,
   interior 18, com a sombra suave do §5 e **sem linha à volta**. A **linha
   preta 1,5 só no destaque dos painéis do evento** — convidado (o resumo

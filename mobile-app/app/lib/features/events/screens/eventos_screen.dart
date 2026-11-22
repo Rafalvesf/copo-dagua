@@ -160,17 +160,25 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
       const _Pad(_InviteTile()),
       if (hasMine) ...[
         const _Title('Os meus eventos'),
-        SnapCarousel(
-          // Vê-se a ponta do cartão seguinte (pedido 2026-11-22).
-          peek: true,
-          itemCount: own.length + guest.length,
-          // Cada cartão numa moldura (mockup «Alerta com ação», A,
-          // 2026-11-22): linha da cor do tom com coisas por fazer, cinzenta
-          // subtil sem urgência.
-          itemBuilder: (context, i) => i < own.length
-              ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
-              : _InvitedEventCard(wedding: guest[i - own.length]),
-        ),
+        // Organizas e Convidado em linhas separadas (pedido 2026-11-22),
+        // cada uma no seu carrossel; vê-se a ponta do cartão seguinte.
+        if (own.isNotEmpty) ...[
+          _RowLabel('Organizas', own.length),
+          SnapCarousel(
+            peek: true,
+            itemCount: own.length,
+            itemBuilder: (context, i) => _MyEventCard(wedding: own[i], active: own[i].id == activeId),
+          ),
+        ],
+        if (guest.isNotEmpty) ...[
+          if (own.isNotEmpty) const SizedBox(height: 8),
+          _RowLabel('Convidado', guest.length),
+          SnapCarousel(
+            peek: true,
+            itemCount: guest.length,
+            itemBuilder: (context, i) => _InvitedEventCard(wedding: guest[i]),
+          ),
+        ],
         // Mais espaço até «Descobrir».
         const SizedBox(height: 16),
       ],
@@ -434,6 +442,21 @@ class _PosterPlaceholder extends StatelessWidget {
       child: Center(child: Icon(_typeIcon(type), size: 72, color: Colors.white.withValues(alpha: 0.85))),
     );
   }
+}
+
+/// Título de grupo em maiúsculas por cima de cada linha de «Os meus
+/// eventos» («ORGANIZAS · 2», «CONVIDADO · 3»).
+class _RowLabel extends StatelessWidget {
+  final String text;
+  final int count;
+  const _RowLabel(this.text, this.count);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 4, AppTheme.screenMargin, 10),
+        child: Text('${text.toUpperCase()} · $count',
+            style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+      );
 }
 
 class _Title extends StatelessWidget {
@@ -807,12 +830,22 @@ class _Attendees extends ConsumerWidget {
   final String eventId;
   final int total;
   final String? suffix;
-  const _Attendees({required this.eventId, required this.total, this.suffix});
+  final String? emptyText;
+
+  /// Cartões brancos de «Os meus eventos»: o aro das fotos a branco.
+  final bool onWhite;
+  const _Attendees({required this.eventId, required this.total, this.suffix, this.emptyText, this.onWhite = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final people = total > 0 ? ref.watch(eventAttendeesProvider(eventId)).value ?? const <EventPerson>[] : const <EventPerson>[];
-    return AttendeesLine(people: people, total: total, suffix: suffix);
+    return AttendeesLine(
+      people: people,
+      total: total,
+      suffix: suffix,
+      emptyText: emptyText ?? 'Sê o primeiro a ir!',
+      ring: onWhite ? Colors.white : AppTheme.background,
+    );
   }
 }
 
@@ -870,6 +903,7 @@ class _MyEventCard extends ConsumerWidget {
     // apagar (185).
     return PhotoCard(
       frameTone: todo > 0 ? tone : null,
+      filled: true,
       onTap: () => _open(context, ref),
       onLongPress: () => showEventActionsSheet(context, ref,
           weddingId: wedding.id,
@@ -887,11 +921,14 @@ class _MyEventCard extends ConsumerWidget {
           if (summary.guests > 0) '${summary.guests} ${summary.guests == 1 ? 'convidado' : 'convidados'}',
         ].join(' · '),
       ],
-      footerLeft: summary.confirmed > 0
-          ? _Attendees(eventId: wedding.id, total: summary.confirmed)
-          : summary.guests > 0
-              ? const InfoTag('Ninguém respondeu ainda')
-              : const InfoTag('Ainda sem convidados'),
+      // Sempre as 3 fotos (pedido 2026-11-22): quem confirmou ou, sem
+      // ninguém, os 3 círculos cinzentos.
+      footerLeft: _Attendees(
+        eventId: wedding.id,
+        total: summary.confirmed,
+        onWhite: true,
+        emptyText: summary.guests > 0 ? 'Ninguém respondeu ainda' : 'Ainda sem convidados',
+      ),
       footerRight: _countdownBox(wedding.weddingDate),
       // A tarefa mais urgente com o botão da ação (2026-11-22).
       below: first != null
@@ -945,8 +982,10 @@ class _InvitedEventCard extends ConsumerWidget {
             : next?.$1 == 'gift'
                 ? ('Oferece um presente', 'Ver')
                 : null;
+    final going = ref.watch(eventGoingCountProvider(wedding.weddingId)).value;
     return PhotoCard(
       frameTone: todo > 0 ? tone : null,
+      filled: true,
       onTap: () => context.go(open),
       photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
       leftTag: const InfoTag('Convidado', onPhoto: true),
@@ -957,14 +996,18 @@ class _InvitedEventCard extends ConsumerWidget {
         wedding.eventType.label,
         [?place, if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!].join(' · '),
       ],
-      // O que falta está no sinal da foto; o rodapé não o repete.
-      footerLeft: steps.isEmpty
-          ? null
-          : next == null
-              ? const InfoTag('Está tudo tratado', green: true)
-              : next.$1 == 'rsvp'
-                  ? const InfoTag('Ainda não respondeste')
-                  : const InfoTag('Vais', green: true),
+      // Quem vai (pedido 2026-11-22, mockup «Os meus eventos · cartões
+      // brancos»): as 3 fotos, como no organizador; o que falta fazer vai
+      // na tarefa por baixo. Antes da 220 (sem contagem), o estado.
+      footerLeft: going != null
+          ? _Attendees(eventId: wedding.weddingId, total: going, onWhite: true, emptyText: 'Ninguém confirmou ainda')
+          : steps.isEmpty
+              ? null
+              : next == null
+                  ? const InfoTag('Está tudo tratado', green: true)
+                  : next.$1 == 'rsvp'
+                      ? const InfoTag('Ainda não respondeste')
+                      : const InfoTag('Vais', green: true),
       footerRight: _countdownBox(wedding.weddingDate),
       below: todo > 0 && first != null
           ? _TaskPill(tone: tone, task: first.$1, more: todo - 1, action: first.$2, onTap: () => context.go(open))

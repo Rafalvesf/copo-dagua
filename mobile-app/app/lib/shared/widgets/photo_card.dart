@@ -50,6 +50,10 @@ class PhotoCard extends StatelessWidget {
   /// com coisas por fazer, 1,5 da cor do tom. Sem brilho.
   final AlertTone? frameTone;
 
+  /// Fundo branco dentro da moldura («Os meus eventos», pedido do Rafael
+  /// 2026-11-22). Os outros cartões ficam sem fundo.
+  final bool filled;
+
   const PhotoCard({
     super.key,
     required this.photo,
@@ -70,6 +74,7 @@ class PhotoCard extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.frameTone,
+    this.filled = false,
   });
 
   static const double photoHeight = 150;
@@ -168,12 +173,13 @@ class PhotoCard extends StatelessWidget {
     final framed = frameTone == null
         ? Container(
             decoration: BoxDecoration(
+              color: filled ? Colors.white : null,
               borderRadius: BorderRadius.circular(22),
               border: Border.all(color: AppTheme.line),
             ),
             child: body,
           )
-        : AlertOutline(tone: frameTone!, radius: 22, fill: Colors.transparent, child: body);
+        : AlertOutline(tone: frameTone!, radius: 22, fill: filled ? Colors.white : Colors.transparent, child: body);
     final card = SizedBox(width: width, height: height, child: framed);
     if (onTap == null && onLongPress == null) return card;
     return GestureDetector(
