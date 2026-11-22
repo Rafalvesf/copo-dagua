@@ -741,30 +741,34 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       barAction = _scrollToPackages;
     }
 
-    Widget statusNote() => AlertOutline(
-          tone: relationshipStatus == PartnerRelationshipStatus.booked ? AlertTone.invite : AlertTone.pending,
-          child: Row(children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: relationshipStatus == PartnerRelationshipStatus.booked
-                    ? const Color(0xFF4F6B4A)
-                    : const Color(0xFFF2A01B),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                relationshipStatus == PartnerRelationshipStatus.booked
+    // Aviso do §7 / molde do §6.3 (linha 1,5, ponto, título 16 + frase 13),
+    // com interior a sério — antes ficava colado à linha (2026-11-22).
+    Widget statusNote() {
+      final booked = relationshipStatus == PartnerRelationshipStatus.booked;
+      final tone = booked ? AlertTone.invite : AlertTone.pending;
+      return AlertOutline(
+        tone: tone,
+        radius: 22,
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Padding(padding: const EdgeInsets.only(top: 6), child: AlertDot(tone)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(booked ? 'Reservado' : 'Orçamento pedido',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: ink)),
+              const SizedBox(height: 2),
+              Text(
+                booked
                     ? 'Já reservaste ${partner.name} para este evento.'
                     : 'Já pediste orçamento a ${partner.name} para este evento.',
-                style: const TextStyle(fontSize: 13, color: ink, height: 1.35),
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
               ),
-            ),
-          ]),
-        );
+            ]),
+          ),
+        ]),
+      );
+    }
 
     return Material(
       color: cream,
