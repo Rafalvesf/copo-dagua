@@ -2,6 +2,7 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:math' as math;
 import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2RoundButton;
 import '../../../shared/widgets/feedback.dart';
 
@@ -185,9 +186,17 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                   ),
                           ),
                         ]),
-                        const KitTitle('Lugares'),
+                        KitTitle('Mesas', subtitle: wedding?.venue?.isNotEmpty == true ? wedding!.venue : null),
+                        if (!noTables)
+                          KitPills([
+                            KitPill(label: 'Planta', selected: _view == _PlanView.plan, onTap: () => setState(() => _view = _PlanView.plan)),
+                            KitPill(label: 'Lista', selected: _view != _PlanView.plan, onTap: () => setState(() => _view = _PlanView.list)),
+                          ]),
                           ]),
                         ),
+                        // Mockup «Páginas do evento · com molduras» → Mesas
+                        // (2026-11-22): cada bloco numa moldura, sem Mesa de
+                        // Honra nem pista de dança.
                         Padding(
                           padding: const EdgeInsets.fromLTRB(
                             AppTheme.screenMargin,
@@ -196,7 +205,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                             40,
                           ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               _StatsHero(
                                 totalGuests: invited.length,
@@ -204,67 +213,80 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                 totalTables: total,
                                 hasVenue: state.hasVenue,
                               ),
-                              const SizedBox(height: 20),
                               if (noTables)
-                                _NoTablesCard(hasVenue: state.hasVenue)
+                                SectionFrame(title: 'Mesas', children: [_NoTablesCard(hasVenue: state.hasVenue)])
                               else ...[
-                                KitPills(top: 0, [
-                                  KitPill(label: 'Planta', selected: _view == _PlanView.plan, onTap: () => setState(() => _view = _PlanView.plan)),
-                                  KitPill(label: 'Lista', selected: _view != _PlanView.plan, onTap: () => setState(() => _view = _PlanView.list)),
-                                ]),
-                                const SizedBox(height: 18),
-                                _ShapeCategories(
-                                  state: state,
-                                  selected: _shape,
-                                  onTap: (s) => setState(() => _shape = _shape == s ? null : s),
-                                ),
-                                const SizedBox(height: 14),
-                                if (_view == _PlanView.plan)
-                                  _PlanGrid(
-                                    state: state,
-                                    shape: _shape,
-                                    selectedIndex: _selectedIndex,
-                                    onSelect: _select,
-                                    onDrop: (i, g) => _seat(g, i),
+                                if (invited.isNotEmpty)
+                                  SectionFrame(
+                                    title: unseated.isEmpty ? 'Por sentar' : 'Por sentar · ${unseated.length}',
+                                    children: [
+                                      _UnseatedStrip(
+                                        guests: unseated,
+                                        onTap: (g) => _seat(g, _selectedIndex ?? state.nextIndex),
+                                      ),
+                                    ],
                                   )
                                 else
-                                  _TableListView(
+                                  SectionFrame(title: 'Por sentar', children: const [
+                                    FrameNote('Quando os convidados disserem que vão, aparecem aqui para sentar.'),
+                                  ]),
+                                SectionFrame(title: 'Mesas · $total', children: [
+                                  _ShapeCategories(
                                     state: state,
-                                    shape: _shape,
-                                    selectedIndex: _selectedIndex,
-                                    onSelect: _select,
-                                    onDrop: (i, g) => _seat(g, i),
+                                    selected: _shape,
+                                    onTap: (s) => setState(() => _shape = _shape == s ? null : s),
                                   ),
-                                if (_view == _PlanView.plan) ...[
-                                  const SizedBox(height: 14),
-                                  const _Legend(),
-                                ],
-                                _UnseatedStrip(
-                                  guests: unseated,
-                                  onTap: (g) => _seat(g, _selectedIndex ?? state.nextIndex),
-                                ),
-                                if (_selectedIndex != null) ...[
-                                  const SizedBox(height: 22),
-                                  _SelectedTableCard(
-                                    index: _selectedIndex!,
-                                    state: state,
-                                    guests: guestsState.guests,
-                                    onRenameGuest: (g) => renameGuest(context, ref, g),
-                                    onEdit: () {
-                                      final index = _selectedIndex!;
-                                      final isNext = index == state.nextIndex;
-                                      final existing = index < state.tables.length
-                                          ? state.tables[index]
-                                          : null;
-                                      _openTable(
-                                        ref,
-                                        index: index,
-                                        isNextCell: isNext,
-                                        existing: existing,
-                                      );
-                                    },
-                                  ),
-                                ],
+                                  const SizedBox(height: 12),
+                                  if (_view == _PlanView.plan)
+                                    _PlanGrid(
+                                      state: state,
+                                      shape: _shape,
+                                      selectedIndex: _selectedIndex,
+                                      onSelect: _select,
+                                      onDrop: (i, g) => _seat(g, i),
+                                    )
+                                  else
+                                    _TableListView(
+                                      state: state,
+                                      shape: _shape,
+                                      selectedIndex: _selectedIndex,
+                                      onSelect: _select,
+                                      onDrop: (i, g) => _seat(g, i),
+                                    ),
+                                  if (_view == _PlanView.plan) ...[
+                                    const SizedBox(height: 12),
+                                    const _Legend(),
+                                  ],
+                                  if (_selectedIndex != null)
+                                    _SelectedTableCard(
+                                      index: _selectedIndex!,
+                                      state: state,
+                                      guests: guestsState.guests,
+                                      onRenameGuest: (g) => renameGuest(context, ref, g),
+                                      onEdit: () {
+                                        final index = _selectedIndex!;
+                                        final isNext = index == state.nextIndex;
+                                        final existing = index < state.tables.length
+                                            ? state.tables[index]
+                                            : null;
+                                        _openTable(
+                                          ref,
+                                          index: index,
+                                          isNextCell: isNext,
+                                          existing: existing,
+                                        );
+                                      },
+                                    ),
+                                ]),
+                                if (state.tables.isNotEmpty)
+                                  SectionFrame(title: 'Para o local', children: [
+                                    KitRow(
+                                      title: 'Copiar lista das mesas',
+                                      sub: 'Para enviar ao local ou ao catering',
+                                      chevron: true,
+                                      onTap: () => _copyTables(context),
+                                    ),
+                                  ]),
                               ],
                             ],
                           ),
@@ -405,20 +427,10 @@ class _PlanGrid extends StatelessWidget {
     // Mosaico 2×2 (pedido do utilizador, 2026-10-19).
     final (:shown, :hidden) = _shownTables(state, shape);
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-      decoration: whiteLineCard(radius: 26),
-      child: Column(
+    // Sem Mesa de Honra nem pista de dança (pedido 2026-11-22): só as
+    // mesas, cada uma numa caixa branca.
+    return Column(
         children: [
-          Container(
-            width: 190,
-            height: 30,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(10)),
-            child: const Text('Mesa de Honra',
-                style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: Colors.white)),
-          ),
-          const SizedBox(height: 16),
           if (shown.isEmpty && shape != null) _noneOfShape(shape!),
           GridView.builder(
             shrinkWrap: true,
@@ -456,20 +468,7 @@ class _PlanGrid extends StatelessWidget {
             },
           ),
           if (hidden > 0) _hiddenNote(hidden),
-          const SizedBox(height: 12),
-          Container(
-            width: 120,
-            height: 24,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF9DB098), width: 1.4),
-            ),
-            child: const Text('Pista de dança',
-                style: TextStyle(fontSize: AppFontSize.xxs, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-          ),
         ],
-      ),
     );
   }
 }
@@ -601,7 +600,7 @@ class _TableCell extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
         decoration: BoxDecoration(
-          color: hovering ? c.withValues(alpha: 0.10) : const Color(0xFFF7F8F5),
+          color: hovering ? c.withValues(alpha: 0.10) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: selected || hovering ? c : Colors.transparent, width: 2),
         ),
@@ -613,8 +612,10 @@ class _TableCell extends StatelessWidget {
                 child: CustomPaint(
                   painter: _TablePainter(seats: seatsPerTable, taken: count, color: fg, fill: fill, shape: shape),
                   child: Center(
+                    // Sem cadeado (pedido 2026-11-22): a mesa bloqueada só
+                    // fica apagada e diz «Bloqueada» por baixo.
                     child: locked
-                        ? const Icon(Hi.lockClosed, size: 16, color: AppTheme.inkMuted)
+                        ? const SizedBox.shrink()
                         : Text('$count/$seatsPerTable', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
                   ),
                 ),
@@ -624,7 +625,12 @@ class _TableCell extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: locked ? AppTheme.inkMuted : AppTheme.ink)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: locked ? AppTheme.inkMuted : AppTheme.ink)),
+              Text(
+                locked ? 'Bloqueada' : (count >= seatsPerTable ? 'Completa' : '$count de $seatsPerTable'),
+                maxLines: 1,
+                style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
+              ),
             ],
           ),
         ),
@@ -880,9 +886,8 @@ class _UnseatedStrip extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionTitle('Por sentar',
-            trailing: Text(guests.isEmpty ? 'Todos sentados' : 'Arrasta para uma mesa',
-                style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted))),
+        FrameNote(guests.isEmpty ? 'Estão todos sentados.' : 'Arrasta para uma mesa, ou toca para ir para a selecionada.'),
+        if (guests.isNotEmpty) const SizedBox(height: 10),
         if (guests.isNotEmpty)
           SizedBox(
             height: 82,
@@ -953,9 +958,12 @@ class _SelectedTableCard extends StatelessWidget {
     ].whereType<Guest>().toList();
     final c = AppTheme.accentOliveDark;
 
+    // Quem está na mesa escolhida, por baixo das mesas (mockup Mesas,
+    // 2026-11-22): separada por uma linha fina, sem caixa.
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: whiteLineCard(line: c, width: 2),
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.only(top: 12),
+      decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.line))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -965,22 +973,13 @@ class _SelectedTableCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(state.nameFor(index), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                    Text(state.nameFor(index), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                     Text('${state.shapeFor(index).label} · ${seated.length} de $seatsPerTable lugares',
                         style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                   ],
                 ),
               ),
-              SnappyTap(
-                onTap: onEdit,
-                child: Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: c.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(999)),
-                  child: Text('Editar mesa', style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, color: c)),
-                ),
-              ),
+              FrameButton36('Editar', outlined: true, onTap: onEdit),
             ],
           ),
           const SizedBox(height: 12),
@@ -1043,52 +1042,12 @@ class _NoTablesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Redesign 2026-10: sem caixa de fundo (pedido do utilizador: "remove
-    // o fundo") — ilustração da mesa, título em Bold e, sem local
-    // reservado, um atalho para procurar espaços.
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          const TchinMascot(pose: MascotPose.sleep, width: 210),
-          const SizedBox(height: 16),
-          Text(
-            hasVenue ? 'Mesas por configurar' : 'Ainda sem local reservado',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: AppFontSize.h3,
-              color: AppTheme.ink,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 300),
-            child: Text(
-              hasVenue
-                  ? 'O local que reservaste ainda não indicou as mesas disponíveis. Assim que o fizer, aparecem aqui.'
-                  : 'Assim que reservares um espaço, o número real de mesas aparece aqui e podes começar a organizar os lugares.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppTheme.inkMuted,
-                fontWeight: FontWeight.w600,
-                fontSize: AppFontSize.base,
-                height: 1.5,
-              ),
-            ),
-          ),
-          if (!hasVenue) ...[
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () => context.go('/partners'),
-                child: const Text('Procurar espaços'),
-              ),
-            ),
-          ],
-        ],
-      ),
+    return FrameEmpty(
+      title: hasVenue ? 'Ainda sem mesas' : 'Ainda sem local reservado',
+      text: hasVenue
+          ? 'O local que reservaste ainda não indicou as mesas. Assim que o fizer, aparecem aqui.'
+          : 'Escolhe primeiro o local; as mesas vêm dele.',
+      actions: [if (!hasVenue) FrameButton44('Procurar espaços', onTap: () => context.go('/partners'))],
     );
   }
 }
@@ -1397,6 +1356,19 @@ Future<void> _showMoreOptions(BuildContext context) async {
   if (!context.mounted || action == null) return;
 
   if (action == 'copy') {
+    await _copyTables(context);
+    return;
+  }
+  if (action != 'reset') return;
+  await _resetTables(context, container, tables);
+}
+
+/// Copia a lista das mesas (para quem não está na app).
+Future<void> _copyTables(BuildContext context) async {
+  final container = ProviderScope.containerOf(context);
+  final tables = container.read(seatingControllerProvider).tables;
+  final guests = {for (final g in container.read(guestsControllerProvider).guests) g.id: g};
+  {
     final buf = StringBuffer();
     for (var i = 0; i < tables.length; i++) {
       final names = [
@@ -1415,9 +1387,10 @@ Future<void> _showMoreOptions(BuildContext context) async {
         const SnackBar(content: Text('Lista das mesas copiada.')),
       );
     }
-    return;
   }
+}
 
+Future<void> _resetTables(BuildContext context, ProviderContainer container, List<SeatingTable> tables) async {
   final confirmed = await showIslandDialog<bool>(
     context: context,
     builder: (context) => IslandAlert(
