@@ -534,17 +534,9 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         if (top.length >= 2) sections.add(('Mais bem avaliados', top.take(8).toList(), const {}, null));
                         final fresh = partners.where(PartnerBigCard.isNew).toList();
                         if (fresh.length >= 2) sections.add(('Novos na À Nossa!', fresh.take(8).toList(), const {}, null));
-                        if (_filter == null) {
-                          final bySlug = <String, List<Partner>>{};
-                          for (final p in partners) {
-                            (bySlug[p.primaryCategorySlug] ??= []).add(p);
-                          }
-                          final cats = bySlug.entries.where((e) => e.value.length >= 2).toList()
-                            ..sort((a, b) => b.value.length.compareTo(a.value.length));
-                          for (final e in cats.take(3)) {
-                            sections.add((e.value.first.primaryCategoryLabel, e.value.take(8).toList(), const {}, e.key));
-                          }
-                        }
+                        // Sem carrosséis por categoria em «Todos» (pedido do
+                        // Rafael, 2026-11-22): as categorias já estão nas
+                        // pílulas de cima.
                       }
                       final head = <Widget>[
                         if (noneNear && !widget.selectionMode)

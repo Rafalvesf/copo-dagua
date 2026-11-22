@@ -123,7 +123,8 @@ ecrãs. O resto da app mantém a tabela acima.
   círculo **44** com aro branco 3 a sobrepor o canto de baixo da foto
   (logótipo do parceiro; nos eventos, a **foto de quem criou o evento**,
   ou as iniciais se não houver — pedido 2026-11-22); título **19** com os selos
-  (§6) e a ação à direita (coração, partilhar); meta **13**; divisória
+  (§6) e a ação **sempre encostada à direita** (coração, partilhar), seja o
+  nome curto ou comprido; meta **13**; divisória
   `#D9D9D9` e o rodapé — uma etiqueta à esquerda e, à direita, rótulo 9 +
   valor 16 **sem caixa nem linha** (`DESDE €900`, `ENTRADA Grátis`,
   `FALTAM 203 dias`, pedido 2026-11-22). Os eventos já não levam as caixas de números
@@ -374,8 +375,8 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
     13; «zona · N anos de experiência» 13; divisória `#D9D9D9`; rodapé do
     §4 e o preço (sem caixa).
   - **Secções em carrossel:** «Em destaque (perto de ti)», «Mais bem
-    avaliados», «Novos na À Nossa!» e as 3 categorias com mais parceiros
-    («Ver todos» escolhe a categoria). Cartões de **330**, 10 entre eles,
+    avaliados» e «Novos na À Nossa!». **Sem carrosséis por categoria em
+    «Todos»** (pedido 2026-11-22): as categorias estão nas pílulas de cima. Cartões de **330**, 10 entre eles,
     12 entre o título e os cartões, 24 entre secções.
   - Por baixo, «N parceiros» + «Filtrar» com o **mesmo cartão a toda a
     largura**.
