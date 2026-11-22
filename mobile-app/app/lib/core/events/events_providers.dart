@@ -151,6 +151,9 @@ bool isEventFull(Object e) => e is PostgrestException && e.message.contains('eve
 /// entrou com o código/link; o organizador confirma ou recusa.
 class JoinRequest {
   final String id;
+
+  /// A conta de quem pediu (para a foto, o @ e o perfil).
+  final String? profileId;
   final String name;
   final String? email;
   final String? phone;
@@ -160,16 +163,24 @@ class JoinRequest {
   /// menu e alergias. `null` enquanto não respondeu.
   final Map<String, dynamic>? answers;
 
-  const JoinRequest({required this.id, required this.name, this.email, this.phone, required this.createdAt, this.answers});
+  const JoinRequest({required this.id, this.profileId, required this.name, this.email, this.phone, required this.createdAt, this.answers});
 
   factory JoinRequest.fromRow(Map<String, dynamic> r) => JoinRequest(
         id: r['id'] as String,
+        profileId: r['profile_id'] as String?,
         name: (r['full_name'] as String?)?.trim().isNotEmpty == true ? r['full_name'] as String : 'Sem nome',
         email: r['email'] as String?,
         phone: r['phone'] as String?,
         createdAt: DateTime.parse(r['created_at'] as String),
         answers: (r['answers'] as Map?)?.cast<String, dynamic>(),
       );
+
+  /// Quantas pessoas traz (das respostas), ou `null` sem respostas.
+  int? get bringing {
+    final a = answers;
+    if (a == null || a['attending'] == false) return null;
+    return ((a['companions'] as List?) ?? const []).length;
+  }
 
   /// "Vai com 1 pessoa · Carne · sem alergias" — para o organizador decidir.
   String? get answerSummary {
@@ -192,7 +203,7 @@ final joinRequestsProvider = FutureProvider.family<List<JoinRequest>, String>((r
     try {
       rows = await supabase
           .from('guest_join_requests')
-          .select('id, full_name, email, phone, created_at, answers')
+          .select('id, profile_id, full_name, email, phone, created_at, answers')
           .eq('wedding_id', weddingId)
           .order('created_at');
     } on PostgrestException {

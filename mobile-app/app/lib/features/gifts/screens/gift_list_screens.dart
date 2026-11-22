@@ -13,6 +13,9 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/section_frame.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/dense_card.dart' show FeaturedOverlayCard;
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show softCard;
@@ -59,105 +62,145 @@ class OrganizerGiftListScreen extends ConsumerWidget {
     if (weddingId == null) return const SizedBox.shrink();
     final listAsync = ref.watch(giftListProvider(weddingId));
     final givers = ref.watch(giftGiversProvider(weddingId)).value ?? const <GiftGiver>[];
+    // Mockup «Páginas do evento · com molduras» → Presentes (2026-11-22):
+    // resumo do que já foi oferecido, «Receber» (envelope com o IBAN,
+    // envelopes recebidos, morada) e a lista, cada um numa moldura.
+    final iban = ref.watch(_giftIbanProvider(weddingId)).value;
     return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(top: false, 
-        bottom: false,
-        child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-          const PageHeader(title: 'Lista de presentes', centered: true)
- ],
- body: listAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, s) => const _Info('Não foi possível carregar a lista.'),
-              data: (items) {
-                if (items == null) return const _Info('Falta correr a migração 160 na página Migrações do admin.');
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(giftListProvider(weddingId));
-                    ref.invalidate(giftGiversProvider(weddingId));
-                  },
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 60),
-                    children: [
-                      const Text(
-                        'Desejos: escreve o que precisam; os convidados reservam e compram onde quiserem. '
-                        'Loja: produtos dos parceiros À Nossa!, pagos na app e enviados para a vossa morada. '
-                        'O dinheiro dos presentes nunca passa por vocês nem pela À Nossa!, só o da loja vai para o parceiro.',
-                        style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
-                      ),
-                      const SizedBox(height: 14),
-                      Row(children: [
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: () => showWishSheet(context, ref, weddingId: weddingId),
-                            icon: const Icon(Hi.pencilSquare, size: 20),
-                            label: const Text('Desejo'),
-                            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size(0, 46), shape: const StadiumBorder()),
-                          ),
+      background: AppBackground.feed,
+      body: listAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, s) => const _Info('Não foi possível carregar a lista.'),
+        data: (items) {
+          if (items == null) return const _Info('Falta correr a migração 160 na página Migrações do admin.');
+          final given = items.where((i) => i.taken >= i.wanted && i.wanted > 0).length;
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(giftListProvider(weddingId));
+              ref.invalidate(giftGiversProvider(weddingId));
+              ref.invalidate(_giftIbanProvider(weddingId));
+            },
+            child: KitPage(
+              pinnedBack: true,
+              rotateBack: false,
+              children: [
+                KitHeader(actions: [KitAddButton(tooltip: 'Novo desejo', onTap: () => showWishSheet(context, ref, weddingId: weddingId))]),
+                const KitTitle('Presentes', subtitle: 'A vossa lista de presentes'),
+                KitSummary(
+                  kicker: 'Já oferecidos',
+                  value: '$given',
+                  unit: items.isEmpty ? 'presentes' : 'de ${items.length} ${items.length == 1 ? 'presente' : 'presentes'}',
+                  progress: items.isEmpty ? 0 : given / items.length,
+                  footer: givers.isEmpty ? null : '${givers.length} ${givers.length == 1 ? 'pessoa ofereceu' : 'pessoas ofereceram'}',
+                ),
+                SectionFrame(title: 'Receber', children: [
+                  KitGroup([
+                    KitRow(
+                      title: 'Envelope',
+                      sub: 'Em dinheiro ou por transferência',
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Text(
+                          iban == null || iban.isEmpty ? 'Por pôr o IBAN' : 'IBAN ···· ${iban.replaceAll(' ', '').substring(iban.replaceAll(' ', '').length < 4 ? 0 : iban.replaceAll(' ', '').length - 4)}',
+                          style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => context.push('/gift-shop'),
-                            icon: const Icon(Hi.buildingStorefront, size: 20),
-                            label: const Text('Da loja'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.ink,
-                              minimumSize: const Size(0, 46),
-                              side: const BorderSide(color: AppTheme.borderMuted, width: 1.5),
-                              shape: const StadiumBorder(),
-                            ),
-                          ),
-                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
                       ]),
-                      const SizedBox(height: 16),
-                      if (items.isEmpty)
-                        const _Info('A lista está vazia. Junta um desejo ou um produto da loja.')
-                      else
-                        for (final i in items) ...[
-                          _OrganizerItemTile(item: i, weddingId: weddingId),
-                          const SizedBox(height: 10),
-                        ],
-                      if (items.any((i) => i.isProduct)) ...[
-                        const SizedBox(height: 8),
-                        _DeliveryAddressCard(weddingId: weddingId),
+                      onTap: () => _editIban(context, ref, weddingId, iban),
+                    ),
+                    KitRow(title: 'Envelopes recebidos', chevron: true, onTap: () => context.push('/envelopes')),
+                  ]),
+                  if (items.any((i) => i.isProduct)) ...[
+                    const SizedBox(height: 8),
+                    _DeliveryAddressCard(weddingId: weddingId),
+                  ],
+                ]),
+                SectionFrame(title: items.isEmpty ? 'A lista' : 'A lista · ${items.length}', children: [
+                  if (items.isEmpty)
+                    FrameEmpty(
+                      title: 'Ainda sem presentes',
+                      text: 'Junta o que precisam ou escolhe da loja.',
+                      actions: [
+                        FrameButton44('+ Novo desejo', onTap: () => showWishSheet(context, ref, weddingId: weddingId)),
+                        FrameButton44('Ver a loja', outlined: true, onTap: () => context.push('/gift-shop')),
                       ],
-                      if (givers.isNotEmpty) ...[
-                        const SizedBox(height: 22),
-                        const Text('Quem ofereceu', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                        const SizedBox(height: 8),
-                        for (final g in givers)
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: _card(),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text('${g.name} · ${g.title}${g.quantity > 1 ? ' × ${g.quantity}' : ''}',
-                                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                              Text(
-                                g.kind == 'product'
-                                    ? 'Pago na loja${g.shippedAt != null ? ' · enviado pelo parceiro' : ' · o parceiro vai enviar'}'
-                                    : 'Vai comprar fora da app',
-                                style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted),
-                              ),
-                              if (g.message?.isNotEmpty == true) ...[
-                                const SizedBox(height: 4),
-                                Text('«${g.message}»', style: const TextStyle(fontSize: 13.5, fontStyle: FontStyle.italic, color: AppTheme.ink)),
-                              ],
-                            ]),
-                          ),
-                      ],
+                    )
+                  else ...[
+                    const FrameNote('Desejos: os convidados reservam e compram onde quiserem. Loja: produtos dos parceiros, pagos na app e enviados para a vossa morada.'),
+                    const SizedBox(height: 10),
+                    for (final i in items) ...[
+                      _OrganizerItemTile(item: i, weddingId: weddingId),
+                      const SizedBox(height: 10),
                     ],
-                  ),
-                );
-              },
+                    Row(children: [
+                      Expanded(child: FrameButton44('+ Novo desejo', outlined: true, onTap: () => showWishSheet(context, ref, weddingId: weddingId))),
+                      const SizedBox(width: 8),
+                      Expanded(child: FrameButton44('Ver a loja', outlined: true, onTap: () => context.push('/gift-shop'))),
+                    ]),
+                  ],
+                ]),
+                if (givers.isNotEmpty)
+                  SectionFrame(title: 'Quem ofereceu · ${givers.length}', children: [
+                    KitGroup([
+                      for (final g in givers)
+                        KitRow(
+                          title: '${g.name} · ${g.title}${g.quantity > 1 ? ' × ${g.quantity}' : ''}',
+                          sub: [
+                            g.kind == 'product'
+                                ? 'Pago na loja${g.shippedAt != null ? ' · enviado pelo parceiro' : ' · o parceiro vai enviar'}'
+                                : 'Vai comprar fora da app',
+                            if (g.message?.isNotEmpty == true) '«${g.message}»',
+                          ].join(' · '),
+                        ),
+                    ]),
+                  ]),
+              ],
             ),
-),
+          );
+        },
       ),
     );
   }
+
+  /// IBAN do envelope (em dinheiro ou por transferência), em `events.gift_iban`.
+  Future<void> _editIban(BuildContext context, WidgetRef ref, String weddingId, String? current) async {
+    final controller = TextEditingController(text: current ?? '');
+    final v = await showIslandDialog<String>(
+      context: context,
+      builder: (d) => IslandAlert(
+        title: const Text('IBAN para o envelope'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.characters,
+          decoration: const InputDecoration(hintText: 'PT50 …'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(d).pop(), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.of(d).pop(controller.text.trim()), child: const Text('Guardar')),
+        ],
+      ),
+    );
+    if (v == null) return;
+    try {
+      await supabase.from('events').update({'gift_iban': v.isEmpty ? null : v}).eq('id', weddingId);
+      ref.invalidate(_giftIbanProvider(weddingId));
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar o IBAN.')));
+      }
+    }
+  }
 }
+
+final _giftIbanProvider = FutureProvider.autoDispose.family<String?, String>((ref, weddingId) async {
+  try {
+    final r = await supabase.from('events').select('gift_iban').eq('id', weddingId).maybeSingle();
+    return r?['gift_iban'] as String?;
+  } catch (_) {
+    return null;
+  }
+});
 
 class _Info extends StatelessWidget {
   final String text;

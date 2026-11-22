@@ -22,6 +22,10 @@ import '../../../features/partner_bookings/booking_style.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/section_frame.dart';
+import '../../../shared/widgets/alert_outline.dart';
+import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
+import '../../../shared/text_case.dart';
 import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -50,6 +54,9 @@ class CoupleBookingsScreen extends ConsumerStatefulWidget {
 class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
   late bool _guests = widget.guestsTab;
 
+  /// Filtro por evento (null = todos).
+  String? _event;
+
   @override
   Widget build(BuildContext context) {
     final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
@@ -69,9 +76,9 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
               padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const KitHeader(),
-                const KitTitle('Reservas', subtitle: 'Parceiros contratados e reservas dos convidados.'),
+                const KitTitle('Reservas', subtitle: 'Os parceiros de todos os teus eventos'),
                 KitPills([
-                  KitPill(label: 'Serviços', selected: !_guests, onTap: () => setState(() => _guests = false)),
+                  KitPill(label: 'Parceiros', selected: !_guests, onTap: () => setState(() => _guests = false)),
                   KitPill(label: 'Convidados', selected: _guests, onTap: () => setState(() => _guests = true)),
                 ]),
               ]),
@@ -98,11 +105,37 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                     data: (p) => p,
                     orElse: () => const <ReceivedProposal>[],
                   );
+                  // Para que evento é cada parceiro (pedido 2026-11-22).
+                  final names = {
+                    for (final w in ref.watch(weddingControllerProvider).events) w.id: capFirst(w.displayNames),
+                  };
+                  final eventIds = <String>{for (final b in bookings) b.weddingId, for (final p in proposals) p.weddingId}.toList();
+                  final ev = _event != null && eventIds.contains(_event) ? _event : null;
+                  final shownBookings = [for (final b in bookings) if (ev == null || b.weddingId == ev) b];
+                  final shownProposals = [for (final p in proposals) if (ev == null || p.weddingId == ev) p];
+                  final toPay = [
+                    for (final b in shownBookings)
+                      if (b.status != BookingStatus.recusado)
+                        for (final (id, what, due) in [
+                          if (b.pendingDepositPaymentId != null) (b.pendingDepositPaymentId!, b.depositIsFull ? 'Pagamento' : 'Sinal', b.pendingDepositDueAt),
+                          if (b.pendingFinalPaymentId != null) (b.pendingFinalPaymentId!, 'Restante', b.finalPaymentDueAt),
+                        ])
+                          (b, id, what, due),
+                  ];
                   if (bookings.isEmpty && proposals.isEmpty) {
-                    return whole(const EmptyStateView(
-                      message: 'Ainda sem parceiros reservados.',
-                      icon: Hi.buildingStorefront,
-                    ));
+                    return ListView(padding: const EdgeInsets.only(bottom: 140), children: [
+                      ...top,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                        child: SectionFrame(title: 'Os vossos serviços', children: [
+                          FrameEmpty(
+                            title: 'Ainda sem parceiros reservados',
+                            text: 'Espaço, catering, fotografia… reserva e paga tudo aqui.',
+                            actions: [FrameButton44('Ver parceiros', onTap: () => context.push('/partners'))],
+                          ),
+                        ]),
+                      ),
+                    ]);
                   }
                   return ListView(
                     padding: const EdgeInsets.only(bottom: 140),
@@ -111,39 +144,63 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                       Padding(
                       padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      // Canvas "Reservas — redesign": cartão verde com os
-                      // serviços tratados (sinal pago ou mais).
+                      if (eventIds.length > 1)
+                        KitPills(top: 0, [
+                          KitPill(label: 'Todos', selected: ev == null, onTap: () => setState(() => _event = null)),
+                          for (final id in eventIds)
+                            KitPill(label: names[id] ?? 'Evento', selected: ev == id, onTap: () => setState(() => _event = id)),
+                        ]),
                       Builder(builder: (context) {
-                        final active = bookings.where((b) => b.status != BookingStatus.recusado).toList();
+                        final active = shownBookings.where((b) => b.status != BookingStatus.recusado).toList();
                         final handled = active.where((b) => b.paidAmount > 0 || b.status == BookingStatus.concluido).length;
-                        final urgent = active.where((b) => b.pendingDepositPaymentId != null || b.pendingFinalPaymentId != null).length;
                         return KitSummary(
                           kicker: 'Serviços tratados',
                           value: '$handled',
                           unit: 'de ${active.length} ${active.length == 1 ? 'serviço' : 'serviços'}',
                           progress: active.isEmpty ? 0 : handled / active.length,
-                          footer: urgent == 0 && proposals.isEmpty
+                          footer: toPay.isEmpty && shownProposals.isEmpty
                               ? null
                               : [
-                                  if (urgent > 0) '$urgent ${urgent == 1 ? 'pagamento por fazer' : 'pagamentos por fazer'}',
-                                  if (proposals.isNotEmpty) '${proposals.length} ${proposals.length == 1 ? 'proposta' : 'propostas'}',
+                                  if (toPay.isNotEmpty) '${toPay.length} ${toPay.length == 1 ? 'pagamento por fazer' : 'pagamentos por fazer'}',
+                                  if (shownProposals.isNotEmpty) '${shownProposals.length} ${shownProposals.length == 1 ? 'proposta' : 'propostas'}',
                                 ].join(' · '),
                         );
                       }),
-                      if (proposals.isNotEmpty) ...[
-                        const KitSection('Propostas recebidas'),
-                        for (final proposal in proposals)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _ProposalRow(proposal: proposal),
-                          ),
-                      ],
-                      if (bookings.isNotEmpty) const KitSection('Os vossos serviços'),
-                      for (final booking in bookings)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _CoupleBookingRow(booking: booking),
-                        ),
+                      // Pagamentos e propostas recebidas no «Para fazer»
+                      // (pedido 2026-11-22).
+                      if (toPay.isNotEmpty || shownProposals.isNotEmpty)
+                        SectionFrame(title: 'Para fazer · ${toPay.length + shownProposals.length}', children: [
+                          for (final (b, id, what, due) in toPay)
+                            FrameTaskRow(
+                              lead: V2Avatar(b.partnerName, size: 44, imageUrl: b.partnerLogoUrl),
+                              title: b.partnerName,
+                              sub: [
+                                if (names[b.weddingId] != null && eventIds.length > 1) names[b.weddingId]!,
+                                what,
+                                if (due != null) 'até ${due.day}/${due.month}',
+                              ].join(' · '),
+                              action: 'Pagar',
+                              urgent: toneForDue(due) == AlertTone.urgent,
+                              onTap: () async {
+                                await payBookingFlow(context, ref, paymentId: id, bookingId: b.id, partnerName: b.partnerName);
+                                ref.invalidate(coupleBookingsProvider);
+                              },
+                            ),
+                          for (final proposal in shownProposals)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: _ProposalRow(proposal: proposal, eventName: eventIds.length > 1 ? names[proposal.weddingId] : null),
+                            ),
+                        ]),
+                      if (shownBookings.isNotEmpty)
+                        SectionFrame(title: 'Os vossos serviços', children: [
+                          for (final booking in shownBookings)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: _CoupleBookingRow(booking: booking, eventName: names[booking.weddingId]),
+                            ),
+                        ]),
+                      FrameButton44('Ver parceiros', outlined: true, onTap: () => context.push('/partners')),
                       ]),
                       ),
                     ],
@@ -159,7 +216,10 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
 class _CoupleBookingRow extends ConsumerStatefulWidget {
   final CoupleBooking booking;
 
-  const _CoupleBookingRow({required this.booking});
+  /// O evento desta reserva (pedido 2026-11-22: dizer para que evento é).
+  final String? eventName;
+
+  const _CoupleBookingRow({required this.booking, this.eventName});
 
   @override
   ConsumerState<_CoupleBookingRow> createState() => _CoupleBookingRowState();
@@ -331,7 +391,11 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                       ]),
                       const SizedBox(height: 2),
                       Text(
-                        '$dateLabel · ${euros(totalWithCommission(booking.amount, booking.depositAmount, commissionPct))}',
+                        [
+                          ?widget.eventName,
+                          dateLabel,
+                          euros(totalWithCommission(booking.amount, booking.depositAmount, commissionPct)),
+                        ].join(' · '),
                         style: const TextStyle(
                           color: AppTheme.inkMuted,
                           fontSize: AppFontSize.sm,
@@ -482,8 +546,9 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
 /// tinha forma de sair de `quote_requests`/`proposals` para `bookings`.
 class _ProposalRow extends ConsumerStatefulWidget {
   final ReceivedProposal proposal;
+  final String? eventName;
 
-  const _ProposalRow({required this.proposal});
+  const _ProposalRow({required this.proposal, this.eventName});
 
   @override
   ConsumerState<_ProposalRow> createState() => _ProposalRowState();
@@ -598,14 +663,18 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
             const FeeConfig())
         .effectivePct(proposal.price);
 
+    // No «Para fazer»: a linha amarela do aviso, sem fundo (§7).
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: whiteLineCard(),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: alertColor(AlertTone.pending), width: 1.5),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            proposal.partnerName,
+            widget.eventName == null ? 'Proposta de ${proposal.partnerName}' : 'Proposta de ${proposal.partnerName} · ${widget.eventName}',
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: AppFontSize.base,

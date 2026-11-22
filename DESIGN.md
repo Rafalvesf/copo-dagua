@@ -777,6 +777,48 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 - **Pagar:** só cartão, Apple Pay e Google Pay em toda a app — sem
   Multibanco nem MB WAY (pedido 2026-11-22).
 
+## 6.7 Páginas do evento (pedido do Rafael, 2026-11-22; mockups «Páginas do evento · com molduras» e «… quando estão vazias»)
+
+O mesmo desenho do painel novo (§6.5) em Orçamento, Convidados, Reservas,
+Mesas, Convidar, Para os convidados, Presentes, Definições do evento e
+«Pedidos para entrar»: voltar preto 44 (sem rodar), título 28 + subtítulo
+13, filtros em pílulas, o **resumo branco** do topo e **cada secção numa
+moldura** (`SectionFrame`). Peças partilhadas em
+`shared/widgets/section_frame.dart`: `FrameTaskRow` (aviso com a linha
+amarela/vermelha e o botão 36), `FrameNumbers` (números em caixas),
+`FrameEmpty` (mascote animada a dormir — ou a piscar o olho em «Está tudo
+tratado» —, título 16, frase 13 e a ação), `FrameNote`, `FrameButton36`,
+`FrameButton44`.
+
+- **Orçamento:** tocar no resumo muda o **teto** («Mudar o teto ›»; sem
+  teto, «Definir o teto»); números «Gasto» e «Por pagar»; pagamentos — os
+  das reservas em aviso com «Pagar», os que fazes por fora com «Marcar
+  pago» (contorno) ou «Pago»; categorias **aparecem sozinhas** (com gastos
+  ou teto) e, sem teto, «Pôr teto».
+- **Convidados:** o resumo mostra o **teto de convidados** do onboarding
+  («120 de 150 convidados», tocar muda; sem ele, «Definir o teto»);
+  «Pedidos para entrar» até 4 em aviso com «Ver» e, a mais, «+X pedidos»
+  com as fotos e «Ver»; a lista em molduras por resposta («Por responder»,
+  «Vão», «Não vão»), 5 de cada e **«Ver todos (N)»** (contorno 44).
+- **Pedidos para entrar** (`/guests/pedidos`): um pedido de cada vez —
+  foto 76, nome 20, @ e cidade, eventos, em comum e quem traz, as fotos em
+  comum, as respostas, «Quem é para vocês?», «Ver perfil», «Recusar» +
+  «Aceitar»; os outros por baixo com «Ver».
+- **Reservas:** cada parceiro diz **para que evento é**; pílulas por
+  evento quando há mais do que um; **«Para fazer»** com os pagamentos
+  («Pagar», abre os popups) e as **propostas recebidas** (linha amarela).
+- **Mesas:** **sem Mesa de Honra nem pista de dança**; mesas em caixas
+  brancas com os lugares à volta, «n/8» ao centro e o estado por baixo
+  («6 de 8», «Completa», «Bloqueada» — **sem cadeado**); a mesa escolhida
+  com quem lá está por baixo; «Por sentar» e «Para o local» (copiar a
+  lista) em molduras.
+- **Presentes:** «Já oferecidos» no resumo; «Receber» com o **Envelope —
+  em dinheiro ou por transferência** (IBAN, `events.gift_iban`), os
+  envelopes recebidos e a morada; a lista numa moldura.
+- **Vazio:** a mascote a dormir com o que vai aparecer e a ação; resumos a
+  0 com a barra vazia; nada de avisos para o que falta escrever (diz-se no
+  valor da linha, p. ex. «Por escrever»).
+
 ## 7. Alertas
 
 - **Nunca** fundo amarelo. Todos os alertas, avisos e etiquetas de estado
