@@ -9,6 +9,7 @@ import '../widgets/event_program_section.dart';
 import '../widgets/organizer_suggestions.dart';
 import '../../guest_home/widgets/guest_dashboard.dart' show DashSummary, DashNow, DashAllDone, DashTasksEmpty, DashPhotos, DashButton36, dashWhenAt;
 import '../../../shared/widgets/page_kit.dart' show KitCaps, KitGroup, KitRow, KitTag, KitTagKind;
+import '../../../core/events/event_pass.dart' show GuestSection, GuestSections, guestSectionsProvider;
 import '../../../shared/text_case.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/alert_outline.dart';
@@ -3494,9 +3495,9 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-          child: Text('Sugestões para ti', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          child: KitCaps('Parceiros em destaque'),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 4),
         SnapCarousel(
           height: PartnerSuggestionCard.height,
           itemCount: list.length,
@@ -3735,12 +3736,15 @@ class _OrgBody extends ConsumerWidget {
           _OrgManage(wedding: w),
         ]),
       ),
+      // Parceiros em destaque no fim (pedido do Rafael, 2026-11-22).
+      if (!isPast) _Suggestions(wedding: w),
     ]);
   }
 }
 
-/// Números (convidados, orçamento, parceiros, e o 4.º do tipo de evento),
-/// em linhas de dinheiro (DESIGN.md §6.3): nome + meta, valor à direita.
+/// Números em quadrados, como «A tua mesa» no convidado (pedido do Rafael,
+/// 2026-11-22): orçamento, convidados, parceiros e mesas — as mesas só num
+/// espaço com mesas separadas (os restaurantes juntam mesas para o grupo).
 class _OrgNumbers extends ConsumerWidget {
   final Wedding wedding;
   const _OrgNumbers({required this.wedding});
@@ -3751,45 +3755,90 @@ class _OrgNumbers extends ConsumerWidget {
     final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
     final guests = ref.watch(guestsControllerProvider).guests;
     final going = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
-    final notGoing = guests.where((g) => g.rsvpStatus == RsvpStatus.declined).length;
+    final pending = guests.where((g) => g.rsvpStatus == RsvpStatus.pending).length;
     final budget = ref.watch(budgetControllerProvider).budget;
     final bookings = [
       for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[])
         if (b.weddingId == w.id && b.status != BookingStatus.recusado) b,
     ];
     final reserved = bookings.where((b) => b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido).length;
-    final rows = <Widget>[];
-    void add(String title, String sub, String value, String route) {
+    final seating = ref.watch(seatingControllerProvider);
+    final tiles = <Widget>[];
+    void add(IconData icon, String label, String value, String sub, String route) {
       if (!_routeAllowed(route, perms)) return;
-      rows.add(KitRow(
-        title: title,
-        sub: sub,
-        trailing: Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        chevron: true,
-        onTap: () => context.push(route),
-      ));
+      tiles.add(_OrgTile(icon: icon, label: label, value: value, sub: sub, onTap: () => context.push(route)));
     }
 
-    if (guests.isNotEmpty) {
-      add('Convidados', ['$going ${going == 1 ? 'vai' : 'vão'}', '${guests.length - going - notGoing} por responder', if (notGoing > 0) '$notGoing não ${notGoing == 1 ? 'vai' : 'vão'}'].join(' · '),
-          '${guests.length}', '/guests');
-    }
     final spent = budget?.spent ?? 0;
     final total = budget?.total ?? 0;
     if (spent > 0) {
-      add('Orçamento', total > 0 ? 'Gastos de ${euros(total)}' : 'Gastos', euros(spent), '/budget');
+      add(Hi.banknotes, 'Orçamento', euros(spent), total > 0 ? 'de ${euros(total)}' : 'gastos', '/budget');
     } else if (total > 0) {
-      add('Orçamento', 'Por gastar', euros(total), '/budget');
+      add(Hi.banknotes, 'Orçamento', euros(total), 'por gastar', '/budget');
     } else if ((w.estimatedBudget ?? 0) > 0) {
-      add('Orçamento', 'Estimativa', euros(w.estimatedBudget!), '/budget');
+      add(Hi.banknotes, 'Orçamento', euros(w.estimatedBudget!), 'estimativa', '/budget');
+    }
+    if (guests.isNotEmpty) {
+      add(Hi.userGroup, 'Convidados', '$going / ${guests.length}', pending > 0 ? '${going == 1 ? 'vai' : 'vão'} · $pending por responder' : going == 1 ? 'vai' : 'vão', '/guests');
     }
     if (bookings.isNotEmpty) {
       final others = bookings.length - reserved;
-      add('Parceiros', ['$reserved ${reserved == 1 ? 'reservado' : 'reservados'}', if (others > 0) '$others por fechar'].join(' · '), '${bookings.length}', '/bookings');
+      add(Hi.briefcase, 'Parceiros', '$reserved', [reserved == 1 ? 'reservado' : 'reservados', if (others > 0) '$others por fechar'].join(' · '), '/bookings');
     }
-    if (rows.isEmpty) return const SizedBox.shrink();
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const KitCaps('Números'), KitGroup(rows)]);
+    // Mesas: só num espaço com mesas separadas, e já com mesas feitas.
+    if (seating.hasVenue && seating.venueTypes.isNotEmpty && seating.tables.isNotEmpty) {
+      final seated = seating.tables.fold<int>(0, (n, t) => n + t.guestIds.length);
+      add(Hi.tableCells, 'Mesas', '${seating.tables.length}', '$seated de ${going == 0 ? guests.length : going} sentados', '/seating');
+    }
+    if (tiles.isEmpty) return const SizedBox.shrink();
+    final rows = <Widget>[];
+    for (var i = 0; i < tiles.length; i += 2) {
+      if (i > 0) rows.add(const Divider(height: 9, thickness: 1, color: AppTheme.line));
+      rows.add(Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(child: tiles[i]),
+        const SizedBox(width: 12),
+        Expanded(child: i + 1 < tiles.length ? tiles[i + 1] : const SizedBox.shrink()),
+      ]));
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const KitCaps('Números'), ...rows]);
   }
+}
+
+/// Um quadrado dos números: ícone 24 num quadrado 48 #E6E6E6, rótulo 12 em
+/// maiúsculas, valor 22 e uma linha 13 — tudo ao centro.
+class _OrgTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String sub;
+  final VoidCallback onTap;
+  const _OrgTile({required this.icon, required this.label, required this.value, required this.sub, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: '$label: $value, $sub',
+        child: SnappyTap(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(color: const Color(0xFFE6E6E6), borderRadius: BorderRadius.circular(16)),
+                child: Icon(icon, size: 24, color: AppTheme.ink),
+              ),
+              const SizedBox(height: 8),
+              Text(label.toUpperCase(),
+                  style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              const SizedBox(height: 2),
+              Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+        ),
+      );
 }
 
 /// Reservas: uma linha por parceiro com o estado numa etiqueta.
@@ -3851,21 +3900,57 @@ class _OrgInvite extends StatelessWidget {
   }
 }
 
-/// Gerir: a entrada para as Definições do evento (organizadas por temas).
-class _OrgManage extends StatelessWidget {
+/// Gerir (pedido do Rafael, 2026-11-22): presentes e a página dos
+/// convidados; os convidados e as mesas estão nos quadrados. As Definições
+/// do evento ficam à parte, por baixo de uma linha grossa e com o botão
+/// redondo preto (§2), mais à vista.
+class _OrgManage extends ConsumerWidget {
   final Wedding wedding;
   const _OrgManage({required this.wedding});
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const KitCaps('Gerir'),
-        KitGroup([
-          KitRow(
-            title: 'Definições do evento',
-            sub: 'Detalhes, convidados, conteúdo e arquivo',
-            chevron: true,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(wedding: wedding))),
-          ),
-        ]),
-      ]);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final sections = ref.watch(guestSectionsProvider(wedding.id)).value ?? const GuestSections();
+    void settings() => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(wedding: wedding)));
+    final rows = [
+      if (sections.shows(GuestSection.presentes) && _routeAllowed('/gift-list', perms))
+        KitRow(title: 'Presentes', sub: 'Lista e envelope', chevron: true, onTap: () => context.push('/gift-list')),
+      if (_routeAllowed('/guest-page', perms))
+        KitRow(title: 'Página dos convidados', sub: 'O que os convidados veem', chevron: true, onTap: () => context.push('/guest-page')),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const KitCaps('Gerir'),
+      if (rows.isNotEmpty) ...[
+        KitGroup(rows),
+        const SizedBox(height: 12),
+        const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
+      ],
+      SnappyTap(
+        onTap: settings,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 72),
+          child: Row(children: [
+            const Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text('Definições do evento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                SizedBox(height: 2),
+                Text('Detalhes, convidados, conteúdo e arquivo', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ]),
+            ),
+            Semantics(
+              button: true,
+              label: 'Definições do evento',
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                child: const Icon(Hi.cog6Tooth, size: 20, color: Colors.white),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    ]);
+  }
 }
