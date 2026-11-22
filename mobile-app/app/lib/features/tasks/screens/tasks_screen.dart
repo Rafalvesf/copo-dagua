@@ -1,5 +1,6 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import '../../partners/widgets/partner_cards.dart' show PartnerCarousel;
 import '../../../shared/widgets/partner_suggestion_card.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
@@ -328,11 +329,11 @@ class _PartnerSuggestions extends ConsumerWidget {
           padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 2, AppTheme.screenMargin, 10),
           child: Text('Com base no que tens procurado.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         ),
-        // O mesmo cartão das sugestões do painel (2026-11-11).
-        SnapCarousel(
-          height: PartnerSuggestionCard.height,
-          itemCount: picks.length,
-          itemBuilder: (context, i) => PartnerSuggestionCard(pick: picks[i], onTap: () => _open(context, ref, picks[i])),
+        // O mesmo cartão da página Parceiros (`PartnerBigCard`, 2026-11-22).
+        PartnerCarousel(
+          partners: [for (final k in picks) ?ref.watch(partnerByIdProvider(k.partnerId)).value],
+          highlighted: {for (final k in picks) if (k.paid) k.partnerId},
+          onTap: (p) => _open(context, ref, picks.firstWhere((k) => k.partnerId == p.id)),
         ),
       ]),
     );
