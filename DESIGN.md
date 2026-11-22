@@ -133,8 +133,9 @@ ecrãs. O resto da app mantém a tabela acima.
     «N eventos na À Nossa!» · «Responde em ~1 h» · «Desloca-se até X km» /
     «Todo o país».
   - **Rodapé do evento:** organizador — «48 confirmados» (verde), «Ninguém
-    respondeu ainda» ou «Ainda sem convidados»; convidado — o próximo passo
-    («Diz se vais», «Escolhe o teu menu») ou «Está tudo tratado» (verde);
+    respondeu ainda» ou «Ainda sem convidados»; convidado — «Ainda não
+    respondeste», «Vais» (verde) ou «Está tudo tratado» (verde) — o que
+    falta fazer vai no sinal da foto (§7);
     Descobrir — quem vai («12 vão») ou «Sê o primeiro a ir!».
 - **Outros cartões** (perfil, resumos): brancos, cantos 22,
   interior 18, com a sombra suave do §5 e **sem linha à volta**. A **linha
@@ -617,6 +618,16 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 - **Brilho:** ao aparecer (entrar na aba), a linha brilha uns segundos e
   depois fica parada. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
   (1,4 s). Nunca a piscar sem parar.
+- **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
+  «Alertas nos cartões», B1; `AlertBadge`, `alert_outline.dart`): nunca uma
+  faixa por baixo do cartão. No **canto de baixo à direita da foto**, um
+  círculo 32 na cor do tom com «!» branco e aro branco 2, e o número de
+  coisas por fazer num contador branco 18 com aro preto 2 (como o das
+  mensagens por ler). Com tarefas amarelas e vermelhas ao mesmo tempo:
+  **um só sinal, na cor da mais urgente, com o total**. Brilha ao aparecer
+  como os outros alertas. Tocar abre o «Para fazer» (organizador: o painel
+  do evento; convidado: a página do evento). O rodapé do cartão não repete
+  o alerta.
 - Convite: uma linha fina (envelope num círculo verde claro, "CONVITE POR
   RESPONDER" 11, frase 15 negrito, data 13, e por baixo «Não vou» com contorno + «Vou» preto, 36), nunca um
   bloco verde cheio.

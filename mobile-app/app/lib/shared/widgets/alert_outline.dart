@@ -112,3 +112,124 @@ class AlertDot extends StatelessWidget {
         decoration: BoxDecoration(color: alertColor(tone), shape: BoxShape.circle),
       );
 }
+
+/// Sinal de alerta no canto de baixo à direita da foto de um cartão de
+/// evento (pedido do Rafael, 2026-11-22, mockup «Alertas nos cartões», B1;
+/// DESIGN.md §7): círculo 32 na cor do tom com «!» branco e aro branco 2,
+/// e o número de coisas por fazer num contador branco 18 com aro preto 2.
+/// Com tarefas de tons diferentes, é a cor da mais urgente com o total.
+/// Brilha como os outros alertas ao aparecer; parado com «reduzir
+/// movimento». Tocar abre o que há para fazer.
+class AlertBadge extends StatefulWidget {
+  final AlertTone tone;
+  final int count;
+  final VoidCallback? onTap;
+  final String? semanticLabel;
+  const AlertBadge({super.key, required this.tone, required this.count, this.onTap, this.semanticLabel});
+
+  @override
+  State<AlertBadge> createState() => _AlertBadgeState();
+}
+
+class _AlertBadgeState extends State<AlertBadge> with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+  int _left = 0;
+  bool _started = false;
+
+  ({int ms, int times}) get _spec => switch (widget.tone) {
+        AlertTone.urgent => (ms: 1400, times: 4),
+        AlertTone.invite => (ms: 2400, times: 3),
+        AlertTone.pending => (ms: 2000, times: 3),
+      };
+
+  @override
+  void initState() {
+    super.initState();
+    final spec = _spec;
+    _left = spec.times;
+    _c = AnimationController(vsync: this, duration: Duration(milliseconds: spec.ms))
+      ..addStatusListener((s) {
+        if (s == AnimationStatus.completed) {
+          _left--;
+          if (_left > 0 && mounted) _c.forward(from: 0);
+        }
+      });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (!reduce) _c.forward();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = alertColor(widget.tone);
+    final n = widget.count;
+    return Semantics(
+      button: widget.onTap != null,
+      label: widget.semanticLabel ?? '$n ${n == 1 ? 'coisa' : 'coisas'} por fazer',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Stack(clipBehavior: Clip.none, children: [
+            Positioned(
+              left: 0,
+              bottom: 0,
+              child: AnimatedBuilder(
+                animation: _c,
+                builder: (context, _) {
+                  final v = _c.isAnimating ? math.sin(math.pi * _c.value) : 0.0;
+                  return Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: v <= 0.01
+                          ? null
+                          : [BoxShadow(color: color.withValues(alpha: 0.25 + 0.35 * v), blurRadius: 4 + 12 * v, spreadRadius: 3 * v)],
+                    ),
+                    child: const Text('!', style: TextStyle(fontSize: 17, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
+                  );
+                },
+              ),
+            ),
+            if (n > 0)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 18),
+                  height: 18,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(color: const Color(0xFF171713), width: 2),
+                  ),
+                  child: Text('$n', style: const TextStyle(fontSize: 11, height: 1, fontWeight: FontWeight.w700, color: Color(0xFF171713))),
+                ),
+              ),
+          ]),
+        ),
+      ),
+    );
+  }
+}

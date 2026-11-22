@@ -9,7 +9,6 @@ import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/dense_card.dart';
 import '../../../shared/widgets/photo_card.dart';
 import '../../partners/widgets/partner_cards.dart' show InfoTag;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/tasks/task_models.dart' show taskPriorityWeight, taskPriorityFromDb;
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart';
 import '../../../shared/widgets/search_pill.dart';
@@ -674,31 +673,7 @@ final _guestStepsProvider = FutureProvider.autoDispose.family<_GuestSteps, Strin
   );
 });
 
-/// Alertas dos cartões já tocados: depois de selecionado, desaparece
-/// (pedido 2026-11-11). Fica guardado neste dispositivo.
-class _SeenAlerts extends Notifier<Set<String>> {
-  static const _key = 'eventos_alerts_seen';
 
-  @override
-  Set<String> build() {
-    SharedPreferences.getInstance().then((p) {
-      final saved = p.getStringList(_key);
-      if (saved != null && ref.mounted) state = {...state, ...saved};
-    }).catchError((_) {});
-    return const <String>{};
-  }
-
-  Future<void> add(String key) async {
-    state = {...state, key};
-    try {
-      final p = await SharedPreferences.getInstance();
-      final list = state.toList();
-      await p.setStringList(_key, list.length > 200 ? list.sublist(list.length - 200) : list);
-    } catch (_) {}
-  }
-}
-
-final _seenAlertsProvider = NotifierProvider<_SeenAlerts, Set<String>>(_SeenAlerts.new);
 
 /// Evento que organizo: abre o painel desse evento.
 class _MyEventCard extends ConsumerWidget {
@@ -719,10 +694,8 @@ class _MyEventCard extends ConsumerWidget {
     final summary = ref.watch(_orgSummaryProvider(wedding.id)).value ?? const _OrgSummary();
     // No evento aberto, o motor de tarefas é a fonte mais fresca.
     final engine = active ? ref.watch(taskEngineControllerProvider) : null;
-    final engineNext = engine?.systemActive.firstOrNull;
-    final next = engineNext != null ? (id: engineNext.id, title: engineNext.title) : summary.next;
-    final seen = ref.watch(_seenAlertsProvider);
-    final showAlert = next != null && !seen.contains('task:${next.id}');
+    // Quantas coisas por fazer: o sinal no canto da foto (DESIGN.md §7, B1).
+    final todo = engine != null ? engine.systemActive.length : (summary.total - summary.done).clamp(0, 999);
     // Cartão com foto (DESIGN.md §4, 2026-11-22): sem caixa nem sombra,
     // como os parceiros. Toque longo: arquivar ou apagar (185).
     return PhotoCard(
@@ -749,16 +722,14 @@ class _MyEventCard extends ConsumerWidget {
               ? const InfoTag('Ninguém respondeu ainda')
               : const InfoTag('Ainda sem convidados'),
       footerRight: _countdownBox(wedding.weddingDate),
-      below: showAlert
-          ? AlertStrip(
-              // Vermelho a 3 dias ou menos do evento (DESIGN.md).
+      // Alerta no canto de baixo à direita da foto (mockup «Alertas nos
+      // cartões», B1, 2026-11-22): vermelho a 3 dias ou menos do evento.
+      photoAction: todo > 0
+          ? AlertBadge(
               tone: toneForDue(wedding.weddingDate),
-              text: 'Para fazer: ${next!.title}',
-              cta: 'Fazer',
-              onTap: () {
-                ref.read(_seenAlertsProvider.notifier).add('task:${next!.id}');
-                _open(context, ref);
-              },
+              count: todo,
+              semanticLabel: '$todo ${todo == 1 ? 'coisa' : 'coisas'} para fazer',
+              onTap: () => _open(context, ref),
             )
           : null,
     );
@@ -780,16 +751,7 @@ class _InvitedEventCard extends ConsumerWidget {
     final stepsAsync = ref.watch(_guestStepsProvider(wedding.weddingId));
     final steps = stepsAsync.value?.steps ?? const <(String, String, bool)>[];
     final next = steps.where((s) => !s.$3).firstOrNull;
-    final seen = ref.watch(_seenAlertsProvider);
-    final alertKey = next == null ? null : 'guest:${wedding.weddingId}:${next.$1}';
-    final showAlert = alertKey != null && !seen.contains(alertKey);
-    final pending = next == null
-        ? null
-        : switch (next.$1) {
-            'rsvp' => 'Diz se vais',
-            'menu' => 'Escolhe o teu menu',
-            _ => 'Escolhe um presente',
-          };
+    final todo = steps.where((s) => !s.$3).length;
     return PhotoCard(
       onTap: () => context.go(open),
       photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
@@ -801,25 +763,22 @@ class _InvitedEventCard extends ConsumerWidget {
         wedding.eventType.label,
         [?place, if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!].join(' · '),
       ],
+      // O que falta está no sinal da foto; o rodapé não o repete.
       footerLeft: steps.isEmpty
           ? null
-          : pending != null
-              ? InfoTag(pending)
-              : const InfoTag('Está tudo tratado', green: true),
+          : next == null
+              ? const InfoTag('Está tudo tratado', green: true)
+              : next.$1 == 'rsvp'
+                  ? const InfoTag('Ainda não respondeste')
+                  : const InfoTag('Vais', green: true),
       footerRight: _countdownBox(wedding.weddingDate),
-      below: showAlert
-          ? AlertStrip(
+      // Alerta no canto da foto (B1, 2026-11-22).
+      photoAction: todo > 0
+          ? AlertBadge(
               tone: toneForDue(wedding.weddingDate),
-              text: pending!,
-              cta: switch (next!.$1) {
-                'rsvp' => 'Responder',
-                'menu' => 'Escolher',
-                _ => 'Ver',
-              },
-              onTap: () {
-                ref.read(_seenAlertsProvider.notifier).add(alertKey!);
-                context.go(open);
-              },
+              count: todo,
+              semanticLabel: '$todo ${todo == 1 ? 'passo' : 'passos'} por fazer',
+              onTap: () => context.go(open),
             )
           : null,
     );
