@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/auth/google_web_button.dart';
 import '../../../core/models/models.dart';
+import '../../../core/profile/username.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -36,6 +37,11 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _name = TextEditingController();
+  // O @ escolhido logo a seguir ao nome (pedido 2026-11-22).
+  final _username = TextEditingController();
+  String? _usernameError;
+  String? _usernameOk;
+  Timer? _usernameDebounce;
   final _email = TextEditingController();
   final _phone = TextEditingController();
   String? _phoneError;
@@ -73,6 +79,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void dispose() {
     _codeDebounce?.cancel();
+    _usernameDebounce?.cancel();
+    _username.dispose();
     _name.dispose();
     _email.dispose();
     _phone.dispose();
@@ -124,6 +132,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _nameError = _nameRegex.hasMatch(_name.text.trim())
           ? null
           : 'Introduz o teu nome completo';
+      // O @ (2026-11-22): obrigatório; o «ocupado» da verificação mantém-se.
+      final u = normalizeUsername(_username.text);
+      if (u.isEmpty) {
+        _usernameError = 'Escolhe o teu @';
+      } else if (usernameFormatError(u) != null) {
+        _usernameError = usernameFormatError(u);
+      } else if (_usernameError != null && !_usernameError!.startsWith('Esse @')) {
+        _usernameError = null;
+      }
       _emailError = _emailRegex.hasMatch(_email.text.trim())
           ? null
           : 'Introduz um email válido';
@@ -143,6 +160,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (widget.role == UserRole.guest) _weddingCodeError = null;
     });
     return _nameError == null &&
+        _usernameError == null &&
         _emailError == null &&
         _phoneError == null &&
         _passwordError == null &&
@@ -196,6 +214,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: _email.text.trim(),
             phone: _phone.text.trim(),
             password: _password.text,
+            username: _usernameOrNull,
           );
       return;
     }
@@ -206,6 +225,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             phone: _phone.text.trim(),
             password: _password.text,
             role: _signupRole,
+            username: _usernameOrNull,
           );
       return;
     }
@@ -218,6 +238,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           password: _password.text,
           role: _signupRole,
           weddingCode: _codeOrNull,
+          username: _usernameOrNull,
         );
   }
 
@@ -282,6 +303,43 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return true;
   }
 
+  /// Verifica o @ enquanto se escreve: formato logo, disponibilidade depois
+  /// de uma pausa (se a verificação falhar, não bloqueia).
+  void _onUsernameChanged(String v) {
+    _usernameDebounce?.cancel();
+    final u = normalizeUsername(v);
+    setState(() {
+      _usernameOk = null;
+      _usernameError = u.isEmpty ? null : usernameFormatError(u);
+    });
+    if (u.isEmpty || _usernameError != null) return;
+    _usernameDebounce = Timer(const Duration(milliseconds: 450), () async {
+      String? status;
+      try {
+        status = await usernameStatus(u);
+      } catch (_) {}
+      if (!mounted || normalizeUsername(_username.text) != u) return;
+      setState(() {
+        switch (status) {
+          case 'taken':
+            _usernameError = 'Esse @ já está ocupado.';
+          case 'reserved':
+            _usernameError = 'Esse @ não está disponível.';
+          case 'invalid':
+            _usernameError = usernameFormatError(u) ?? 'Esse @ não é válido.';
+          case 'ok':
+          case 'mine':
+            _usernameOk = '@$u está livre';
+        }
+      });
+    });
+  }
+
+  String? get _usernameOrNull {
+    final u = normalizeUsername(_username.text);
+    return u.isEmpty ? null : u;
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
@@ -308,6 +366,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ErrorBanner(message: auth.errorMessage!),
         ],
         AuthField(label: 'Nome', controller: _name, hint: 'Nome e apelido', errorText: _nameError, topGap: 20),
+        // O teu @ — escolhe-se logo a seguir ao nome (2026-11-22); muda-se
+        // depois em «Editar perfil».
+        AuthField(
+          label: 'Nome de utilizador',
+          controller: _username,
+          hint: '@ana.silva',
+          errorText: _usernameError,
+          onChanged: _onUsernameChanged,
+        ),
+        if (_usernameOk != null && _usernameError == null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(_usernameOk!,
+                style: const TextStyle(color: AppStatusColors.confirmed, fontSize: 12, fontWeight: FontWeight.w700)),
+          ),
         if (widget.role == UserRole.guest) ...[
           AuthField(
             label: 'Código de um evento (opcional)',

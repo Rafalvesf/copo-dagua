@@ -408,7 +408,10 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   todas (N)» mostra o resto.
 - **@ nos perfis:** o `@` aparece na meta do perfil de organizadores **e de
   parceiros** («@luzdeagosto · Fotografia · Porto»; edita-se em «Editar
-  perfil» → nome de utilizador).
+  perfil» → nome de utilizador). **No registo**, logo a seguir ao «Nome»,
+  vem «Nome de utilizador» (`@ana.silva`): obrigatório, verificado enquanto
+  se escreve («@ana.silva está livre» a verde ou «Esse @ já está ocupado»);
+  fica na conta e aplica-se assim que houver sessão (pedido 2026-11-22).
 - **Perfil do organizador · «Avaliações que deixou · N»** (2026-11-22): uma
   linha por parceiro que avaliou (logótipo 44, nome 16 com o visto, «★ 5 · categoria ·
   mês ano» 13, seta), que abre a página do parceiro; sem avaliações, não
