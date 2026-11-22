@@ -35,7 +35,7 @@ import '../partner_style.dart';
 import '../widgets/partner_cards.dart';
 import '../../payments/open_payment.dart' show openPaymentFlow;
 import '../widgets/reserve_flow.dart';
-import '../../../shared/widgets/dense_card.dart' show PriceBox, MiniStats;
+import '../../../shared/widgets/dense_card.dart' show PriceBox;
 import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/navigation_sheet.dart' show showNavigationSheet;
 import '../../../shared/widgets/venue_map.dart' show VenueMap;
@@ -56,7 +56,9 @@ import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 /// E onde ainda não pedi orçamento nem pacote. Em dúvida (erro), não oferece
 /// (conservador, para nunca sugerir um duplo pedido).
 /// Altura da foto do topo aberta (mockup «Perfil do parceiro»).
-const double _kHeroHeight = 300;
+// Foto do topo: 200 (pedido 2026-11-22; o logótipo e o nome passaram para
+// o cartão por baixo).
+const double _kHeroHeight = 200;
 
 final _partnerBookableEventsProvider =
     FutureProvider.autoDispose.family<List<Wedding>, String>((ref, partnerId) async {
@@ -1653,7 +1655,6 @@ class _PartnerHero extends StatelessWidget {
           final range = math.max(1.0, _kHeroHeight - minH);
           final h = math.max(minH, _kHeroHeight - y);
           double unit(double v) => v.clamp(0.0, 1.0).toDouble();
-          final big = unit(1 - y / 110);
           final mini = unit((y - range + 50) / 50);
           final radius = _bottomRadius * unit((y - range + 60) / 60);
           final collapsed = h <= minH + 0.5;
@@ -1692,54 +1693,6 @@ class _PartnerHero extends StatelessWidget {
                                   errorBuilder: (context, error, stackTrace) => Container(color: fallback),
                                 ),
                         ),
-                        // Véu escuro em baixo, para o nome a branco se ler.
-                        const Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          height: 160,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                                colors: [Color(0x8C171713), Color(0x00171713)],
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (big > 0)
-                          Positioned(
-                            left: AppTheme.screenMargin,
-                            right: AppTheme.screenMargin,
-                            bottom: 20,
-                            child: Opacity(
-                              opacity: big,
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                // Conquistas na foto, como nos cartões (pedido
-                                // 2026-11-22); sem nenhuma, «Em destaque».
-                                _HeroAchievements(partner),
-                                Row(children: [
-                                  // O logótipo do parceiro (antes só iniciais).
-                                  Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                    child: V2Avatar(partner.name, size: 56, imageUrl: partner.imageUrl),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Flexible(
-                                    child: Text(partner.name,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white, height: 1.1)),
-                                  ),
-                                  // Verificado e Premium ao lado do nome (DESIGN.md §6, 2026-11-22).
-                                  const SizedBox(width: 6),
-                                  _HeroBadges(partner),
-                                ]),
-                              ]),
-                            ),
-                          ),
                       ]),
                     ),
                   ),
@@ -1824,11 +1777,13 @@ class _PartnerHero extends StatelessWidget {
       );
 }
 
-/// Cartão de dados do parceiro por baixo da foto (o nome já está nela):
-/// categoria, nota e zona com a caixa de preço à direita; experiência e
-/// «Responde em ~1 h»; descrição com «Ler mais»; etiquetas; os três
-/// números em caixas com contorno; Seguir e Mensagem.
-class _PartnerHeadCard extends StatefulWidget {
+/// Cartão do parceiro por baixo da foto (pedido do Rafael, 2026-11-22: o
+/// design do mockup «Perfil do parceiro · conquistas»): as conquistas por
+/// cima (pílulas `#F2F2F2`), o logótipo 76 e os três números em colunas,
+/// o nome 20 com o visto e o preço à direita, categoria · zona 13,
+/// experiência e «Responde em ~1 h», descrição com «Ler mais», etiquetas e
+/// Seguir + Mensagem.
+class _PartnerHeadCard extends ConsumerStatefulWidget {
   final Partner partner;
   final Widget priceBox;
   final String? ratingText;
@@ -1850,81 +1805,88 @@ class _PartnerHeadCard extends StatefulWidget {
   });
 
   @override
-  State<_PartnerHeadCard> createState() => _PartnerHeadCardState();
+  ConsumerState<_PartnerHeadCard> createState() => _PartnerHeadCardState();
 }
 
-class _PartnerHeadCardState extends State<_PartnerHeadCard> {
+class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
   bool _more = false;
 
-  Widget _line(Widget icon, Widget text) => Row(children: [
-        SizedBox(width: 18, child: icon),
-        const SizedBox(width: 10),
-        Expanded(child: DefaultTextStyle.merge(style: const TextStyle(fontSize: 14, color: AppTheme.ink), child: text)),
+  Widget _stat((String, String) s) => Column(children: [
+        Text(s.$1, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(s.$2, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       ]);
 
   @override
   Widget build(BuildContext context) {
     final p = widget.partner;
     final travel = p.maxTravelDistanceKm;
-    final where = [
+    final meta = [
+      p.primaryCategoryLabel,
       if (p.location.isNotEmpty) p.location,
       if (travel != null && travel > 0) 'até $travel km',
     ].join(' · ');
     final bio = p.description.trim();
     final long = bio.length > 200;
+    final hasAchievements = ref.watch(partnerAchievementsProvider(p.id)).isNotEmpty;
+    final tags = [
+      for (final c in p.categoryLabels.skip(1)) InfoTag(c),
+      if (widget.figureText != null) InfoTag(widget.figureText!),
+    ];
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        if (hasAchievements) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: AchievementsCorner(partnerId: p.id, partnerName: capFirst(p.name), background: AppTheme.background),
+          ),
+          const SizedBox(height: 14),
+        ],
+        Row(children: [
+          V2Avatar(p.name, size: 76, imageUrl: p.imageUrl),
+          const SizedBox(width: 16),
+          for (final s in widget.stats.take(3)) Expanded(child: _stat(s)),
+        ]),
+        const SizedBox(height: 14),
+        Row(children: [
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              _line(Icon(iconForCategorySlug(p.primaryCategorySlug), size: 18, color: AppTheme.inkMuted),
-                  Text(p.primaryCategoryLabel)),
-              if (widget.ratingText != null) ...[
-                const SizedBox(height: 10),
-                _line(
-                  const Icon(Hi.star, size: 18, color: AppTheme.ink),
-                  Text.rich(TextSpan(children: [
-                    TextSpan(text: widget.ratingText, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    TextSpan(
-                      text: ' (${widget.reviewCount} ${widget.reviewCount == 1 ? 'avaliação' : 'avaliações'})',
-                      style: const TextStyle(color: AppTheme.inkMuted),
-                    ),
-                  ])),
-                ),
-              ],
-              if (where.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                _line(const Icon(Hi.mapPin, size: 18, color: AppTheme.inkMuted), Text(where)),
-              ],
+            child: Row(children: [
+              Flexible(
+                child: Text(capFirst(p.name),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
+              const SizedBox(width: 4),
+              VerifiedBadge(p),
             ]),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           widget.priceBox,
         ]),
+        if (meta.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(meta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+        ],
         if (p.yearsExperience != null || widget.responds != null) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(children: [
-            if (p.yearsExperience != null) ...[
-              const SizedBox(width: 18, child: Icon(Hi.clock, size: 18, color: AppTheme.inkMuted)),
-              const SizedBox(width: 10),
+            if (p.yearsExperience != null)
               Expanded(
                 child: Text('${p.yearsExperience} ${p.yearsExperience == 1 ? 'ano' : 'anos'} de experiência',
-                    style: const TextStyle(fontSize: 14, color: AppTheme.ink)),
-              ),
-            ] else
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              )
+            else
               const Spacer(),
             if (widget.responds != null) InfoTag(widget.responds!, green: true),
           ]),
         ],
         if (bio.isNotEmpty) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           Text(bio,
               maxLines: _more || !long ? null : 4,
               overflow: _more || !long ? null : TextOverflow.ellipsis,
               textAlign: TextAlign.justify,
-              style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink)),
           if (long && !_more)
             Align(
               alignment: Alignment.centerLeft,
@@ -1937,15 +1899,11 @@ class _PartnerHeadCardState extends State<_PartnerHeadCard> {
               ),
             ),
         ],
-        const SizedBox(height: 14),
-        Wrap(spacing: 6, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
-          FounderBadge(p.id, long: true),
-          for (final c in p.categoryLabels.skip(1)) InfoTag(c),
-          if (widget.figureText != null) InfoTag(widget.figureText!),
-        ]),
-        const SizedBox(height: 14),
-        MiniStats(widget.stats),
-        if (widget.buttons != null) ...[const SizedBox(height: 16), widget.buttons!],
+        if (tags.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(spacing: 6, runSpacing: 6, children: tags),
+        ],
+        if (widget.buttons != null) ...[const SizedBox(height: 14), widget.buttons!],
       ]),
     );
   }
@@ -2102,44 +2060,4 @@ class _BottomBar extends StatelessWidget {
           ),
         ]),
       );
-}
-
-
-
-/// Selos sobre a foto escura: num círculo branco para se verem.
-class _HeroBadges extends ConsumerWidget {
-  final Partner partner;
-  const _HeroBadges(this.partner);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pro = ref.watch(proPartnerIdsProvider).value?.contains(partner.id) ?? false;
-    if (!VerifiedBadge.isVerified(partner) && !pro) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.fromLTRB(2, 3, 4, 3),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
-      child: PartnerBadges(partner),
-    );
-  }
-}
-
-
-/// Conquistas por cima do nome, na foto do topo (Fundador, Modo Pro, Mais
-/// ativo — as mesmas do canto dos cartões, 2026-11-22). Sem conquistas,
-/// «Em destaque» se o parceiro estiver em destaque.
-class _HeroAchievements extends ConsumerWidget {
-  final Partner partner;
-  const _HeroAchievements(this.partner);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final has = ref.watch(partnerAchievementsProvider(partner.id)).isNotEmpty;
-    if (!has && !partner.featured) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: has
-          ? AchievementsCorner(partnerId: partner.id, partnerName: capFirst(partner.name))
-          : const InfoTag('Em destaque', green: true),
-    );
-  }
 }
