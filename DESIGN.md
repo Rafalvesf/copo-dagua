@@ -537,7 +537,10 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 - **Ordem:** resumo → PARA FAZER → SUGESTÕES → (no dia e depois) FOTOS →
   PROGRAMA → NÚMEROS → RESERVAS (estado em etiqueta; «Falta o sinal» ou, nos
   restaurantes, «Por pagar») → CONVITE (código, «Partilhar», «Ver como
-  convidado») → GERIR → **PARCEIROS EM DESTAQUE** (carrossel, no fim).
+  convidado») → GERIR → **PARCEIROS EM DESTAQUE** (carrossel, no fim, com o
+  mesmo cartão da página Parceiros — `PartnerBigCard` / `PartnerCarousel`,
+  pedido 2026-11-22: os parceiros em destaque usam sempre esse cartão, em
+  todo o lado).
   Depois do evento, o programa, os números, o convite e os parceiros em
   destaque saem.
 - **Números em quadrados** (pedido 2026-11-22, como «A tua mesa» no

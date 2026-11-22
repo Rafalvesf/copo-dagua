@@ -55,6 +55,7 @@ import '../../../core/events/tickets.dart' show ticketSummaryProvider;
 import '../../../core/partners/promotions.dart' show featuredForMeProvider, FeaturedPick, trackPromotionClick;
 import '../../../core/partners/partner_providers.dart' show partnerByIdProvider;
 import '../../partners/screens/partner_detail_screen.dart' show PartnerDetailScreen;
+import '../../partners/widgets/partner_cards.dart' show PartnerCarousel;
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
 
@@ -3489,7 +3490,11 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
         if (b.partnerId != null && b.status != BookingStatus.recusado) b.partnerId!,
     };
     final list = [for (final k in picks ?? const <FeaturedPick>[]) if (!booked.contains(k.partnerId)) k];
-    if (list.isEmpty) return const SizedBox.shrink();
+    // O mesmo cartão da página Parceiros (`PartnerBigCard`, pedido do
+    // Rafael, 2026-11-22): o mesmo elemento igual em todo o lado.
+    final partners = [for (final k in list) ?ref.watch(partnerByIdProvider(k.partnerId)).value];
+    if (partners.isEmpty) return const SizedBox.shrink();
+    final paid = {for (final k in list) if (k.paid) k.partnerId};
     return Padding(
       padding: const EdgeInsets.only(top: 18),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -3498,10 +3503,10 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
           child: KitCaps('Parceiros em destaque'),
         ),
         const SizedBox(height: 4),
-        SnapCarousel(
-          height: PartnerSuggestionCard.height,
-          itemCount: list.length,
-          itemBuilder: (context, i) => PartnerSuggestionCard(pick: list[i], onTap: () => _open(list[i])),
+        PartnerCarousel(
+          partners: partners,
+          highlighted: paid,
+          onTap: (p) => _open(list.firstWhere((k) => k.partnerId == p.id)),
         ),
       ]),
     );
