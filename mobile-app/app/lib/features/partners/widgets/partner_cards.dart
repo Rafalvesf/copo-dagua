@@ -196,7 +196,8 @@ class PartnerBigCard extends ConsumerWidget {
   const PartnerBigCard({super.key, required this.partner, required this.onTap, this.highlighted = false, this.width = carouselWidth, this.badges});
 
   static const double carouselWidth = 330;
-  static const double height = 322;
+  // + 18 da moldura (8 + 1 de cada lado, 2026-11-22).
+  static const double height = 340;
   static const double _photo = 150;
 
   /// Novo na app: entrou há menos de 30 dias.

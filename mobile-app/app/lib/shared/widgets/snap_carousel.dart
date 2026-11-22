@@ -12,7 +12,10 @@ class SnapCarousel extends StatefulWidget {
   /// está à vista (cartões de alturas diferentes, sem espaço vazio).
   final double? height;
   final IndexedWidgetBuilder itemBuilder;
-  const SnapCarousel({super.key, required this.itemCount, this.height, required this.itemBuilder});
+
+  /// Mostra a ponta do cartão seguinte (eventos, pedido 2026-11-22).
+  final bool peek;
+  const SnapCarousel({super.key, required this.itemCount, this.height, required this.itemBuilder, this.peek = false});
 
   @override
   State<SnapCarousel> createState() => _SnapCarouselState();
@@ -35,7 +38,7 @@ class _SnapCarouselState extends State<SnapCarousel> {
   PageController _controllerFor(double width) {
     // Página da largura do ecrã: os cartões do lado só aparecem ao deslizar
     // (2026-11-11: "não mostres os cartões da esquerda e da direita").
-    const fraction = 1.0;
+    final fraction = widget.peek && widget.itemCount > 1 ? 0.86 : 1.0;
     if (_controller == null || (fraction - _fraction).abs() > 0.001) {
       _controller?.dispose();
       _fraction = fraction;
@@ -61,11 +64,15 @@ class _SnapCarouselState extends State<SnapCarousel> {
                 : (_heights[page] ?? (_heights.isEmpty ? 300 + _shadowPad : _heights.values.first)),
             child: PageView.builder(
               controller: _controllerFor(c.maxWidth),
+              padEnds: !(widget.peek && widget.itemCount > 1),
               itemCount: widget.itemCount,
               onPageChanged: (i) => setState(() => _page = i),
               itemBuilder: (context, i) {
+                // Com a ponta do seguinte: margem só à esquerda (o espaço
+                // entre cartões é a margem do cartão seguinte).
+                final peeking = widget.peek && widget.itemCount > 1;
                 final card = Padding(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, _shadowPad),
+                  padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, peeking ? 0 : AppTheme.screenMargin, _shadowPad),
                   child: widget.itemBuilder(context, i),
                 );
                 if (widget.height != null) return card;
