@@ -73,15 +73,23 @@ class PhotoCard extends StatelessWidget {
     final info = Padding(
       padding: EdgeInsets.fromLTRB(4, avatar != null ? 28 : 12, 4, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        // O título e os selos ocupam o espaço que houver; a ação (coração,
+        // partilhar) fica sempre encostada à direita, seja o nome curto ou
+        // comprido (antes dividiam o espaço com um Spacer e o coração mudava
+        // de sítio de cartão para cartão).
         Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          Flexible(
-            child: Text(title,
-                maxLines: titleLines,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 19, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Expanded(
+            child: Row(children: [
+              Flexible(
+                child: Text(title,
+                    maxLines: titleLines,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 19, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
+              if (titleBadges != null) ...[const SizedBox(width: 4), titleBadges!],
+            ]),
           ),
-          if (titleBadges != null) ...[const SizedBox(width: 4), titleBadges!],
-          if (titleAction != null) ...[const Spacer(), titleAction!],
+          if (titleAction != null) ...[const SizedBox(width: 8), titleAction!],
         ]),
         for (final m in meta)
           if (m.isNotEmpty)
