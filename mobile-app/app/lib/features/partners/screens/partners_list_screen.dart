@@ -613,7 +613,6 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               child: PartnerBigCard(
                                 partner: partner,
                                 width: null,
-                                badges: PartnerBadges(partner, founder: true),
                                 onTap: () => _openDetails(context, partner),
                               ),
                             );

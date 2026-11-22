@@ -193,14 +193,26 @@ ecrãs. O resto da app mantém a tabela acima.
   "sem linha". Já não vão nos cartões de evento (§4, 2026-11-22).
 - **Selos do parceiro** (pedido do Rafael, 2026-11-22; `PartnerBadges`,
   `shared/widgets/partner_badges.dart`): ao lado do nome, em todo o lado
-  onde aparece um parceiro (cartões, linhas de lista, topo do perfil),
-  por esta ordem:
-  - **Verificado** — visto verde `#4F6B4A` 18 (`checkBadge`): todo o
-    parceiro aprovado pela equipa (perfil publicado).
-  - **Premium** — círculo preto 18 com a estrela branca 11: quem tem a
-    subscrição Premium. Nunca o visto verde para o Premium.
-  - **Fundador** — a etiqueta verde com a estrela, onde houver espaço.
-  Sobre a foto escura do topo do perfil, os selos vão numa pílula branca.
+  onde aparece um parceiro (cartões, linhas de lista, topo do perfil), **só
+  o visto verde de verificado** — `#4F6B4A` 18 (`checkBadge`): todo o
+  parceiro aprovado pela equipa (perfil publicado). Sobre a foto escura do
+  topo do perfil vai numa pílula branca.
+- **Conquistas do parceiro** (pedido do Rafael, 2026-11-22, mockup
+  «Conquistas dos parceiros», forma C; `AchievementsCorner`,
+  `shared/widgets/partner_achievements.dart`): no **canto superior
+  esquerdo da foto** do cartão de parceiro, por esta ordem:
+  - **Fundador** — coroa de louros verde `#4F6B4A` com a estrela: os
+    primeiros 100 parceiros.
+  - **Modo Pro** — estrela preta: subscrição Pro ativa.
+  - **Mais ativo** — chama amarela `#F2A01B`: os 10 % com mais reservas
+    confirmadas nos últimos 30 dias (migração 213).
+  A primeira vai numa **pílula branca 28 com o ícone 15 e o nome** (12
+  negrito); as outras só em ícone, em **discos brancos 28**. Sem
+  conquistas, o canto mostra «Novo» (se entrou há menos de 30 dias) ou
+  nada. Tocar abre o popup **«Conquistas»** (molde do §6.3: título 22, nome
+  do parceiro 13, «×»; uma linha por conquista com o ícone branco num
+  círculo 44 da sua cor, nome 16 e o que quer dizer 13, e a linha
+  «Verificado»; «OK» preto 52).
 - **Preço:** caixa com contorno e **duas linhas** — rótulo 9 em cima + valor 16
   por baixo: `DESDE` + `€X`, ou, para quem trabalha por orçamento, `POR` +
   `Orçamento`. A mesma caixa no topo do parceiro e nos cartões de evento e de

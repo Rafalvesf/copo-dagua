@@ -466,6 +466,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Cada evento passa a ter logo o seu grupo com toda a gente, com a foto, o nome e a descrição do evento (acompanha quando o evento muda); os anfitriões aparecem em primeiro. Cria o grupo para os eventos que já existem. É para lá que vai o «Agradecer aos convidados» do painel do organizador.",
     check: { kind: "marker", id: "212" },
   },
+  {
+    file: "213_active_partners.sql",
+    date: "2026-11-22",
+    title: "Conquista «Mais ativo» dos parceiros",
+    what: "Os cartões de parceiro mostram as conquistas no canto da foto. Esta migração calcula «Mais ativo»: os 10 % de parceiros com mais reservas confirmadas nos últimos 30 dias. Sem ela, a app mostra só Fundador e Modo Pro.",
+    check: { kind: "marker", id: "213" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
