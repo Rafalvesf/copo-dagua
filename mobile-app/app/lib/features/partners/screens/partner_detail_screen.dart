@@ -876,11 +876,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                   _ReferenceCard(price: reference, note: partner.referenceNote),
                 ],
                 if (portfolioPhotos.isNotEmpty) ...[
-                  sectionTitle(
+                  KeyedSubtree(key: _portfolioKey, child: sectionTitle(
                     'Portfólio',
                     action: 'Ver todos (${portfolioPhotos.length})',
                     onAction: () => _openPhotos(portfolioPhotos, 0),
-                  ),
+                  )),
                   SizedBox(
                     height: 128,
                     child: ListView.separated(
@@ -907,7 +907,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                   ),
                 ],
                 if (partner.location.isNotEmpty) ...[
-                  sectionTitle('Onde fica'),
+                  KeyedSubtree(key: _mapKey, child: sectionTitle('Onde fica')),
                   // Sem caixa branca (B, 2026-11-22); o mapa é o do Google.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
@@ -925,6 +925,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     ]),
                   ),
                 ],
+                KeyedSubtree(key: _reviewsKey, child: const SizedBox.shrink()),
                 _ReviewsSection(
                   partnerId: partner.id,
                   partnerName: partner.name,
@@ -954,7 +955,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               photo: photos.isEmpty ? null : photos.first,
               topPad: topPad,
               metaLine: [
-                if (summary.count > 0) '★ $avgText',
                 partner.primaryCategoryLabel,
                 if (partner.location.isNotEmpty) partner.location.split(', ').first,
               ].join(' · '),
@@ -972,6 +972,22 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               },
             ),
           ),
+          // Atalhos para as secções, por baixo do topo reduzido (D).
+          Positioned(
+            left: 0,
+            right: 0,
+            top: topPad + 68,
+            child: _SectionTabs(
+              scroll: _scroll,
+              topPad: topPad,
+              sections: [
+                if (packages.isNotEmpty) (menusOnly ? 'Menus' : 'Pacotes', _packagesKey),
+                if (portfolioPhotos.isNotEmpty) ('Portfólio', _portfolioKey),
+                if (partner.location.isNotEmpty) ('Onde fica', _mapKey),
+                ('Avaliações', _reviewsKey),
+              ],
+            ),
+          ),
           // Barra fixa: a largura das caixas de conteúdo e os cantos da navbar.
           Positioned(
             left: AppTheme.screenMargin,
@@ -985,6 +1001,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   }
 
   final _packagesKey = GlobalKey();
+  final _portfolioKey = GlobalKey();
+  final _mapKey = GlobalKey();
+  final _reviewsKey = GlobalKey();
 
   void _scrollToPackages() {
     final ctx = _packagesKey.currentContext;
@@ -1657,6 +1676,9 @@ class _PartnerHero extends StatelessWidget {
           final mini = unit((y - range + 50) / 50);
           final radius = _bottomRadius * unit((y - range + 60) / 60);
           final collapsed = h <= minH + 0.5;
+          // Reduzida (mockup «Topo reduzido», D, 2026-11-22): a foto dá lugar
+          // a uma barra branca com o logótipo, o nome e o visto.
+          final white = mini;
           final corners = BorderRadius.vertical(bottom: Radius.circular(radius));
           final fallback = colorForCategorySlug(partner.primaryCategorySlug);
 
@@ -1669,7 +1691,7 @@ class _PartnerHero extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: corners,
-                      boxShadow: collapsed ? const [BoxShadow(color: Color(0x0F171713), blurRadius: 14, offset: Offset(0, 4))] : null,
+                      boxShadow: collapsed ? const [BoxShadow(color: Color(0x1F171713), blurRadius: 24, offset: Offset(0, 8))] : null,
                     ),
                     child: ClipRRect(
                       borderRadius: corners,
@@ -1692,6 +1714,7 @@ class _PartnerHero extends StatelessWidget {
                                   errorBuilder: (context, error, stackTrace) => Container(color: fallback),
                                 ),
                         ),
+                        if (white > 0) Positioned.fill(child: ColoredBox(color: Colors.white.withValues(alpha: white))),
                       ]),
                     ),
                   ),
@@ -1724,15 +1747,27 @@ class _PartnerHero extends StatelessWidget {
                         opacity: mini,
                         child: Transform.translate(
                           offset: Offset(0, (1 - mini) * 6),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                            Text(partner.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
-                            Text(metaLine,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.88))),
+                          child: Row(children: [
+                            V2Avatar(partner.name, size: 32, imageUrl: partner.imageUrl),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                                Row(children: [
+                                  Flexible(
+                                    child: Text(capFirst(partner.name),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  VerifiedBadge(partner),
+                                ]),
+                                Text(metaLine,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                              ]),
+                            ),
                           ]),
                         ),
                       ),
@@ -1755,12 +1790,18 @@ class _PartnerHero extends StatelessWidget {
                         ),
                       ),
                   ] else ...[
-                    const SizedBox(width: 10),
-                    _GlassButton(
-                      icon: const Icon(Hi.arrowUpOnSquare, size: 20, color: Colors.white),
-                      label: 'Partilhar',
-                      onTap: onShare,
-                    ),
+                    // Reduzida, fica só o favorito (D).
+                    if (mini < 0.5) ...[
+                      const SizedBox(width: 10),
+                      Opacity(
+                        opacity: 1 - mini * 2,
+                        child: _GlassButton(
+                          icon: const Icon(Hi.arrowUpOnSquare, size: 20, color: Colors.white),
+                          label: 'Partilhar',
+                          onTap: onShare,
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 10),
                     _GlassButton(
                       icon: Icon(favorited ? Hi.heart : Hi.heartOutline, size: 20, color: Colors.white),
@@ -2054,5 +2095,79 @@ class _BottomBar extends StatelessWidget {
             ),
           ),
         ]),
+      );
+}
+
+
+/// Atalhos para as secções da página do parceiro (mockup «Topo reduzido», D,
+/// 2026-11-22): aparecem com o topo reduzido; pílulas 32 brancas, a da
+/// secção onde estás a preto. Tocar leva à secção.
+class _SectionTabs extends StatelessWidget {
+  final ScrollController scroll;
+  final double topPad;
+  final List<(String, GlobalKey)> sections;
+  const _SectionTabs({required this.scroll, required this.topPad, required this.sections});
+
+  double? _top(GlobalKey k) {
+    final box = k.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || !box.attached) return null;
+    return box.localToGlobal(Offset.zero).dy;
+  }
+
+  void _go(GlobalKey k) {
+    final top = _top(k);
+    if (top == null || !scroll.hasClients) return;
+    final line = topPad + 68 + 10 + 32 + 8;
+    final target = (scroll.offset + top - line).clamp(0.0, scroll.position.maxScrollExtent);
+    scroll.animateTo(target, duration: const Duration(milliseconds: 450), curve: Curves.easeOutCubic);
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: scroll,
+        builder: (context, _) {
+          final y = scroll.hasClients ? math.max(0.0, scroll.offset) : 0.0;
+          final range = math.max(1.0, _kHeroHeight - (topPad + 68));
+          final show = ((y - range + 50) / 50).clamp(0.0, 1.0).toDouble();
+          if (show <= 0 || sections.isEmpty) return const SizedBox.shrink();
+          // A secção ativa: a última cujo título já passou a linha dos atalhos.
+          final line = topPad + 68 + 10 + 32 + 24;
+          var active = 0;
+          for (var i = 0; i < sections.length; i++) {
+            final t = _top(sections[i].$2);
+            if (t != null && t <= line) active = i;
+          }
+          // Fundo da página por trás dos atalhos, para o conteúdo não se ver
+          // a passar entre as pílulas.
+          return Opacity(
+            opacity: show,
+            child: Container(
+              color: AppTheme.background,
+              padding: const EdgeInsets.only(top: 10, bottom: 8),
+              height: 50,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                itemCount: sections.length,
+                separatorBuilder: (context, i) => const SizedBox(width: 6),
+                itemBuilder: (context, i) {
+                  final on = i == active;
+                  return SnappyTap(
+                    onTap: () => _go(sections[i].$2),
+                    semanticLabel: sections[i].$1,
+                    child: Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(color: on ? AppTheme.ink : Colors.white, borderRadius: BorderRadius.circular(16)),
+                      child: Text(sections[i].$1,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
       );
 }
