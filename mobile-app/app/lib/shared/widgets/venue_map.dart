@@ -1,15 +1,18 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
 import '../../core/partner_profile/partner_location.dart' show searchAddress;
+import '../../core/supabase/supabase_config.dart';
 import '../../core/theme/app_theme.dart';
 import 'navigation_sheet.dart';
 
 /// Mapa embutido do local (pedido 2026-11-08: "o local não tem o mapa
-/// embutido"). Mosaicos do OpenStreetMap, sem chave nem SDK; o pino fica
-/// ao centro. Sem coordenadas, procura a morada (Nominatim) uma vez.
+/// embutido"). A imagem do Google Maps (2026-11-22, pela função `places`);
+/// sem ela, mosaicos do OpenStreetMap com o pino ao centro. Sem coordenadas, procura a morada (Nominatim) uma vez.
 /// Tocar abre "Como chegar".
 class VenueMap extends StatefulWidget {
   final String label;
@@ -101,7 +104,9 @@ class _VenueMapState extends State<VenueMap> {
           child: Container(
             height: widget.height,
             color: const Color(0xFFEDEBE5),
-            child: c == null ? const SizedBox.expand() : _Tiles(lat: c.$1, lng: c.$2),
+            // Imagem do Google Maps (pedido 2026-11-22); sem ela (chave por
+            // configurar ou erro), os mosaicos do OpenStreetMap.
+            child: c == null ? const SizedBox.expand() : _GoogleMap(lat: c.$1, lng: c.$2),
           ),
         ),
       ),
@@ -170,4 +175,72 @@ class _Tiles extends StatelessWidget {
       );
     });
   }
+}
+
+
+/// Mapa estático do Google (função `places`, ação `staticmap`), com o pino.
+/// Fica em memória por sítio e tamanho; se falhar, mostra os mosaicos.
+class _GoogleMap extends StatefulWidget {
+  final double lat;
+  final double lng;
+  const _GoogleMap({required this.lat, required this.lng});
+
+  @override
+  State<_GoogleMap> createState() => _GoogleMapState();
+}
+
+class _GoogleMapState extends State<_GoogleMap> {
+  static final Map<String, Uint8List?> _cache = {};
+  Uint8List? _bytes;
+  bool _failed = false;
+  String? _key;
+
+  Future<void> _load(int w, int h) async {
+    final key = '${widget.lat.toStringAsFixed(5)},${widget.lng.toStringAsFixed(5)},$w,$h';
+    if (key == _key) return;
+    _key = key;
+    if (_cache.containsKey(key)) {
+      final b = _cache[key];
+      setState(() {
+        _bytes = b;
+        _failed = b == null;
+      });
+      return;
+    }
+    Uint8List? bytes;
+    try {
+      final res = await supabase.functions.invoke('places', body: {
+        'action': 'staticmap',
+        'lat': widget.lat,
+        'lng': widget.lng,
+        'width': w,
+        'height': h,
+      });
+      final data = res.data;
+      if (data is Map && data['image'] is String) bytes = base64Decode(data['image'] as String);
+    } catch (_) {}
+    _cache[key] = bytes;
+    if (!mounted || _key != key) return;
+    setState(() {
+      _bytes = bytes;
+      _failed = bytes == null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
+        // O Google aceita até 640 de cada lado (com escala 2 fica nítido).
+        final w = box.maxWidth.isFinite ? box.maxWidth : 600.0;
+        final h = box.maxHeight.isFinite ? box.maxHeight : 200.0;
+        final f = w > 640 ? 640 / w : 1.0;
+        final rw = (w * f).round(), rh = (h * f).round();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _load(rw, rh);
+        });
+        if (_bytes != null) {
+          return Image.memory(_bytes!, fit: BoxFit.cover, width: w, height: h, gaplessPlayback: true, excludeFromSemantics: true);
+        }
+        if (_failed) return _Tiles(lat: widget.lat, lng: widget.lng);
+        return const SizedBox.expand();
+      });
 }

@@ -129,10 +129,10 @@ class ProfileCard_Users extends StatelessWidget {
       ]);
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(18),
-        // Sem sombra (mockup).
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+  // Sem fundo branco (pedido 2026-11-22, mockup «Perfil do parceiro · a
+  // página toda», B): o perfil fica direto no fundo `#F2F2F2`.
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 4),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (top != null) top!,
           Row(children: [

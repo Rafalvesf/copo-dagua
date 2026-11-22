@@ -134,10 +134,12 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                           ],
                         ]),
                       ),
+                      // O perfil já não tem caixa branca (2026-11-22): fica
+                      // por baixo da faixa, sem a sobrepor.
                       Transform.translate(
-                        offset: const Offset(0, -56),
+                        offset: Offset.zero,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
                           child: ProfileCard_Users(
                             avatar: V2Avatar(p.name, size: 76, imageUrl: p.avatarUrl, flat: true),
                             name: p.name,

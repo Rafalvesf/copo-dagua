@@ -180,7 +180,7 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
               padding: const EdgeInsets.only(bottom: 14),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: AchievementsCorner(partnerId: p.id, partnerName: name, background: AppTheme.background),
+                child: AchievementsCorner(partnerId: p.id, partnerName: name, background: Colors.white),
               ),
             ),
       // Visto verde de verificado: perfil aprovado (publicado).

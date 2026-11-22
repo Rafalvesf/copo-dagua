@@ -353,15 +353,23 @@ class PartnerListRow extends StatelessWidget {
 /// Grupo de linhas: cartão branco, cantos 22, interior 4×16.
 class RowGroup extends StatelessWidget {
   final List<Widget> children;
-  const RowGroup({super.key, required this.children});
+
+  /// Sem caixa: as linhas direto no fundo (perfil do parceiro, 2026-11-22).
+  final bool flat;
+  const RowGroup({super.key, required this.children, this.flat = false});
 
   @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-        child: Column(mainAxisSize: MainAxisSize.min, children: children),
-      );
+  Widget build(BuildContext context) => flat
+      ? Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+          child: Column(mainAxisSize: MainAxisSize.min, children: children),
+        )
+      : Container(
+          margin: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+          child: Column(mainAxisSize: MainAxisSize.min, children: children),
+        );
 }
 
 /// Uma linha de um grupo de linhas, para listas compridas: o mesmo
