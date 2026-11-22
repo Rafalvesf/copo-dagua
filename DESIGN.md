@@ -391,8 +391,10 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   justificado). «Ver todas (N)» mostra o resto no mesmo cartão.
 - **Topo do perfil do parceiro** (pedido do Rafael): a foto tem 300 e
   **encolhe com o scroll** até à faixa dos botões, que fica **sempre
-  visível**. Aberta: «Em destaque», logótipo 56 e nome 28 a branco sobre um
-  véu escuro. Reduzida: ao lado da seta fica o nome 16 e a meta 13 a branco,
+  visível**. Aberta: as **conquistas** (as mesmas do canto dos cartões, §6;
+  sem nenhuma, «Em destaque»), o **logótipo 56 com aro branco 3** (a foto do
+  parceiro, nunca só iniciais quando há foto) e o nome 28 a branco com o
+  visto de verificado, sobre um véu escuro (2026-11-22). Reduzida: ao lado da seta fica o nome 16 e a meta 13 a branco,
   e os cantos de baixo ficam iguais aos de cima (40). Voltar, partilhar e
   favorito ficam sempre no mesmo sítio e são os pretos 44 do §2. **Exceção ao «voltar ao topo» do §6:** aqui a seta é
   sempre «voltar» (não roda para ↑).

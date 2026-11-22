@@ -45,6 +45,9 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import '../../../shared/widgets/partner_badges.dart';
+import '../../../shared/widgets/partner_achievements.dart';
+import '../../../shared/text_case.dart';
+import '../../../core/partners/partner_achievements.dart' show partnerAchievementsProvider;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 
 
@@ -1713,12 +1716,16 @@ class _PartnerHero extends StatelessWidget {
                             child: Opacity(
                               opacity: big,
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                                if (partner.featured) ...[
-                                  const InfoTag('Em destaque', green: true),
-                                  const SizedBox(height: 12),
-                                ],
+                                // Conquistas na foto, como nos cartões (pedido
+                                // 2026-11-22); sem nenhuma, «Em destaque».
+                                _HeroAchievements(partner),
                                 Row(children: [
-                                  V2Avatar(partner.name, size: 56),
+                                  // O logótipo do parceiro (antes só iniciais).
+                                  Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                    child: V2Avatar(partner.name, size: 56, imageUrl: partner.imageUrl),
+                                  ),
                                   const SizedBox(width: 12),
                                   Flexible(
                                     child: Text(partner.name,
@@ -2112,6 +2119,27 @@ class _HeroBadges extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(2, 3, 4, 3),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
       child: PartnerBadges(partner),
+    );
+  }
+}
+
+
+/// Conquistas por cima do nome, na foto do topo (Fundador, Modo Pro, Mais
+/// ativo — as mesmas do canto dos cartões, 2026-11-22). Sem conquistas,
+/// «Em destaque» se o parceiro estiver em destaque.
+class _HeroAchievements extends ConsumerWidget {
+  final Partner partner;
+  const _HeroAchievements(this.partner);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final has = ref.watch(partnerAchievementsProvider(partner.id)).isNotEmpty;
+    if (!has && !partner.featured) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: has
+          ? AchievementsCorner(partnerId: partner.id, partnerName: capFirst(partner.name))
+          : const InfoTag('Em destaque', green: true),
     );
   }
 }
