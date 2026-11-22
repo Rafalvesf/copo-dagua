@@ -518,6 +518,13 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "218_paid_for_after_booking.sql",
     check: { kind: "marker", id: "219" },
   },
+  {
+    file: "220_event_going_counts.sql",
+    date: "2026-11-22",
+    title: "Quantos vão, nos cartões de convidado",
+    what: "Os cartões de «Os meus eventos» onde és convidado passam a mostrar quantos confirmaram («Ana + 30 confirmados»). Só a contagem, nos eventos que podes ver.",
+    check: { kind: "marker", id: "220" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

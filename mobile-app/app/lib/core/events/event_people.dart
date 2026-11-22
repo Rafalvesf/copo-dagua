@@ -35,6 +35,19 @@ final eventAttendeesProvider = FutureProvider.autoDispose.family<List<EventPerso
   }
 });
 
+/// Quantos confirmaram num evento (migração 220); `null` antes dela.
+final eventGoingCountProvider = FutureProvider.autoDispose.family<int?, String>((ref, eventId) async {
+  try {
+    final rows = await supabase.rpc('event_going_counts', params: {
+      'p_event_ids': [eventId],
+    });
+    if (rows is! List || rows.isEmpty) return null;
+    return ((rows.first as Map<String, dynamic>)['total'] as num?)?.toInt();
+  } catch (_) {
+    return null;
+  }
+});
+
 /// Quem criou o evento (a foto do círculo do cartão). `null` antes da 214.
 final eventHostProvider = FutureProvider.autoDispose.family<EventPerson?, String>((ref, eventId) async {
   try {

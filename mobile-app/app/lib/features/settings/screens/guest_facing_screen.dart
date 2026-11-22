@@ -1269,8 +1269,8 @@ class _SaveBar extends StatelessWidget {
 
 
 /// "Acompanhantes" — quantas pessoas cada convidado pode trazer
-/// (091). O valor por omissão vale para quem entra pelo código; o botão
-/// aplica-o a todos os convidados que já existem. Cada convidado também
+/// (091). O teto do evento vale para quem entra pelo link e para os já
+/// convidados (mudar aplica-o logo). Cada convidado também
 /// pode ter o seu limite na ficha dele (Convidados). Guarda logo.
 class _CompanionsSection extends ConsumerStatefulWidget {
   final String weddingId;
@@ -1283,7 +1283,6 @@ class _CompanionsSection extends ConsumerStatefulWidget {
 class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
   int? _value;
   bool _available = true;
-  bool _applying = false;
 
   @override
   void initState() {
@@ -1300,44 +1299,24 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
     }
   }
 
+  /// Muda o teto do evento e aplica-o logo a quem já está convidado
+  /// (pedido do Rafael, 2026-11-22): os convidados que tinham o teto
+  /// antigo passam para o novo; quem tem um teto próprio na ficha fica com
+  /// o seu. Quem entra pelo link ou pelos pedidos já usa o do evento.
   Future<void> _set(int v) async {
+    final old = _value ?? 1;
     setState(() => _value = v);
     try {
       await supabase.from('events').update({'default_max_companions': v}).eq('id', widget.weddingId);
+      if (old != v) {
+        await supabase.from('guests').update({'max_companions': v}).eq('wedding_id', widget.weddingId).eq('max_companions', old);
+        await ref.read(guestsControllerProvider.notifier).load(widget.weddingId);
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar.')));
       }
     }
-  }
-
-  Future<void> _applyAll() async {
-    final v = _value ?? 1;
-    final ok = await showIslandDialog<bool>(
-      context: context,
-      builder: (d) => IslandAlert(
-        title: const Text('Aplicar a todos?'),
-        content: Text(v == 0
-            ? 'Todos os convidados passam a poder vir só eles.'
-            : 'Todos os convidados passam a poder trazer até $v ${v == 1 ? 'pessoa' : 'pessoas'}. Podes depois mudar um a um.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(d).pop(false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.of(d).pop(true), child: const Text('Aplicar')),
-        ],
-      ),
-    );
-    if (ok != true) return;
-    setState(() => _applying = true);
-    var msg = 'Aplicado a todos os convidados.';
-    try {
-      await supabase.from('guests').update({'max_companions': v}).eq('wedding_id', widget.weddingId);
-      await ref.read(guestsControllerProvider.notifier).load(widget.weddingId);
-    } catch (_) {
-      msg = 'Não foi possível aplicar. Tenta outra vez.';
-    }
-    if (!mounted) return;
-    setState(() => _applying = false);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   // Conteúdo da folha "Acompanhantes" (mockup: linha compacta que abre
@@ -1381,15 +1360,8 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
       ),
       const SizedBox(height: 6),
       const Text(
-        'Vale para quem entra com o código. Na ficha de cada convidado podes dar mais ou menos lugares.',
+        'Vale para todos: os já convidados e quem entra pelo link ou pelos pedidos. Na ficha de cada convidado podes dar mais ou menos lugares.',
         style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
-      ),
-      Align(
-        alignment: Alignment.centerLeft,
-        child: TextButton(
-          onPressed: _applying ? null : _applyAll,
-          child: Text(_applying ? 'A aplicar…' : 'Aplicar a todos os convidados'),
-        ),
       ),
     ];
   }
