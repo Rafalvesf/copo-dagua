@@ -8,6 +8,7 @@ import '../../core/supabase/supabase_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/profile/profile_widgets.dart' show ProfileSectionTitle;
 import '../hero_icons.dart';
+import 'partner_badges.dart' show VerifiedBadge;
 import 'snappy_tap.dart';
 import 'v2_kit.dart';
 
@@ -79,8 +80,13 @@ class _Row extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Row(children: [
+                Flexible(
+                  child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ),
+                if (p != null) ...[const SizedBox(width: 4), VerifiedBadge(p)],
+              ]),
               Text(
                 [
                   '★ ${item.rating}',
