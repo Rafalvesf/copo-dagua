@@ -746,6 +746,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     Widget statusNote() {
       final booked = relationshipStatus == PartnerRelationshipStatus.booked;
       final tone = booked ? AlertTone.invite : AlertTone.pending;
+      // Diz qual é o evento (pedido 2026-11-22): o estado é do evento ativo.
+      final ev = ref.watch(weddingControllerProvider.select((s) => s.wedding));
+      final evName = ev == null ? 'este evento' : capFirst(ev.displayNames);
       return AlertOutline(
         tone: tone,
         radius: 22,
@@ -760,8 +763,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               const SizedBox(height: 2),
               Text(
                 booked
-                    ? 'Já reservaste ${partner.name} para este evento.'
-                    : 'Já pediste orçamento a ${partner.name} para este evento.',
+                    ? 'Já reservaste ${partner.name} para $evName.'
+                    : 'Já pediste orçamento a ${partner.name} para $evName.',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
               ),
             ]),
