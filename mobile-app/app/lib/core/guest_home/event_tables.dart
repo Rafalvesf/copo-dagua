@@ -45,6 +45,11 @@ class EventTable {
   final int? menuPeople;
   final int? menuChosen;
 
+  /// As minhas pessoas (eu e quem vem comigo) e quantas já disseram as
+  /// alergias (217).
+  final int? allergyPeople;
+  final int? allergyDone;
+
   const EventTable({
     required this.bookingId,
     required this.partnerId,
@@ -62,12 +67,19 @@ class EventTable {
     this.myPayment,
     this.menuPeople,
     this.menuChosen,
+    this.allergyPeople,
+    this.allergyDone,
   });
 
   bool get eachChooses => choiceMode == 'each';
   bool get eachPays => payerMode == 'each';
   bool get paid => myPayment?['status'] == 'paid';
-  bool get chose => (menuPeople != null && menuChosen != null) ? menuChosen! >= menuPeople! : myChoice != null;
+  bool get chose => (menuPeople != null && menuChosen != null)
+      ? menuChosen! >= menuPeople! && (allergyDone ?? 0) >= (allergyPeople ?? 0)
+      : myChoice != null;
+
+  /// Só digo alergias (e posso juntar extras): a comida paga-a outro.
+  bool get onlyAllergies => menuPeople == 0;
 
   /// A escolha ainda está aberta (fecha 3 dias antes do evento).
   bool get open {
@@ -102,6 +114,8 @@ class EventTable {
         myPayment: j['my_payment'] is Map ? Map<String, dynamic>.from(j['my_payment'] as Map) : null,
         menuPeople: (j['menu_people'] as num?)?.toInt(),
         menuChosen: (j['menu_chosen'] as num?)?.toInt(),
+        allergyPeople: (j['allergy_people'] as num?)?.toInt(),
+        allergyDone: (j['allergy_done'] as num?)?.toInt(),
       );
 }
 
@@ -146,6 +160,12 @@ class MenuPerson {
   /// obrigatório — cada uma escolhe o seu.
   final bool mine;
 
+  /// Escolho o menu desta pessoa: sou eu que pago a comida dela (217).
+  final bool menu;
+
+  /// Quem paga a comida: 'me', 'organizers' ou 'other'.
+  final String pays;
+
   /// Quem a traz (acompanhantes).
   final String? ownerName;
 
@@ -161,6 +181,8 @@ class MenuPerson {
     required this.ageGroup,
     required this.isMe,
     this.mine = true,
+    this.menu = true,
+    this.pays = 'me',
     this.ownerName,
     required this.iPay,
     this.packageId,
@@ -178,6 +200,8 @@ class MenuPerson {
       ageGroup: (j['age_group'] as String?) ?? 'adult',
       isMe: j['is_me'] == true,
       mine: j['mine'] != false,
+      menu: j['menu'] != false,
+      pays: (j['pays'] as String?) ?? 'other',
       ownerName: j['owner_name'] as String?,
       iPay: j['pays'] == 'me',
       packageId: c?['package_id'] as String?,
@@ -200,13 +224,13 @@ Future<List<MenuPerson>> fetchMenuPeople(String bookingId) async {
 /// Guarda os menus de várias pessoas. Devolve o meu pagamento por fazer.
 Future<({String? paymentId, double amount})> chooseMenus({
   required String bookingId,
-  required List<({String key, String packageId, String allergies})> people,
+  required List<({String key, String? packageId, String? allergies})> people,
   required List<String> extraIds,
 }) async {
   final res = await supabase.rpc('choose_menus', params: {
     'p_booking_id': bookingId,
     'p_people': [
-      for (final p in people) {'key': p.key, 'package_id': p.packageId, 'allergies': p.allergies},
+      for (final p in people) {'key': p.key, 'package_id': ?p.packageId, 'allergies': ?p.allergies},
     ],
     'p_extra_ids': extraIds,
   });
