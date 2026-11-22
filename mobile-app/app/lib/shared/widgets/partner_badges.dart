@@ -8,14 +8,10 @@ import '../hero_icons.dart';
 import 'founder_badge.dart';
 
 /// Selos ao lado do nome de um parceiro (pedido do Rafael, 2026-11-22;
-/// DESIGN.md §6 «Selos do parceiro»), sempre por esta ordem:
-///
-/// 1. **Verificado** — visto verde (`checkBadge` 18, `#4F6B4A`): todo o
-///    parceiro aprovado pela equipa (perfil publicado).
-/// 2. **Premium** — círculo preto 18 com a estrela branca: parceiros com a
-///    subscrição Premium ativa.
-/// 3. **Fundador** — etiqueta verde (os primeiros 100), só onde houver
-///    espaço ([founder]).
+/// DESIGN.md §6 «Selos do parceiro»): só o **visto verde de verificado**.
+/// Fundador, Modo Pro e Mais ativo são conquistas e vão no canto da foto
+/// (`partner_achievements.dart`); [founder] mantém a etiqueta onde não há
+/// foto (lista).
 class PartnerBadges extends StatelessWidget {
   final Partner partner;
   final bool founder;
@@ -24,7 +20,6 @@ class PartnerBadges extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
         VerifiedBadge(partner),
-        PremiumBadge(partner.id),
         if (founder) ...[const SizedBox(width: 6), FounderBadge(partner.id)],
       ]);
 }

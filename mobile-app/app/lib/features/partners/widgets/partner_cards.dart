@@ -12,6 +12,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import '../../../shared/text_case.dart';
 import '../../../shared/widgets/dense_card.dart' show PriceBox;
+import '../../../core/partners/partner_achievements.dart' show partnerAchievementsProvider;
+import '../../../shared/widgets/partner_achievements.dart';
 import '../../../shared/widgets/partner_badges.dart';
 import '../../../shared/widgets/photo_card.dart';
 import '../../../shared/widgets/sized_network_image.dart';
@@ -209,7 +211,14 @@ class PartnerBigCard extends ConsumerWidget {
     ].join(' · ');
     // Sem «Em destaque» na foto (pedido 2026-11-22): já está na secção
     // «Em destaque», era repetido. Fica só «Novo».
-    final badge = isNew(partner) ? const InfoTag('Novo', onPhoto: true) : null;
+    // Canto da foto: as conquistas (Fundador, Modo Pro, Mais ativo — forma
+    // C do mockup, 2026-11-22); sem nenhuma, «Novo» se acabou de entrar.
+    final hasAchievements = ref.watch(partnerAchievementsProvider(partner.id)).isNotEmpty;
+    final badge = hasAchievements
+        ? AchievementsCorner(partnerId: partner.id, partnerName: capFirst(partner.name))
+        : isNew(partner)
+            ? const InfoTag('Novo', onPhoto: true)
+            : null;
 
     return PhotoCard(
       width: width,
