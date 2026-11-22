@@ -115,7 +115,7 @@ class AlertDot extends StatelessWidget {
 
 /// Sinal de alerta no canto de baixo à direita da foto de um cartão de
 /// evento (pedido do Rafael, 2026-11-22, mockup «Alertas nos cartões», B1;
-/// DESIGN.md §7): círculo 32 na cor do tom com «!» branco e aro branco 2,
+/// DESIGN.md §7): círculo 36 na cor do tom (32 + aro branco 2) com «!» 17,
 /// e o número de coisas por fazer num contador branco 18 com aro preto 2.
 /// Com tarefas de tons diferentes, é a cor da mais urgente com o total.
 /// Brilha como os outros alertas ao aparecer; parado com «reduzir
@@ -182,38 +182,37 @@ class _AlertBadgeState extends State<AlertBadge> with SingleTickerProviderStateM
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
+        // Igual ao mockup «Alertas nos cartões» (B): círculo 36 (32 + aro
+        // branco 2), «!» 17; contador 18 a sair 6 para fora, em cima à
+        // direita.
         child: SizedBox(
-          width: 40,
-          height: 40,
+          width: 36,
+          height: 36,
           child: Stack(clipBehavior: Clip.none, children: [
-            Positioned(
-              left: 0,
-              bottom: 0,
-              child: AnimatedBuilder(
-                animation: _c,
-                builder: (context, _) {
-                  final v = _c.isAnimating ? math.sin(math.pi * _c.value) : 0.0;
-                  return Container(
-                    width: 32,
-                    height: 32,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: v <= 0.01
-                          ? null
-                          : [BoxShadow(color: color.withValues(alpha: 0.25 + 0.35 * v), blurRadius: 4 + 12 * v, spreadRadius: 3 * v)],
-                    ),
-                    child: const Text('!', style: TextStyle(fontSize: 17, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
-                  );
-                },
-              ),
+            AnimatedBuilder(
+              animation: _c,
+              builder: (context, _) {
+                final v = _c.isAnimating ? math.sin(math.pi * _c.value) : 0.0;
+                return Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: v <= 0.01
+                        ? null
+                        : [BoxShadow(color: color.withValues(alpha: 0.25 + 0.35 * v), blurRadius: 4 + 12 * v, spreadRadius: 3 * v)],
+                  ),
+                  child: const Text('!', style: TextStyle(fontSize: 17, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
+                );
+              },
             ),
             if (n > 0)
               Positioned(
-                right: 0,
-                top: 0,
+                right: -6,
+                top: -6,
                 child: Container(
                   constraints: const BoxConstraints(minWidth: 18),
                   height: 18,

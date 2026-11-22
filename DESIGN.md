@@ -621,8 +621,8 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   (1,4 s). Nunca a piscar sem parar.
 - **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
   «Alertas nos cartões», B1; `AlertBadge`, `alert_outline.dart`): nunca uma
-  faixa por baixo do cartão. No **canto de baixo à direita da foto**, um
-  círculo 32 na cor do tom com «!» branco e aro branco 2, e o número de
+  faixa por baixo do cartão. No **canto de baixo à direita da foto** (12 de
+  margem), um círculo **36** na cor do tom (32 + aro branco 2) com «!» branco 17, e o número de
   coisas por fazer num contador branco 18 com aro preto 2 (como o das
   mensagens por ler). **Cor pelo prazo de cada coisa** (pedido
   2026-11-22): vermelho a **3 dias ou menos** do prazo (ou já passado),
