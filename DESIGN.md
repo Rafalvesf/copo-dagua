@@ -133,9 +133,9 @@ ecrãs. O resto da app mantém a tabela acima.
   entre cartões. **Todos os cartões com foto** (eventos e parceiros, em
   todo o lado) vão numa **moldura** (forma A do mockup «Alerta com ação nos
   cartões», 2026-11-22; `PhotoCard.frameTone`): linha à volta do cartão,
-  cantos 22, interior 8, sem fundo e **sem brilho** — **cinzenta subtil
-  1 px `#E3E3E3`** sem nada urgente, **1,5 da cor do tom** (§7) com coisas
-  por fazer. Nos carrosséis de eventos («Os meus eventos», perfil) **vê-se
+  cantos 22, interior 8, sem fundo e **sem brilho** — sempre **cinzenta
+  subtil 1 px `#E3E3E3`**; o amarelo e o vermelho ficam **só na tarefa
+  «Para fazer»** por baixo do rodapé (§7). Nos carrosséis de eventos («Os meus eventos», perfil) **vê-se
   a ponta do cartão seguinte** (`SnapCarousel(peek: true)`, 86 % da
   largura); 16 a mais até «Descobrir».
   Os eventos já não levam as caixas de números
@@ -650,9 +650,9 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   (1,4 s). Nunca a piscar sem parar.
 - **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
   «Alerta com ação nos cartões», forma A; sem o sinal «!» na foto desde
-  2026-11-22): a linha da cor do tom dá a volta a todo o cartão (a moldura
-  do §4, sem brilho) e, por baixo do rodapé, sem linha própria,
-  o ponto, a tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
+  2026-11-22): a moldura do cartão fica cinzenta (§4) e só a tarefa, por
+  baixo do rodapé, leva a cor do tom — pílula branca com a linha 1,5 do
+  tom, sem brilho: o ponto, a tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
   fotógrafo · +1») e o botão preto 36 com a ação — «Pagar» (pagamentos),
   «Ver» (propostas, presente), «Responder» («Diz se vais»), «Fazer» (o
   resto). **Cor pelo prazo de cada coisa**: vermelho a **3 dias ou menos**

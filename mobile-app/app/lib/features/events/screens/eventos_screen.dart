@@ -757,9 +757,13 @@ class _TaskPill extends StatelessWidget {
   const _TaskPill({required this.tone, required this.task, required this.more, required this.action, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => Padding(
-        // Sem linha própria: a linha é a moldura do cartão (forma A).
-        padding: const EdgeInsets.fromLTRB(4, 2, 0, 0),
+  Widget build(BuildContext context) => AlertOutline(
+        // Só a tarefa leva a cor do tom (pedido 2026-11-22); a moldura do
+        // cartão fica cinzenta. Sem brilho.
+        tone: tone,
+        radius: 999,
+        glow: false,
+        padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
         child: Row(children: [
           AlertDot(tone),
           const SizedBox(width: 8),
@@ -859,7 +863,6 @@ class _MyEventCard extends ConsumerWidget {
     // como os parceiros, dentro da moldura. Toque longo: arquivar ou
     // apagar (185).
     return PhotoCard(
-      frameTone: todo > 0 ? tone : null,
       onTap: () => _open(context, ref),
       onLongPress: () => showEventActionsSheet(context, ref,
           weddingId: wedding.id,
@@ -936,7 +939,6 @@ class _InvitedEventCard extends ConsumerWidget {
                 ? ('Oferece um presente', 'Ver')
                 : null;
     return PhotoCard(
-      frameTone: todo > 0 ? tone : null,
       onTap: () => context.go(open),
       photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
       leftTag: const InfoTag('Convidado', onPhoto: true),

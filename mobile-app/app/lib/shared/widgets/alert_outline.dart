@@ -34,6 +34,9 @@ class AlertOutline extends StatefulWidget {
   /// Fundo dentro da linha (branco; transparente na moldura dos cartões).
   final Color fill;
 
+  /// Brilho ao aparecer (sem ele na tarefa dos cartões, 2026-11-22).
+  final bool glow;
+
   const AlertOutline({
     super.key,
     required this.tone,
@@ -41,6 +44,7 @@ class AlertOutline extends StatefulWidget {
     this.radius = 14,
     this.padding = EdgeInsets.zero,
     this.fill = Colors.white,
+    this.glow = true,
   });
 
   @override
@@ -69,7 +73,7 @@ class _AlertOutlineState extends State<AlertOutline> with SingleTickerProviderSt
           if (_left > 0 && mounted) _c.forward(from: 0);
         }
       });
-    _c.forward();
+    if (widget.glow) _c.forward();
   }
 
   @override
