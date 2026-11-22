@@ -192,6 +192,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       background: AppBackground.subtle,
       body: KitPage(
         pinnedBack: true,
+              rotateBack: false,
         onBack: () => context.canPop() ? context.pop() : context.go('/guests'),
         children: [
           const KitHeader(),

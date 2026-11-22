@@ -107,6 +107,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : KitPage(
               pinnedBack: true,
+              rotateBack: false,
               children: [
                 KitHeader(actions: [KitAddButton(tooltip: 'Adicionar convidado', onTap: _addGuest)]),
                 const KitTitle('Convidados'),

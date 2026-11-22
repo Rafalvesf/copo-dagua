@@ -30,6 +30,10 @@ class KitPage extends StatefulWidget {
   /// Ação de voltar da seta fixa (quando [pinnedBack]). Omitir = `maybePop`.
   final VoidCallback? onBack;
 
+  /// `false`: a seta fixa é sempre «voltar» e não roda para ↑ (páginas do
+  /// evento, pedido do Rafael 2026-11-22).
+  final bool rotateBack;
+
   const KitPage({
     super.key,
     required this.children,
@@ -38,6 +42,7 @@ class KitPage extends StatefulWidget {
     this.controller,
     this.pinnedBack = false,
     this.onBack,
+    this.rotateBack = true,
   });
 
   @override
@@ -161,6 +166,7 @@ class _KitPageState extends State<KitPage> {
             child: ScrollAwareBackButton(
               controller: _controller,
               onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+              rotate: widget.rotateBack,
             ),
           )
         else

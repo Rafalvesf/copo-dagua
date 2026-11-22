@@ -23,7 +23,7 @@ class EdgeFade extends StatelessWidget {
     // Na web o ShaderMask obriga a redesenhar a lista inteira numa camada à
     // parte a cada frame do scroll — era o que mais pesava (2026-11-08,
     // "a app está lenta"). Na web fica sem o desvanecimento.
-    if (kIsWeb) return child;
+    if (kIsWeb || (topFadeHeight <= 0 && bottomFadeHeight <= 0)) return child;
     return ShaderMask(
       blendMode: BlendMode.dstIn,
       shaderCallback: (rect) {

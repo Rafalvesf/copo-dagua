@@ -424,9 +424,12 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   à secção. Voltar e favorito ficam sempre no mesmo sítio e são os pretos
   44 do §2. **Exceção ao «voltar ao topo» do
   §6:** aqui a seta é sempre «voltar» (não roda para ↑). O mesmo nos
-  **eventos** (painel do organizador, pedido 2026-11-22:
-  `ScrollAwareBackButton(rotate: false)`), que também não têm o desvanecer
-  branco em cima e em baixo.
+  **eventos** (painel do organizador e as páginas do evento — Orçamento,
+  Convidados, Reservas/Parceiros, Mesas, Convidar, Para os convidados,
+  Presentes, Definições do evento; pedido 2026-11-22:
+  `ScrollAwareBackButton(rotate: false)` / `KitPage(rotateBack: false)`),
+  que também não têm o desvanecer branco em cima e em baixo nem o degradê
+  para branco no fundo (fundo liso `#F2F2F2`).
 - **Perfil do parceiro** por baixo da foto (pedido 2026-11-22, mockup
   «Perfil do parceiro · a página toda», **B**): **sem caixa branca** — as
   **conquistas** por cima (pílulas e discos brancos, §6; sem nenhuma,
