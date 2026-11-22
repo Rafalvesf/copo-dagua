@@ -21,6 +21,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/events/events_providers.dart';
+import '../../../core/guest_home/event_tables.dart' show EventTable, myEventTablesProvider;
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
@@ -596,7 +597,11 @@ class _OrgSummary {
   final int done;
   final int total;
   final ({String id, String title})? next;
-  const _OrgSummary({this.guests = 0, this.confirmed = 0, this.bookings = 0, this.done = 0, this.total = 0, this.next});
+
+  /// Prazos das tarefas por fazer que já abriram (null = sem prazo).
+  final List<DateTime?> dues;
+  const _OrgSummary(
+      {this.guests = 0, this.confirmed = 0, this.bookings = 0, this.done = 0, this.total = 0, this.next, this.dues = const []});
 }
 
 final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, String>((ref, id) async {
@@ -607,7 +612,7 @@ final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, Strin
       list(supabase.from('bookings').select('status').eq('wedding_id', id)),
       list(supabase
           .from('wedding_tasks')
-          .select('id, title, status, priority, created_at')
+          .select('id, title, status, priority, created_at, due_date, available_at')
           .eq('wedding_id', id)
           .eq('source', 'system')
           .inFilter('status', ['active', 'completed'])),
@@ -629,6 +634,10 @@ final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, Strin
       done: tasks.length - active.length,
       total: tasks.length,
       next: active.isEmpty ? null : (id: active.first['id'] as String, title: active.first['title'] as String),
+      dues: [
+        for (final t in active)
+          if (_isOpen(t['available_at'] as String?)) t['due_date'] == null ? null : DateTime.tryParse(t['due_date'] as String),
+      ],
     );
   } catch (_) {
     return const _OrgSummary();
@@ -681,6 +690,27 @@ final _guestStepsProvider = FutureProvider.autoDispose.family<_GuestSteps, Strin
 
 
 
+
+/// Tarefa já aberta (o resto e o pagamento único só abrem 6 dias antes do
+/// prazo — `available_at`).
+bool _isOpen(String? availableAt) {
+  final a = availableAt == null ? null : DateTime.tryParse(availableAt);
+  return a == null || !a.isAfter(DateTime.now());
+}
+
+/// Cor do sinal do cartão (DESIGN.md §7, B1, 2026-11-22): vermelho se
+/// alguma coisa por fazer acaba em 3 dias ou menos (ou já acabou), pelo
+/// prazo dela; sem prazo, conta a data do evento. Senão, amarelo.
+AlertTone _toneForAll(Iterable<DateTime?> dues, DateTime? eventDate) =>
+    dues.any((d) => toneForDue(d ?? eventDate) == AlertTone.urgent) ? AlertTone.urgent : AlertTone.pending;
+
+/// Dias até ao prazo (hoje = 0; negativo = já passou).
+int? _daysTo(DateTime? d) {
+  if (d == null) return null;
+  final now = DateTime.now();
+  return DateTime(d.year, d.month, d.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+}
+
 /// Evento que organizo: abre o painel desse evento.
 class _MyEventCard extends ConsumerWidget {
   final Wedding wedding;
@@ -701,7 +731,12 @@ class _MyEventCard extends ConsumerWidget {
     // No evento aberto, o motor de tarefas é a fonte mais fresca.
     final engine = active ? ref.watch(taskEngineControllerProvider) : null;
     // Quantas coisas por fazer: o sinal no canto da foto (DESIGN.md §7, B1).
-    final todo = engine != null ? engine.systemActive.length : (summary.total - summary.done).clamp(0, 999);
+    // O que há por fazer e já abriu, com o prazo de cada coisa.
+    final now = DateTime.now();
+    final dues = engine != null
+        ? [for (final t in engine.systemActive) if (!t.availableAt.isAfter(now)) t.dueDate]
+        : summary.dues;
+    final todo = dues.length;
     // Cartão com foto (DESIGN.md §4, 2026-11-22): sem caixa nem sombra,
     // como os parceiros. Toque longo: arquivar ou apagar (185).
     return PhotoCard(
@@ -732,7 +767,7 @@ class _MyEventCard extends ConsumerWidget {
       // cartões», B1, 2026-11-22): vermelho a 3 dias ou menos do evento.
       photoAction: todo > 0
           ? AlertBadge(
-              tone: toneForDue(wedding.weddingDate),
+              tone: _toneForAll(dues, wedding.weddingDate),
               count: todo,
               semanticLabel: '$todo ${todo == 1 ? 'coisa' : 'coisas'} para fazer',
               onTap: () => _open(context, ref),
@@ -757,7 +792,16 @@ class _InvitedEventCard extends ConsumerWidget {
     final stepsAsync = ref.watch(_guestStepsProvider(wedding.weddingId));
     final steps = stepsAsync.value?.steps ?? const <(String, String, bool)>[];
     final next = steps.where((s) => !s.$3).firstOrNull;
-    final todo = steps.where((s) => !s.$3).length;
+    // Mesas (cada um escolhe / cada um paga): escolher conta sempre; pagar
+    // a minha parte só nos 6 dias antes do prazo; vermelho nos últimos 3.
+    final tables = ref.watch(myEventTablesProvider(wedding.weddingId)).value ?? const <EventTable>[];
+    final dues = <DateTime?>[
+      for (final s in steps)
+        if (!s.$3) null,
+      for (final t in tables)
+        if (t.needsAction && ((t.eachChooses && !t.chose) || (_daysTo(t.choiceDeadline) ?? 0) <= 6)) t.choiceDeadline,
+    ];
+    final todo = dues.length;
     return PhotoCard(
       onTap: () => context.go(open),
       photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
@@ -781,7 +825,7 @@ class _InvitedEventCard extends ConsumerWidget {
       // Alerta no canto da foto (B1, 2026-11-22).
       photoAction: todo > 0
           ? AlertBadge(
-              tone: toneForDue(wedding.weddingDate),
+              tone: _toneForAll(dues, wedding.weddingDate),
               count: todo,
               semanticLabel: '$todo ${todo == 1 ? 'passo' : 'passos'} por fazer',
               onTap: () => context.go(open),

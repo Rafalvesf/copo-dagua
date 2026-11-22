@@ -624,8 +624,13 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   faixa por baixo do cartão. No **canto de baixo à direita da foto**, um
   círculo 32 na cor do tom com «!» branco e aro branco 2, e o número de
   coisas por fazer num contador branco 18 com aro preto 2 (como o das
-  mensagens por ler). Com tarefas amarelas e vermelhas ao mesmo tempo:
-  **um só sinal, na cor da mais urgente, com o total**. Brilha ao aparecer
+  mensagens por ler). **Cor pelo prazo de cada coisa** (pedido
+  2026-11-22): vermelho a **3 dias ou menos** do prazo (ou já passado),
+  amarelo antes disso; sem prazo, conta a data do evento. Pagamentos: o
+  sinal conta logo (amarelo); o resto, o pagamento único (sem sinal) e a
+  parte do convidado **só aparecem nos 6 dias antes do prazo** (amarelo) e
+  ficam vermelhos nos últimos 3. Com tarefas amarelas e vermelhas ao mesmo
+  tempo: **um só sinal, na cor da mais urgente, com o total**. Brilha ao aparecer
   como os outros alertas. Tocar abre o «Para fazer» (organizador: o painel
   do evento; convidado: a página do evento). O rodapé do cartão não repete
   o alerta.
