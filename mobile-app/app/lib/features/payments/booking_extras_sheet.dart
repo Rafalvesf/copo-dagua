@@ -29,6 +29,8 @@ Future<(double, double)?> offerBookingExtras(BuildContext context, String bookin
   }
   if (!context.mounted) return null;
   final chosen = await showIslandSheet<Set<String>>(
+    // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
+    confirmExit: true,
     context: context,
     isScrollControlled: true,
     builder: (_) => _ExtrasSheet(options: options, total: total, deposit: deposit, partnerName: partnerName),

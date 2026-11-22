@@ -332,11 +332,16 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   exceção à regra «verde nunca em botões/fundos»: o verde só existe durante
   a animação.
 - **Fechar:** tocar fora ou puxar para baixo (se o popup o permitir).
-- **Sair pergunta sempre** (pedido do Rafael, 2026-11-20): tocar no «×»,
-  tocar fora do popup ou puxá-lo para baixo abre sempre «Tens a certeza que
-  queres sair?» («O que preencheste neste popup não fica guardado.») com
-  «Sair» (contorno) e «Continuar» (preto, volta ao popup como estava). Esta
-  pergunta não tem «×».
+- **Sair pergunta só na reserva e no pagamento** (pedido do Rafael,
+  2026-11-20; só nestes fluxos desde 2026-11-22): nos popups de **reservar
+  / pedir orçamento** (escolher o evento, o fluxo de reserva, os extras) e
+  de **pagar** (pagamento em falta, bilhetes), tocar no «×», tocar fora ou
+  puxar para baixo abre «Tens a certeza que queres sair?» («O que
+  preencheste neste popup não fica guardado.») com «Sair» (contorno) e
+  «Continuar» (preto, volta ao popup como estava). Esta pergunta não tem
+  «×». **Nos outros popups fecha logo** (`showIslandSheet` tem
+  `confirmExit: false` por omissão; estes fluxos passam `confirmExit:
+  true`).
 - **Voltar — sempre no mesmo sítio** (pedido do Rafael, 2026-11-20, regra
   da consistência): nos popups com passos, a partir do 2.º passo, o voltar é
   um **círculo preto 44 com a seta ← branca 20 (§2), no canto superior esquerdo**, ao
