@@ -118,8 +118,8 @@ ecrãs. O resto da app mantém a tabela acima.
   app: «Os meus eventos», Descobrir, perfil de amigos, Parceiros,
   parceiros em destaque): **sem caixa e sem sombra** — o texto fica direto
   no fundo `#F2F2F2`; foto **150** com os **quatro cantos redondos (22)**;
-  por cima da foto a etiqueta à esquerda («Em destaque», «Novo»,
-  «Organizas», «Convidado») e uma pílula branca à direita (nota, dia);
+  por cima da foto a etiqueta à esquerda («Novo», «Organizas»,
+  «Convidado» — **nunca «Em destaque»**, que já é o título da secção) e uma pílula branca à direita (nota, dia);
   círculo **44** com aro branco 3 a sobrepor o canto de baixo da foto
   (logótipo do parceiro, iniciais do evento); título **19** com os selos
   (§6) e a ação à direita (coração, partilhar); meta **13**; divisória
@@ -341,7 +341,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   secções:
   - **Cartão de parceiro** (`PartnerBigCard`, `partner_cards.dart`): o
     cartão com foto do §4 (**sem caixa nem sombra**, foto toda redonda) —
-    etiqueta («Em destaque» verde, «Novo» branca) e nota na foto; logótipo
+    etiqueta «Novo» (branca) e nota na foto (sem «Em destaque»: a secção já o diz); logótipo
     44 a sobrepor o canto; nome 19 com os selos (§6) e o coração; categoria
     13; «zona · N anos de experiência» 13; divisória `#D9D9D9`; rodapé do
     §4 e a caixa de preço.

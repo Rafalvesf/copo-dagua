@@ -207,11 +207,9 @@ class PartnerBigCard extends ConsumerWidget {
       if (area.isNotEmpty) area,
       if (years != null && years > 0) '$years ${years == 1 ? 'ano' : 'anos'} de experiência',
     ].join(' · ');
-    final badge = highlighted || partner.featured
-        ? const InfoTag('Em destaque', green: true)
-        : isNew(partner)
-            ? const InfoTag('Novo', onPhoto: true)
-            : null;
+    // Sem «Em destaque» na foto (pedido 2026-11-22): já está na secção
+    // «Em destaque», era repetido. Fica só «Novo».
+    final badge = isNew(partner) ? const InfoTag('Novo', onPhoto: true) : null;
 
     return PhotoCard(
       width: width,
