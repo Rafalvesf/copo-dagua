@@ -123,9 +123,10 @@ ecrãs. O resto da app mantém a tabela acima.
   círculo **44** com aro branco 3 a sobrepor o canto de baixo da foto
   (logótipo do parceiro, iniciais do evento); título **19** com os selos
   (§6) e a ação à direita (coração, partilhar); meta **13**; divisória
-  `#D9D9D9` e o rodapé — uma etiqueta à esquerda e uma caixa com contorno
-  à direita (rótulo 9 + valor 16: `DESDE €900`, `FALTAM 203 dias`,
-  `ENTRADA Grátis`). Os eventos já não levam as caixas de números
+  `#D9D9D9` e o rodapé — uma etiqueta à esquerda e, à direita, rótulo 9 +
+  valor 16: numa caixa com contorno para o preço (`DESDE €900`, `ENTRADA
+  Grátis`); **sem caixa nem linha** para o tempo (`FALTAM 203 dias`,
+  pedido 2026-11-22). Os eventos já não levam as caixas de números
   (`MiniStats`) nem a barra de planeamento no cartão. **Nunca** voltar a
   pôr caixa branca ou sombra nestes cartões.
   - **Rodapé do parceiro** (no lugar de «Responde em ~1 h», por esta
