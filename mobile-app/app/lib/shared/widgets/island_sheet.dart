@@ -10,9 +10,9 @@ import '../hero_icons.dart';
 /// fundo do ecrã. Substitui `showModalBottomSheet` e `showDialog` em toda
 /// a app, com a mesma forma de chamar.
 ///
-/// Pedido do Rafael (2026-11-20): todos os popups têm **o tamanho da
-/// navbar** — 20 dos lados (a largura das caixas de conteúdo), 20 em baixo (ou a margem segura, se for maior),
-/// cantos 35 — e **nascem na navbar**: uma onda de cor (verde da marca)
+/// Pedido do Rafael (2026-11-22): todos os popups **encostam aos lados e
+/// ao fundo do ecrã** (sem margem), com os cantos 35 só em cima — e
+/// **nascem na navbar**: uma onda de cor (verde da marca)
 /// sai do centro da navbar e cresce em círculo até encher o popup; depois a
 /// cor desfaz-se no branco à medida que o conteúdo entra. Ao fechar, a onda
 /// volta a encolher para a navbar. Com «reduzir movimento» só aparece e
@@ -53,7 +53,6 @@ Future<T?> showIslandSheet<T>({
 /// Medidas da navbar (`floating_bottom_nav.dart`: `kNavRadius`, margens
 /// 20/20 — a mesma largura das caixas de conteúdo) — o popup ocupa o mesmo sítio e a onda nasce no centro dela.
 const double kIslandRadius = 35;
-const double _kIslandSide = AppTheme.screenMargin;
 const double _kIslandBottom = 20;
 const double _kNavHeight = 70;
 
@@ -93,8 +92,13 @@ class _IslandRoute<T> extends PopupRoute<T> {
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
     final mq = MediaQuery.of(context);
-    final bottom = math.max(_kIslandBottom, mq.padding.bottom) + mq.viewInsets.bottom;
-    final full = mq.size.height - mq.padding.top - 24 - bottom;
+    // Colado aos lados e ao fundo (pedido 2026-11-22). Com o teclado aberto
+    // sobe por cima dele; sem teclado, a margem segura fica dentro do popup.
+    final keyboard = mq.viewInsets.bottom;
+    final safeInside = keyboard > 0 ? 0.0 : mq.padding.bottom;
+    // A onda nasce no centro da navbar (20 do fundo, ou a margem segura).
+    final waveFromBottom = (keyboard > 0 ? 0.0 : math.max(_kIslandBottom, mq.padding.bottom)) + _kNavHeight / 2;
+    final full = mq.size.height - mq.padding.top - 24 - keyboard;
     // Sem isScrollControlled a folha antiga ficava em 9/16 do ecrã.
     final maxH = isScrollControlled ? full : math.min(full, mq.size.height * 9 / 16);
 
@@ -107,7 +111,10 @@ class _IslandRoute<T> extends PopupRoute<T> {
           final t = Theme.of(c);
           return Theme(
             data: t.copyWith(inputDecorationTheme: t.inputDecorationTheme.copyWith(fillColor: AppTheme.surface)),
-            child: Builder(builder: builder),
+            child: Padding(
+              padding: EdgeInsets.only(bottom: safeInside),
+              child: Builder(builder: builder),
+            ),
           );
         },
       ),
@@ -115,7 +122,7 @@ class _IslandRoute<T> extends PopupRoute<T> {
 
     final island = capturedThemes.wrap(
       Padding(
-        padding: EdgeInsets.fromLTRB(_kIslandSide, 0, _kIslandSide, bottom),
+        padding: EdgeInsets.only(bottom: keyboard),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.end,
@@ -129,7 +136,7 @@ class _IslandRoute<T> extends PopupRoute<T> {
                         if ((d.primaryVelocity ?? 0) > 700) Navigator.of(context).maybePop();
                       }
                     : null,
-                child: _NavGrow(animation: animation, child: content),
+                child: _NavGrow(animation: animation, waveFromBottom: waveFromBottom, child: content),
               ),
             ),
           ],
@@ -162,7 +169,9 @@ class _NavGrow extends StatelessWidget {
   final Animation<double> animation;
   final Widget child;
 
-  const _NavGrow({required this.animation, required this.child});
+  final double waveFromBottom;
+
+  const _NavGrow({required this.animation, required this.waveFromBottom, required this.child});
 
   static const _shadows = [
     BoxShadow(color: Color(0x2E171713), blurRadius: 40, offset: Offset(0, 16)),
@@ -171,7 +180,8 @@ class _NavGrow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(kIslandRadius);
+    // Cantos redondos só em cima: em baixo encosta ao fundo do ecrã.
+    const radius = BorderRadius.vertical(top: Radius.circular(kIslandRadius));
     if (MediaQuery.of(context).disableAnimations) {
       return FadeTransition(
         opacity: animation,
@@ -216,7 +226,7 @@ class _NavGrow extends StatelessWidget {
             ],
           ),
           child: ClipPath(
-            clipper: _WaveClipper(grow.value),
+            clipper: _WaveClipper(grow.value, waveFromBottom),
             child: ClipRRect(
               borderRadius: radius,
               child: Stack(
@@ -238,24 +248,25 @@ class _NavGrow extends StatelessWidget {
   }
 }
 
-/// Recorte em círculo com centro no meio da navbar. A navbar e o popup
-/// estão ambos a 20 do fundo, por isso o centro dela fica a 35 (metade da
-/// altura) acima do fundo do popup. O raio vai de 0 até ao canto mais longe.
+/// Recorte em círculo com centro no meio da navbar ([fromBottom] acima do
+/// fundo do popup, que encosta ao fundo do ecrã). O raio vai de 0 até ao
+/// canto mais longe.
 class _WaveClipper extends CustomClipper<Path> {
   final double t;
+  final double fromBottom;
 
-  const _WaveClipper(this.t);
+  const _WaveClipper(this.t, this.fromBottom);
 
   @override
   Path getClip(Size size) {
-    final origin = Offset(size.width / 2, size.height - _kNavHeight / 2);
+    final origin = Offset(size.width / 2, size.height - fromBottom);
     final maxR = math.sqrt(origin.dx * origin.dx + origin.dy * origin.dy) + 2;
     final r = math.max(0.01, maxR * t.clamp(0.0, 1.0).toDouble());
     return Path()..addOval(Rect.fromCircle(center: origin, radius: r));
   }
 
   @override
-  bool shouldReclip(_WaveClipper old) => old.t != t;
+  bool shouldReclip(_WaveClipper old) => old.t != t || old.fromBottom != fromBottom;
 }
 
 /// `showDialog` em forma de ilha (mesma assinatura usada na app).

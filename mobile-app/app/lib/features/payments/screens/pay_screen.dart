@@ -80,11 +80,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   List<PayMethod> get _methods => [
         if (_wallet.isNotEmpty) PayMethod.wallet,
         PayMethod.card,
-        // Reservas podem ter de ser devolvidas: só cartão e Apple Pay /
-        // Google Pay, que ficam cativos. MB WAY e Multibanco cobram logo
-        // (pedido do Rafael, 2026-11-20).
-        if (!a.isBooking) PayMethod.mbWay,
-        if (!a.isBooking) PayMethod.multibanco,
+        // Só cartão, Apple Pay e Google Pay em toda a app (pedido do Rafael,
+        // 2026-11-22): já não há Multibanco nem MB WAY. Os passos deles
+        // ficam só para retomar referências antigas ainda por pagar.
       ].where((m) => a.methods == null || a.methods!.contains(m)).toList();
 
   @override

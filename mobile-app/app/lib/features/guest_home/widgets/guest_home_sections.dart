@@ -774,8 +774,9 @@ class GuestTablesAlerts extends ConsumerWidget {
     if (t.eachChooses && !t.chose) {
       // Uma só tarefa (pedido 2026-11-21): escolher o menu e pagar a parte
       // vão juntos — «Escolher e pagar».
-      caps = t.eachPays ? 'FALTA ESCOLHER E PAGAR' : 'FALTA O TEU MENU';
-      title = t.eachPays ? 'Menus e a tua parte' : 'Escolhe o teu menu';
+      final many = (t.menuPeople ?? 1) > 1;
+      caps = t.eachPays ? 'FALTA ESCOLHER E PAGAR' : (many ? 'FALTAM OS MENUS' : 'FALTA O TEU MENU');
+      title = t.eachPays ? 'Menus e a tua parte' : (many ? 'Os menus do teu convite' : 'Escolhe o teu menu');
       sub = [?until, t.partnerName].join(' · ');
       cta = t.eachPays ? 'Escolher e pagar' : 'Escolher';
       onTap = () => chooseMenuAndPay(context, ref, weddingId, t);

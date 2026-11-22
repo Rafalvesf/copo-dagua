@@ -14,15 +14,31 @@ import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/step_sheet_head.dart';
+import '../../payments/open_payment.dart';
 
-/// «Escolher e pagar» do «Para fazer» do convidado (pedido do Rafael,
-/// 2026-11-22; mockups «Reservar por categoria» · Restaurante): popups por
-/// cima da página, nunca uma página à parte — «Escolhe o teu menu» →
-/// «Queres juntar alguma coisa?» (só se o menu tiver extras) → «A tua
-/// parte» (o pagamento). O voltar de cada passo regressa ao anterior.
+/// O que fica escolhido para uma pessoa.
+class _Pick {
+  String? packageId;
+  String allergies;
+  bool none;
+  _Pick({this.packageId, this.allergies = '', this.none = false});
+  bool get done => packageId != null && (none || allergies.trim().isNotEmpty);
+}
+
+/// «Escolher e pagar» / «Escolher os menus» (pedido do Rafael, 2026-11-22;
+/// mockup «Escolher o menu · popup»): popups por cima da página, para o
+/// convidado e para o organizador —
+///   1. «Escolhe os menus»: «PARA QUEM» com uma pílula por pessoa (eu, quem
+///      vem no meu convite e quem pago; o organizador com «Pagamos nós»,
+///      toda a gente), o menu e as alergias (sempre; «Nenhuma» conta);
+///   2. «Queres juntar alguma coisa?» (os extras, depois dos menus);
+///   3. pagar (cartão, Apple Pay ou Google Pay), se houver a minha parte.
+/// O voltar de cada passo regressa ao anterior.
 Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddingId, EventTable t) async {
   List<ServicePackage> packages;
   List<ServiceExtra> extras;
+  List<MenuPerson> people;
+  var legacy = false; // antes da migração 216: só a minha escolha
   try {
     packages = [
       for (final p in await ref.read(partnerPackagesForProvider(t.partnerId).future))
@@ -33,57 +49,82 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
     packages = const [];
     extras = const [];
   }
+  try {
+    people = await fetchMenuPeople(t.bookingId);
+  } on PostgrestException catch (e) {
+    if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+    legacy = true;
+    people = [
+      MenuPerson(
+        key: 'me',
+        name: 'Tu',
+        ageGroup: 'adult',
+        isMe: true,
+        iPay: t.eachPays,
+        packageId: t.myChoice?['package_id'] as String?,
+        allergies: t.myChoice?['allergies'] as String?,
+      ),
+    ];
+  } catch (_) {
+    people = const [];
+  }
   if (!context.mounted) return;
-  if (packages.isEmpty) {
-    context.push('/mesa/$weddingId', extra: t);
+  if (packages.isEmpty || people.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(packages.isEmpty ? 'Ainda não há menus para escolher.' : 'Não há ninguém por quem escolhas aqui.'),
+    ));
     return;
   }
-  String? pkgId = t.myChoice?['package_id'] as String?;
-  final picked = <String>{
-    for (final e in (t.myChoice?['extras_snapshot'] as List? ?? const []))
-      if (e is Map && e['id'] is String) e['id'] as String,
+
+  final picks = <String, _Pick>{
+    for (final p in people)
+      p.key: _Pick(
+        packageId: packages.any((k) => k.id == p.packageId) ? p.packageId : null,
+        allergies: p.allergies ?? '',
+        none: p.allergies != null && p.allergies!.trim().isEmpty,
+      ),
   };
-  final allergies = t.myChoice?['allergies'] as String?;
+  final picked = <String>{for (final p in people) ...p.extraIds};
+  final anyIPay = people.any((p) => p.iPay);
   final deadline = t.choiceDeadline;
   final sub = [t.partnerName, if (deadline != null) 'escolhe até ${shortDate(deadline)}'].join(' · ');
-  var stage = 0; // 0 menu · 1 extras · 2 pagar
+  var stage = 0; // 0 menus · 1 extras · 2 guardar e pagar
   while (context.mounted) {
-    final pkg = packages.where((p) => p.id == pkgId).firstOrNull;
-    final pkgExtras = pkg == null ? const <ServiceExtra>[] : extras.where((e) => e.appliesTo(pkg.id)).toList();
-    final total = (pkgExtras.isEmpty ? 1 : 2) + (t.eachPays ? 1 : 0);
-    if (stage == 0 || pkg == null) {
-      final r = await showIslandSheet<String>(
-        confirmExit: t.eachPays,
+    final chosenPkgs = {for (final p in picks.values) ?p.packageId};
+    final inviteExtras = extras
+        .where((e) => chosenPkgs.isEmpty || e.packageIds.isEmpty || e.packageIds.any(chosenPkgs.contains))
+        .toList();
+    final total = 1 + (inviteExtras.isEmpty ? 0 : 1) + (anyIPay ? 1 : 0);
+    if (stage == 0) {
+      final ok = await showIslandSheet<bool>(
+        confirmExit: anyIPay,
         context: context,
         isScrollControlled: true,
-        builder: (_) => _MenuStep(
+        builder: (_) => _MenusStep(
+          people: people,
           packages: packages,
-          selected: pkgId,
+          picks: picks,
           step: (1, total),
           subtitle: sub,
-          note: t.eachPays
-              ? 'Pagas a tua parte na app. Podes mudar até a escolha fechar.'
-              : 'Pagam os organizadores. Podes mudar até a escolha fechar.',
+          last: inviteExtras.isEmpty && !anyIPay,
         ),
       );
-      if (r == null) return;
-      pkgId = r;
-      picked.removeWhere((id) => !extras.any((e) => e.id == id && e.appliesTo(r)));
+      if (ok != true) return;
       stage = 1;
       continue;
     }
-    if (stage == 1 && pkgExtras.isNotEmpty) {
+    if (stage == 1 && inviteExtras.isNotEmpty) {
       final r = await showIslandSheet<Object>(
-        confirmExit: t.eachPays,
+        confirmExit: anyIPay,
         context: context,
         isScrollControlled: true,
         builder: (_) => _ExtrasStep(
-          extras: pkgExtras,
+          extras: inviteExtras,
           picked: picked,
-          base: pkg.price,
+          base: _menusTotal(people, picks, packages),
           step: (2, total),
           subtitle: sub,
-          last: !t.eachPays,
+          last: !anyIPay,
         ),
       );
       if (r == null) return;
@@ -95,16 +136,35 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
         ..clear()
         ..addAll(r as Set<String>);
     }
-    // Guardar a escolha e pagar.
+    // Guardar as escolhas.
     ({String? paymentId, double amount}) res;
     try {
-      res = await chooseMyMenu(bookingId: t.bookingId, packageId: pkg.id, extraIds: picked.toList(), allergies: allergies);
+      if (legacy) {
+        final p = picks['me']!;
+        res = await chooseMyMenu(
+          bookingId: t.bookingId,
+          packageId: p.packageId!,
+          extraIds: picked.toList(),
+          allergies: p.none ? '' : p.allergies.trim(),
+        );
+      } else {
+        res = await chooseMenus(
+          bookingId: t.bookingId,
+          people: [
+            // As minhas (obrigatórias) e as outras que já ficaram completas.
+            for (final p in people)
+              if (picks[p.key]!.done)
+                (key: p.key, packageId: picks[p.key]!.packageId!, allergies: picks[p.key]!.none ? '' : picks[p.key]!.allergies.trim()),
+          ],
+          extraIds: picked.toList(),
+        );
+      }
     } on PostgrestException catch (e) {
       if (context.mounted) {
         final msg = e.message.contains('closed')
             ? 'A escolha já fechou.'
             : e.message.contains('already_paid')
-                ? 'Já pagaste a tua parte: não dá para mudar.'
+                ? 'Já está pago: não dá para mudar.'
                 : 'Não foi possível guardar. Tenta outra vez.';
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
@@ -118,26 +178,46 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
     ref.invalidate(myEventTablesProvider(weddingId));
     if (!context.mounted) return;
     final paymentId = res.paymentId;
-    if (paymentId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Escolha guardada.')));
+    if (paymentId == null || res.amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menus guardados.')));
       return;
     }
-    final pct = await guestShareFeePct(ref, t.partnerId,
-        (t.totalAmount ?? 0) - ((t.myChoice?['amount'] as num?)?.toDouble() ?? 0) + res.amount, res.amount);
-    if (!context.mounted) return;
-    final back = await context.push<Object?>('/pay', extra: PayArgs(
-      paymentId: paymentId,
-      partnerName: t.partnerName,
-      kind: 'guest_share',
-      amount: amountWithCommission(res.amount, pct),
-      baseAmount: res.amount,
-      step: (total, total),
-    ));
+    final Object? back;
+    if (t.eachPays) {
+      final pct = await guestShareFeePct(ref, t.partnerId, t.totalAmount ?? res.amount, res.amount);
+      if (!context.mounted) return;
+      back = await context.push<Object?>('/pay', extra: PayArgs(
+        paymentId: paymentId,
+        partnerName: t.partnerName,
+        kind: 'guest_share',
+        amount: amountWithCommission(res.amount, pct),
+        baseAmount: res.amount,
+        step: (total, total),
+      ));
+    } else {
+      // Pagamos nós: o pagamento da reserva, como no «Para fazer».
+      back = await openPaymentFlow(context, ref, paymentId, step: (total, total));
+    }
     ref.invalidate(myEventTablesProvider(weddingId));
     if (back != 'back') return;
-    stage = pkgExtras.isEmpty ? 0 : 1;
+    stage = inviteExtras.isEmpty ? 0 : 1;
   }
 }
+
+double _menusTotal(List<MenuPerson> people, Map<String, _Pick> picks, List<ServicePackage> packages) {
+  var sum = 0.0;
+  for (final p in people) {
+    final id = picks[p.key]?.packageId;
+    final pkg = packages.where((k) => k.id == id).firstOrNull;
+    if (pkg != null) sum += pkg.price;
+  }
+  return sum;
+}
+
+String _firstName(String s) => s.trim().split(RegExp(r'\s+')).first;
+
+/// «Menu Carne» → «Carne».
+String _shortMenu(String s) => s.replaceFirst(RegExp(r'^menu\s+', caseSensitive: false), '');
 
 /// Grupo `#F2F2F2` do molde do popup (DESIGN.md §6.3).
 class _Group extends StatelessWidget {
@@ -155,6 +235,18 @@ class _Group extends StatelessWidget {
               child: c,
             ),
         ]),
+      );
+}
+
+class _Caps extends StatelessWidget {
+  final String text;
+  const _Caps(this.text);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Text(text,
+            style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       );
 }
 
@@ -203,6 +295,30 @@ class _Row extends StatelessWidget {
       );
 }
 
+/// Pílula 38 (verde quando escolhida).
+class _Pill extends StatelessWidget {
+  final String label;
+  final bool on;
+  final VoidCallback onTap;
+  const _Pill(this.label, {required this.on, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Container(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: on ? AppTheme.accentOliveDark : AppTheme.background,
+            borderRadius: BorderRadius.circular(19),
+          ),
+          child: Text(label,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+        ),
+      );
+}
+
 class _Btn extends StatelessWidget {
   final String label;
   final bool outlined;
@@ -223,49 +339,189 @@ class _Btn extends StatelessWidget {
             ),
             child: Text(label,
                 maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: outlined ? AppTheme.ink : Colors.white)),
           ),
         ),
       );
 }
 
-class _MenuStep extends StatefulWidget {
+class _MenusStep extends StatefulWidget {
+  final List<MenuPerson> people;
   final List<ServicePackage> packages;
-  final String? selected;
+  final Map<String, _Pick> picks;
   final (int, int) step;
   final String subtitle;
-  final String note;
-  const _MenuStep({required this.packages, this.selected, required this.step, required this.subtitle, required this.note});
+
+  /// Sem extras nem pagamento a seguir: o botão guarda.
+  final bool last;
+  const _MenusStep({
+    required this.people,
+    required this.packages,
+    required this.picks,
+    required this.step,
+    required this.subtitle,
+    required this.last,
+  });
 
   @override
-  State<_MenuStep> createState() => _MenuStepState();
+  State<_MenusStep> createState() => _MenusStepState();
 }
 
-class _MenuStepState extends State<_MenuStep> {
-  late String? _id = widget.selected;
+class _MenusStepState extends State<_MenusStep> {
+  late String _cur =
+      (widget.people.firstWhere((p) => p.mine && !widget.picks[p.key]!.done, orElse: () => widget.people.first)).key;
+  final _allergy = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _allergy.text = widget.picks[_cur]!.allergies;
+  }
+
+  @override
+  void dispose() {
+    _allergy.dispose();
+    super.dispose();
+  }
+
+  MenuPerson get _person => widget.people.firstWhere((p) => p.key == _cur);
+  String _label(MenuPerson p) => p.isMe ? 'Tu' : _firstName(p.name);
+  String _who(MenuPerson p) => p.isMe ? 'TEU' : 'DE ${_firstName(p.name).toUpperCase()}';
+
+  void _select(String key) {
+    setState(() {
+      _cur = key;
+      _allergy.text = widget.picks[key]!.allergies;
+    });
+  }
+
+  /// Depois de escolher o menu e as alergias, passa à pessoa seguinte que falta.
+  void _maybeAdvance() {
+    if (!widget.picks[_cur]!.done) return;
+    final next = widget.people.where((p) => p.mine && !widget.picks[p.key]!.done).firstOrNull;
+    if (next != null && next.key != _cur) _select(next.key);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final picks = widget.picks;
+    final pick = picks[_cur]!;
+    final p = _person;
+    final chosen = widget.people.where((x) => picks[x.key]!.packageId != null).length;
+    // Obrigatório só para mim e para quem vem comigo; os outros (quem pago,
+    // ou todos com «Pagamos nós») podem escolher o seu.
+    final missing = widget.people.where((x) => x.mine && !picks[x.key]!.done).firstOrNull;
+    final half = widget.people.where((x) => !x.mine && picks[x.key]!.packageId != null && !picks[x.key]!.done).firstOrNull;
+    final String cta;
+    if (missing == null && half != null) {
+      cta = 'Faltam as alergias de ${_firstName(half.name)}';
+    } else if (missing == null) {
+      cta = widget.last ? 'Guardar' : 'Continuar';
+    } else if (picks[missing.key]!.packageId == null) {
+      cta = missing.isMe ? 'Falta o teu menu' : 'Falta o menu de ${_firstName(missing.name)}';
+    } else {
+      cta = missing.isMe ? 'Faltam as tuas alergias' : 'Faltam as alergias de ${_firstName(missing.name)}';
+    }
+    final total = _menusTotal(widget.people, picks, widget.packages);
+    final many = widget.people.length > 1;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        StepSheetHead(step: widget.step, title: 'Escolhe o teu menu', subtitle: widget.subtitle),
+        StepSheetHead(step: widget.step, title: many ? 'Escolhe os menus' : 'Escolhe o teu menu', subtitle: widget.subtitle),
         const SizedBox(height: 16),
+        if (many) ...[
+          const _Caps('PARA QUEM'),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final x in widget.people)
+              _Pill(
+                [
+                  _label(x),
+                  if (x.key != _cur && picks[x.key]!.packageId != null)
+                    _shortMenu(widget.packages.firstWhere((k) => k.id == picks[x.key]!.packageId).name),
+                ].join(' · '),
+                on: x.key == _cur,
+                onTap: () => _select(x.key),
+              ),
+          ]),
+          if (p.ownerName != null && !p.isMe) ...[
+            const SizedBox(height: 8),
+            Text('Vem com ${_firstName(p.ownerName!)}${p.iPay ? ' · pagas tu' : ''}',
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ],
+          const SizedBox(height: 16),
+        ],
+        _Caps('MENU ${_who(p)}'),
         _Group([
-          for (final p in widget.packages)
+          for (final k in widget.packages)
             _Row(
-              title: p.name,
-              meta: p.description,
-              trailing: euros(p.price),
-              on: p.id == _id,
-              onTap: () => setState(() => _id = p.id),
+              title: k.name,
+              meta: k.description,
+              trailing: euros(k.price),
+              on: pick.packageId == k.id,
+              onTap: () {
+                setState(() => pick.packageId = k.id);
+                _maybeAdvance();
+              },
             ),
         ]),
         const SizedBox(height: 16),
-        Text(widget.note, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-        const SizedBox(height: 20),
-        _Btn(_id == null ? 'Escolhe um menu' : 'Continuar',
-            onTap: _id == null ? null : () => Navigator.of(context).pop(_id)),
+        _Caps('ALERGIAS ${_who(p)}'),
+        Row(children: [
+          Expanded(
+            child: Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              alignment: Alignment.centerLeft,
+              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+              child: TextField(
+                controller: _allergy,
+                maxLength: 200,
+                textCapitalization: TextCapitalization.sentences,
+                style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+                decoration: const InputDecoration(
+                  isCollapsed: true,
+                  border: InputBorder.none,
+                  counterText: '',
+                  hintText: 'Ex.: sem glúten, marisco',
+                  hintStyle: TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+                ),
+                onChanged: (v) => setState(() {
+                  pick.allergies = v;
+                  if (v.trim().isNotEmpty) pick.none = false;
+                }),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _Pill('Nenhuma', on: pick.none, onTap: () {
+            setState(() {
+              pick.none = !pick.none;
+              if (pick.none) {
+                pick.allergies = '';
+                _allergy.clear();
+              }
+            });
+            _maybeAdvance();
+          }),
+        ]),
+        const SizedBox(height: 16),
+        Row(children: [
+          Expanded(
+            child: Text(many ? '$chosen de ${widget.people.length} menus' : 'O teu menu',
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ),
+          if (total > 0)
+            Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        ]),
+        const SizedBox(height: 16),
+        _Btn(cta, onTap: missing == null && half == null ? () => Navigator.of(context).pop(true) : null),
+        const SizedBox(height: 10),
+        Text(
+          widget.last ? 'Podes mudar até a escolha fechar.' : 'A seguir: os extras e depois pagar.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+        ),
       ]),
     );
   }
@@ -278,7 +534,7 @@ class _ExtrasStep extends StatefulWidget {
   final (int, int) step;
   final String subtitle;
 
-  /// Sem pagamento a seguir (pagam os organizadores): o botão guarda.
+  /// Sem pagamento a seguir: o botão guarda.
   final bool last;
   const _ExtrasStep({
     required this.extras,
@@ -299,7 +555,7 @@ class _ExtrasStepState extends State<_ExtrasStep> {
   @override
   Widget build(BuildContext context) {
     final add = widget.extras.where((e) => _on.contains(e.id)).fold<double>(0, (s, e) => s + e.price);
-    final go = widget.last ? 'Guardar escolha' : 'Continuar';
+    final go = widget.last ? 'Guardar' : 'Continuar · ${euros(widget.base + add)}';
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -322,20 +578,23 @@ class _ExtrasStepState extends State<_ExtrasStep> {
         ]),
         const SizedBox(height: 16),
         Row(children: [
-          const Expanded(child: Text('Menu + extras', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+          Expanded(
+            child: Text(_on.isEmpty ? 'Menus' : 'Menus + ${_on.length} ${_on.length == 1 ? 'extra' : 'extras'}',
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ),
           Text(euros(widget.base + add), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
-        if (!widget.last)
-          const Align(
-            alignment: Alignment.centerRight,
-            child: Text('+ taxa de serviço no passo seguinte', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-          ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Row(children: [
           Expanded(child: _Btn('Sem extras', outlined: true, onTap: () => Navigator.of(context).pop(<String>{}))),
           const SizedBox(width: 8),
           Expanded(flex: 2, child: _Btn(go, onTap: () => Navigator.of(context).pop({..._on}))),
         ]),
+        if (!widget.last) ...[
+          const SizedBox(height: 10),
+          const Text('+ taxa de serviço no passo seguinte',
+              textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        ],
       ]),
     );
   }

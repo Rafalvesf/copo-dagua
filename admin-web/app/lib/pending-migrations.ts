@@ -487,6 +487,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O registo pede o @ logo a seguir ao nome. Esta migração deixa verificar, antes de haver conta, se o @ está livre ou ocupado. Sem ela, o registo só verifica o formato; se o @ estiver ocupado, a pessoa escolhe outro depois em «Editar perfil».",
     check: { kind: "marker", id: "215" },
   },
+  {
+    file: "216_menus_per_person.sql",
+    date: "2026-11-22",
+    title: "Menus por pessoa e «Nós pagamos por»",
+    what: "Cada pessoa tem o seu menu: escolhes o teu, o dos teus acompanhantes e o de quem pagas; com «Pagamos nós» os organizadores escolhem por todos. Alergias sempre. Na reserva, «Nós pagamos por» pessoas escolhidas. Sem ela, o popup novo de menus não guarda.",
+    check: { kind: "marker", id: "216" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
