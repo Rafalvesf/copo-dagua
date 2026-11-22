@@ -666,6 +666,10 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   sinal) e a parte do convidado **só aparecem nos 6 dias antes do prazo**
   (amarelo) e ficam vermelhos nos últimos 3. Tocar abre o «Para fazer»
   (organizador: o painel do evento; convidado: a página do evento).
+  **Só conta o que está na lista «Para fazer»** (pedido 2026-11-22) —
+  organizador: pagamentos com prazo, propostas dos parceiros e pedidos
+  para entrar; convidado: responder, escolher/pagar a parte e o presente.
+  As **sugestões nunca** fazem alerta nos cartões.
 - Convite: uma linha fina (envelope num círculo verde claro, "CONVITE POR
   RESPONDER" 11, frase 15 negrito, data 13, e por baixo «Não vou» com contorno + «Vou» preto, 36), nunca um
   bloco verde cheio.
