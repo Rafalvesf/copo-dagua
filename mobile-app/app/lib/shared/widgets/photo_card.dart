@@ -86,7 +86,8 @@ class PhotoCard extends StatelessWidget {
         for (final m in meta)
           if (m.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 2),
+              // 3 entre o título e cada linha de meta, como no mockup (2026-11-22).
+              padding: const EdgeInsets.only(top: 3),
               child: Text(m,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
