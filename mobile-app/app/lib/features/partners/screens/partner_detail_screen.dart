@@ -42,6 +42,7 @@ import '../../../shared/widgets/navigation_sheet.dart' show showNavigationSheet;
 import '../../../shared/widgets/venue_map.dart' show VenueMap;
 import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
+import '../../../shared/widgets/step_sheet_head.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
@@ -232,41 +233,35 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       } catch (_) {}
       ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
       ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
-      // «Pagar o sinal» no fim do pedido (migração 207): fica cativo até o
-      // parceiro responder; se recusar ou não responder em 48 h, é libertado.
-      var depositPaid = false;
-      if (flow != null && flow.payNow && quoteId is String && mounted) {
-        try {
-          final paymentId = await supabase.rpc('prepay_request_deposit', params: {'p_quote_request_id': quoteId});
-          if (paymentId is String && mounted) {
-            // Pago → volta logo aqui para o fim «Reserva pedida» (com a
-            // estrela de parabéns), em vez de ir para Reservas.
-            await openPaymentFlow(context, ref, paymentId, onPaid: (c) => Navigator.of(c).pop());
-            final row = await supabase.from('payments').select('status').eq('id', paymentId).maybeSingle();
-            depositPaid = row?['status'] == 'paid';
-          }
-        } catch (_) {}
-      }
       if (mounted) {
         double each(String unit, double price) => unit == 'person' ? price * people : price;
         final total = each(pkg.priceUnit, pkg.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
         final due = wedding.weddingDate?.subtract(const Duration(days: 3));
         final noDeposit = (flow != null) && _depositPct >= 100;
+        // Com sinal (pedido do Rafael, 2026-11-22): «Reserva feita!» e logo
+        // a seguir o popup «Pagar o sinal» («Pagar mais tarde» / «Pagar
+        // agora»). Pago já, fica cativo até o parceiro aceitar.
+        final offerDeposit = flow != null && quoteId is String && !_eachPays && !noDeposit && !pkg.isStartingPrice && total > 0;
+        final recapTitle = [pkg.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra'].join(' ');
+        final recapMeta = [wedding.displayNames, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · ');
         await _showRequestSent(
-          title: 'Reserva pedida',
+          title: offerDeposit ? 'Reserva feita!' : 'Reserva pedida',
           body: _eachPays
               ? '${widget.partner.name} aceita ou recusa e avisamos-te. Cada convite paga a sua parte${due != null ? ' até ${reserveShortDay(due).toLowerCase()}' : ''}.'
               : noDeposit
                   ? '${widget.partner.name} aceita ou recusa e avisamos-te. Sem sinal: pagas tudo de uma vez, nos 6 dias antes do prazo.'
-                  : depositPaid
-                      ? 'Pagaste o sinal: fica cativo até ${widget.partner.name} responder (48 h). Se recusar, é libertado.'
+                  : offerDeposit
+                      ? 'Pedimos a reserva à ${widget.partner.name}. Avisamos-te quando aceitar. Paga já o sinal para garantir a data.'
                       : '${widget.partner.name} aceita ou recusa e avisamos-te. Paga o sinal para garantir a data.',
-          recapTitle: [pkg.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra'].join(' '),
-          recapMeta: [wedding.displayNames, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · '),
+          recapTitle: recapTitle,
+          recapMeta: recapMeta,
           recapValue: pkg.isStartingPrice ? null : euros(total),
           event: wedding,
-          paid: depositPaid,
+          continueLabel: offerDeposit ? 'Continuar' : null,
         );
+        if (offerDeposit && mounted) {
+          await _askPayDeposit(quoteId, wedding: wedding, total: total);
+        }
       }
     } on PostgrestException catch (e) {
       if (!mounted) return;
@@ -390,6 +385,89 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// Popup de confirmação depois de enviar um pedido/reserva (pedido do
   /// Rafael, 2026-11-18): "Reserva pedida" com um só botão "OK". Com o sinal
   /// pago no fim do pedido (migração 207), a estrela é a de parabéns.
+  /// «Pagar o sinal» logo a seguir a «Reserva feita!» (pedido do Rafael,
+  /// 2026-11-22): o resumo, o que acontece ao sinal e «Pagar mais tarde» /
+  /// «Pagar agora». Pago já (migração 207), fica cativo até o parceiro
+  /// aceitar; aceite, cancela-se com devolução até 48 h depois de pagar.
+  Future<void> _askPayDeposit(String quoteId, {required Wedding wedding, required double total}) async {
+    final deposit = double.parse((total * _depositPct / 100).toStringAsFixed(2));
+    final name = widget.partner.name;
+    final meta = [name, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · ');
+    final now = await showIslandSheet<bool>(
+      confirmExit: true,
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        Widget line(String k, String v) => Container(
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(children: [
+                Expanded(child: Text(k, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+                Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ]),
+            );
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            StepSheetHead(title: 'Pagar o sinal', subtitle: meta),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+              child: Column(children: [
+                line('Reserva', euros(total)),
+                Container(height: 1, color: const Color(0xFFD9D9D9)),
+                line('Sinal (${_depositPct.round()} %)', euros(deposit, cents: true)),
+              ]),
+            ),
+            const SizedBox(height: 12),
+            Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+              const Expanded(child: Text('A pagar agora', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+              Text(euros(deposit, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ]),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text('+ taxa de serviço no passo seguinte', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'O sinal fica cativo até $name aceitar. Se aceitar, podes cancelar a reserva até 48 h depois de pagar e recebes tudo; '
+              'depois disso, não é reembolsável. Se recusar ou não responder em 48 h, o valor é libertado.',
+              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+            ),
+            const SizedBox(height: 20),
+            Row(children: [
+              Expanded(child: ProfileButton('Pagar mais tarde', height: 52, onTap: () => Navigator.of(ctx).pop(false))),
+              const SizedBox(width: 8),
+              Expanded(child: ProfileButton('Pagar agora', dark: true, height: 52, onTap: () => Navigator.of(ctx).pop(true))),
+            ]),
+          ]),
+        );
+      },
+    );
+    if (now != true || !mounted) return;
+    var paid = false;
+    try {
+      final paymentId = await supabase.rpc('prepay_request_deposit', params: {'p_quote_request_id': quoteId});
+      if (paymentId is String && mounted) {
+        await openPaymentFlow(context, ref, paymentId, onPaid: (c) => Navigator.of(c).pop());
+        final row = await supabase.from('payments').select('status').eq('id', paymentId).maybeSingle();
+        paid = row?['status'] == 'paid';
+      }
+    } catch (_) {
+      if (mounted) _comingSoon('Não foi possível abrir o pagamento. Pagas depois em Reservas.');
+      return;
+    }
+    if (paid && mounted) {
+      await _showRequestSent(
+        title: 'Sinal pago',
+        body: 'Fica cativo até $name aceitar. Se aceitar, podes cancelar até 48 h depois de pagar; depois disso, não é reembolsável.',
+        event: wedding,
+        paid: true,
+      );
+    }
+  }
+
   Future<void> _showRequestSent({
     required String title,
     required String body,
@@ -398,6 +476,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     String? recapValue,
     Wedding? event,
     bool paid = false,
+    /// Só um botão preto (p. ex. «Continuar» para pagar o sinal a seguir).
+    String? continueLabel,
   }) async {
     if (!mounted) return;
     // Mockup «Reserva pedida» (2026-11-20): estrela contente, o resumo do
@@ -448,11 +528,14 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               ),
             ],
             const SizedBox(height: 20),
-            Row(children: [
-              Expanded(child: ProfileButton('Ver conversa', height: 52, onTap: () => Navigator.of(ctx).pop(true))),
-              const SizedBox(width: 8),
-              Expanded(child: ProfileButton('OK', dark: true, height: 52, onTap: () => Navigator.of(ctx).pop(false))),
-            ]),
+            if (continueLabel != null)
+              ProfileButton(continueLabel, dark: true, height: 52, onTap: () => Navigator.of(ctx).pop(false))
+            else
+              Row(children: [
+                Expanded(child: ProfileButton('Ver conversa', height: 52, onTap: () => Navigator.of(ctx).pop(true))),
+                const SizedBox(width: 8),
+                Expanded(child: ProfileButton('OK', dark: true, height: 52, onTap: () => Navigator.of(ctx).pop(false))),
+              ]),
           ],
         ),
       ),
