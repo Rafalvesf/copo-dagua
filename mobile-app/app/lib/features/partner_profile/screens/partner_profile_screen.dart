@@ -19,6 +19,8 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/social/social.dart';
 import '../../profile/profile_widgets.dart';
+import '../../../core/partners/partner_achievements.dart';
+import '../../../shared/widgets/partner_achievements.dart';
 
 class PartnerProfileScreen extends ConsumerStatefulWidget {
   const PartnerProfileScreen({super.key});
@@ -168,7 +170,26 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
     final stats = ref.watch(partnerPublicStatsProvider(p.id)).value;
     final follow = ref.watch(partnerFollowInfoProvider(p.id)).value;
     final pub = ref.watch(publicProfileProvider(p.id)).value;
+    final achievements = ref.watch(partnerAchievementsProvider(p.id));
     return ProfileCard_Users(
+      // Conquistas por cima do cartão (mockup «Perfil do parceiro ·
+      // conquistas», 2026-11-22); sem conquistas, nada.
+      top: achievements.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: AchievementsCorner(partnerId: p.id, partnerName: name, background: AppTheme.background),
+              ),
+            ),
+      // Visto verde de verificado: perfil aprovado (publicado).
+      nameBadge: p.partnerProfileStatus == 'published'
+          ? const Padding(
+              padding: EdgeInsets.only(left: 6),
+              child: Icon(Hi.checkBadge, size: 18, color: AppTheme.accentOliveDark, semanticLabel: 'Verificado'),
+            )
+          : null,
       avatar: Semantics(
         button: true,
         label: 'Mudar foto de perfil',

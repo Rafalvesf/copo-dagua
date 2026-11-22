@@ -75,7 +75,16 @@ class AchievementIcon extends StatelessWidget {
 class AchievementsCorner extends ConsumerWidget {
   final String partnerId;
   final String partnerName;
-  const AchievementsCorner({super.key, required this.partnerId, required this.partnerName});
+
+  /// Fundo das pílulas: branco sobre fotos; `#F2F2F2` num cartão branco
+  /// (Perfil do parceiro).
+  final Color background;
+  const AchievementsCorner({
+    super.key,
+    required this.partnerId,
+    required this.partnerName,
+    this.background = Colors.white,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,7 +101,7 @@ class AchievementsCorner extends ConsumerWidget {
           Container(
             height: 28,
             padding: const EdgeInsets.only(left: 8, right: 10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+            decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(14)),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               AchievementIcon(list.first, size: 15),
               const SizedBox(width: 5),
@@ -105,7 +114,7 @@ class AchievementsCorner extends ConsumerWidget {
               width: 28,
               height: 28,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: background, shape: BoxShape.circle),
               child: AchievementIcon(a, size: 15),
             ),
           ],
