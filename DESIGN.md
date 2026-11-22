@@ -130,11 +130,14 @@ ecrãs. O resto da app mantém a tabela acima.
   `FALTAM 203 dias`, pedido 2026-11-22). **Empilhados na vertical**
   (Descobrir, lista de parceiros): uma **linha grossa 2 px `#CFCFCF`** entre
   cartões, 16 acima e abaixo (`CardsDivider`); nos carrosséis não há linha
-  entre cartões. Os cartões de «Os meus eventos» vão numa **moldura**
-  (forma A do mockup «Alerta com ação nos cartões», 2026-11-22): linha à
-  volta do cartão, cantos 22, interior 8, sem fundo — **cinzenta subtil
+  entre cartões. **Todos os cartões com foto** (eventos e parceiros, em
+  todo o lado) vão numa **moldura** (forma A do mockup «Alerta com ação nos
+  cartões», 2026-11-22; `PhotoCard.frameTone`): linha à volta do cartão,
+  cantos 22, interior 8, sem fundo e **sem brilho** — **cinzenta subtil
   1 px `#E3E3E3`** sem nada urgente, **1,5 da cor do tom** (§7) com coisas
-  por fazer; 16 a mais até «Descobrir».
+  por fazer. Nos carrosséis de eventos («Os meus eventos», perfil) **vê-se
+  a ponta do cartão seguinte** (`SnapCarousel(peek: true)`, 86 % da
+  largura); 16 a mais até «Descobrir».
   Os eventos já não levam as caixas de números
   (`MiniStats`) nem a barra de planeamento no cartão. **Nunca** voltar a
   pôr caixa branca ou sombra nestes cartões.
@@ -648,7 +651,7 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 - **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
   «Alerta com ação nos cartões», forma A; sem o sinal «!» na foto desde
   2026-11-22): a linha da cor do tom dá a volta a todo o cartão (a moldura
-  do §4, que brilha ao aparecer) e, por baixo do rodapé, sem linha própria,
+  do §4, sem brilho) e, por baixo do rodapé, sem linha própria,
   o ponto, a tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
   fotógrafo · +1») e o botão preto 36 com a ação — «Pagar» (pagamentos),
   «Ver» (propostas, presente), «Responder» («Diz se vais»), «Fazer» (o

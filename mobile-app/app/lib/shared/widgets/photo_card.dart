@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'alert_outline.dart';
 import 'snappy_tap.dart';
 
 /// Cartão com foto — **o mesmo em toda a app** para eventos e parceiros
@@ -44,6 +45,11 @@ class PhotoCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
+  /// Moldura (pedido 2026-11-22): todos os cartões com foto têm uma linha à
+  /// volta, cantos 22, interior 8, sem fundo — cinzenta subtil 1 `#E3E3E3`;
+  /// com coisas por fazer, 1,5 da cor do tom. Sem brilho.
+  final AlertTone? frameTone;
+
   const PhotoCard({
     super.key,
     required this.photo,
@@ -63,6 +69,7 @@ class PhotoCard extends StatelessWidget {
     this.height,
     this.onTap,
     this.onLongPress,
+    this.frameTone,
   });
 
   static const double photoHeight = 150;
@@ -152,7 +159,17 @@ class PhotoCard extends StatelessWidget {
             if (below != null) ...[const SizedBox(height: 10), below!],
           ]);
 
-    final card = SizedBox(width: width, height: height, child: body);
+    final framed = Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: frameTone == null
+            ? Border.all(color: AppTheme.line)
+            : Border.all(color: alertColor(frameTone!), width: 1.5),
+      ),
+      child: body,
+    );
+    final card = SizedBox(width: width, height: height, child: framed);
     if (onTap == null && onLongPress == null) return card;
     return GestureDetector(
       onLongPress: onLongPress,
