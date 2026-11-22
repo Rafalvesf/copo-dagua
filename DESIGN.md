@@ -226,6 +226,11 @@ ecrãs. O resto da app mantém a tabela acima.
   do parceiro 13, «×»; uma linha por conquista com o ícone branco num
   círculo 44 da sua cor, nome 16 e o que quer dizer 13, e a linha
   «Verificado»; «OK» preto 52).
+  No **Perfil do parceiro** (o cartão `ProfileCard_Users`, mockup «Perfil do
+  parceiro · conquistas», 2026-11-22) as mesmas conquistas vão **por cima do
+  cartão**, 14 acima da foto 76, com as pílulas e os discos a `#F2F2F2` (o
+  cartão é branco); sem conquistas, nada. Ao lado do nome, o visto verde
+  de verificado (perfil publicado).
 - **Preço:** **duas linhas, sem caixa nem linha** (pedido do Rafael,
   2026-11-22) — rótulo 9 `#57534E` em cima + valor 16 negrito por baixo,
   alinhados à direita: `DESDE` + `€X`, ou, para quem trabalha por

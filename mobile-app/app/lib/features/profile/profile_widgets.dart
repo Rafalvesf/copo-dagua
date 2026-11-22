@@ -100,6 +100,9 @@ class ProfileCard_Users extends StatelessWidget {
   final Widget? priceBox;
 
   final List<Widget> buttons;
+
+  /// Por cima de tudo (as conquistas do parceiro no Perfil, 2026-11-22).
+  final Widget? top;
   /// Etiquetas dos três números (o parceiro mostra avaliações).
   final List<String> labels;
   const ProfileCard_Users({
@@ -116,6 +119,7 @@ class ProfileCard_Users extends StatelessWidget {
     this.nameBadge,
     this.priceBox,
     this.buttons = const [],
+    this.top,
     this.labels = const ['Eventos', 'Seguidores', 'A seguir'],
   });
 
@@ -130,6 +134,7 @@ class ProfileCard_Users extends StatelessWidget {
         // Sem sombra (mockup).
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (top != null) top!,
           Row(children: [
             if (avatar != null) ...[
               SizedBox(width: 76, height: 76, child: avatar),
