@@ -403,14 +403,14 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   comentário (avatar 40, nome 16 **com «›»** — tocar abre o **perfil do
   organizador** que avaliou —, «zona · mês ano» 13, nota 12 com estrela
   preta, texto 14 justificado) e, se o parceiro respondeu, a **resposta em
-  balão** (forma B): branco, cantos 18, logótipo 24, nome 13 negrito,
-  etiqueta verde «Parceiro», texto 14 e «Respondeu em mês ano» 12. «Ver
+  balão** (forma B): branco, cantos 18, logótipo 24, nome 13 negrito com o
+  visto verde de verificado, etiqueta verde «Parceiro», texto 14 e «Respondeu em mês ano» 12. «Ver
   todas (N)» mostra o resto.
 - **@ nos perfis:** o `@` aparece na meta do perfil de organizadores **e de
   parceiros** («@luzdeagosto · Fotografia · Porto»; edita-se em «Editar
   perfil» → nome de utilizador).
 - **Perfil do organizador · «Avaliações que deixou · N»** (2026-11-22): uma
-  linha por parceiro que avaliou (logótipo 44, nome 16, «★ 5 · categoria ·
+  linha por parceiro que avaliou (logótipo 44, nome 16 com o visto, «★ 5 · categoria ·
   mês ano» 13, seta), que abre a página do parceiro; sem avaliações, não
   aparece.
 - **Topo do perfil do parceiro** (pedido do Rafael; foto 200 desde

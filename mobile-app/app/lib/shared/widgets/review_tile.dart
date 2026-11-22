@@ -358,6 +358,9 @@ class _ReplyBalloon extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
+            // Visto verde de verificado ao lado do nome (pedido 2026-11-22).
+            const SizedBox(width: 3),
+            Icon(Hi.checkBadge, size: 16, color: AppTheme.accentOliveDark, semanticLabel: 'Verificado'),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
