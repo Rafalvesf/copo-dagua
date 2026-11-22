@@ -23,6 +23,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/events/events_providers.dart';
+import '../../../core/home/home_providers.dart' show coupleBookingsProvider, pendingProposalsProvider;
 import '../../../core/guest_home/event_tables.dart' show EventTable, myEventTablesProvider;
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
@@ -32,7 +33,6 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/organizers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
-import '../../../core/tasks/task_engine_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -735,16 +735,6 @@ String? _mostUrgent(List<(String, DateTime?)> tasks) {
   return sorted.first.$1;
 }
 
-/// Ação do botão da pílula pela tarefa: pagamentos «Pagar», propostas
-/// «Ver», o resto «Fazer».
-String _actionFor(String task) {
-  final t = task.toLowerCase();
-  if (t.contains('pagar') || t.contains('sinal') || t.contains('pagamento')) return 'Pagar';
-  if (t.contains('proposta')) return 'Ver';
-  if (t.contains('pedido') && t.contains('entrar')) return 'Aceitar';
-  return 'Fazer';
-}
-
 /// Pílula de alerta por baixo do rodapé do cartão (mockup «Alerta com ação
 /// nos cartões», 2026-11-22): branca, linha 1,5 da cor do tom, ponto, a
 /// tarefa mais urgente (+N) e o botão preto 36 com a ação.
@@ -843,18 +833,37 @@ class _MyEventCard extends ConsumerWidget {
         ? wedding.venue
         : (wedding.location?.isNotEmpty == true ? wedding.location : null);
     final summary = ref.watch(_orgSummaryProvider(wedding.id)).value ?? const _OrgSummary();
-    // No evento aberto, o motor de tarefas é a fonte mais fresca.
-    final engine = active ? ref.watch(taskEngineControllerProvider) : null;
-    // Quantas coisas por fazer: o sinal no canto da foto (DESIGN.md §7, B1).
-    // O que há por fazer e já abriu, com o prazo de cada coisa.
-    final now = DateTime.now();
-    final dues = engine != null
-        ? [for (final t in engine.systemActive) if (!t.availableAt.isAfter(now)) t.dueDate]
-        : summary.dues;
-    final todo = dues.length;
-    final firstTask = engine != null
-        ? _mostUrgent([for (final t in engine.systemActive) if (!t.availableAt.isAfter(now)) (t.title, t.dueDate)])
-        : summary.firstOpen;
+    // Só o que está na lista «Para fazer» do painel (pedido 2026-11-22 —
+    // as sugestões não contam): pagamentos com prazo (o sinal logo; o
+    // restante só nos 6 dias antes do prazo), propostas dos parceiros e
+    // pedidos para entrar.
+    final items = <(String, DateTime?, String)>[];
+    for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[]) {
+      if (b.weddingId != wedding.id || b.status == BookingStatus.recusado) continue;
+      if (b.pendingDepositPaymentId != null) {
+        items.add((b.depositIsFull ? 'Pagar · ${b.partnerName}' : 'Pagar o sinal · ${b.partnerName}', b.pendingDepositDueAt, 'Pagar'));
+      }
+      if (b.pendingFinalPaymentId != null && (_daysTo(b.finalPaymentDueAt) ?? 0) <= 6) {
+        items.add(('Pagar o restante · ${b.partnerName}', b.finalPaymentDueAt, 'Pagar'));
+      }
+    }
+    for (final p in ref.watch(pendingProposalsProvider).value ?? const <ReceivedProposal>[]) {
+      if (p.weddingId == wedding.id) items.add(('Proposta de ${p.partnerName}', null, 'Ver'));
+    }
+    final requests = ref.watch(joinRequestsProvider(wedding.id)).value?.length ?? 0;
+    if (requests > 0) {
+      items.add(('$requests ${requests == 1 ? 'pedido para entrar' : 'pedidos para entrar'}', null, 'Aceitar'));
+    }
+    // A mais urgente primeiro (com prazo, o mais perto; sem prazo no fim).
+    items.sort((x, y) {
+      if (x.$2 == null && y.$2 == null) return 0;
+      if (x.$2 == null) return 1;
+      if (y.$2 == null) return -1;
+      return x.$2!.compareTo(y.$2!);
+    });
+    final dues = [for (final i in items) i.$2];
+    final todo = items.length;
+    final first = items.firstOrNull;
     final tone = _toneForAll(dues, wedding.weddingDate);
     // Cartão com foto (DESIGN.md §4, 2026-11-22): sem caixa nem sombra,
     // como os parceiros, dentro da moldura. Toque longo: arquivar ou
@@ -885,12 +894,12 @@ class _MyEventCard extends ConsumerWidget {
               : const InfoTag('Ainda sem convidados'),
       footerRight: _countdownBox(wedding.weddingDate),
       // A tarefa mais urgente com o botão da ação (2026-11-22).
-      below: todo > 0 && firstTask != null
+      below: first != null
           ? _TaskPill(
               tone: tone,
-              task: firstTask,
+              task: first.$1,
               more: todo - 1,
-              action: _actionFor(firstTask),
+              action: first.$3,
               onTap: () => _open(context, ref),
             )
           : null,
