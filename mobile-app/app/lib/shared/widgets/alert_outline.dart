@@ -96,10 +96,17 @@ class _AlertOutlineState extends State<AlertOutline> with SingleTickerProviderSt
             color: widget.fill,
             borderRadius: BorderRadius.circular(widget.radius),
             border: Border.all(color: color, width: 1.5),
-            boxShadow: v <= 0.01
-                ? null
-                : [BoxShadow(color: color.withValues(alpha: 0.25 + 0.35 * v), blurRadius: 4 + 12 * v, spreadRadius: 3 * v)],
           ),
+          // O brilho fica só na linha e uns pixéis para dentro (pedido
+          // 2026-11-22) — nunca à volta da caixa toda.
+          foregroundDecoration: v <= 0.01
+              ? null
+              : BoxDecoration(
+                  borderRadius: BorderRadius.circular(widget.radius),
+                  boxShadow: [
+                    BoxShadow(color: color.withValues(alpha: 0.35 + 0.45 * v), blurRadius: 2 + 6 * v, blurStyle: BlurStyle.inner),
+                  ],
+                ),
           child: child,
         );
       },
