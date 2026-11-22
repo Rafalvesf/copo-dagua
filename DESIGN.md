@@ -463,6 +463,15 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   é pedida depois dos extras. Nunca se volta a perguntar o dia, o local nem
   as pessoas. Fim: «Reserva pedida» (estrela contente, resumo, «Ver
   conversa» + «OK»); pagamento feito → estrela de parabéns.
+  **Com sinal** (pedido do Rafael, 2026-11-22, mockup «Reserva: quem paga e
+  pagar o sinal»): o último passo é só «Pedir reserva»; depois vem
+  **«Reserva feita!»** (estrela contente, resumo, «Continuar») e logo a
+  seguir o popup **«Pagar o sinal»** — resumo (reserva, sinal), «A pagar
+  agora», «+ taxa de serviço no passo seguinte», a nota (cativo até o
+  parceiro aceitar; aceite, cancela-se com devolução até 48 h depois de
+  pagar; depois, sem reembolso; recusado ou sem resposta em 48 h, é
+  libertado) e **«Pagar mais tarde» + «Pagar agora»**. Pago → «Sinal pago»
+  (parabéns).
 - **Pedir orçamento:** o mesmo fluxo — evento, pessoas, «O que procuras?»
   (hora e mensagem), Tudo certo? → «Pedir orçamento» → «Orçamento pedido».
   Na proposta: «Recusar» (pergunta o motivo, que segue para o parceiro na
