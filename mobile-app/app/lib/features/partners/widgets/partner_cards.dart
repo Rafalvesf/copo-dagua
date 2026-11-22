@@ -160,10 +160,15 @@ class FavoriteHeart extends ConsumerWidget {
           }
           ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
         },
+        // Encostado à direita (a área de toque continua 32): alinha com o
+        // preço por baixo, que já não tem caixa (2026-11-22).
         child: SizedBox(
           width: 32,
           height: 32,
-          child: Icon(favorited ? Hi.heart : Hi.heartOutline, size: size, color: AppTheme.ink),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Icon(favorited ? Hi.heart : Hi.heartOutline, size: size, color: AppTheme.ink),
+          ),
         ),
       ),
     );
