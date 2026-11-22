@@ -166,6 +166,12 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
               ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
               : _InvitedEventCard(wedding: guest[i - own.length]),
         ),
+        // Linha fina por baixo dos cartões e mais espaço até «Descobrir»
+        // (pedido do Rafael, 2026-11-22).
+        const Padding(
+          padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 8),
+          child: SizedBox(height: 1, child: ColoredBox(color: AppTheme.line)),
+        ),
       ],
       // O programa saiu daqui (pedido do Rafael, 2026-11-20): fica só no
       // painel do evento.
