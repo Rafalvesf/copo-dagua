@@ -115,7 +115,7 @@ class PhotoCard extends StatelessWidget {
         ClipRRect(borderRadius: BorderRadius.circular(22), child: photo),
         if (leftTag != null) Positioned(left: 12, top: 12, child: leftTag!),
         if (rightTag != null) Positioned(right: 12, top: 12, child: rightTag!),
-        if (photoAction != null) Positioned(right: 10, bottom: 10, child: photoAction!),
+        if (photoAction != null) Positioned(right: 12, bottom: 12, child: photoAction!),
         if (avatar != null)
           Positioned(
             left: 12,

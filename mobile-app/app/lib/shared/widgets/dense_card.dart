@@ -110,14 +110,16 @@ class PhotoPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        // 10×5 como as outras etiquetas (DESIGN.md §6) — a mesma altura da
+        // etiqueta e da nota por cima da foto.
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(color: dark ? AppTheme.ink : Colors.white, borderRadius: BorderRadius.circular(999)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           if (icon != null) ...[
             Icon(icon, size: 13, color: const Color(0xFFC9A24A)),
             const SizedBox(width: 3),
           ],
-          Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: dark ? Colors.white : AppTheme.ink)),
+          Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: dark ? Colors.white : AppTheme.ink)),
           if (muted != null)
             Text(' $muted', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
         ]),
