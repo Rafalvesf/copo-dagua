@@ -68,37 +68,30 @@ class AttendeesLine extends StatelessWidget {
   }
 }
 
-/// Três lugares vazios (círculos tracejados 24): ainda ninguém confirmou.
+/// Três lugares vazios: ainda ninguém confirmou. Com a mesma forma das
+/// fotos (círculo 20 com o aro 2 da cor do fundo, sobrepostos a 16), mas
+/// cinzentos (pedido 2026-11-22).
 class _Ghosts extends StatelessWidget {
   const _Ghosts();
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: 24 + 2 * 18,
+        width: 24 + 2 * 16,
         height: 24,
         child: Stack(children: [
-          for (var i = 0; i < 3; i++) Positioned(left: i * 18.0, child: const CustomPaint(size: Size(24, 24), painter: _DashedCircle())),
+          for (var i = 0; i < 3; i++)
+            Positioned(
+              left: i * 16.0,
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0E0E0),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppTheme.background, width: 2),
+                ),
+              ),
+            ),
         ]),
       );
-}
-
-class _DashedCircle extends CustomPainter {
-  const _DashedCircle();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFB5B0A8)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final r = Rect.fromLTWH(0.75, 0.75, size.width - 1.5, size.height - 1.5);
-    const n = 12;
-    const step = 2 * 3.141592653589793 / n;
-    for (var i = 0; i < n; i++) {
-      canvas.drawArc(r, i * step, step * 0.55, false, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
