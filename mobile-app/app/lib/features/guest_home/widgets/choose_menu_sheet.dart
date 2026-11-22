@@ -18,20 +18,39 @@ import '../../payments/open_payment.dart';
 
 /// O que fica escolhido para uma pessoa.
 class _Pick {
+  /// Escolho o menu (pago a comida desta pessoa).
+  final bool menu;
+
+  /// Eu ou quem vem comigo: as alergias são obrigatórias.
+  final bool mine;
   String? packageId;
   String allergies;
   bool none;
-  _Pick({this.packageId, this.allergies = '', this.none = false});
-  bool get done => packageId != null && (none || allergies.trim().isNotEmpty);
+  _Pick({required this.menu, required this.mine, this.packageId, this.allergies = '', this.none = false});
+  bool get answered => none || allergies.trim().isNotEmpty;
+  bool get done => (!menu || packageId != null) && (!mine || answered);
+
+  /// O que vai para o servidor: o menu (só se o escolho) e as alergias (se
+  /// respondidas). `null` = nada a guardar desta pessoa.
+  ({String key, String? packageId, String? allergies})? payload(String key) {
+    final pkg = menu ? packageId : null;
+    final a = answered ? (none ? '' : allergies.trim()) : null;
+    if (pkg == null && a == null) return null;
+    return (key: key, packageId: pkg, allergies: a);
+  }
 }
 
 /// «Escolher e pagar» / «Escolher os menus» (pedido do Rafael, 2026-11-22;
 /// mockup «Escolher o menu · popup»): popups por cima da página, para o
 /// convidado e para o organizador —
-///   1. «Escolhe os menus»: «PARA QUEM» com uma pílula por pessoa (eu, quem
-///      vem no meu convite e quem pago; o organizador com «Pagamos nós»,
-///      toda a gente), o menu e as alergias (sempre; «Nenhuma» conta);
-///   2. «Queres juntar alguma coisa?» (os extras, depois dos menus);
+///   1. «Escolhe os menus»: «PARA QUEM» com uma pílula por pessoa. O menu
+///      escolhe-o **quem paga** a comida (pedido 2026-11-22): eu por mim e
+///      por quem vem no meu convite quando cada um paga o seu; os
+///      organizadores por quem pagam («Pagamos nós» ou «Nós pagamos por»).
+///      Quem tem a comida paga por outros só diz as alergias (sempre;
+///      «Nenhuma» conta);
+///   2. «Queres juntar alguma coisa?» (os extras, depois dos menus — pagos
+///      por quem os junta);
 ///   3. pagar (cartão, Apple Pay ou Google Pay), se houver a minha parte.
 /// O voltar de cada passo regressa ao anterior.
 Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddingId, EventTable t) async {
@@ -61,6 +80,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
         ageGroup: 'adult',
         isMe: true,
         iPay: t.eachPays,
+        menu: true,
         packageId: t.myChoice?['package_id'] as String?,
         allergies: t.myChoice?['allergies'] as String?,
       ),
@@ -71,7 +91,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
   if (!context.mounted) return;
   if (packages.isEmpty || people.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(packages.isEmpty ? 'Ainda não há menus para escolher.' : 'Não há ninguém por quem escolhas aqui.'),
+      content: Text(packages.isEmpty ? 'Ainda não há menus para escolher.' : 'Aqui não tens nada para escolher.'),
     ));
     return;
   }
@@ -79,13 +99,19 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
   final picks = <String, _Pick>{
     for (final p in people)
       p.key: _Pick(
+        menu: p.menu,
+        mine: p.mine,
         packageId: packages.any((k) => k.id == p.packageId) ? p.packageId : null,
         allergies: p.allergies ?? '',
         none: p.allergies != null && p.allergies!.trim().isEmpty,
       ),
   };
   final picked = <String>{for (final p in people) ...p.extraIds};
-  final anyIPay = people.any((p) => p.iPay);
+  // Pago menus aqui? (Os extras que juntar, pago-os sempre eu.)
+  final anyIPay = people.any((p) => p.iPay && p.menu);
+  // Com «Pagamos nós», quem paga a mesa é o organizador: o pagamento da
+  // reserva; os outros pagam a sua parte.
+  final organizerBill = !t.eachPays && anyIPay;
   final deadline = t.choiceDeadline;
   final sub = [t.partnerName, if (deadline != null) 'escolhe até ${shortDate(deadline)}'].join(' · ');
   var stage = 0; // 0 menus · 1 extras · 2 guardar e pagar
@@ -94,7 +120,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
     final inviteExtras = extras
         .where((e) => chosenPkgs.isEmpty || e.packageIds.isEmpty || e.packageIds.any(chosenPkgs.contains))
         .toList();
-    final total = 1 + (inviteExtras.isEmpty ? 0 : 1) + (anyIPay ? 1 : 0);
+    final total = 1 + (inviteExtras.isEmpty ? 0 : 1) + (anyIPay || picked.isNotEmpty ? 1 : 0);
     if (stage == 0) {
       final ok = await showIslandSheet<bool>(
         confirmExit: anyIPay,
@@ -106,7 +132,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
           picks: picks,
           step: (1, total),
           subtitle: sub,
-          last: inviteExtras.isEmpty && !anyIPay,
+          last: inviteExtras.isEmpty && !anyIPay && picked.isEmpty,
         ),
       );
       if (ok != true) return;
@@ -115,16 +141,16 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
     }
     if (stage == 1 && inviteExtras.isNotEmpty) {
       final r = await showIslandSheet<Object>(
-        confirmExit: anyIPay,
+        confirmExit: true,
         context: context,
         isScrollControlled: true,
         builder: (_) => _ExtrasStep(
           extras: inviteExtras,
           picked: picked,
-          base: _menusTotal(people, picks, packages),
+          base: _menusTotal([for (final p in people) if (p.iPay && p.menu) p], picks, packages),
           step: (2, total),
           subtitle: sub,
-          last: !anyIPay,
+          payAfterMenus: anyIPay,
         ),
       );
       if (r == null) return;
@@ -151,10 +177,8 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
         res = await chooseMenus(
           bookingId: t.bookingId,
           people: [
-            // As minhas (obrigatórias) e as outras que já ficaram completas.
-            for (final p in people)
-              if (picks[p.key]!.done)
-                (key: p.key, packageId: picks[p.key]!.packageId!, allergies: picks[p.key]!.none ? '' : picks[p.key]!.allergies.trim()),
+            // Os menus que escolho e as alergias respondidas.
+            for (final p in people) ?picks[p.key]!.payload(p.key),
           ],
           extraIds: picked.toList(),
         );
@@ -179,11 +203,13 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
     if (!context.mounted) return;
     final paymentId = res.paymentId;
     if (paymentId == null || res.amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menus guardados.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(anyIPay || people.any((p) => p.menu) ? 'Menus guardados.' : 'Alergias guardadas.')),
+      );
       return;
     }
     final Object? back;
-    if (t.eachPays) {
+    if (!organizerBill) {
       final pct = await guestShareFeePct(ref, t.partnerId, t.totalAmount ?? res.amount, res.amount);
       if (!context.mounted) return;
       back = await context.push<Object?>('/pay', extra: PayArgs(
@@ -370,7 +396,7 @@ class _MenusStep extends StatefulWidget {
 
 class _MenusStepState extends State<_MenusStep> {
   late String _cur =
-      (widget.people.firstWhere((p) => p.mine && !widget.picks[p.key]!.done, orElse: () => widget.people.first)).key;
+      (widget.people.firstWhere((p) => !widget.picks[p.key]!.done, orElse: () => widget.people.first)).key;
   final _allergy = TextEditingController();
 
   @override
@@ -399,7 +425,7 @@ class _MenusStepState extends State<_MenusStep> {
   /// Depois de escolher o menu e as alergias, passa à pessoa seguinte que falta.
   void _maybeAdvance() {
     if (!widget.picks[_cur]!.done) return;
-    final next = widget.people.where((p) => p.mine && !widget.picks[p.key]!.done).firstOrNull;
+    final next = widget.people.where((p) => !widget.picks[p.key]!.done).firstOrNull;
     if (next != null && next.key != _cur) _select(next.key);
   }
 
@@ -408,27 +434,32 @@ class _MenusStepState extends State<_MenusStep> {
     final picks = widget.picks;
     final pick = picks[_cur]!;
     final p = _person;
-    final chosen = widget.people.where((x) => picks[x.key]!.packageId != null).length;
-    // Obrigatório só para mim e para quem vem comigo; os outros (quem pago,
-    // ou todos com «Pagamos nós») podem escolher o seu.
-    final missing = widget.people.where((x) => x.mine && !picks[x.key]!.done).firstOrNull;
-    final half = widget.people.where((x) => !x.mine && picks[x.key]!.packageId != null && !picks[x.key]!.done).firstOrNull;
+    final menuPeople = widget.people.where((x) => x.menu).toList();
+    final chosen = menuPeople.where((x) => picks[x.key]!.packageId != null).length;
+    // O menu é obrigatório para quem pago; as alergias, para mim e para quem
+    // vem comigo (dos outros, se as souber).
+    final missing = widget.people.where((x) => !picks[x.key]!.done).firstOrNull;
     final String cta;
-    if (missing == null && half != null) {
-      cta = 'Faltam as alergias de ${_firstName(half.name)}';
-    } else if (missing == null) {
+    if (missing == null) {
       cta = widget.last ? 'Guardar' : 'Continuar';
-    } else if (picks[missing.key]!.packageId == null) {
+    } else if (missing.menu && picks[missing.key]!.packageId == null) {
       cta = missing.isMe ? 'Falta o teu menu' : 'Falta o menu de ${_firstName(missing.name)}';
     } else {
       cta = missing.isMe ? 'Faltam as tuas alergias' : 'Faltam as alergias de ${_firstName(missing.name)}';
     }
-    final total = _menusTotal(widget.people, picks, widget.packages);
+    final total = _menusTotal(menuPeople, picks, widget.packages);
     final many = widget.people.length > 1;
+    final anyMenu = menuPeople.isNotEmpty;
+    final title = !anyMenu
+        ? (many ? 'As alergias' : 'As tuas alergias')
+        : many
+            ? 'Escolhe os menus'
+            : 'Escolhe o teu menu';
+    final chosenPkg = widget.packages.where((k) => k.id == pick.packageId).firstOrNull;
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        StepSheetHead(step: widget.step, title: many ? 'Escolhe os menus' : 'Escolhe o teu menu', subtitle: widget.subtitle),
+        StepSheetHead(step: widget.step, title: title, subtitle: widget.subtitle),
         const SizedBox(height: 16),
         if (many) ...[
           const _Caps('PARA QUEM'),
@@ -446,26 +477,50 @@ class _MenusStepState extends State<_MenusStep> {
           ]),
           if (p.ownerName != null && !p.isMe) ...[
             const SizedBox(height: 8),
-            Text('Vem com ${_firstName(p.ownerName!)}${p.iPay ? ' · pagas tu' : ''}',
+            Text('Vem com ${_firstName(p.ownerName!)}${p.iPay && p.menu ? ' · pagas tu' : ''}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ],
           const SizedBox(height: 16),
         ],
-        _Caps('MENU ${_who(p)}'),
-        _Group([
-          for (final k in widget.packages)
-            _Row(
-              title: k.name,
-              meta: k.description,
-              trailing: euros(k.price),
-              on: pick.packageId == k.id,
-              onTap: () {
-                setState(() => pick.packageId = k.id);
-                _maybeAdvance();
-              },
+        if (p.menu) ...[
+          _Caps('MENU ${_who(p)}'),
+          _Group([
+            for (final k in widget.packages)
+              _Row(
+                title: k.name,
+                meta: k.description,
+                trailing: euros(k.price),
+                on: pick.packageId == k.id,
+                onTap: () {
+                  setState(() => pick.packageId = k.id);
+                  _maybeAdvance();
+                },
+              ),
+          ]),
+          const SizedBox(height: 16),
+        ] else ...[
+          // A comida paga-a outro: quem paga escolhe o menu (pedido
+          // 2026-11-22); aqui só as alergias (e, a seguir, os extras).
+          _Caps('MENU ${_who(p)}'),
+          _Group([
+            Container(
+              constraints: const BoxConstraints(minHeight: 56),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              alignment: Alignment.centerLeft,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(chosenPkg?.name ?? 'Ainda por escolher',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(
+                  p.pays == 'organizers'
+                      ? 'Escolhem os anfitriões: são eles que pagam.'
+                      : 'Escolhe quem paga a comida.',
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                ),
+              ]),
             ),
-        ]),
-        const SizedBox(height: 16),
+          ]),
+          const SizedBox(height: 16),
+        ],
         _Caps('ALERGIAS ${_who(p)}'),
         Row(children: [
           Expanded(
@@ -508,17 +563,26 @@ class _MenusStepState extends State<_MenusStep> {
         const SizedBox(height: 16),
         Row(children: [
           Expanded(
-            child: Text(many ? '$chosen de ${widget.people.length} menus' : 'O teu menu',
+            child: Text(
+                !anyMenu
+                    ? 'Os menus escolhem-nos os anfitriões'
+                    : many
+                        ? '$chosen de ${menuPeople.length} menus'
+                        : 'O teu menu',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ),
           if (total > 0)
             Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 16),
-        _Btn(cta, onTap: missing == null && half == null ? () => Navigator.of(context).pop(true) : null),
+        _Btn(cta, onTap: missing == null ? () => Navigator.of(context).pop(true) : null),
         const SizedBox(height: 10),
         Text(
-          widget.last ? 'Podes mudar até a escolha fechar.' : 'A seguir: os extras e depois pagar.',
+          widget.last
+              ? 'Podes mudar até a escolha fechar.'
+              : anyMenu
+                  ? 'A seguir: os extras e depois pagar.'
+                  : 'A seguir: se quiseres, extras (pagas tu).',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
         ),
@@ -534,15 +598,15 @@ class _ExtrasStep extends StatefulWidget {
   final (int, int) step;
   final String subtitle;
 
-  /// Sem pagamento a seguir: o botão guarda.
-  final bool last;
+  /// Há menus meus para pagar a seguir (senão, sem extras, guarda).
+  final bool payAfterMenus;
   const _ExtrasStep({
     required this.extras,
     required this.picked,
     required this.base,
     required this.step,
     required this.subtitle,
-    required this.last,
+    required this.payAfterMenus,
   });
 
   @override
@@ -555,7 +619,8 @@ class _ExtrasStepState extends State<_ExtrasStep> {
   @override
   Widget build(BuildContext context) {
     final add = widget.extras.where((e) => _on.contains(e.id)).fold<double>(0, (s, e) => s + e.price);
-    final go = widget.last ? 'Guardar' : 'Continuar · ${euros(widget.base + add)}';
+    final last = !widget.payAfterMenus && _on.isEmpty;
+    final go = last ? 'Guardar' : 'Continuar · ${euros(widget.base + add)}';
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -579,7 +644,12 @@ class _ExtrasStepState extends State<_ExtrasStep> {
         const SizedBox(height: 16),
         Row(children: [
           Expanded(
-            child: Text(_on.isEmpty ? 'Menus' : 'Menus + ${_on.length} ${_on.length == 1 ? 'extra' : 'extras'}',
+            child: Text(
+                widget.base <= 0
+                    ? (_on.isEmpty ? 'Sem extras' : '${_on.length} ${_on.length == 1 ? 'extra' : 'extras'} · pagas tu')
+                    : _on.isEmpty
+                        ? 'Menus'
+                        : 'Menus + ${_on.length} ${_on.length == 1 ? 'extra' : 'extras'}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ),
           Text(euros(widget.base + add), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -590,7 +660,7 @@ class _ExtrasStepState extends State<_ExtrasStep> {
           const SizedBox(width: 8),
           Expanded(flex: 2, child: _Btn(go, onTap: () => Navigator.of(context).pop({..._on}))),
         ]),
-        if (!widget.last) ...[
+        if (!last) ...[
           const SizedBox(height: 10),
           const Text('+ taxa de serviço no passo seguinte',
               textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),

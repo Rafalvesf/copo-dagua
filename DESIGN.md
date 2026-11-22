@@ -671,17 +671,21 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 ## 6.6 Menus por pessoa (pedido do Rafael, 2026-11-22, migração 216; mockup «Escolher o menu · popup»)
 
 - **Já não há menu igual para todos:** cada pessoa tem o seu menu.
-- **Quem escolhe:** cada pessoa escolhe o seu e o de quem vem no seu
-  convite (acompanhantes e filhos) — igual para convidados e
-  organizadores. Escolhes também por quem pagas a comida: com «Pagamos
-  nós», os organizadores podem escolher por qualquer pessoa do evento;
-  quando cada convite paga o seu, pelas pessoas de «Nós pagamos por». Só é
-  obrigatório escolher por ti e por quem vem contigo; os outros podem
-  escolher o seu.
+- **Quem escolhe o menu: quem paga a comida** (pedido do Rafael,
+  2026-11-22, migração 217). Quando cada convite paga o seu, escolhes o teu
+  e o de quem vem no teu convite (acompanhantes e filhos); os organizadores
+  escolhem por quem pagam — toda a gente com «Pagamos nós», ou as pessoas
+  de «Nós pagamos por». **Quem tem a comida paga por outros só diz as
+  alergias** (dele e de quem traz) e pode juntar **extras, que paga ele**.
+  As alergias de quem vem contigo são obrigatórias; as dos outros, se as
+  souberes.
 - **Popup** (`chooseMenuAndPay`, `choose_menu_sheet.dart`): 1 «Escolhe os
   menus» — «PARA QUEM» com uma pílula 38 por pessoa («Tu · Carne», a aberta
   a verde), «MENU DO TOMÁS · 4» com os menus num grupo, «ALERGIAS DO TOMÁS»
-  (caixa 52 + pílula «Nenhuma»; **pedem-se sempre**), «3 de 4 menus» + o
+  (caixa 52 + pílula «Nenhuma»; **pedem-se sempre**); para quem não
+  escolhes o menu, em vez dos menus, o menu já escolhido (ou «Ainda por
+  escolher») e «Escolhem os anfitriões: são eles que pagam.» — o título
+  passa a «As tuas alergias»; «3 de 4 menus» + o
   valor 20 e o botão que diz o que falta («Falta o menu da Rita») → 2
   «Queres juntar alguma coisa?» (os extras do convite, **depois dos
   menus**; «Sem extras» + «Continuar · 98 €») → 3 pagar.

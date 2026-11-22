@@ -494,6 +494,14 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Cada pessoa tem o seu menu: escolhes o teu, o dos teus acompanhantes e o de quem pagas; com «Pagamos nós» os organizadores escolhem por todos. Alergias sempre. Na reserva, «Nós pagamos por» pessoas escolhidas. Sem ela, o popup novo de menus não guarda.",
     check: { kind: "marker", id: "216" },
   },
+  {
+    file: "217_payer_chooses_menu.sql",
+    date: "2026-11-22",
+    title: "Quem paga escolhe o menu",
+    what: "Corre depois da 216. O menu de cada pessoa escolhe-o quem paga a comida dela; quem tem a comida paga por outros só diz as alergias e pode juntar extras, que paga ele.",
+    after: "216_menus_per_person.sql",
+    check: { kind: "marker", id: "217" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
