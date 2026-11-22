@@ -255,9 +255,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             // Link que a pessoa abriu antes de entrar (2026-11-03).
             final pending = PendingDeepLink.take();
             if (pending != null) return pending;
-            // Pedido do utilizador (2026-10-17): quem organiza entra
-            // sempre na aba Parceiros.
-            return homeForRole == '/home' ? '/partners' : homeForRole;
+            // Pedido do Rafael (2026-11-22): ao abrir a app, quem organiza
+            // entra logo na aba Eventos (antes: Parceiros, 2026-10-17).
+            return homeForRole == '/home' ? '/eventos' : homeForRole;
           }
           // Mantém o utilizador na área certa mesmo que a role mude a
           // meio da sessão (troca rápida de conta de demonstração).
