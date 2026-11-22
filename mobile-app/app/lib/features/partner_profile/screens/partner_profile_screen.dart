@@ -185,8 +185,8 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
             ),
       // Visto verde de verificado: perfil aprovado (publicado).
       nameBadge: p.partnerProfileStatus == 'published'
-          ? const Padding(
-              padding: EdgeInsets.only(left: 6),
+          ? Padding(
+              padding: const EdgeInsets.only(left: 6),
               child: Icon(Hi.checkBadge, size: 18, color: AppTheme.accentOliveDark, semanticLabel: 'Verificado'),
             )
           : null,
