@@ -554,11 +554,14 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         if (_eachPays) ...[
           const SizedBox(height: 8),
           _caps('NÓS PAGAMOS POR (SE QUISERES)'),
-          _group([
-            Container(
-              constraints: const BoxConstraints(minHeight: 56),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(children: [
+          // Mockup «Quem paga?» (Menus por convite, 2026-11-22): um cartão
+          // com «Pessoas» + «Escolher» e, lá dentro, as escolhidas em
+          // pílulas verdes com «×».
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
                     const Text('Pessoas', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -570,6 +573,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
                     ),
                   ]),
                 ),
+                const SizedBox(width: 12),
                 SnappyTap(
                   onTap: _pickPaidFor,
                   child: Container(
@@ -577,34 +581,21 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     alignment: Alignment.center,
                     decoration: const ShapeDecoration(
+                      color: Colors.white,
                       shape: StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
                     ),
                     child: const Text('Escolher', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ),
                 ),
               ]),
-            ),
-          ]),
-          if (_paidFor.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final e in _paidFor.entries)
-                SnappyTap(
-                  onTap: () => setState(() => _paidFor.remove(e.key)),
-                  child: Container(
-                    height: 38,
-                    padding: const EdgeInsets.only(left: 16, right: 12),
-                    decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(19)),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Text(e.value.split(' ').first,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      const SizedBox(width: 6),
-                      Icon(Hi.xMark, size: 16, color: AppTheme.inkMuted),
-                    ]),
-                  ),
-                ),
+              if (_paidFor.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  for (final e in _paidFor.entries) PaidForChip(e.value, onRemove: () => setState(() => _paidFor.remove(e.key))),
+                ]),
+              ],
             ]),
-          ],
+          ),
           const SizedBox(height: 10),
           _note(_paidFor.isEmpty
               ? 'Os outros pagam como sempre: cada convite por si e por quem traz.'
@@ -1082,8 +1073,40 @@ class _Btn extends StatelessWidget {
 }
 
 
-/// «Por quem pagamos?» (mockup «Quem paga?», 2026-11-22): os convidados que
-/// vão e quem cada um traz, com procurar; toca para escolher.
+/// Pílula verde com o nome e um «×» num círculo branco (mockup «Quem
+/// paga?»): uma pessoa por quem pagamos.
+class PaidForChip extends StatelessWidget {
+  final String name;
+  final VoidCallback onRemove;
+  const PaidForChip(this.name, {super.key, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onRemove,
+        child: Container(
+          height: 38,
+          padding: const EdgeInsets.only(left: 16, right: 6),
+          decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(19)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Text(name.split(' ').first, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+            const SizedBox(width: 8),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.25)),
+              alignment: Alignment.center,
+              child: Icon(Hi.xMark, size: 13, color: Colors.white),
+            ),
+          ]),
+        ),
+      );
+}
+
+/// «Por quem pagamos?» (mockup «Menus por convite e cadeirinhas»,
+/// 2026-11-22): voltar + «×», «N pessoas escolhidas», procurar e um grupo
+/// por convite — «**João** traz Ana e Manuel» por cima, e uma linha por
+/// pessoa (avatar 44 branco com as iniciais, nome 16, «Paga por si» /
+/// «Pagas tu» a verde / «Paga João», e o visto verde à direita).
 class PaidForSheet extends StatefulWidget {
   final List<Map<String, dynamic>> people;
   final Map<String, String> initial;
@@ -1097,20 +1120,46 @@ class _PaidForSheetState extends State<PaidForSheet> {
   late final Map<String, String> _on = Map.of(widget.initial);
   String _q = '';
 
+  static String _first(String s) => s.trim().split(RegExp(r'\s+')).first;
+
+  static String _initials(String s) {
+    final parts = s.trim().split(RegExp(r'\s+')).where((x) => x.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+  }
+
+  /// Convites: o convidado e quem traz (pela chave do convite).
+  List<(Map<String, dynamic>?, List<Map<String, dynamic>>)> _invites(List<Map<String, dynamic>> people) {
+    final byKey = {for (final p in people) p['key'] as String: p};
+    final groups = <String, List<Map<String, dynamic>>>{};
+    final order = <String>[];
+    for (final p in people) {
+      final owner = (p['owner_key'] as String?) ?? (p['key'] as String);
+      if (!groups.containsKey(owner)) order.add(owner);
+      groups.putIfAbsent(owner, () => []).add(p);
+    }
+    return [
+      for (final k in order) (byKey[k], [for (final p in groups[k]!) if (p['key'] != k) p]),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final q = _q.trim().toLowerCase();
-    final shown = [
-      for (final p in widget.people)
-        if (q.isEmpty ||
-            '${p['name']}'.toLowerCase().contains(q) ||
-            '${p['owner_name'] ?? ''}'.toLowerCase().contains(q))
-          p,
+    bool match(Map<String, dynamic> p) => q.isEmpty || '${p['name']}'.toLowerCase().contains(q);
+    final invites = [
+      for (final (host, comp) in _invites(widget.people))
+        if ((host != null && match(host)) || comp.any(match)) (host, comp),
     ];
+    final solo = [for (final (h, c) in invites) if (c.isEmpty && h != null) h];
+    final withCompanions = [for (final i in invites) if (i.$2.isNotEmpty) i];
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          IslandBackButton(onTap: () => Navigator.of(context).pop()),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Text('Por quem pagamos?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -1139,18 +1188,26 @@ class _PaidForSheetState extends State<PaidForSheet> {
             onChanged: (v) => setState(() => _q = v),
           ),
         ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
-          child: Column(children: [
-            for (final (i, p) in shown.indexed)
-              Container(
-                decoration: i == 0 ? null : const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFD9D9D9)))),
-                child: _row(p),
-              ),
-          ]),
-        ),
+        for (final (host, comp) in withCompanions) ...[
+          const SizedBox(height: 16),
+          Text.rich(
+            TextSpan(children: [
+              TextSpan(text: _first('${host?['name'] ?? comp.first['owner_name'] ?? ''}'), style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              TextSpan(text: ' traz ${_list([for (final c in comp) _first('${c['name']}')])}'),
+            ]),
+            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          ),
+          const SizedBox(height: 8),
+          _group([?host, ...comp]),
+        ],
+        if (solo.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          if (withCompanions.isNotEmpty) ...[
+            const Text('Vêm sozinhos', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            const SizedBox(height: 8),
+          ],
+          _group(solo),
+        ],
         const SizedBox(height: 20),
         SnappyTap(
           onTap: () => Navigator.of(context).pop(Map.of(_on)),
@@ -1166,36 +1223,65 @@ class _PaidForSheetState extends State<PaidForSheet> {
     );
   }
 
+  static String _list(List<String> xs) =>
+      xs.length <= 1 ? xs.join() : '${xs.sublist(0, xs.length - 1).join(', ')} e ${xs.last}';
+
+  Widget _group(List<Map<String, dynamic>> rows) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+        child: Column(children: [
+          for (final (i, p) in rows.indexed)
+            Container(
+              decoration: i == 0 ? null : const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFD9D9D9)))),
+              child: _row(p),
+            ),
+        ]),
+      );
+
   Widget _row(Map<String, dynamic> p) {
     final key = p['key'] as String;
     final name = '${p['name']}';
     final owner = p['owner_name'] as String?;
     final on = _on.containsKey(key);
-    return SnappyTap(
-      onTap: () => setState(() => on ? _on.remove(key) : _on[key] = name),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 56),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(children: [
-          Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: on ? AppTheme.accentOliveDark : Colors.white,
-              border: on ? null : Border.all(color: AppTheme.inkMuted, width: 1.5),
+    return Semantics(
+      button: true,
+      selected: on,
+      child: SnappyTap(
+        onTap: () => setState(() => on ? _on.remove(key) : _on[key] = name),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 64),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+              alignment: Alignment.center,
+              child: Text(_initials(name), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
-            child: on ? Icon(Hi.check, size: 13, color: Colors.white) : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              Text(on ? 'Pagas tu' : owner != null ? 'Vem com ${owner.split(' ').first}' : 'Paga por si',
-                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ]),
-          ),
-        ]),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(
+                  on ? 'Pagas tu' : owner != null ? 'Paga ${_first(owner)}' : 'Paga por si',
+                  style: TextStyle(fontSize: 13, color: on ? const Color(0xFF3F7A4F) : AppTheme.inkMuted),
+                ),
+              ]),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: on ? AppTheme.accentOliveDark : Colors.white,
+                border: on ? null : Border.all(color: AppTheme.inkMuted, width: 1.5),
+              ),
+              child: on ? Icon(Hi.check, size: 14, color: Colors.white) : null,
+            ),
+          ]),
+        ),
       ),
     );
   }

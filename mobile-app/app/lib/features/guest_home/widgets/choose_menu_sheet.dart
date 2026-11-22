@@ -28,14 +28,30 @@ class _Pick {
   String? packageId;
   String allergies;
   bool none;
-  _Pick({required this.menu, required this.mine, this.packageId, this.allergies = '', this.none = false});
+
+  /// O menu que está guardado e o preço do menu de quem paga (219): sem
+  /// [menu], posso trocar por um do mesmo valor ou mais caro.
+  final String? savedPackageId;
+  final double? basePrice;
+  _Pick({
+    required this.menu,
+    required this.mine,
+    this.packageId,
+    this.allergies = '',
+    this.none = false,
+    this.savedPackageId,
+    this.basePrice,
+  });
+
+  /// Posso trocar o menu que outro paga (já escolhido por ele).
+  bool get canUpgrade => !menu && mine && basePrice != null && savedPackageId != null;
   bool get answered => none || allergies.trim().isNotEmpty;
   bool get done => (!menu || packageId != null) && (!mine || answered);
 
   /// O que vai para o servidor: o menu (só se o escolho) e as alergias (se
   /// respondidas). `null` = nada a guardar desta pessoa.
   ({String key, String? packageId, String? allergies})? payload(String key) {
-    final pkg = menu ? packageId : null;
+    final pkg = menu ? packageId : (canUpgrade && packageId != savedPackageId ? packageId : null);
     final a = answered ? (none ? '' : allergies.trim()) : null;
     if (pkg == null && a == null) return null;
     return (key: key, packageId: pkg, allergies: a);
@@ -104,6 +120,8 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
       p.key: _Pick(
         menu: p.menu,
         mine: p.mine,
+        savedPackageId: p.packageId,
+        basePrice: p.basePrice,
         packageId: packages.any((k) => k.id == p.packageId) ? p.packageId : null,
         allergies: p.allergies ?? '',
         none: p.allergies != null && p.allergies!.trim().isEmpty,
@@ -125,7 +143,8 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
     final inviteExtras = extras
         .where((e) => chosenPkgs.isEmpty || e.packageIds.isEmpty || e.packageIds.any(chosenPkgs.contains))
         .toList();
-    final total = 1 + (inviteExtras.isEmpty ? 0 : 1) + (anyIPay || picked.isNotEmpty ? 1 : 0);
+    final upgrade = _upgradeTotal(picks, packages);
+    final total = 1 + (inviteExtras.isEmpty ? 0 : 1) + (anyIPay || picked.isNotEmpty || upgrade > 0 ? 1 : 0);
     if (stage == 0) {
       final ok = await showIslandSheet<Object>(
         confirmExit: anyIPay,
@@ -137,7 +156,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
           picks: picks,
           step: (1, total),
           subtitle: sub,
-          last: inviteExtras.isEmpty && !anyIPay && picked.isEmpty,
+          last: inviteExtras.isEmpty && !anyIPay && picked.isEmpty && upgrade <= 0,
           paidForCount: t.iOrganize && t.eachPays && !legacy ? paidFor.length : null,
         ),
       );
@@ -156,6 +175,8 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
             picks[p.key] = _Pick(
               menu: p.menu,
               mine: p.mine,
+              savedPackageId: p.packageId,
+              basePrice: p.basePrice,
               packageId: old?.packageId ?? (packages.any((k) => k.id == p.packageId) ? p.packageId : null),
               allergies: old?.allergies ?? p.allergies ?? '',
               none: old?.none ?? (p.allergies != null && p.allergies!.trim().isEmpty),
@@ -182,10 +203,10 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
         builder: (_) => _ExtrasStep(
           extras: inviteExtras,
           picked: picked,
-          base: _menusTotal([for (final p in people) if (p.iPay && p.menu) p], picks, packages),
+          base: _menusTotal([for (final p in people) if (p.iPay && p.menu) p], picks, packages) + upgrade,
           step: (2, total),
           subtitle: sub,
-          payAfterMenus: anyIPay,
+          payAfterMenus: anyIPay || upgrade > 0,
         ),
       );
       if (r == null) return;
@@ -263,6 +284,17 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
     if (back != 'back') return;
     stage = inviteExtras.isEmpty ? 0 : 1;
   }
+}
+
+/// O que pago a mais por trocar menus que outros pagam (219).
+double _upgradeTotal(Map<String, _Pick> picks, List<ServicePackage> packages) {
+  var sum = 0.0;
+  for (final p in picks.values) {
+    if (!p.canUpgrade) continue;
+    final pkg = packages.where((k) => k.id == p.packageId).firstOrNull;
+    if (pkg != null && pkg.price > p.basePrice!) sum += pkg.price - p.basePrice!;
+  }
+  return sum;
 }
 
 double _menusTotal(List<MenuPerson> people, Map<String, _Pick> picks, List<ServicePackage> packages) {
@@ -617,6 +649,39 @@ class _MenusStepState extends State<_MenusStep> {
               ),
           ]),
           const SizedBox(height: 16),
+        ] else if (pick!.canUpgrade) ...[
+          // O menu paga-o outro, mas posso trocar por um do mesmo valor ou
+          // mais caro e pagar a diferença (pedido 2026-11-22, migração 219).
+          _Caps('MENU ${_who(p)}'),
+          _Group([
+            for (final k in widget.packages)
+              Opacity(
+                opacity: k.price < pick.basePrice! ? 0.4 : 1,
+                child: _Row(
+                  title: k.name,
+                  meta: k.id == pick.savedPackageId && k.price == pick.basePrice
+                      ? 'Escolhido por quem paga'
+                      : k.price < pick.basePrice!
+                          ? 'Mais barato: não dá para trocar'
+                          : k.price > pick.basePrice!
+                              ? '+ ${euros(k.price - pick.basePrice!)} · pagas tu'
+                              : k.description,
+                  trailing: euros(k.price),
+                  on: pick.packageId == k.id,
+                  onTap: () {
+                    if (k.price < pick.basePrice!) return;
+                    setState(() => pick.packageId = k.id);
+                  },
+                ),
+              ),
+          ]),
+          const SizedBox(height: 10),
+          Text(
+            '${p.pays == 'organizers' ? 'Os anfitriões pagam' : 'Quem paga escolheu'} um menu de ${euros(pick.basePrice!)}. '
+            'Podes trocar por um do mesmo valor ou mais caro: pagas tu a diferença.',
+            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          ),
+          const SizedBox(height: 16),
         ] else ...[
           // A comida paga-a outro: quem paga escolhe o menu (pedido
           // 2026-11-22); aqui só as alergias (e, a seguir, os extras).
@@ -684,14 +749,15 @@ class _MenusStepState extends State<_MenusStep> {
           Expanded(
             child: Text(
                 !anyMenu
-                    ? 'Os menus escolhem-nos os anfitriões'
+                    ? (_upgradeTotal(picks, widget.packages) > 0 ? 'Pagas a diferença' : 'Os menus escolhem-nos os anfitriões')
                     : many
                         ? '$chosen de ${_menuPeople.length} menus'
                         : 'O teu menu',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ),
-          if (total > 0)
-            Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          if (total + _upgradeTotal(picks, widget.packages) > 0)
+            Text(euros(total + _upgradeTotal(picks, widget.packages)),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 16),
         _Btn(cta, onTap: missing == null ? () => Navigator.of(context).pop(true) : null),

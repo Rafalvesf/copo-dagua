@@ -183,6 +183,11 @@ class MenuPerson {
   final String? allergies;
   final List<String> extraIds;
 
+  /// O menu que quem paga escolheu e o preço dele (219): quem tem a comida
+  /// paga por outros pode trocar por um do mesmo valor ou mais caro.
+  final String? basePackageId;
+  final double? basePrice;
+
   const MenuPerson({
     required this.key,
     required this.name,
@@ -196,6 +201,8 @@ class MenuPerson {
     this.packageId,
     this.allergies,
     this.extraIds = const [],
+    this.basePackageId,
+    this.basePrice,
   });
 
   bool get isChild => ageGroup == 'child';
@@ -214,6 +221,8 @@ class MenuPerson {
       iPay: j['pays'] == 'me',
       packageId: c?['package_id'] as String?,
       allergies: c?['allergies'] as String?,
+      basePackageId: (c?['base_package_id'] ?? c?['package_id']) as String?,
+      basePrice: c?['package_id'] == null ? null : (c?['base_price'] as num?)?.toDouble(),
       extraIds: [
         for (final e in (c?['extras'] as List? ?? const []))
           if (e is Map && e['id'] is String) e['id'] as String,
