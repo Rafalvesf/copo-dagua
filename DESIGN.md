@@ -699,10 +699,23 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   paga o seu — «Nós pagamos por · N pessoas» + «Escolher» (abre «Por quem
   pagamos?»); ao guardar, essas pessoas passam para a vossa conta e
   escolhes o menu delas.
-- **«Quem paga?» na reserva:** «Pagamos nós» ou «Cada convite paga o seu»
-  e, neste, «NÓS PAGAMOS POR (SE QUISERES)» — «Escolher» abre «Por quem
-  pagamos?» (procurar, os convidados e quem trazem, «Pagas tu» / «Vem com
-  João» / «Paga por si»); os escolhidos ficam em pílulas com «×».
+- **Trocar o menu que outro paga** (pedido 2026-11-22, migração 219): quem
+  tem a comida paga por outros vê o menu escolhido («Escolhido por quem
+  paga») e pode trocar por um **do mesmo valor ou mais caro** — os mais
+  baratos ficam apagados («Mais barato: não dá para trocar»), os mais caros
+  dizem «+ 16 € · pagas tu»; **a diferença paga-a quem troca**. Se quem paga
+  mudar o menu, a troca sai.
+- **«Quem paga?» na reserva** (mockup «Menus por convite e cadeirinhas»,
+  2026-11-22): «Pagamos nós» ou «Cada convite paga o seu» (opção escolhida
+  a verde) e, neste, «NÓS PAGAMOS POR (SE QUISERES)» — um cartão `#F2F2F2`
+  com «Pessoas» + «Escolhe pelo nome · 2 escolhidas» e «Escolher» (contorno
+  36); as escolhidas ficam **dentro do cartão** em pílulas verdes 38 com o
+  «×» num círculo; por baixo a nota 13. «Escolher» abre **«Por quem
+  pagamos?»**: voltar + «×», «2 pessoas escolhidas», «Procurar
+  convidado» e um grupo por convite — «**João** traz Ana e Manuel» 13 por
+  cima e uma linha por pessoa (avatar 44 branco com as iniciais, nome 16,
+  «Paga por si» / «Pagas tu» a verde / «Paga João», visto verde à
+  direita); «Guardar · 2 pessoas» preto 52.
 - **Pagar:** só cartão, Apple Pay e Google Pay em toda a app — sem
   Multibanco nem MB WAY (pedido 2026-11-22).
 

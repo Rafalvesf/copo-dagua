@@ -510,6 +510,14 @@ export const MIGRATIONS: PendingMigration[] = [
     after: "217_payer_chooses_menu.sql",
     check: { kind: "marker", id: "218" },
   },
+  {
+    file: "219_menu_upgrade.sql",
+    date: "2026-11-22",
+    title: "Trocar o menu que outro paga",
+    what: "Corre depois da 218. Quem tem o menu pago por outros pode trocar por um do mesmo valor ou mais caro e paga a diferença; «Por quem pagamos?» agrupa por convite.",
+    after: "218_paid_for_after_booking.sql",
+    check: { kind: "marker", id: "219" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
