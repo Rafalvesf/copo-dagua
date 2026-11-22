@@ -19,6 +19,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/social/social.dart';
 import '../../profile/profile_widgets.dart';
+import '../../../core/profile/username.dart' show myUsernameProvider;
 import '../../../core/partners/partner_achievements.dart';
 import '../../../shared/widgets/partner_achievements.dart';
 
@@ -163,7 +164,10 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
     final p = widget.profile;
     if (p == null) return const SizedBox.shrink();
     final name = (p.businessName?.isEmpty ?? true) ? (p.fullName ?? '') : p.businessName!;
+    // O @ do parceiro, como nos perfis dos organizadores (2026-11-22).
+    final handle = ref.watch(myUsernameProvider).value?.username;
     final meta = [
+      if (handle != null && handle.isNotEmpty) '@$handle',
       if (p.category != null) p.category!.label,
       if (p.location != null && p.location!.isNotEmpty) p.location!,
     ].join(' · ');

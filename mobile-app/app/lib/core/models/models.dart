@@ -1222,6 +1222,9 @@ class Review {
   final DateTime? responseAt;
   final String status;
 
+  /// Quem escreveu (`reviews.couple_id`): abre o perfil desse organizador.
+  final String? coupleId;
+
   /// Nome a mostrar ("Rafael & Inês") — o mesmo `events.partner_name_1`/
   /// `partner_name_2` que aparece em "Os noivos", não o nome da conta
   /// individual (`profiles.full_name`). Pedido explícito do utilizador:
@@ -1256,6 +1259,7 @@ class Review {
     this.response,
     this.responseAt,
     this.status = 'published',
+    this.coupleId,
     this.coupleDisplayName = 'Casal',
     this.coupleAvatarUrl,
     required this.accountCreatedAt,
@@ -1287,6 +1291,7 @@ class Review {
           ? null
           : DateTime.parse(row['partner_response_at'] as String),
       status: row['status'] as String? ?? 'published',
+      coupleId: row['couple_id'] as String?,
       coupleDisplayName: displayName,
       coupleAvatarUrl: wedding?['cover_photo_url'] as String?,
       accountCreatedAt: profile?['created_at'] == null
