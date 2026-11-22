@@ -50,6 +50,10 @@ class EventTable {
   final int? allergyPeople;
   final int? allergyDone;
 
+  /// Organizo este evento (218) e por quem pagamos («Nós pagamos por»).
+  final bool iOrganize;
+  final List<String> paidFor;
+
   const EventTable({
     required this.bookingId,
     required this.partnerId,
@@ -69,6 +73,8 @@ class EventTable {
     this.menuChosen,
     this.allergyPeople,
     this.allergyDone,
+    this.iOrganize = false,
+    this.paidFor = const [],
   });
 
   bool get eachChooses => choiceMode == 'each';
@@ -116,6 +122,8 @@ class EventTable {
         menuChosen: (j['menu_chosen'] as num?)?.toInt(),
         allergyPeople: (j['allergy_people'] as num?)?.toInt(),
         allergyDone: (j['allergy_done'] as num?)?.toInt(),
+        iOrganize: j['i_organize'] == true,
+        paidFor: [for (final k in (j['paid_for'] as List? ?? const [])) '$k'],
       );
 }
 
@@ -237,6 +245,10 @@ Future<({String? paymentId, double amount})> chooseMenus({
   final m = Map<String, dynamic>.from(res as Map);
   return (paymentId: m['payment_id'] as String?, amount: ((m['amount'] as num?) ?? 0).toDouble());
 }
+
+/// «Nós pagamos por» depois da reserva (216/218).
+Future<void> setPaidFor(String bookingId, List<String> keys) =>
+    supabase.rpc('set_paid_for', params: {'p_quote_request_id': null, 'p_booking_id': bookingId, 'p_keys': keys});
 
 /// Menu igual para todos e cada um paga: cria (ou devolve) a minha parte.
 Future<({String paymentId, double amount, String status})> myShareEnsure(String bookingId) async {

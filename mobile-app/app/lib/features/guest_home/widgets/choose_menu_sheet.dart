@@ -15,6 +15,8 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/step_sheet_head.dart';
 import '../../payments/open_payment.dart';
+import '../../partners/widgets/reserve_flow.dart' show PaidForSheet;
+import '../../../core/supabase/supabase_config.dart';
 
 /// O que fica escolhido para uma pessoa.
 class _Pick {
@@ -96,6 +98,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
     return;
   }
 
+  var paidFor = [...t.paidFor];
   final picks = <String, _Pick>{
     for (final p in people)
       p.key: _Pick(
@@ -108,21 +111,23 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
   };
   final picked = <String>{for (final p in people) ...p.extraIds};
   // Pago menus aqui? (Os extras que juntar, pago-os sempre eu.)
-  final anyIPay = people.any((p) => p.iPay && p.menu);
+  bool anyIPayNow() => people.any((p) => p.iPay && p.menu);
+  var anyIPay = anyIPayNow();
   // Com «Pagamos nós», quem paga a mesa é o organizador: o pagamento da
   // reserva; os outros pagam a sua parte.
-  final organizerBill = !t.eachPays && anyIPay;
+  bool organizerBill() => !t.eachPays && anyIPay;
   final deadline = t.choiceDeadline;
   final sub = [t.partnerName, if (deadline != null) 'escolhe até ${shortDate(deadline)}'].join(' · ');
   var stage = 0; // 0 menus · 1 extras · 2 guardar e pagar
   while (context.mounted) {
+    anyIPay = anyIPayNow();
     final chosenPkgs = {for (final p in picks.values) ?p.packageId};
     final inviteExtras = extras
         .where((e) => chosenPkgs.isEmpty || e.packageIds.isEmpty || e.packageIds.any(chosenPkgs.contains))
         .toList();
     final total = 1 + (inviteExtras.isEmpty ? 0 : 1) + (anyIPay || picked.isNotEmpty ? 1 : 0);
     if (stage == 0) {
-      final ok = await showIslandSheet<bool>(
+      final ok = await showIslandSheet<Object>(
         confirmExit: anyIPay,
         context: context,
         isScrollControlled: true,
@@ -133,8 +138,38 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
           step: (1, total),
           subtitle: sub,
           last: inviteExtras.isEmpty && !anyIPay && picked.isEmpty,
+          paidForCount: t.iOrganize && t.eachPays && !legacy ? paidFor.length : null,
         ),
       );
+      if (ok == 'paidFor') {
+        // «Nós pagamos por» depois da reserva: escolher, guardar e voltar a
+        // carregar as pessoas (passo a escolher o menu delas).
+        final keys = await _editPaidFor(context, weddingId, paidFor);
+        if (keys == null || !context.mounted) continue;
+        try {
+          await setPaidFor(t.bookingId, keys);
+          paidFor = keys;
+          final fresh = await fetchMenuPeople(t.bookingId);
+          people = fresh;
+          for (final p in fresh) {
+            final old = picks[p.key];
+            picks[p.key] = _Pick(
+              menu: p.menu,
+              mine: p.mine,
+              packageId: old?.packageId ?? (packages.any((k) => k.id == p.packageId) ? p.packageId : null),
+              allergies: old?.allergies ?? p.allergies ?? '',
+              none: old?.none ?? (p.allergies != null && p.allergies!.trim().isEmpty),
+            );
+          }
+          picks.removeWhere((k, _) => !fresh.any((p) => p.key == k));
+          ref.invalidate(myEventTablesProvider(weddingId));
+        } catch (_) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
+          }
+        }
+        continue;
+      }
       if (ok != true) return;
       stage = 1;
       continue;
@@ -209,7 +244,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
       return;
     }
     final Object? back;
-    if (!organizerBill) {
+    if (!organizerBill()) {
       final pct = await guestShareFeePct(ref, t.partnerId, t.totalAmount ?? res.amount, res.amount);
       if (!context.mounted) return;
       back = await context.push<Object?>('/pay', extra: PayArgs(
@@ -381,6 +416,10 @@ class _MenusStep extends StatefulWidget {
 
   /// Sem extras nem pagamento a seguir: o botão guarda.
   final bool last;
+
+  /// Organizador, cada convite paga o seu: «Nós pagamos por» (218). `null`
+  /// = não aparece; senão, quantas pessoas.
+  final int? paidForCount;
   const _MenusStep({
     required this.people,
     required this.packages,
@@ -388,21 +427,33 @@ class _MenusStep extends StatefulWidget {
     required this.step,
     required this.subtitle,
     required this.last,
+    this.paidForCount,
   });
 
   @override
   State<_MenusStep> createState() => _MenusStepState();
 }
 
+/// «Todos»: um menu para todas as pessoas por quem escolho (muitos
+/// convidados, pedido 2026-11-22).
+const _kAll = '*';
+
+/// A partir de quantas pessoas abre em «Todos» e esconde as pílulas por
+/// pessoa atrás de «Por pessoa».
+const _kMany = 8;
+
 class _MenusStepState extends State<_MenusStep> {
-  late String _cur =
-      (widget.people.firstWhere((p) => !widget.picks[p.key]!.done, orElse: () => widget.people.first)).key;
+  late final List<MenuPerson> _menuPeople = [for (final p in widget.people) if (p.menu) p];
+  late String _cur = _menuPeople.length > _kMany
+      ? _kAll
+      : (widget.people.firstWhere((p) => !widget.picks[p.key]!.done, orElse: () => widget.people.first)).key;
+  bool _expand = false;
   final _allergy = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _allergy.text = widget.picks[_cur]!.allergies;
+    if (_cur != _kAll) _allergy.text = widget.picks[_cur]!.allergies;
   }
 
   @override
@@ -411,20 +462,20 @@ class _MenusStepState extends State<_MenusStep> {
     super.dispose();
   }
 
-  MenuPerson get _person => widget.people.firstWhere((p) => p.key == _cur);
   String _label(MenuPerson p) => p.isMe ? 'Tu' : _firstName(p.name);
   String _who(MenuPerson p) => p.isMe ? 'TEU' : 'DE ${_firstName(p.name).toUpperCase()}';
 
   void _select(String key) {
     setState(() {
       _cur = key;
-      _allergy.text = widget.picks[key]!.allergies;
+      if (key != _kAll) _allergy.text = widget.picks[key]!.allergies;
     });
   }
 
   /// Depois de escolher o menu e as alergias, passa à pessoa seguinte que falta.
   void _maybeAdvance() {
-    if (!widget.picks[_cur]!.done) return;
+    if (_cur == _kAll || !widget.picks[_cur]!.done) return;
+    if (_menuPeople.length > _kMany) return;
     final next = widget.people.where((p) => !widget.picks[p.key]!.done).firstOrNull;
     if (next != null && next.key != _cur) _select(next.key);
   }
@@ -432,10 +483,10 @@ class _MenusStepState extends State<_MenusStep> {
   @override
   Widget build(BuildContext context) {
     final picks = widget.picks;
-    final pick = picks[_cur]!;
-    final p = _person;
-    final menuPeople = widget.people.where((x) => x.menu).toList();
-    final chosen = menuPeople.where((x) => picks[x.key]!.packageId != null).length;
+    final all = _cur == _kAll;
+    final p = all ? null : widget.people.firstWhere((x) => x.key == _cur);
+    final pick = all ? null : picks[_cur]!;
+    final chosen = _menuPeople.where((x) => picks[x.key]!.packageId != null).length;
     // O menu é obrigatório para quem pago; as alergias, para mim e para quem
     // vem comigo (dos outros, se as souber).
     final missing = widget.people.where((x) => !picks[x.key]!.done).firstOrNull;
@@ -443,46 +494,114 @@ class _MenusStepState extends State<_MenusStep> {
     if (missing == null) {
       cta = widget.last ? 'Guardar' : 'Continuar';
     } else if (missing.menu && picks[missing.key]!.packageId == null) {
-      cta = missing.isMe ? 'Falta o teu menu' : 'Falta o menu de ${_firstName(missing.name)}';
+      final left = _menuPeople.where((x) => picks[x.key]!.packageId == null).length;
+      cta = left > 1
+          ? 'Faltam $left menus'
+          : missing.isMe
+              ? 'Falta o teu menu'
+              : 'Falta o menu de ${_firstName(missing.name)}';
     } else {
       cta = missing.isMe ? 'Faltam as tuas alergias' : 'Faltam as alergias de ${_firstName(missing.name)}';
     }
-    final total = _menusTotal(menuPeople, picks, widget.packages);
+    final total = _menusTotal(_menuPeople, picks, widget.packages);
     final many = widget.people.length > 1;
-    final anyMenu = menuPeople.isNotEmpty;
+    final anyMenu = _menuPeople.isNotEmpty;
     final title = !anyMenu
         ? (many ? 'As alergias' : 'As tuas alergias')
         : many
             ? 'Escolhe os menus'
             : 'Escolhe o teu menu';
-    final chosenPkg = widget.packages.where((k) => k.id == pick.packageId).firstOrNull;
+    final chosenPkg = pick == null ? null : widget.packages.where((k) => k.id == pick.packageId).firstOrNull;
+    // «Todos»: o menu que todos têm (se for o mesmo).
+    final common = {for (final x in _menuPeople) picks[x.key]!.packageId};
+    final allPkg = common.length == 1 ? common.first : null;
+    final collapsed = widget.people.length > _kMany && !_expand;
+
+    String pillFor(MenuPerson x) => [
+          _label(x),
+          if (x.key != _cur && picks[x.key]!.packageId != null)
+            _shortMenu(widget.packages.firstWhere((k) => k.id == picks[x.key]!.packageId).name),
+        ].join(' · ');
+
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         StepSheetHead(step: widget.step, title: title, subtitle: widget.subtitle),
         const SizedBox(height: 16),
+        if (widget.paidForCount != null) ...[
+          // «Nós pagamos por» também depois da reserva (pedido 2026-11-22).
+          _Group([
+            Container(
+              constraints: const BoxConstraints(minHeight: 56),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(children: [
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                    const Text('Nós pagamos por', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    Text(
+                      widget.paidForCount == 0
+                          ? 'Ninguém · cada convite paga o seu'
+                          : '${widget.paidForCount} ${widget.paidForCount == 1 ? 'pessoa' : 'pessoas'} · escolhes o menu delas',
+                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                    ),
+                  ]),
+                ),
+                SnappyTap(
+                  onTap: () => Navigator.of(context).pop('paidFor'),
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.center,
+                    decoration: const ShapeDecoration(
+                      shape: StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
+                    ),
+                    child: const Text('Escolher', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 16),
+        ],
         if (many) ...[
           const _Caps('PARA QUEM'),
           Wrap(spacing: 8, runSpacing: 8, children: [
+            if (_menuPeople.length > 1) _Pill('Todos · ${_menuPeople.length}', on: all, onTap: () => _select(_kAll)),
             for (final x in widget.people)
-              _Pill(
-                [
-                  _label(x),
-                  if (x.key != _cur && picks[x.key]!.packageId != null)
-                    _shortMenu(widget.packages.firstWhere((k) => k.id == picks[x.key]!.packageId).name),
-                ].join(' · '),
-                on: x.key == _cur,
-                onTap: () => _select(x.key),
-              ),
+              if (!collapsed || x.isMe || x.key == _cur) _Pill(pillFor(x), on: x.key == _cur, onTap: () => _select(x.key)),
+            if (collapsed)
+              _Pill('Por pessoa (${widget.people.length})', on: false, onTap: () => setState(() => _expand = true)),
           ]),
-          if (p.ownerName != null && !p.isMe) ...[
+          if (p != null && p.ownerName != null && !p.isMe) ...[
             const SizedBox(height: 8),
             Text('Vem com ${_firstName(p.ownerName!)}${p.iPay && p.menu ? ' · pagas tu' : ''}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ],
           const SizedBox(height: 16),
         ],
-        if (p.menu) ...[
+        if (all) ...[
+          _Caps('MENU PARA TODOS · ${_menuPeople.length}'),
+          _Group([
+            for (final k in widget.packages)
+              _Row(
+                title: k.name,
+                meta: k.description,
+                trailing: euros(k.price),
+                on: allPkg == k.id,
+                onTap: () => setState(() {
+                  for (final x in _menuPeople) {
+                    picks[x.key]!.packageId = k.id;
+                  }
+                }),
+              ),
+          ]),
+          const SizedBox(height: 10),
+          const Text(
+            'O mesmo menu para todos. Muda o de alguém em «Por pessoa»; as alergias, cada convidado diz na app.',
+            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          ),
+          const SizedBox(height: 16),
+        ] else if (p!.menu) ...[
           _Caps('MENU ${_who(p)}'),
           _Group([
             for (final k in widget.packages)
@@ -490,7 +609,7 @@ class _MenusStepState extends State<_MenusStep> {
                 title: k.name,
                 meta: k.description,
                 trailing: euros(k.price),
-                on: pick.packageId == k.id,
+                on: pick!.packageId == k.id,
                 onTap: () {
                   setState(() => pick.packageId = k.id);
                   _maybeAdvance();
@@ -511,9 +630,7 @@ class _MenusStepState extends State<_MenusStep> {
                 Text(chosenPkg?.name ?? 'Ainda por escolher',
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 Text(
-                  p.pays == 'organizers'
-                      ? 'Escolhem os anfitriões: são eles que pagam.'
-                      : 'Escolhe quem paga a comida.',
+                  p.pays == 'organizers' ? 'Escolhem os anfitriões: são eles que pagam.' : 'Escolhe quem paga a comida.',
                   style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                 ),
               ]),
@@ -521,53 +638,55 @@ class _MenusStepState extends State<_MenusStep> {
           ]),
           const SizedBox(height: 16),
         ],
-        _Caps('ALERGIAS ${_who(p)}'),
-        Row(children: [
-          Expanded(
-            child: Container(
-              height: 52,
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              alignment: Alignment.centerLeft,
-              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
-              child: TextField(
-                controller: _allergy,
-                maxLength: 200,
-                textCapitalization: TextCapitalization.sentences,
-                style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-                decoration: const InputDecoration(
-                  isCollapsed: true,
-                  border: InputBorder.none,
-                  counterText: '',
-                  hintText: 'Ex.: sem glúten, marisco',
-                  hintStyle: TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+        if (!all) ...[
+          _Caps('ALERGIAS ${_who(p!)}'),
+          Row(children: [
+            Expanded(
+              child: Container(
+                height: 52,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                alignment: Alignment.centerLeft,
+                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+                child: TextField(
+                  controller: _allergy,
+                  maxLength: 200,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    counterText: '',
+                    hintText: 'Ex.: sem glúten, marisco',
+                    hintStyle: TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+                  ),
+                  onChanged: (v) => setState(() {
+                    pick!.allergies = v;
+                    if (v.trim().isNotEmpty) pick.none = false;
+                  }),
                 ),
-                onChanged: (v) => setState(() {
-                  pick.allergies = v;
-                  if (v.trim().isNotEmpty) pick.none = false;
-                }),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          _Pill('Nenhuma', on: pick.none, onTap: () {
-            setState(() {
-              pick.none = !pick.none;
-              if (pick.none) {
-                pick.allergies = '';
-                _allergy.clear();
-              }
-            });
-            _maybeAdvance();
-          }),
-        ]),
-        const SizedBox(height: 16),
+            const SizedBox(width: 8),
+            _Pill('Nenhuma', on: pick!.none, onTap: () {
+              setState(() {
+                pick.none = !pick.none;
+                if (pick.none) {
+                  pick.allergies = '';
+                  _allergy.clear();
+                }
+              });
+              _maybeAdvance();
+            }),
+          ]),
+          const SizedBox(height: 16),
+        ],
         Row(children: [
           Expanded(
             child: Text(
                 !anyMenu
                     ? 'Os menus escolhem-nos os anfitriões'
                     : many
-                        ? '$chosen de ${menuPeople.length} menus'
+                        ? '$chosen de ${_menuPeople.length} menus'
                         : 'O teu menu',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ),
@@ -581,7 +700,7 @@ class _MenusStepState extends State<_MenusStep> {
           widget.last
               ? 'Podes mudar até a escolha fechar.'
               : anyMenu
-                  ? 'A seguir: os extras e depois pagar.'
+                  ? 'A seguir: os extras e depois pagar${_menuPeople.length > 1 ? ' tudo junto' : ''}.'
                   : 'A seguir: se quiseres, extras (pagas tu).',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
@@ -668,4 +787,36 @@ class _ExtrasStepState extends State<_ExtrasStep> {
       ]),
     );
   }
+}
+
+/// «Por quem pagamos?» a partir do popup dos menus. Devolve as chaves
+/// escolhidas, ou `null` se fechar.
+Future<List<String>?> _editPaidFor(BuildContext context, String weddingId, List<String> current) async {
+  List<Map<String, dynamic>> people;
+  try {
+    final res = await supabase.rpc('event_people_for_paying', params: {'p_wedding_id': weddingId});
+    people = [
+      for (final r in (res as List? ?? const []))
+        if (r is Map && r['is_organizer'] != true) Map<String, dynamic>.from(r),
+    ];
+  } catch (_) {
+    people = const [];
+  }
+  if (!context.mounted) return null;
+  if (people.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ainda não há convidados confirmados.')));
+    return null;
+  }
+  final chosen = await showIslandSheet<Map<String, String>>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => PaidForSheet(
+      people: people,
+      initial: {
+        for (final p in people)
+          if (current.contains(p['key'])) p['key'] as String: '${p['name']}',
+      },
+    ),
+  );
+  return chosen?.keys.toList();
 }

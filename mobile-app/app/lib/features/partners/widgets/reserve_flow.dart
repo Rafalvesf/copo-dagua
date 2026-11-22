@@ -633,7 +633,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     final chosen = await showIslandSheet<Map<String, String>>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => _PaidForSheet(people: people, initial: _paidFor),
+      builder: (_) => PaidForSheet(people: people, initial: _paidFor),
     );
     if (chosen != null && mounted) {
       setState(() {
@@ -1084,16 +1084,16 @@ class _Btn extends StatelessWidget {
 
 /// «Por quem pagamos?» (mockup «Quem paga?», 2026-11-22): os convidados que
 /// vão e quem cada um traz, com procurar; toca para escolher.
-class _PaidForSheet extends StatefulWidget {
+class PaidForSheet extends StatefulWidget {
   final List<Map<String, dynamic>> people;
   final Map<String, String> initial;
-  const _PaidForSheet({required this.people, required this.initial});
+  const PaidForSheet({super.key, required this.people, required this.initial});
 
   @override
-  State<_PaidForSheet> createState() => _PaidForSheetState();
+  State<PaidForSheet> createState() => _PaidForSheetState();
 }
 
-class _PaidForSheetState extends State<_PaidForSheet> {
+class _PaidForSheetState extends State<PaidForSheet> {
   late final Map<String, String> _on = Map.of(widget.initial);
   String _q = '';
 

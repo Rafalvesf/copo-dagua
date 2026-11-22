@@ -689,6 +689,16 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   valor 20 e o botão que diz o que falta («Falta o menu da Rita») → 2
   «Queres juntar alguma coisa?» (os extras do convite, **depois dos
   menus**; «Sem extras» + «Continuar · 98 €») → 3 pagar.
+- **Muitas pessoas** (mais de 8 por quem escolhes, p. ex. «Pagamos nós»):
+  o popup abre em **«Todos · N»** — um menu para todos de uma vez («O mesmo
+  menu para todos. Muda o de alguém em «Por pessoa»…») — e as pílulas por
+  pessoa ficam atrás de «Por pessoa (N)». Depois os extras e **um só
+  pagamento** com tudo junto.
+- **«Nós pagamos por» depois da reserva** (pedido 2026-11-22, migração
+  218): no topo do popup dos menus do organizador, quando cada convite
+  paga o seu — «Nós pagamos por · N pessoas» + «Escolher» (abre «Por quem
+  pagamos?»); ao guardar, essas pessoas passam para a vossa conta e
+  escolhes o menu delas.
 - **«Quem paga?» na reserva:** «Pagamos nós» ou «Cada convite paga o seu»
   e, neste, «NÓS PAGAMOS POR (SE QUISERES)» — «Escolher» abre «Por quem
   pagamos?» (procurar, os convidados e quem trazem, «Pagas tu» / «Vem com
