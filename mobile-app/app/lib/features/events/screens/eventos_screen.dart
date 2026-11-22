@@ -759,10 +759,9 @@ class _TaskPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AlertOutline(
         // Só a tarefa leva a cor do tom (pedido 2026-11-22); a moldura do
-        // cartão fica cinzenta. Sem brilho.
+        // cartão fica cinzenta. O brilho fica na linha, para dentro.
         tone: tone,
         radius: 999,
-        glow: false,
         padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
         child: Row(children: [
           AlertDot(tone),

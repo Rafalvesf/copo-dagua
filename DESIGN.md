@@ -646,13 +646,14 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
     (ou já acabou). `toneForDue(prazo)` decide.
   - **Verde** `#4F6B4A` — convite para um evento.
 - **Brilho:** ao aparecer (entrar na aba), a linha brilha uns segundos e
-  depois fica parada. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
+  depois fica parada. O brilho fica **só na linha e uns pixéis para dentro**
+  (pedido 2026-11-22) — nunca à volta da caixa toda. Amarelo e verde 3 vezes (2 s / 2,4 s), vermelho 4 vezes
   (1,4 s). Nunca a piscar sem parar.
 - **Alertas nos cartões de evento** (pedido do Rafael, 2026-11-22, mockup
   «Alerta com ação nos cartões», forma A; sem o sinal «!» na foto desde
   2026-11-22): a moldura do cartão fica cinzenta (§4) e só a tarefa, por
   baixo do rodapé, leva a cor do tom — pílula branca com a linha 1,5 do
-  tom, sem brilho: o ponto, a tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
+  tom, com o brilho só na linha (para dentro): o ponto, a tarefa com o prazo mais perto em 13 negrito («Pagar o sinal ao
   fotógrafo · +1») e o botão preto 36 com a ação — «Pagar» (pagamentos),
   «Ver» (propostas, presente), «Responder» («Diz se vais»), «Fazer» (o
   resto). **Cor pelo prazo de cada coisa**: vermelho a **3 dias ou menos**
