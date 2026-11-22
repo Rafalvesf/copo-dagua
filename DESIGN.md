@@ -515,9 +515,17 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
     escondidas; pergunta «Revelar as mesas?» e os convidados passam a ver já
     a mesa deles) · **Dress code** (sem estilo nem cores) · **Lista de
     presentes** (ligada e vazia) · **Pôr foto de capa** (sem foto) ·
-    **Convidar quem organiza contigo** (só um organizador) · depois do
-    evento, **Agradecer aos convidados** (abre o grupo do evento). O programa
-    vazio é pedido pela própria secção Programa.
+    **Convidar quem organiza contigo** (só um organizador) · **Convidar
+    quem segues** (quem sigo e ainda não está no evento) · **Juntar a hora**
+    (sem hora de início) · **Escrever as boas-vindas** (sem mensagem) ·
+    **Definir o orçamento** (sem orçamento) · **Sentar os convidados** (só
+    num espaço com mesas separadas, ainda sem mesas e já com confirmados — os
+    restaurantes juntam mesas para o grupo) · **Onde ficar e como lá chegar**
+    («Estadia» ligada e sem opções) · **Pôr bilhetes à venda** (festas,
+    concertos, festivais e noites com entrada livre) · depois do evento,
+    **Agradecer aos convidados** (abre o grupo do evento) e **Avaliar os
+    parceiros** (reservas feitas ainda sem avaliação). O programa vazio é
+    pedido pela própria secção Programa.
 - **Grupo do evento** (pedido do Rafael, 2026-11-21, migração 212): nasce
   com o evento, com toda a gente (anfitriões, quem organiza e convidados com
   conta); tem a **foto** (a capa), o **nome** e a **descrição** do evento
@@ -527,10 +535,19 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 - **Restaurantes não têm sinal** (191): paga-se tudo de uma vez — «Menus e o
   pagamento (300 €)», etiqueta «Por pagar» (nunca «Falta o sinal»).
 - **Ordem:** resumo → PARA FAZER → SUGESTÕES → (no dia e depois) FOTOS →
-  PROGRAMA → NÚMEROS (linhas de dinheiro: convidados, orçamento, parceiros)
-  → RESERVAS (estado em etiqueta; «Falta o sinal» pendente) → CONVITE
-  (código, «Partilhar», «Ver como convidado») → GERIR (Definições do
-  evento). Depois do evento, o programa, os números e o convite saem.
+  PROGRAMA → NÚMEROS → RESERVAS (estado em etiqueta; «Falta o sinal» ou, nos
+  restaurantes, «Por pagar») → CONVITE (código, «Partilhar», «Ver como
+  convidado») → GERIR → **PARCEIROS EM DESTAQUE** (carrossel, no fim).
+  Depois do evento, o programa, os números, o convite e os parceiros em
+  destaque saem.
+- **Números em quadrados** (pedido 2026-11-22, como «A tua mesa» no
+  convidado): 2 por linha, sem caixa — ícone 24 num quadrado 48 `#E6E6E6`,
+  rótulo 12 em maiúsculas, valor 22 e uma linha 13, tudo ao centro:
+  orçamento, convidados, parceiros e mesas (só num espaço com mesas
+  separadas e já com mesas).
+- **Gerir:** Presentes e Página dos convidados (os convidados e as mesas
+  estão nos quadrados); por baixo de uma linha grossa (2 px), **Definições
+  do evento** à parte, com o botão redondo preto 44 (roda dentada).
 
 ## 7. Alertas
 

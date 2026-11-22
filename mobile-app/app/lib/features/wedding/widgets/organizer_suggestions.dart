@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/budget/budget_controller.dart';
 import '../../../core/chat/group_chat.dart' show openEventGroup;
+import '../../../core/events/events_providers.dart' show eventEntryProvider;
+import '../../../core/guest_offers/guest_offers.dart' show guestOffersEnabledProvider, guestOffersProvider;
+import '../../../core/reviews/review_providers.dart' show reviewForBookingProvider;
+import '../../../core/supabase/supabase_config.dart';
 import '../../../core/events/event_pass.dart';
 import '../../../shared/widgets/island_sheet.dart' show showIslandDialog, IslandAlert;
 import '../../../core/gifts/gift_shop.dart';
@@ -21,6 +26,16 @@ import '../../guests/screens/guests_list_screen.dart' show shareWeddingInvite;
 final orgGuestFacingProvider = FutureProvider.autoDispose.family<GuestFacingInfo, String>(
   (ref, weddingId) => loadGuestFacingInfo(weddingId),
 );
+
+/// Quantas pessoas que sigo ainda não estão no evento (189).
+final orgFollowedCountProvider = FutureProvider.autoDispose.family<int, String>((ref, weddingId) async {
+  try {
+    final rows = await supabase.rpc('event_followed_people', params: {'p_wedding_id': weddingId});
+    return (rows as List).length;
+  } catch (_) {
+    return 0;
+  }
+});
 
 /// As categorias que cada tipo de evento costuma precisar (aprovado pelo
 /// Rafael, 2026-11-21). Cada grupo fica tratado com qualquer uma das
@@ -142,6 +157,23 @@ class OrgSuggestions extends ConsumerWidget {
           context.push('/group/${g.id}', extra: g);
         },
       ));
+      // Avaliar os parceiros: as reservas feitas que ainda não avaliei.
+      final done = [
+        for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[])
+          if (b.weddingId == w.id && (b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido)) b,
+      ];
+      final toReview = [
+        for (final b in done)
+          if (ref.watch(reviewForBookingProvider(b.id)).hasValue && ref.watch(reviewForBookingProvider(b.id)).value == null) b,
+      ];
+      if (toReview.isNotEmpty) {
+        rows.add(KitRow(
+          title: 'Avaliar os parceiros',
+          sub: _join([for (final b in toReview.take(2)) b.partnerName]) + (toReview.length > 2 ? ' e mais ${toReview.length - 2}' : ''),
+          chevron: true,
+          onTap: () => context.push('/bookings'),
+        ));
+      }
     } else {
       final info = ref.watch(orgGuestFacingProvider(w.id)).value;
       final bookings = [
@@ -191,12 +223,40 @@ class OrgSuggestions extends ConsumerWidget {
           onTap: () => shareWeddingInvite(context, w),
         ));
       }
+      // Convidar quem segues: pessoas que sigo e ainda não estão no evento.
+      final followed = ref.watch(orgFollowedCountProvider(w.id)).value ?? 0;
+      if (followed > 0) {
+        rows.add(KitRow(
+          title: 'Convidar quem segues',
+          sub: '$followed ${followed == 1 ? 'pessoa que segues ainda não está' : 'pessoas que segues ainda não estão'} no evento',
+          chevron: true,
+          onTap: () => context.push('/guests/convidar'),
+        ));
+      }
       if (info != null) {
         // 3 · Juntar o local.
         if (w.venue?.trim().isNotEmpty != true && info.venueAddress?.trim().isNotEmpty != true) {
           rows.add(KitRow(
             title: 'Juntar o local',
             sub: 'Sem ele, os convidados não têm «Como chegar»',
+            chevron: true,
+            onTap: () => context.push('/guest-page'),
+          ));
+        }
+        // Juntar a hora de início.
+        if (info.ceremonyTime?.trim().isNotEmpty != true) {
+          rows.add(KitRow(
+            title: 'Juntar a hora',
+            sub: 'Os convidados veem a que horas começa',
+            chevron: true,
+            onTap: () => context.push('/guest-page'),
+          ));
+        }
+        // Escrever as boas-vindas.
+        if (info.welcomeMessage?.trim().isNotEmpty != true) {
+          rows.add(KitRow(
+            title: 'Escrever as boas-vindas',
+            sub: 'A primeira coisa que os convidados leem',
             chevron: true,
             onTap: () => context.push('/guest-page'),
           ));
@@ -214,6 +274,55 @@ class OrgSuggestions extends ConsumerWidget {
         }
       }
       final sections = ref.watch(guestSectionsProvider(w.id)).value ?? const GuestSections();
+      // Definir o orçamento.
+      final budget = ref.watch(budgetControllerProvider).budget;
+      if ((budget?.total ?? 0) <= 0 && (budget?.spent ?? 0) <= 0 && (w.estimatedBudget ?? 0) <= 0) {
+        rows.add(KitRow(
+          title: 'Definir o orçamento',
+          sub: 'Para saberes quanto já gastaste',
+          chevron: true,
+          onTap: () => context.push('/budget'),
+        ));
+      }
+      // Sentar os convidados: só num espaço com mesas separadas (os
+      // restaurantes juntam mesas para o grupo todo) e ainda sem mesas.
+      final seatingNow = ref.watch(seatingControllerProvider);
+      if (seatingNow.hasVenue &&
+          seatingNow.venueTypes.isNotEmpty &&
+          seatingNow.tables.isEmpty &&
+          guests.any((g) => g.rsvpStatus == RsvpStatus.confirmed)) {
+        rows.add(KitRow(
+          title: 'Sentar os convidados',
+          sub: 'O espaço tem mesas separadas',
+          chevron: true,
+          onTap: () => context.push('/seating'),
+        ));
+      }
+      // Onde ficar e como lá chegar: a «Estadia» ligada, mas sem opções.
+      if (sections.shows(GuestSection.estadia) && (ref.watch(guestOffersEnabledProvider).value ?? false)) {
+        final offers = ref.watch(guestOffersProvider(w.id)).value;
+        if (offers != null && offers.isEmpty) {
+          rows.add(KitRow(
+            title: 'Onde ficar e como lá chegar',
+            sub: 'A «Estadia» está ligada, mas sem opções',
+            chevron: true,
+            onTap: () => context.push('/guest-stay/${w.id}'),
+          ));
+        }
+      }
+      // Pôr bilhetes à venda: festas, concertos, festivais e noites.
+      const ticketed = {EventType.party, EventType.concert, EventType.festival, EventType.nightlife};
+      if (ticketed.contains(w.eventType)) {
+        final entry = ref.watch(eventEntryProvider(w.id)).value;
+        if (entry != null && !entry.paid) {
+          rows.add(KitRow(
+            title: 'Pôr bilhetes à venda',
+            sub: 'A entrada ainda é livre',
+            chevron: true,
+            onTap: () => context.push('/bilhetes'),
+          ));
+        }
+      }
       // 5 · Revelar as mesas: todos os que vão já estão sentados, mas os
       // convidados ainda não veem a mesa (só a veem perto do dia).
       final tables = ref.watch(seatingControllerProvider).tables;
