@@ -480,6 +480,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Os cartões de evento mostram as fotos de quem confirmou (amigos primeiro; só quem segues ou tem perfil público) e, no círculo, a foto de quem criou o evento. Sem a migração, os cartões mostram só o número e as iniciais.",
     check: { kind: "marker", id: "214" },
   },
+  {
+    file: "215_username_status_anon.sql",
+    date: "2026-11-22",
+    title: "Ver se o @ está livre no registo",
+    what: "O registo pede o @ logo a seguir ao nome. Esta migração deixa verificar, antes de haver conta, se o @ está livre ou ocupado. Sem ela, o registo só verifica o formato; se o @ estiver ocupado, a pessoa escolhe outro depois em «Editar perfil».",
+    check: { kind: "marker", id: "215" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
