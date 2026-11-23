@@ -161,7 +161,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   ]),
                 SectionFrame(title: 'Pagamentos', children: [
                   if (paid.isNotEmpty || pending.isNotEmpty) ...[
-                    KitPills(top: 4, [
+                    KitPills(top: 4, clip: true, [
                       KitPill(
                         label: 'Todos',
                         count: paid.length + pending.length,

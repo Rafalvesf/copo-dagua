@@ -479,10 +479,19 @@ class KitPill extends StatelessWidget {
 class KitPills extends StatelessWidget {
   final List<KitPill> pills;
   final double top;
-  const KitPills(this.pills, {super.key, this.top = 16});
+
+  /// Dentro de uma moldura as pílulas nunca passam da linha: as que não
+  /// cabem descem para a linha de baixo (pedido 2026-11-23).
+  final bool clip;
+  const KitPills(this.pills, {super.key, this.top = 16, this.clip = false});
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) => clip
+      ? Padding(
+          padding: EdgeInsets.only(top: top),
+          child: Wrap(spacing: 8, runSpacing: 8, children: pills),
+        )
+      : Padding(
         padding: EdgeInsets.only(top: top),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
