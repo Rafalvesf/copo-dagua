@@ -56,14 +56,14 @@ class ReviewTile extends StatelessWidget {
     final meta = partnerSide
         ? [
             reviewAccountAge(r.accountCreatedAt),
-            if (r.weddingDate != null) 'evento a ${_date(r.weddingDate!)}',
+            if (r.eventDate != null) 'evento a ${_date(r.eventDate!)}',
             if (r.location != null && r.location!.isNotEmpty) r.location!,
             if (r.estimatedGuests != null) '~${r.estimatedGuests} convidados',
           ].join(' · ')
         : embedded
             ? [
                 if (r.location != null && r.location!.isNotEmpty) r.location!.split(', ').first,
-                _monthYear(r.weddingDate ?? r.createdAt),
+                _monthYear(r.eventDate ?? r.createdAt),
               ].join(' · ')
             : _date(r.createdAt);
     return Container(

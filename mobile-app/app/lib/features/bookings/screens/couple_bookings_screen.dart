@@ -14,7 +14,7 @@ import '../widgets/reject_proposal.dart';
 import '../../../core/payments/payments.dart' show PayArgs, payDay;
 import '../../../core/models/models.dart';
 import '../../../core/reviews/review_providers.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../guest_offers/widgets/organizer_guest_offers.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/theme/app_theme.dart';
@@ -64,9 +64,9 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    final events = ref.watch(weddingControllerProvider.select((s) => s.events));
-    final selected = _all ? null : (events.any((e) => e.id == _picked) ? _picked : weddingId);
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+    final events = ref.watch(eventControllerProvider.select((s) => s.events));
+    final selected = _all ? null : (events.any((e) => e.id == _picked) ? _picked : eventId);
     final eventName = [
       for (final e in events)
         if (e.id == selected) capFirst(e.displayNames),
@@ -115,7 +115,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
  header: [
               ...top
  ],
- body: weddingId == null ? const SizedBox.shrink() : OrganizerGuestOffers(weddingId: weddingId),
+ body: eventId == null ? const SizedBox.shrink() : OrganizerGuestOffers(eventId: eventId),
 );
           }
           // Sempre uma ListView (a carregar, erro, vazio e com dados): trocar
@@ -134,15 +134,15 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                   );
                   // Para que evento é cada parceiro (pedido 2026-11-22).
                   final names = {
-                    for (final w in ref.watch(weddingControllerProvider).events) w.id: capFirst(w.displayNames),
+                    for (final w in ref.watch(eventControllerProvider).events) w.id: capFirst(w.displayNames),
                   };
                   // Só as reservas do evento aberto (pedido 2026-11-23: antes
                   // apareciam as de todos os eventos na mesma página).
                   // Barra de eventos: «Todos» ou um evento (pedido 2026-11-23).
                   final ev = selected;
                   final eventIds = ev == null ? [for (final e in events) e.id] : <String>[ev];
-                  final shownBookings = [for (final b in bookings) if (ev == null || b.weddingId == ev) b];
-                  final shownProposals = [for (final p in proposals) if (ev == null || p.weddingId == ev) p];
+                  final shownBookings = [for (final b in bookings) if (ev == null || b.eventId == ev) b];
+                  final shownProposals = [for (final p in proposals) if (ev == null || p.eventId == ev) p];
                   final toPay = [
                     for (final b in shownBookings)
                       if (b.status != BookingStatus.recusado)
@@ -168,7 +168,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                       if (ev != null)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                          child: ServicePreferencesFrame(weddingId: ev),
+                          child: ServicePreferencesFrame(eventId: ev),
                         ),
                     ]);
                   }
@@ -205,7 +205,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                               lead: V2Avatar(b.partnerName, size: 44, imageUrl: b.partnerLogoUrl),
                               title: b.partnerName,
                               sub: [
-                                if (names[b.weddingId] != null && eventIds.length > 1) names[b.weddingId]!,
+                                if (names[b.eventId] != null && eventIds.length > 1) names[b.eventId]!,
                                 what,
                                 if (due != null) 'até ${due.day}/${due.month}',
                               ].join(' · '),
@@ -223,7 +223,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                               lead: V2Avatar(proposal.partnerName, size: 44),
                               title: proposal.partnerName,
                               sub: [
-                                if (names[proposal.weddingId] != null && eventIds.length > 1) names[proposal.weddingId]!,
+                                if (names[proposal.eventId] != null && eventIds.length > 1) names[proposal.eventId]!,
                                 'Proposta',
                                 euros(proposal.price),
                               ].join(' · '),
@@ -235,7 +235,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                                   top: false,
                                   child: Padding(
                                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                                    child: _ProposalRow(proposal: proposal, eventName: names[proposal.weddingId]),
+                                    child: _ProposalRow(proposal: proposal, eventName: names[proposal.eventId]),
                                   ),
                                 ),
                               ),
@@ -245,12 +245,12 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                         SectionFrame(title: 'Os vossos serviços', children: [
                           for (final (i, booking) in shownBookings.indexed) ...[
                             if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
-                            _CoupleBookingRow(booking: booking, eventName: names[booking.weddingId]),
+                            _CoupleBookingRow(booking: booking, eventName: names[booking.eventId]),
                           ],
                         ]),
                       // «Já têm tratado?» (antes a página «Serviços tratados»,
                       // pedido 2026-11-23).
-                      if (ev != null) ServicePreferencesFrame(weddingId: ev),
+                      if (ev != null) ServicePreferencesFrame(eventId: ev),
                       FrameButton44('Ver parceiros', outlined: true, onTap: () => context.push('/partners')),
                       ]),
                       ),
@@ -583,7 +583,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
 
   Future<void> _accept() async {
     // Partilhar com os outros organizadores ou guardar em segredo (2026-10-21).
-    final secret = await askHirePrivacy(context, widget.proposal.weddingId, widget.proposal.partnerName);
+    final secret = await askHirePrivacy(context, widget.proposal.eventId, widget.proposal.partnerName);
     if (secret == null || !mounted) return;
     setState(() => _accepting = true);
     try {
@@ -662,7 +662,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
       sendMessage: (text) async {
         final partnerId = p.partnerId;
         if (partnerId == null) return;
-        final conv = await getOrCreateConversation(weddingId: p.weddingId, partnerId: partnerId);
+        final conv = await getOrCreateConversation(eventId: p.eventId, partnerId: partnerId);
         await supabase.from('messages').insert({
           'conversation_id': conv,
           'sender_role': 'couple',

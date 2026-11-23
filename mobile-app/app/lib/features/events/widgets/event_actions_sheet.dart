@@ -3,23 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/event_lifecycle.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_lifecycle.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
 /// Arquivar ou apagar um evento (migração 185): na página do evento (⋯) e
 /// com um toque longo no cartão em "Os meus eventos". O apagar pede
 /// confirmação dentro da própria folha.
-Future<void> showEventActionsSheet(BuildContext context, WidgetRef ref, {required String weddingId, required String name, required bool isOwner}) async {
+Future<void> showEventActionsSheet(BuildContext context, WidgetRef ref, {required String eventId, required String name, required bool isOwner}) async {
   final messenger = ScaffoldMessenger.of(context);
   final done = await showIslandSheet<String>(
     context: context,
-    builder: (ctx) => _EventActions(weddingId: weddingId, name: name, isOwner: isOwner),
+    builder: (ctx) => _EventActions(eventId: eventId, name: name, isOwner: isOwner),
   );
   if (done == null) return;
   final me = ref.read(authControllerProvider).profile?.id;
-  if (me != null) await ref.read(weddingControllerProvider.notifier).load(me);
+  if (me != null) await ref.read(eventControllerProvider.notifier).load(me);
   ref.invalidate(hiddenEventsProvider);
   messenger.showSnackBar(SnackBar(
     content: Text(done == 'archived'
@@ -29,10 +29,10 @@ Future<void> showEventActionsSheet(BuildContext context, WidgetRef ref, {require
 }
 
 class _EventActions extends StatefulWidget {
-  final String weddingId;
+  final String eventId;
   final String name;
   final bool isOwner;
-  const _EventActions({required this.weddingId, required this.name, required this.isOwner});
+  const _EventActions({required this.eventId, required this.name, required this.isOwner});
 
   @override
   State<_EventActions> createState() => _EventActionsState();
@@ -85,7 +85,7 @@ class _EventActionsState extends State<_EventActions> {
         if (!_confirmDelete) ...[
           _row('Arquivar evento',
               sub: 'Sai das tuas listas. Os convidados continuam a vê-lo.',
-              onTap: _busy ? null : () => _run(() => archiveEvent(widget.weddingId), 'archived')),
+              onTap: _busy ? null : () => _run(() => archiveEvent(widget.eventId), 'archived')),
           if (widget.isOwner) ...[
             const SizedBox(height: 8),
             _row('Apagar evento',
@@ -113,7 +113,7 @@ class _EventActionsState extends State<_EventActions> {
             const SizedBox(width: 8),
             Expanded(
               child: FilledButton(
-                onPressed: _busy ? null : () => _run(() => deleteEvent(widget.weddingId), 'deleted'),
+                onPressed: _busy ? null : () => _run(() => deleteEvent(widget.eventId), 'deleted'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
                   backgroundColor: AppTheme.ink,

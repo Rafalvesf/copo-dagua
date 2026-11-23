@@ -14,10 +14,10 @@ import '../../../core/models/models.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/guest_facing.dart';
-import '../../../core/wedding/pastel_colors.dart';
-import '../../../core/wedding/wedding_controller.dart';
-import '../../../core/wedding/wedding_venue.dart';
+import '../../../core/event/guest_facing.dart';
+import '../../../core/event/pastel_colors.dart';
+import '../../../core/event/event_controller.dart';
+import '../../../core/event/event_venue.dart';
 import '../../../shared/widgets/venue_map.dart' show VenueMap;
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/section_frame.dart';
@@ -29,7 +29,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
-import '../../guest_home/screens/guest_wedding_details_screen.dart';
+import '../../guest_home/screens/guest_event_details_screen.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
 
@@ -47,21 +47,21 @@ class GuestPageRoute extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final wedding = ref.watch(weddingControllerProvider).wedding;
-    if (wedding == null) {
+    final event = ref.watch(eventControllerProvider).event;
+    if (event == null) {
       return const Scaffold(backgroundColor: AppTheme.background, body: Center(child: CircularProgressIndicator()));
     }
-    return GuestFacingScreen(key: ValueKey(wedding.id), wedding: wedding);
+    return GuestFacingScreen(key: ValueKey(event.id), event: event);
   }
 }
 
 class GuestFacingScreen extends ConsumerStatefulWidget {
-  final Wedding wedding;
+  final Event event;
 
   /// Abre já na secção do Programa.
   final bool focusProgram;
 
-  const GuestFacingScreen({super.key, required this.wedding, this.focusProgram = false});
+  const GuestFacingScreen({super.key, required this.event, this.focusProgram = false});
 
   @override
   ConsumerState<GuestFacingScreen> createState() => _GuestFacingScreenState();
@@ -154,7 +154,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
 
   Future<void> _load() async {
     try {
-      _info = await loadGuestFacingInfo(widget.wedding.id);
+      _info = await loadGuestFacingInfo(widget.event.id);
     } catch (_) {
       // Campos vazios; guardar continua possível.
     }
@@ -166,7 +166,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     _iban.text = _info.giftIban ?? '';
     _giftMessage.text = _info.giftMessage ?? '';
     _colors = [..._info.themeColors];
-    _venueName.text = widget.wedding.venue ?? '';
+    _venueName.text = widget.event.venue ?? '';
     // Dress code "Estilo · nota" (2026-11-08, como no mockup).
     final dc = _dressCode.text.trim();
     final style = _dressStyles.where((st) => dc == st || dc.startsWith('$st · ')).firstOrNull;
@@ -182,11 +182,11 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       _moments.add(_Moment(m));
     }
     if (_moments.isEmpty && _info.programAvailable) {
-      _moments.add(_Moment(ProgramItem(time: _info.ceremonyTime ?? '', title: 'Cerimónia', place: widget.wedding.venue ?? '')));
+      _moments.add(_Moment(ProgramItem(time: _info.ceremonyTime ?? '', title: 'Cerimónia', place: widget.event.venue ?? '')));
     }
 
     // Local escolhido na app: a morada entra sozinha se ainda não há.
-    final venue = await ref.read(weddingVenueProvider(widget.wedding.id).future);
+    final venue = await ref.read(eventVenueProvider(widget.event.id).future);
     if (venue?.address != null && _address.text.trim().isEmpty) {
       _useVenue(venue!, markDirty: true);
     }
@@ -211,7 +211,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     }
   }
 
-  void _useVenue(WeddingVenue venue, {bool markDirty = false}) {
+  void _useVenue(EventVenue venue, {bool markDirty = false}) {
     _address.text = venue.address ?? '';
     _venueAddressUsed = _address.text;
     _lat = venue.latitude;
@@ -246,12 +246,12 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
     var message = 'Guardado.';
     var ok = true;
     try {
-      await saveGuestFacingInfo(widget.wedding.id, _current());
+      await saveGuestFacingInfo(widget.event.id, _current());
       // Nome do local (events.venue), editado na folha Local.
-      final w = ref.read(weddingControllerProvider).wedding;
+      final w = ref.read(eventControllerProvider).event;
       final name = _venueName.text.trim();
       if (w != null && name != (w.venue ?? '')) {
-        await ref.read(weddingControllerProvider.notifier).update(w.copyWith(venue: name.isEmpty ? null : name));
+        await ref.read(eventControllerProvider.notifier).update(w.copyWith(venue: name.isEmpty ? null : name));
       }
     } catch (_) {
       ok = false;
@@ -266,17 +266,17 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   }
 
   void _preview() {
-    final w = widget.wedding;
+    final w = widget.event;
     final info = _current();
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => GuestWeddingDetailsScreen(
+        builder: (_) => GuestEventDetailsScreen(
           preview: true,
-          wedding: GuestWedding(
-            weddingId: w.id,
+          event: GuestEvent(
+            eventId: w.id,
             partnerName1: w.partnerName1,
             partnerName2: w.partnerName2,
-            weddingDate: w.weddingDate,
+            eventDate: w.eventDate,
             venue: w.venue,
             location: w.location,
             quote: w.quote,
@@ -298,9 +298,9 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
 
   Future<void> _shareLink(String link) async {
     try {
-      final code = widget.wedding.guestCode;
+      final code = widget.event.guestCode;
       final codeLine = code?.isNotEmpty == true ? '\nOu entra na app com o código $code' : '';
-      await SharePlus.instance.share(ShareParams(text: 'Estás convidado para ${widget.wedding.displayNames} na À Nossa!: $link$codeLine'));
+      await SharePlus.instance.share(ShareParams(text: 'Estás convidado para ${widget.event.displayNames} na À Nossa!: $link$codeLine'));
     } catch (_) {
       await copyText(link);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
@@ -393,22 +393,22 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                           padding: const EdgeInsets.only(top: 6),
                           child: FrameButton44('Ver como convidado', outlined: true, onTap: _preview),
                         ),
-                        _PartsList(weddingId: widget.wedding.id, parts: _parts()),
+                        _PartsList(eventId: widget.event.id, parts: _parts()),
                         SectionFrame(title: 'Acesso e entrada', children: [
-                          _CompanionsSection(weddingId: widget.wedding.id),
-                          _AccessCard(wedding: widget.wedding),
-                          if (widget.wedding.guestCode?.isNotEmpty == true) ...[
+                          _CompanionsSection(eventId: widget.event.id),
+                          _AccessCard(event: widget.event),
+                          if (widget.event.guestCode?.isNotEmpty == true) ...[
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
                               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
                               child: Row(children: [
                                 Expanded(
-                                  child: Text(widget.wedding.guestCode!,
+                                  child: Text(widget.event.guestCode!,
                                       style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                 ),
                                 FrameButton36('Copiar', outlined: true, onTap: () async {
-                                  await copyText(widget.wedding.guestCode!);
+                                  await copyText(widget.event.guestCode!);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
                                   }
@@ -460,7 +460,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                   _SuggestChip(label: sug, onTap: () => setState(() => _welcome.text = sug)),
               ]),
               const SizedBox(height: 8),
-              Text('Assinado: ${widget.wedding.displayNames}', style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
+              Text('Assinado: ${widget.event.displayNames}', style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
             ]),
       ),
       _Part(
@@ -559,7 +559,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
               ),
               const SizedBox(height: 16),
               _OptSegment(
-                weddingId: widget.wedding.id,
+                eventId: widget.event.id,
                 optKey: 'opt_table_reveal',
                 fallback: 'now',
                 title: 'Quando aparece aos convidados',
@@ -567,7 +567,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
               ),
               const SizedBox(height: 8),
               _OptSwitch(
-                weddingId: widget.wedding.id,
+                eventId: widget.event.id,
                 optKey: 'opt_table_mates',
                 fallback: true,
                 title: 'Mostrar quem está na mesa',
@@ -582,14 +582,14 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         status: 'Fotos do evento, partilhadas por todos',
         onOpen: () => _openPart('Galeria', () => [
               _OptSwitch(
-                weddingId: widget.wedding.id,
+                eventId: widget.event.id,
                 optKey: 'opt_gallery_upload',
                 fallback: true,
                 title: 'Convidados publicam fotos',
                 subtitle: 'Senão só vocês publicam',
               ),
               _OptSwitch(
-                weddingId: widget.wedding.id,
+                eventId: widget.event.id,
                 optKey: 'opt_gallery_on_day',
                 fallback: false,
                 title: 'Abrir só no dia',
@@ -611,7 +611,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         status: 'Conversa entre os convidados',
         onOpen: () => _openPart('Grupos', () => [
               _OptSwitch(
-                weddingId: widget.wedding.id,
+                eventId: widget.event.id,
                 optKey: 'opt_groups_create',
                 fallback: true,
                 title: 'Convidados criam grupos',
@@ -669,9 +669,9 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
   }
 
   List<Widget> _placeSection() {
-    final venue = ref.watch(weddingVenueProvider(widget.wedding.id)).asData?.value;
+    final venue = ref.watch(eventVenueProvider(widget.event.id)).asData?.value;
     final usingVenue = venue != null && _venueAddressUsed != null && _address.text == (venue.address ?? '');
-    final placeName = widget.wedding.venue?.isNotEmpty == true ? widget.wedding.venue! : (venue?.name ?? 'Local');
+    final placeName = widget.event.venue?.isNotEmpty == true ? widget.event.venue! : (venue?.name ?? 'Local');
     return [
       if (venue != null)
         Container(
@@ -1295,8 +1295,8 @@ class _SaveBar extends StatelessWidget {
 /// convidados (mudar aplica-o logo). Cada convidado também
 /// pode ter o seu limite na ficha dele (Convidados). Guarda logo.
 class _CompanionsSection extends ConsumerStatefulWidget {
-  final String weddingId;
-  const _CompanionsSection({required this.weddingId});
+  final String eventId;
+  const _CompanionsSection({required this.eventId});
 
   @override
   ConsumerState<_CompanionsSection> createState() => _CompanionsSectionState();
@@ -1314,7 +1314,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
 
   Future<void> _load() async {
     try {
-      final r = await supabase.from('events').select('default_max_companions').eq('id', widget.weddingId).single();
+      final r = await supabase.from('events').select('default_max_companions').eq('id', widget.eventId).single();
       if (mounted) setState(() => _value = (r['default_max_companions'] as int?) ?? 1);
     } catch (_) {
       if (mounted) setState(() => _available = false);
@@ -1329,10 +1329,10 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
     final old = _value ?? 1;
     setState(() => _value = v);
     try {
-      await supabase.from('events').update({'default_max_companions': v}).eq('id', widget.weddingId);
+      await supabase.from('events').update({'default_max_companions': v}).eq('id', widget.eventId);
       if (old != v) {
-        await supabase.from('guests').update({'max_companions': v}).eq('wedding_id', widget.weddingId).eq('max_companions', old);
-        await ref.read(guestsControllerProvider.notifier).load(widget.weddingId);
+        await supabase.from('guests').update({'max_companions': v}).eq('wedding_id', widget.eventId).eq('max_companions', old);
+        await ref.read(guestsControllerProvider.notifier).load(widget.eventId);
       }
     } catch (_) {
       if (mounted) {
@@ -1357,7 +1357,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
       ),
       const SizedBox(height: 4),
       _OptSwitch(
-        weddingId: widget.weddingId,
+        eventId: widget.eventId,
         optKey: 'opt_companion_details',
         fallback: true,
         title: 'Pedir os dados dos acompanhantes',
@@ -1367,14 +1367,14 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
       // restaurante cada um escolhe no dia. Ligado por omissão nos
       // casamentos, batizados, comunhões e eventos de empresa.
       _OptSwitch(
-        weddingId: widget.weddingId,
+        eventId: widget.eventId,
         optKey: 'opt_ask_allergies',
-        fallback: cateringByOrganizer(ref.read(weddingControllerProvider).wedding?.eventType ?? EventType.wedding),
+        fallback: cateringByOrganizer(ref.read(eventControllerProvider).event?.eventType ?? EventType.wedding),
         title: 'Perguntar alergias',
         subtitle: 'Quando são vocês a escolher o menu (catering)',
       ),
       _OptSwitch(
-        weddingId: widget.weddingId,
+        eventId: widget.eventId,
         optKey: 'opt_kids_free',
         fallback: false,
         title: 'Crianças à parte',
@@ -1460,8 +1460,8 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
 /// "Acesso e entrada": evento público ou privado, grátis ou pago (com
 /// preço). Guarda logo ao mudar — o mesmo que em Definições → Organização.
 class _AccessCard extends ConsumerStatefulWidget {
-  final Wedding wedding;
-  const _AccessCard({required this.wedding});
+  final Event event;
+  const _AccessCard({required this.event});
 
   @override
   ConsumerState<_AccessCard> createState() => _AccessCardState();
@@ -1481,7 +1481,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
     super.dispose();
   }
 
-  String get _id => widget.wedding.id;
+  String get _id => widget.event.id;
 
   double? get _priceValue =>
       double.tryParse(_price.text.trim().replaceAll(' ', '').replaceAll('€', '').replaceAll(',', '.'));
@@ -1679,7 +1679,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
 
   @override
   Widget build(BuildContext context) {
-    final canBePublic = widget.wedding.eventType.canBePublic;
+    final canBePublic = widget.event.eventType.canBePublic;
     final isPublic = ref.watch(eventIsPublicProvider(_id)).value ?? false;
     final entryAsync = ref.watch(eventEntryProvider(_id));
     final entry = entryAsync.value ?? (paid: false, price: null);
@@ -1711,7 +1711,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             onTap: () {
               if (isPublic) return;
               if (!canBePublic) {
-                _toast('${widget.wedding.eventType.label} é sempre privado. Públicos só festas, concertos, festivais e eventos de empresa.');
+                _toast('${widget.event.eventType.label} é sempre privado. Públicos só festas, concertos, festivais e eventos de empresa.');
                 return;
               }
               _setPublic(true);
@@ -1739,7 +1739,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
         if (!paid) ...[
           const SizedBox(height: 10),
           Text(
-            '${canBePublic ? (isPublic ? 'Aparece a todos em Eventos.' : 'Só entra quem tem o código ou o convite.') : '${widget.wedding.eventType.label} é sempre privado.'} Com Pago aparece o preço por pessoa.',
+            '${canBePublic ? (isPublic ? 'Aparece a todos em Eventos.' : 'Só entra quem tem o código ou o convite.') : '${widget.event.eventType.label} é sempre privado.'} Com Pago aparece o preço por pessoa.',
             style: const TextStyle(fontSize: AppFontSize.sm, height: 1.4, color: AppTheme.inkMuted),
           ),
         ] else ...[
@@ -1834,7 +1834,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
         ],
         ],
         const SizedBox(height: 18),
-        _CapacityBlock(weddingId: _id, segment: _segment, choice: _choice, stepBtn: _stepBtn),
+        _CapacityBlock(eventId: _id, segment: _segment, choice: _choice, stepBtn: _stepBtn),
       ]),
       ),
     ]);
@@ -1844,11 +1844,11 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
 /// Limite de pessoas (migração 182, pedido 2026-11-11): sem limite ou um
 /// máximo; quando enche, ninguém mais entra nem compra bilhete.
 class _CapacityBlock extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final Widget Function(List<Widget>) segment;
   final Widget Function({required String label, required String hint, required bool selected, required VoidCallback onTap}) choice;
   final Widget Function(IconData, String, VoidCallback) stepBtn;
-  const _CapacityBlock({required this.weddingId, required this.segment, required this.choice, required this.stepBtn});
+  const _CapacityBlock({required this.eventId, required this.segment, required this.choice, required this.stepBtn});
 
   @override
   ConsumerState<_CapacityBlock> createState() => _CapacityBlockState();
@@ -1876,8 +1876,8 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
   Future<void> _save(int? v) async {
     setState(() => _saving = true);
     try {
-      await setEventMaxAttendees(widget.weddingId, v);
-      ref.invalidate(eventMaxAttendeesProvider(widget.weddingId));
+      await setEventMaxAttendees(widget.eventId, v);
+      ref.invalidate(eventMaxAttendeesProvider(widget.eventId));
       ref.invalidate(publicEventsProvider);
       if (!mounted) return;
       FocusScope.of(context).unfocus();
@@ -1896,7 +1896,7 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
 
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(eventMaxAttendeesProvider(widget.weddingId));
+    final async = ref.watch(eventMaxAttendeesProvider(widget.eventId));
     final saved = async.value;
     if (!_loaded && async.hasValue) {
       _loaded = true;
@@ -1997,8 +1997,8 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
 /// O que os convidados veem (migração 158): o organizador liga e desliga
 /// cada parte. Tudo desligado = só o bilhete (num evento pago).
 class _GuestSectionsCard extends ConsumerStatefulWidget {
-  final String weddingId;
-  const _GuestSectionsCard({required this.weddingId});
+  final String eventId;
+  const _GuestSectionsCard({required this.eventId});
 
   @override
   ConsumerState<_GuestSectionsCard> createState() => _GuestSectionsCardState();
@@ -2015,8 +2015,8 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
       _saving = true;
     });
     try {
-      await saveGuestSections(widget.weddingId, next);
-      ref.invalidate(guestSectionsProvider(widget.weddingId));
+      await saveGuestSections(widget.eventId, next);
+      ref.invalidate(guestSectionsProvider(widget.eventId));
     } catch (_) {
       if (!mounted) return;
       setState(() => _local = before);
@@ -2028,7 +2028,7 @@ class _GuestSectionsCardState extends ConsumerState<_GuestSectionsCard> {
 
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(guestSectionsProvider(widget.weddingId));
+    final async = ref.watch(guestSectionsProvider(widget.eventId));
     final loaded = async.value;
     if (async.isLoading && _local == null) return const SizedBox.shrink();
     // Antes da migração 158 não há onde guardar: não mostra o cartão.
@@ -2091,15 +2091,15 @@ BoxDecoration _whiteCard() => const BoxDecoration();
 
 /// Cartão verde: código em grande, Partilhar convite e Ver como convidado.
 class _CodeHero extends ConsumerWidget {
-  final Wedding wedding;
+  final Event event;
   final VoidCallback? onShare;
   final VoidCallback onPreview;
-  const _CodeHero({required this.wedding, required this.onShare, required this.onPreview});
+  const _CodeHero({required this.event, required this.onShare, required this.onPreview});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final code = wedding.guestCode;
-    final isPublic = ref.watch(eventIsPublicProvider(wedding.id)).value ?? false;
+    final code = event.guestCode;
+    final isPublic = ref.watch(eventIsPublicProvider(event.id)).value ?? false;
     const btnText = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700);
     return Container(
       padding: const EdgeInsets.all(18),
@@ -2200,9 +2200,9 @@ class _Part {
 /// "A página": cada parte com o que já tem, mostrar/esconder (migração
 /// 158) e a folha para editar. O que falta fica a amarelo.
 class _PartsList extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final List<_Part> parts;
-  const _PartsList({required this.weddingId, required this.parts});
+  const _PartsList({required this.eventId, required this.parts});
 
   @override
   ConsumerState<_PartsList> createState() => _PartsListState();
@@ -2215,8 +2215,8 @@ class _PartsListState extends ConsumerState<_PartsList> {
     final before = _local;
     setState(() => _local = next);
     try {
-      await saveGuestSections(widget.weddingId, next);
-      ref.invalidate(guestSectionsProvider(widget.weddingId));
+      await saveGuestSections(widget.eventId, next);
+      ref.invalidate(guestSectionsProvider(widget.eventId));
     } catch (_) {
       if (!mounted) return;
       setState(() => _local = before);
@@ -2228,7 +2228,7 @@ class _PartsListState extends ConsumerState<_PartsList> {
   Widget build(BuildContext context) {
     // Sem resposta ainda: tudo visível (o padrão), para os interruptores
     // aparecerem sempre, como no mockup.
-    final sections = _local ?? ref.watch(guestSectionsProvider(widget.weddingId)).value ?? const GuestSections();
+    final sections = _local ?? ref.watch(guestSectionsProvider(widget.eventId)).value ?? const GuestSections();
     final parts = widget.parts;
     final countable = parts.where((p) => !p.locked).toList();
     final ready = countable.where((p) => !p.missing).length;
@@ -2303,12 +2303,12 @@ class _PartsListState extends ConsumerState<_PartsList> {
 
 /// Opção da página (guardada em `guest_sections`, 2026-11-08).
 class _OptSwitch extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final String optKey;
   final bool fallback;
   final String title;
   final String subtitle;
-  const _OptSwitch({required this.weddingId, required this.optKey, required this.fallback, required this.title, required this.subtitle});
+  const _OptSwitch({required this.eventId, required this.optKey, required this.fallback, required this.title, required this.subtitle});
   @override
   ConsumerState<_OptSwitch> createState() => _OptSwitchState();
 }
@@ -2319,8 +2319,8 @@ class _OptSwitchState extends ConsumerState<_OptSwitch> {
   Future<void> _set(GuestSections sections, bool v) async {
     setState(() => _local = v);
     try {
-      await saveGuestSections(widget.weddingId, sections.withOption(widget.optKey, v));
-      ref.invalidate(guestSectionsProvider(widget.weddingId));
+      await saveGuestSections(widget.eventId, sections.withOption(widget.optKey, v));
+      ref.invalidate(guestSectionsProvider(widget.eventId));
     } catch (_) {
       if (!mounted) return;
       setState(() => _local = null);
@@ -2330,7 +2330,7 @@ class _OptSwitchState extends ConsumerState<_OptSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    final sections = ref.watch(guestSectionsProvider(widget.weddingId)).value;
+    final sections = ref.watch(guestSectionsProvider(widget.eventId)).value;
     if (sections == null) return const SizedBox.shrink();
     final value = _local ?? sections.flag(widget.optKey, fallback: widget.fallback);
     return SwitchListTile.adaptive(
@@ -2346,12 +2346,12 @@ class _OptSwitchState extends ConsumerState<_OptSwitch> {
 
 /// Opção com várias escolhas em pílula (ex.: quando a mesa aparece).
 class _OptSegment extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final String optKey;
   final String fallback;
   final String title;
   final List<(String, String)> options;
-  const _OptSegment({required this.weddingId, required this.optKey, required this.fallback, required this.title, required this.options});
+  const _OptSegment({required this.eventId, required this.optKey, required this.fallback, required this.title, required this.options});
   @override
   ConsumerState<_OptSegment> createState() => _OptSegmentState();
 }
@@ -2362,8 +2362,8 @@ class _OptSegmentState extends ConsumerState<_OptSegment> {
   Future<void> _set(GuestSections sections, String v) async {
     setState(() => _local = v);
     try {
-      await saveGuestSections(widget.weddingId, sections.withOption(widget.optKey, v));
-      ref.invalidate(guestSectionsProvider(widget.weddingId));
+      await saveGuestSections(widget.eventId, sections.withOption(widget.optKey, v));
+      ref.invalidate(guestSectionsProvider(widget.eventId));
     } catch (_) {
       if (!mounted) return;
       setState(() => _local = null);
@@ -2373,7 +2373,7 @@ class _OptSegmentState extends ConsumerState<_OptSegment> {
 
   @override
   Widget build(BuildContext context) {
-    final sections = ref.watch(guestSectionsProvider(widget.weddingId)).value;
+    final sections = ref.watch(guestSectionsProvider(widget.eventId)).value;
     if (sections == null) return const SizedBox.shrink();
     final raw = sections.toJson()[widget.optKey];
     final value = _local ?? (raw is String ? raw : widget.fallback);

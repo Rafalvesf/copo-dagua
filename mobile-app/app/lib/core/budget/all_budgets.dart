@@ -1,17 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 
 /// Orçamento de um evento no «Todos» do Orçamento (pedido 2026-11-23).
-typedef EventBudgetLine = ({String weddingId, double total, double spentByHand, double unpaidByHand});
+typedef EventBudgetLine = ({String eventId, double total, double spentByHand, double unpaidByHand});
 
 /// Tetos, gastos escritos à mão e despesas por pagar de todos os eventos
 /// que organizas — só se lê quando se escolhe «Todos» (o resto da página
 /// usa o evento aberto). As reservas entram no ecrã, a partir das reservas
 /// já carregadas.
 final allEventBudgetsProvider = FutureProvider.autoDispose<List<EventBudgetLine>>((ref) async {
-  final events = ref.watch(weddingControllerProvider.select((s) => s.events));
+  final events = ref.watch(eventControllerProvider.select((s) => s.events));
   if (events.isEmpty) return const [];
   final ids = [for (final e in events) e.id];
   final budgetsF = supabase.from('budgets').select('wedding_id, total').inFilter('wedding_id', ids).then((r) => r);
@@ -34,7 +34,7 @@ final allEventBudgetsProvider = FutureProvider.autoDispose<List<EventBudgetLine>
   return [
     for (final e in events)
       (
-        weddingId: e.id,
+        eventId: e.id,
         total: budgets[e.id] ?? e.estimatedBudget ?? 0,
         spentByHand: spent[e.id] ?? 0,
         unpaidByHand: unpaid[e.id] ?? 0,

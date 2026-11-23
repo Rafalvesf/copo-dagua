@@ -8,7 +8,7 @@ import '../features/settings/screens/organizers_screen.dart' show OrganizersScre
 import '../features/gifts/screens/gift_list_screens.dart' show OrganizerGiftListScreen, GiftShopScreen, GiftReturnScreen;
 import '../features/gifts/screens/partner_shop_screen.dart' show PartnerShopScreen;
 import '../features/partner_pro/partner_pro_screen.dart' show PartnerProScreen;
-import 'wedding/organizers.dart' show OrganizerPerm;
+import 'event/organizers.dart' show OrganizerPerm;
 import '../features/messages/team_messages.dart' deferred as l2;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,7 +50,7 @@ import '../features/guest_home/screens/guest_profile_screen.dart' deferred as l2
 import '../features/guest_home/screens/invite_token_screen.dart' deferred as l22;
 import '../features/partners/screens/partner_invite_screen.dart' deferred as l23;
 import '../features/gifts/screens/envelopes_screen.dart' deferred as l24;
-import '../features/guest_home/screens/guest_wedding_details_screen.dart' deferred as l25;
+import '../features/guest_home/screens/guest_event_details_screen.dart' deferred as l25;
 import '../features/gallery/screens/gallery_screen.dart' deferred as l26;
 import '../features/guests/screens/guest_detail_screen.dart' deferred as l27;
 import '../features/guests/screens/guests_list_screen.dart' deferred as l28;
@@ -93,7 +93,7 @@ import '../features/settings/screens/settings_screen.dart' deferred as l57;
 import '../features/profile/screens/account_settings_screen.dart' deferred as lacct;
 import '../features/profile/screens/public_profile_screen.dart' deferred as lpub;
 import '../features/support/screens/support_screen.dart' deferred as l58;
-import '../features/wedding/screens/wedding_details_screen.dart' deferred as l59;
+import '../features/event/screens/event_details_screen.dart' deferred as l59;
 import 'auth/auth_controller.dart';
 import 'theme/app_theme.dart';
 import 'models/models.dart';
@@ -305,7 +305,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           // chega aqui com 'couple' ou 'partner' na URL.
           return RegisterScreen(
             role: UserRole.values.byName(state.uri.queryParameters['role']!),
-            initialWeddingCode: state.uri.queryParameters['code'],
+            initialEventCode: state.uri.queryParameters['code'],
           );
         },
       ),
@@ -353,7 +353,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       tabRoute(
-        // Variante com `weddingId` explícito — usada só por uma conta
+        // Variante com `eventId` explícito — usada só por uma conta
         // de casal em "Modo convidado" (`guest_mode_screen.dart`),
         // nunca por uma conta 100% convidado. Caminho distinto de
         // `/guest-home` de propósito: o `redirect` acima devolve
@@ -361,7 +361,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         // '/guest-home'` exatamente — este caminho nunca é esse texto
         // exato, por isso não é apanhado por essa guarda.
         path: '/guest-home/:weddingId',
-        builder: (context, state) =>l19.GuestHomeScreen(weddingId: state.pathParameters['weddingId']),
+        builder: (context, state) =>l19.GuestHomeScreen(eventId: state.pathParameters['weddingId']),
       ),
       // Mensagem da equipa (admin, migrações 133/134), com resposta.
       GoRoute(path: '/mensagem/:id', builder: (context, state) =>lazyPage([l61.loadLibrary], () =>  l61.AdminMessageScreen(id: state.pathParameters['id']!))),
@@ -389,7 +389,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (state.extra is! Guest) return _LostRoute('/guest-home/${state.pathParameters['weddingId']}');
           return lazyPage([l20.loadLibrary], () => l20.GuestOnboardingWizardScreen(
             key: ValueKey('gonb$step'),
-            weddingId: state.pathParameters['weddingId']!,
+            eventId: state.pathParameters['weddingId']!,
             guest: state.extra as Guest,
             initialStep: step,
           ));
@@ -443,8 +443,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/guest-events', redirect: (context, state) => '/eventos'),
       GoRoute(
         path: '/guest-wedding-details',
-        builder: (context, state) =>lazyPage([l25.loadLibrary], () =>  state.extra is GuestWedding
-            ? l25.GuestWeddingDetailsScreen(wedding: state.extra as GuestWedding)
+        builder: (context, state) =>lazyPage([l25.loadLibrary], () =>  state.extra is GuestEvent
+            ? l25.GuestEventDetailsScreen(event: state.extra as GuestEvent)
             : const _LostRoute('/guest-home')),
       ),
       tabRoute(
@@ -454,7 +454,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       tabRoute(
         path: '/guest-gifts/:weddingId',
         builder: (context, state) =>lazyPage([l18.loadLibrary], () => 
-            l18.GuestGiftsScreen(weddingId: state.pathParameters['weddingId'])),
+            l18.GuestGiftsScreen(eventId: state.pathParameters['weddingId'])),
       ),
       tabRoute(
         // Perfil igual ao do organizador (2026-11), com a barra de convidado.
@@ -463,18 +463,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/guest-profile/:weddingId',
-        builder: (context, state) =>l29.HomeFeedScreen(guestMode: true, guestWeddingId: state.pathParameters['weddingId']),
+        builder: (context, state) =>l29.HomeFeedScreen(guestMode: true, guestEventId: state.pathParameters['weddingId']),
       ),
       // Resposta, acompanhantes e mesa de um evento (antigo perfil
       // do convidado).
       GoRoute(
         path: '/guest-presenca/:weddingId',
-        builder: (context, state) =>lazyPage([l21.loadLibrary], () =>  l21.GuestProfileScreen(weddingId: state.pathParameters['weddingId'])),
+        builder: (context, state) =>lazyPage([l21.loadLibrary], () =>  l21.GuestProfileScreen(eventId: state.pathParameters['weddingId'])),
       ),
       GoRoute(
         // Alojamento e transporte para os convidados (099_guest_offers.sql).
         path: '/guest-stay/:weddingId',
-        builder: (context, state) =>lazyPage([l9.loadLibrary], () =>  l9.GuestOffersScreen(weddingId: state.pathParameters['weddingId']!)),
+        builder: (context, state) =>lazyPage([l9.loadLibrary], () =>  l9.GuestOffersScreen(eventId: state.pathParameters['weddingId']!)),
       ),
       tabRoute(
         path: '/guest-gallery',
@@ -483,7 +483,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       tabRoute(
         path: '/guest-gallery/:weddingId',
         builder: (context, state) =>lazyPage([l17.loadLibrary], () => 
-            l17.GuestGalleryScreen(weddingId: state.pathParameters['weddingId'])),
+            l17.GuestGalleryScreen(eventId: state.pathParameters['weddingId'])),
       ),
       GoRoute(
         path: '/partner-contracts',
@@ -590,7 +590,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/evento',
         // `?aparencia=1`: abre logo no modo de mudar estilo e cor
         // (Definições → Aparência do menu).
-        builder: (context, state) =>lazyPage([l59.loadLibrary], () =>  l59.WeddingDetailsScreen(
+        builder: (context, state) =>lazyPage([l59.loadLibrary], () =>  l59.EventDetailsScreen(
           key: ValueKey(state.uri.toString()),
           startEditing: state.uri.queryParameters['aparencia'] == '1',
         )),
@@ -603,7 +603,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/gallery',
         builder: (context, state) =>lazyPage([l26.loadLibrary], () => 
-            l26.GalleryScreen(weddingId: state.extra as String?)),
+            l26.GalleryScreen(eventId: state.extra as String?)),
       ),
       GoRoute(
         path: '/guests',
@@ -625,7 +625,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/mesa/:weddingId',
         redirect: (context, state) => state.extra is EventTable ? null : '/guest-home',
         builder: (context, state) => lazyPage([l28c.loadLibrary],
-            () => l28c.ChooseMenuScreen(weddingId: state.pathParameters['weddingId']!, table: state.extra as EventTable)),
+            () => l28c.ChooseMenuScreen(eventId: state.pathParameters['weddingId']!, table: state.extra as EventTable)),
       ),
       GoRoute(
         path: '/guests/:id',
@@ -712,7 +712,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Grupos do evento (2026-10-20).
       GoRoute(
         path: '/groups/:weddingId',
-        builder: (context, state) =>lazyPage([l3.loadLibrary], () =>  l3.GroupsScreen(weddingId: state.pathParameters['weddingId']!)),
+        builder: (context, state) =>lazyPage([l3.loadLibrary], () =>  l3.GroupsScreen(eventId: state.pathParameters['weddingId']!)),
       ),
       GoRoute(
         path: '/group/:id',

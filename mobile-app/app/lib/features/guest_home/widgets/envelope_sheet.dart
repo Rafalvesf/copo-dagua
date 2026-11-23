@@ -14,17 +14,17 @@ import '../../../shared/widgets/island_sheet.dart';
 /// depois vê o IBAN, o valor e a descrição para copiar, faz a
 /// transferência no banco e confirma. O dinheiro vai direto para os
 /// anfitriões — não passa pela À Nossa!.
-Future<void> showEnvelopeSheet(BuildContext context, GuestWedding wedding) {
+Future<void> showEnvelopeSheet(BuildContext context, GuestEvent event) {
   return showIslandSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _EnvelopeSheet(wedding: wedding),
+    builder: (_) => _EnvelopeSheet(event: event),
   );
 }
 
 class _EnvelopeSheet extends ConsumerStatefulWidget {
-  final GuestWedding wedding;
-  const _EnvelopeSheet({required this.wedding});
+  final GuestEvent event;
+  const _EnvelopeSheet({required this.event});
 
   @override
   ConsumerState<_EnvelopeSheet> createState() => _EnvelopeSheetState();
@@ -51,11 +51,11 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
     return double.tryParse(_custom.text.trim().replaceAll(' ', '').replaceAll('€', '').replaceAll(',', '.'));
   }
 
-  String get _iban => (widget.wedding.giftIban ?? '').trim();
+  String get _iban => (widget.event.giftIban ?? '').trim();
 
   String get _description {
     final me = ref.read(_myNameProvider);
-    return 'Envelope ${widget.wedding.displayNames}${me.isEmpty ? '' : ' - $me'}';
+    return 'Envelope ${widget.event.displayNames}${me.isEmpty ? '' : ' - $me'}';
   }
 
   Future<void> _copy(String text, String what) async {
@@ -71,12 +71,12 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
       _error = null;
     });
     try {
-      await sendGiftEnvelope(weddingId: widget.wedding.weddingId, amount: v, message: _message.text.trim());
-      ref.invalidate(myEnvelopesProvider(widget.wedding.weddingId));
+      await sendGiftEnvelope(eventId: widget.event.eventId, amount: v, message: _message.text.trim());
+      ref.invalidate(myEnvelopesProvider(widget.event.eventId));
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Envelope entregue. ${widget.wedding.displayNames} recebem a tua mensagem em Grupos.')),
+        SnackBar(content: Text('Envelope entregue. ${widget.event.displayNames} recebem a tua mensagem em Grupos.')),
       );
     } catch (_) {
       if (mounted) setState(() => _error = 'Não foi possível registar o envelope. Tenta outra vez.');
@@ -141,8 +141,8 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
         const SizedBox(height: 4),
         Text(
           _step2
-              ? 'No teu banco (ou MB WAY para IBAN), transfere para ${widget.wedding.displayNames}. Toca para copiar.'
-              : 'O dinheiro vai diretamente para a conta de ${widget.wedding.displayNames}, por transferência.',
+              ? 'No teu banco (ou MB WAY para IBAN), transfere para ${widget.event.displayNames}. Toca para copiar.'
+              : 'O dinheiro vai diretamente para a conta de ${widget.event.displayNames}, por transferência.',
           style: const TextStyle(fontSize: 13.5, height: 1.4, color: AppTheme.inkMuted),
         ),
         const SizedBox(height: 16),

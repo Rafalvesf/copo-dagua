@@ -11,7 +11,7 @@ import '../../../core/events/tickets.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/payments/partner_connect.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -33,8 +33,8 @@ Future<void> showBuyTicketSheet(BuildContext context, PublicEvent e, {String? co
 }
 
 /// Entrada num evento pago sem bilhete: abre a compra (código, link ou id).
-Future<bool> openTicketPurchase(BuildContext context, {String? weddingId, String? code, String? inviteToken}) async {
-  final e = await ticketEventPreview(weddingId: weddingId, code: code, inviteToken: inviteToken);
+Future<bool> openTicketPurchase(BuildContext context, {String? eventId, String? code, String? inviteToken}) async {
+  final e = await ticketEventPreview(eventId: eventId, code: code, inviteToken: inviteToken);
   if (e == null || !context.mounted) return false;
   await showBuyTicketSheet(context, e, code: code, inviteToken: inviteToken);
   return true;
@@ -61,7 +61,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
   String? _error;
 
   Future<void> _pay() async {
-    Funnel.track('ticket_checkout_open', ref: widget.event.weddingId);
+    Funnel.track('ticket_checkout_open', ref: widget.event.eventId);
     setState(() {
       _busy = true;
       _error = null;
@@ -80,7 +80,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
         titleOverride: qty == 1 ? 'Bilhete' : '$qty bilhetes',
         create: (m, {phone, paymentMethodId}) async {
           final r = await createTicketIntent(
-            weddingId: e.weddingId,
+            eventId: e.eventId,
             quantity: qty,
             method: m,
             phone: phone,
@@ -182,7 +182,7 @@ class TicketReturnScreen extends ConsumerStatefulWidget {
 
 class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
   String _status = 'checking';
-  String? _weddingId;
+  String? _eventId;
 
   @override
   void initState() {
@@ -195,11 +195,11 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
     for (var i = 0; i < 8 && mounted; i++) {
       try {
         final r = await syncTicket(widget.ticketId);
-        _weddingId = r.weddingId;
+        _eventId = r.eventId;
         if (r.status == 'paid') {
-          ref.invalidate(guestWeddingsProvider);
+          ref.invalidate(guestEventsProvider);
           ref.invalidate(publicEventsProvider);
-          if (r.weddingId != null) ref.invalidate(myEventPassProvider(r.weddingId!));
+          if (r.eventId != null) ref.invalidate(myEventPassProvider(r.eventId!));
           if (mounted) setState(() => _status = 'paid');
           return;
         }
@@ -213,7 +213,7 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
   Widget build(BuildContext context) {
     final paid = _status == 'paid';
     // O bilhete com o QR logo a seguir ao pagamento (migração 158).
-    final ticket = paid && _weddingId != null ? ref.watch(myEventPassProvider(_weddingId!)).value?.ticket : null;
+    final ticket = paid && _eventId != null ? ref.watch(myEventPassProvider(_eventId!)).value?.ticket : null;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
@@ -255,8 +255,8 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
               const SizedBox(height: 24),
               if (_status != 'checking')
                 FilledButton(
-                  onPressed: () => paid && _weddingId != null
-                      ? context.go('/guest-home/$_weddingId')
+                  onPressed: () => paid && _eventId != null
+                      ? context.go('/guest-home/$_eventId')
                       : context.go('/eventos'),
                   style: FilledButton.styleFrom(minimumSize: const Size(220, 50), backgroundColor: AppTheme.ink),
                   child: Text(paid ? 'Ver o evento' : 'Voltar aos eventos'),
@@ -340,7 +340,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
     );
   }
 
-  Future<void> _refundOne(String weddingId, EventTicketRow t) async {
+  Future<void> _refundOne(String eventId, EventTicketRow t) async {
     final reason = await _confirm(
       title: 'Reembolsar ${t.buyerName}?',
       message: '${t.buyerName} recebe ${euroLabel(t.amount)} de volta e sai do evento. '
@@ -355,11 +355,11 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
     } on TicketError {
       messenger.showSnackBar(const SnackBar(content: Text('Não foi possível reembolsar. Tenta outra vez.')));
     }
-    ref.invalidate(eventTicketListProvider(weddingId));
-    ref.invalidate(ticketSummaryProvider(weddingId));
+    ref.invalidate(eventTicketListProvider(eventId));
+    ref.invalidate(ticketSummaryProvider(eventId));
   }
 
-  Future<void> _cancelEvent(String weddingId, TicketSummary summary) async {
+  Future<void> _cancelEvent(String eventId, TicketSummary summary) async {
     final reason = await _confirm(
       title: 'Cancelar o evento?',
       message: 'O evento sai do Descobrir e deixa de vender bilhetes. '
@@ -371,20 +371,20 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
     setState(() => _cancelling = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final res = await cancelPaidEvent(weddingId, reason: reason.isEmpty ? null : reason);
+      final res = await cancelPaidEvent(eventId, reason: reason.isEmpty ? null : reason);
       messenger.showSnackBar(SnackBar(
         content: Text(res.failed == 0
             ? 'Evento cancelado. ${res.refunded} ${res.refunded == 1 ? 'bilhete reembolsado' : 'bilhetes reembolsados'}.'
             : 'Evento cancelado, mas ${res.failed} reembolsos falharam. Toca outra vez em Cancelar para repetir.'),
       ));
-      ref.invalidate(eventIsPublicProvider(weddingId));
+      ref.invalidate(eventIsPublicProvider(eventId));
     } on TicketError {
       messenger.showSnackBar(const SnackBar(content: Text('Não foi possível cancelar. Tenta outra vez.')));
     } finally {
       if (mounted) setState(() => _cancelling = false);
     }
-    ref.invalidate(eventTicketListProvider(weddingId));
-    ref.invalidate(ticketSummaryProvider(weddingId));
+    ref.invalidate(eventTicketListProvider(eventId));
+    ref.invalidate(ticketSummaryProvider(eventId));
   }
 
   Widget _line(String label, String value, {bool strong = false}) => Padding(
@@ -397,10 +397,10 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final wedding = ref.watch(weddingControllerProvider).wedding;
+    final event = ref.watch(eventControllerProvider).event;
     final statusAsync = ref.watch(partnerConnectStatusProvider);
     final s = statusAsync.value;
-    final summary = wedding == null ? null : ref.watch(ticketSummaryProvider(wedding.id)).value;
+    final summary = event == null ? null : ref.watch(ticketSummaryProvider(event.id)).value;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(top: false, 
@@ -446,7 +446,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                 padding: const EdgeInsets.all(16),
                 decoration: softCard(),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Text('VENDAS · ${wedding!.displayNames.toUpperCase()}',
+                  Text('VENDAS · ${event!.displayNames.toUpperCase()}',
                       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
                   const SizedBox(height: 8),
                   _line('Bilhetes vendidos', '${summary.sold}'),
@@ -458,9 +458,9 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                   _line('Recebes', euroLabel(summary.net), strong: true),
                 ]),
               ),
-            if (wedding != null) ...[
+            if (event != null) ...[
               const SizedBox(height: 14),
-              _TicketList(weddingId: wedding.id, onRefund: (t) => _refundOne(wedding.id, t)),
+              _TicketList(eventId: event.id, onRefund: (t) => _refundOne(event.id, t)),
             ],
             const SizedBox(height: 14),
             if (s != null && s.hasAccount)
@@ -489,10 +489,10 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
               style: TextStyle(fontSize: 12.5, height: 1.45, color: AppTheme.inkMuted),
             ),
             // Visível também depois de cancelar, enquanto houver bilhetes por reembolsar (repetir falhas).
-            if (wedding != null && summary != null && ((ref.watch(eventIsPublicProvider(wedding.id)).value ?? false) || summary.sold > 0)) ...[
+            if (event != null && summary != null && ((ref.watch(eventIsPublicProvider(event.id)).value ?? false) || summary.sold > 0)) ...[
               const SizedBox(height: 18),
               OutlinedButton.icon(
-                onPressed: _cancelling ? null : () => _cancelEvent(wedding.id, summary),
+                onPressed: _cancelling ? null : () => _cancelEvent(event.id, summary),
                 icon: _cancelling
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Hi.calendar),
@@ -514,13 +514,13 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
 
 /// Bilhetes vendidos, com reembolso individual (migração 152).
 class _TicketList extends ConsumerWidget {
-  final String weddingId;
+  final String eventId;
   final void Function(EventTicketRow) onRefund;
-  const _TicketList({required this.weddingId, required this.onRefund});
+  const _TicketList({required this.eventId, required this.onRefund});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rows = ref.watch(eventTicketListProvider(weddingId)).value ?? const <EventTicketRow>[];
+    final rows = ref.watch(eventTicketListProvider(eventId)).value ?? const <EventTicketRow>[];
     if (rows.isEmpty) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),

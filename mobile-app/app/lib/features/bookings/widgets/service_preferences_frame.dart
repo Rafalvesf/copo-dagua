@@ -20,8 +20,8 @@ import '../../../shared/widgets/step_sheet_head.dart';
 /// 039_task_engine.sql). Uma linha por categoria com o estado e a seta;
 /// tocar abre um popup com as três opções.
 class ServicePreferencesFrame extends ConsumerStatefulWidget {
-  final String weddingId;
-  const ServicePreferencesFrame({super.key, required this.weddingId});
+  final String eventId;
+  const ServicePreferencesFrame({super.key, required this.eventId});
 
   @override
   ConsumerState<ServicePreferencesFrame> createState() => _ServicePreferencesFrameState();
@@ -41,7 +41,7 @@ class _ServicePreferencesFrameState extends ConsumerState<ServicePreferencesFram
   @override
   void didUpdateWidget(covariant ServicePreferencesFrame old) {
     super.didUpdateWidget(old);
-    if (old.weddingId != widget.weddingId) {
+    if (old.eventId != widget.eventId) {
       _pref.clear();
       _external.clear();
       _loading = true;
@@ -54,7 +54,7 @@ class _ServicePreferencesFrameState extends ConsumerState<ServicePreferencesFram
       final rows = await supabase
           .from('wedding_service_preferences')
           .select('partner_category_slug, preference, external_partner_name')
-          .eq('wedding_id', widget.weddingId);
+          .eq('wedding_id', widget.eventId);
       for (final r in (rows as List).cast<Map<String, dynamic>>()) {
         final slug = r['partner_category_slug'] as String;
         _pref[slug] = r['preference'] as String;
@@ -79,7 +79,7 @@ class _ServicePreferencesFrameState extends ConsumerState<ServicePreferencesFram
       }
     });
     await supabase.from('wedding_service_preferences').upsert({
-      'wedding_id': widget.weddingId,
+      'wedding_id': widget.eventId,
       'partner_category_slug': slug,
       'preference': preference,
       'external_partner_name': n,
@@ -111,7 +111,7 @@ class _ServicePreferencesFrameState extends ConsumerState<ServicePreferencesFram
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(partnerCategoryOptionsProvider).value;
-    final booked = ref.watch(bookedPartnersBySlugProvider(widget.weddingId)).value ?? const <String, List<String>>{};
+    final booked = ref.watch(bookedPartnersBySlugProvider(widget.eventId)).value ?? const <String, List<String>>{};
     if (categories == null || _loading) return const SizedBox.shrink();
 
     String stateOf(String slug) {

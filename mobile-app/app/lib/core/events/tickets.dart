@@ -27,13 +27,13 @@ class TicketError implements Exception {
 
 /// [code] / [inviteToken]: evento privado e pago (migração 153) — só se
 /// compra com o código do evento ou o link individual.
-Future<String> createTicketCheckoutUrl({required String weddingId, required int quantity, String? code, String? inviteToken}) async {
+Future<String> createTicketCheckoutUrl({required String eventId, required int quantity, String? code, String? inviteToken}) async {
   final success = kIsWeb ? publicLink('/bilhete/{TICKET_ID}') : 'anossa://bilhete/{TICKET_ID}';
-  final cancel = kIsWeb ? publicLink('/evento/$weddingId') : 'anossa://payment-cancel';
+  final cancel = kIsWeb ? publicLink('/evento/$eventId') : 'anossa://payment-cancel';
   try {
     final res = await supabase.functions.invoke('create-ticket-checkout', body: {
       'action': 'checkout',
-      'wedding_id': weddingId,
+      'wedding_id': eventId,
       'quantity': quantity,
       'success_url': success,
       'cancel_url': cancel,
@@ -53,7 +53,7 @@ Future<String> createTicketCheckoutUrl({required String weddingId, required int 
 /// pagamento da app. [previousId]: bilhete de uma tentativa anterior (é
 /// anulado). Devolve o bilhete criado.
 Future<({String ticketId, PaymentIntentInfo info})> createTicketIntent({
-  required String weddingId,
+  required String eventId,
   required int quantity,
   required PayMethod method,
   String? phone,
@@ -63,7 +63,7 @@ Future<({String ticketId, PaymentIntentInfo info})> createTicketIntent({
 }) async {
   final d = await invokePayFunction('create-ticket-checkout', {
     'action': 'intent',
-    'wedding_id': weddingId,
+    'wedding_id': eventId,
     'quantity': quantity,
     'method': method.code,
     if (phone != null) 'phone': phone,
@@ -83,10 +83,10 @@ Future<(String, MultibancoRef?)> ticketPayState(String ticketId) async {
 }
 
 /// Ao voltar da Stripe: `paid` (já entrou no evento), `open` ou erro.
-Future<({String status, String? weddingId})> syncTicket(String ticketId) async {
+Future<({String status, String? eventId})> syncTicket(String ticketId) async {
   final res = await supabase.functions.invoke('create-ticket-checkout', body: {'action': 'sync', 'ticket_id': ticketId});
   final m = (res.data as Map).cast<String, dynamic>();
-  return (status: m['status'] as String? ?? 'open', weddingId: m['wedding_id'] as String?);
+  return (status: m['status'] as String? ?? 'open', eventId: m['wedding_id'] as String?);
 }
 
 class TicketSummary {
@@ -112,9 +112,9 @@ class TicketSummary {
   });
 }
 
-final ticketSummaryProvider = FutureProvider.family<TicketSummary, String>((ref, weddingId) async {
+final ticketSummaryProvider = FutureProvider.family<TicketSummary, String>((ref, eventId) async {
   try {
-    final rows = await supabase.rpc('event_ticket_summary', params: {'p_wedding': weddingId}) as List;
+    final rows = await supabase.rpc('event_ticket_summary', params: {'p_wedding': eventId}) as List;
     if (rows.isEmpty) return const TicketSummary();
     final r = (rows.first as Map).cast<String, dynamic>();
     double n(String k) => (r[k] as num?)?.toDouble() ?? 0;
@@ -134,9 +134,9 @@ final ticketSummaryProvider = FutureProvider.family<TicketSummary, String>((ref,
 });
 
 /// Bilhetes que eu já comprei para um evento.
-final myTicketsProvider = FutureProvider.family<int, String>((ref, weddingId) async {
+final myTicketsProvider = FutureProvider.family<int, String>((ref, eventId) async {
   try {
-    return (await supabase.rpc('my_event_tickets', params: {'p_wedding': weddingId}) as num?)?.toInt() ?? 0;
+    return (await supabase.rpc('my_event_tickets', params: {'p_wedding': eventId}) as num?)?.toInt() ?? 0;
   } on PostgrestException {
     return 0;
   }
@@ -169,9 +169,9 @@ class EventTicketRow {
   });
 }
 
-final eventTicketListProvider = FutureProvider.family<List<EventTicketRow>, String>((ref, weddingId) async {
+final eventTicketListProvider = FutureProvider.family<List<EventTicketRow>, String>((ref, eventId) async {
   try {
-    final rows = await supabase.rpc('event_ticket_list', params: {'p_wedding': weddingId}) as List;
+    final rows = await supabase.rpc('event_ticket_list', params: {'p_wedding': eventId}) as List;
     return [
       for (final r in rows.cast<Map<String, dynamic>>())
         EventTicketRow(
@@ -212,8 +212,8 @@ Future<RefundResult> refundTicket(String ticketId, {String? reason}) =>
     _refundCall({'action': 'refund_ticket', 'ticket_id': ticketId, if (reason != null) 'reason': reason});
 
 /// Cancela o evento pago: sai do Descobrir e reembolsa todos os bilhetes.
-Future<RefundResult> cancelPaidEvent(String weddingId, {String? reason}) =>
-    _refundCall({'action': 'cancel_event', 'wedding_id': weddingId, if (reason != null) 'reason': reason});
+Future<RefundResult> cancelPaidEvent(String eventId, {String? reason}) =>
+    _refundCall({'action': 'cancel_event', 'wedding_id': eventId, if (reason != null) 'reason': reason});
 
 // ---------- Eventos pagos com código ou link (migração 153) ----------
 
@@ -221,10 +221,10 @@ Future<RefundResult> cancelPaidEvent(String weddingId, {String? reason}) =>
 bool isTicketRequired(Object e) => e is PostgrestException && e.message.contains('ticket_required');
 
 /// Dados do evento para a folha de compra (por id, código ou link individual).
-Future<PublicEvent?> ticketEventPreview({String? weddingId, String? code, String? inviteToken}) async {
+Future<PublicEvent?> ticketEventPreview({String? eventId, String? code, String? inviteToken}) async {
   try {
     final rows = await supabase.rpc('ticket_event_preview', params: {
-      'p_wedding': weddingId,
+      'p_wedding': eventId,
       'p_code': code,
       'p_token': inviteToken,
     }) as List;

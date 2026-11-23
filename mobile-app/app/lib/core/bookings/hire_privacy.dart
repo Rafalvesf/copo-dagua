@@ -14,10 +14,10 @@ import '../theme/app_theme.dart';
 
 /// Quantos outros organizadores tem o evento. 0 se a migração ainda não
 /// correu (nesse caso não se pergunta nada).
-Future<int> otherOrganizersCount(String? weddingId) async {
-  if (weddingId == null) return 0;
+Future<int> otherOrganizersCount(String? eventId) async {
+  if (eventId == null) return 0;
   try {
-    final n = await supabase.rpc('other_organizers_count', params: {'p_wedding_id': weddingId});
+    final n = await supabase.rpc('other_organizers_count', params: {'p_wedding_id': eventId});
     return (n as num?)?.toInt() ?? 0;
   } catch (_) {
     return 0;
@@ -32,8 +32,8 @@ Future<void> setBookingPrivate(String bookingId, bool private) async {
 /// partilhar, `null` = desistiu. Pergunta sempre (2026-10-25): quem ainda
 /// organiza sozinho pode convidar alguém depois, e a surpresa tem de já
 /// estar guardada.
-Future<bool?> askHirePrivacy(BuildContext context, String? weddingId, String partnerName) async {
-  final others = await otherOrganizersCount(weddingId);
+Future<bool?> askHirePrivacy(BuildContext context, String? eventId, String partnerName) async {
+  final others = await otherOrganizersCount(eventId);
   if (!context.mounted) return null;
   return showIslandDialog<bool>(
     context: context,
@@ -64,10 +64,10 @@ Future<bool?> askHirePrivacy(BuildContext context, String? weddingId, String par
 /// escondê-la). Aparece sempre (2026-10-25).
 class HirePrivacyCard extends ConsumerStatefulWidget {
   final String bookingId;
-  final String weddingId;
+  final String eventId;
   final bool isPrivate;
 
-  const HirePrivacyCard({super.key, required this.bookingId, required this.weddingId, required this.isPrivate});
+  const HirePrivacyCard({super.key, required this.bookingId, required this.eventId, required this.isPrivate});
 
   @override
   ConsumerState<HirePrivacyCard> createState() => _HirePrivacyCardState();

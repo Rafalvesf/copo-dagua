@@ -6,7 +6,7 @@ import 'package:copo_dagua_app/core/events/event_pass.dart';
 import 'package:copo_dagua_app/features/events/screens/ticket_pass_screens.dart' show TicketPassCard;
 import 'package:flutter/material.dart';
 import '../../../core/chat/group_chat.dart' show openEventGroup, eventGroupUnreadProvider;
-import '../../../core/gallery/gallery_providers.dart' show weddingGalleryPhotosProvider, GalleryPhoto;
+import '../../../core/gallery/gallery_providers.dart' show eventGalleryPhotosProvider, GalleryPhoto;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/organizers_card.dart';
@@ -17,7 +17,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -43,18 +43,18 @@ final Set<String> _openedOnboarding = {};
 
 class GuestHomeScreen extends ConsumerWidget {
   /// Presente só quando aberto a partir de "Modo convidado"
-  /// (`guest_mode_screen.dart`, `/guest-home/:weddingId`) — uma conta
+  /// (`guest_mode_screen.dart`, `/guest-home/:eventId`) — uma conta
   /// de casal pode estar ligada a mais do que um casamento como
   /// convidado, por isso escolhe explicitamente qual mostrar em vez de
   /// assumir sempre `events.first`.
-  final String? weddingId;
+  final String? eventId;
 
-  const GuestHomeScreen({super.key, this.weddingId});
+  const GuestHomeScreen({super.key, this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(authControllerProvider).profile;
-    final weddingsAsync = ref.watch(guestWeddingsProvider);
+    final eventsAsync = ref.watch(guestEventsProvider);
 
     // Completa um convite individual aberto sem sessão
     // (`invite_token_screen.dart` guardou o token e mandou para
@@ -64,9 +64,9 @@ class GuestHomeScreen extends ConsumerWidget {
       ref.read(pendingInviteTokenProvider.notifier).set(null);
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         try {
-          final result = await joinWeddingByInviteToken(pendingToken);
-          ref.invalidate(guestWeddingsProvider);
-          ref.invalidate(myGuestRowProvider(result.weddingId));
+          final result = await joinEventByInviteToken(pendingToken);
+          ref.invalidate(guestEventsProvider);
+          ref.invalidate(myGuestRowProvider(result.eventId));
         } catch (e) {
           // Evento pago (153): abre a compra do bilhete com o link.
           if (isTicketRequired(e) && context.mounted) {
@@ -85,16 +85,16 @@ class GuestHomeScreen extends ConsumerWidget {
           SafeArea(
             top: false,
             bottom: false,
-            child: weddingsAsync.when(
+            child: eventsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar o teu casamento.', onRetry: () => ref.invalidate(guestWeddingsProvider)),
+              error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar o teu casamento.', onRetry: () => ref.invalidate(guestEventsProvider)),
               data: (events) {
                 if (events.isEmpty) {
                   return _EmptyState(profile: profile, ref: ref);
                 }
-                final wedding = weddingId == null
+                final event = eventId == null
                     ? events.first
-                    : events.where((w) => w.weddingId == weddingId).firstOrNull ?? events.first;
+                    : events.where((w) => w.eventId == eventId).firstOrNull ?? events.first;
 
                 // Mostra o wizard "Vais ao casamento?" uma única vez,
                 // assim que a conta fica ligada a uma linha de `guests`
@@ -104,7 +104,7 @@ class GuestHomeScreen extends ConsumerWidget {
                 // (ex.: depois de entrar com o código numa conta de
                 // organizador) empilhava mais um assistente por cima do
                 // outro e a app bloqueava (2026-10-17).
-                ref.watch(myGuestRowProvider(wedding.weddingId)).whenData((guest) {
+                ref.watch(myGuestRowProvider(event.eventId)).whenData((guest) {
                   if (guest != null &&
                       guest.onboardingCompletedAt == null &&
                       // Só depois de «Vou» na página dos eventos: o
@@ -113,16 +113,16 @@ class GuestHomeScreen extends ConsumerWidget {
                       // Por conta e evento: antes era só o evento, e quem criava
                       // uma conta nova no mesmo separador (depois de testar
                       // com outra conta) nunca via o onboarding (2026-10-17).
-                      _openedOnboarding.add('${profile?.id}:${wedding.weddingId}')) {
+                      _openedOnboarding.add('${profile?.id}:${event.eventId}')) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (context.mounted) {
-                        context.push('/guest-onboarding/${wedding.weddingId}', extra: guest);
+                        context.push('/guest-onboarding/${event.eventId}', extra: guest);
                       }
                     });
                   }
                 });
 
-                return _GuestHomeBody(wedding: wedding, eventCount: events.length);
+                return _GuestHomeBody(event: event, eventCount: events.length);
               },
             ),
           ),
@@ -130,7 +130,7 @@ class GuestHomeScreen extends ConsumerWidget {
             left: 0,
             right: 0,
             bottom: 0,
-            child: GuestBottomNav(current: GuestTab.home, weddingId: weddingId),
+            child: GuestBottomNav(current: GuestTab.home, eventId: eventId),
           ),
         ],
       ),
@@ -182,10 +182,10 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _GuestHomeBody extends ConsumerStatefulWidget {
-  final GuestWedding wedding;
+  final GuestEvent event;
   final int eventCount;
 
-  const _GuestHomeBody({required this.wedding, required this.eventCount});
+  const _GuestHomeBody({required this.event, required this.eventCount});
 
   @override
   ConsumerState<_GuestHomeBody> createState() => _GuestHomeBodyState();
@@ -212,9 +212,9 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     // Painel do convidado novo (mockups «Painel do convidado», 2026-11-21;
     // DESIGN.md §6.4). Só aparece o que existe; «Como chegar» sempre em
     // último; o destaque (resumo / agora / a tua resposta) numa caixa branca.
-    final wedding = widget.wedding;
-    final id = wedding.weddingId;
-    final date = wedding.weddingDate;
+    final event = widget.event;
+    final id = event.eventId;
+    final date = event.eventDate;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final day = date == null ? null : DateTime(date.year, date.month, date.day);
@@ -240,24 +240,24 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
     final offers = offersOn && show(GuestSection.estadia)
         ? (ref.watch(guestOffersProvider(id)).asData?.value ?? const <GuestOffer>[])
         : const <GuestOffer>[];
-    final program = wedding.program;
-    final dress = wedding.dressCode?.trim() ?? '';
+    final program = event.program;
+    final dress = event.dressCode?.trim() ?? '';
     final place = [
-      if (wedding.venue?.isNotEmpty == true) wedding.venue!,
-      if (wedding.location?.isNotEmpty == true) wedding.location!,
+      if (event.venue?.isNotEmpty == true) event.venue!,
+      if (event.location?.isNotEmpty == true) event.location!,
     ].join(', ');
-    final hasPlace = place.isNotEmpty || wedding.venueAddress?.isNotEmpty == true;
+    final hasPlace = place.isNotEmpty || event.venueAddress?.isNotEmpty == true;
     final started = isToday && DashNow.started(program);
     final photosOn = show(GuestSection.galeria) && (isToday || isPast);
     final groupOn = going && show(GuestSection.grupos);
     final unread = groupOn ? (ref.watch(eventGroupUnreadProvider(id)).value ?? 0) : 0;
     final List<GalleryPhoto> photos =
-        photosOn ? (ref.watch(weddingGalleryPhotosProvider(id)).value ?? const <GalleryPhoto>[]) : const <GalleryPhoto>[];
+        photosOn ? (ref.watch(eventGalleryPhotosProvider(id)).value ?? const <GalleryPhoto>[]) : const <GalleryPhoto>[];
     final photoUrls = [for (final p in photos) p.imageUrl];
 
     void openPhotos() => context.go('/guest-gallery/$id');
     void openTable() => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => GuestTableScreen(weddingId: id, tableNumber: table)),
+          MaterialPageRoute(builder: (_) => GuestTableScreen(eventId: id, tableNumber: table)),
         );
     void editAnswer() => context.push('/guest-presenca/$id');
     Future<void> openGroup() async {
@@ -297,10 +297,10 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           : (allergies == 0 ? 'Sem alergias' : '$allergies ${allergies == 1 ? 'alergia' : 'alergias'}');
     }
 
-    final (label, big, unit) = dashWhen(wedding);
-    final title = isToday ? 'É hoje!' : wedding.displayNames;
+    final (label, big, unit) = dashWhen(event);
+    final title = isToday ? 'É hoje!' : event.displayNames;
     final meta = isToday
-        ? [wedding.displayNames, if (place.isNotEmpty) place].join(' · ')
+        ? [event.displayNames, if (place.isNotEmpty) place].join(' · ')
         : [
             if (date != null) (isPast ? 'Foi a ${date.day} ${monthNamesPt[date.month - 1].substring(0, 3).toLowerCase()} ${date.year}' : '${formatShortDatePt(date)} ${date.year}'),
             if (place.isNotEmpty) place,
@@ -320,8 +320,8 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
             onTap: () => context.push('/guest-stay/$id'),
           );
     final more = [?presents, ?stay];
-    final hosts = GuestOrganizersCard(organizers: wedding.organizers);
-    final placeBlock = hasPlace ? KeyedSubtree(key: _placeKey, child: GuestPlaceCard(wedding: wedding)) : null;
+    final hosts = GuestOrganizersCard(organizers: event.organizers);
+    final placeBlock = hasPlace ? KeyedSubtree(key: _placeKey, child: GuestPlaceCard(event: event)) : null;
 
     final body = <Widget>[];
     if (declined) {
@@ -350,7 +350,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
         hosts,
       ]);
     } else {
-      final nothing = !hasTodo && tables.isEmpty && table == null && program.isEmpty && dress.isEmpty && wedding.themeColors.isEmpty && !hasPlace;
+      final nothing = !hasTodo && tables.isEmpty && table == null && program.isEmpty && dress.isEmpty && event.themeColors.isEmpty && !hasPlace;
       if (started) {
         body.addAll([const KitCaps('Agora', top: 16, line: false), DashNow(program: program)]);
       } else {
@@ -369,13 +369,13 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       if (pass.ticket != null) {
         body.addAll([
           const SizedBox(height: 16),
-          TicketPassCard(ticket: pass.ticket!, eventName: wedding.displayNames),
+          TicketPassCard(ticket: pass.ticket!, eventName: event.displayNames),
         ]);
       }
       // «Para fazer» sempre (regra 2026-11-21): as tarefas, «Está tudo
       // tratado» ou «Aparecem aqui as tuas tarefas».
       if (going && hasTodo) {
-        body.addAll([KeyedSubtree(key: _todoKey, child: KitCaps(isToday ? 'Para fazer' : 'Para fazer · ${tables.where((t) => t.needsAction).length}')), GuestTablesAlerts(weddingId: id)]);
+        body.addAll([KeyedSubtree(key: _todoKey, child: KitCaps(isToday ? 'Para fazer' : 'Para fazer · ${tables.where((t) => t.needsAction).length}')), GuestTablesAlerts(eventId: id)]);
       } else if (going && tables.isNotEmpty) {
         body.addAll([KeyedSubtree(key: _todoKey, child: const KitCaps('Para fazer')), const DashAllDone()]);
       } else {
@@ -387,7 +387,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           const SizedBox(height: 12),
           const Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
           const SizedBox(height: 16),
-          DashWaiting(hosts: wedding.displayNames.replaceAll(' & ', ' e ')),
+          DashWaiting(hosts: event.displayNames.replaceAll(' & ', ' e ')),
         ]);
       }
       if (photosOn && isToday) body.addAll([const KitCaps('Fotos'), DashPhotos(onOpen: openPhotos, urls: photoUrls, count: photos.length)]);
@@ -401,11 +401,11 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       if (program.isNotEmpty) {
         body.addAll([
           KeyedSubtree(key: _programKey, child: KitCaps(isToday ? 'Programa de hoje' : 'Programa')),
-          DashProgram(program: program, live: isToday, onAll: () => context.push('/guest-wedding-details', extra: wedding)),
+          DashProgram(program: program, live: isToday, onAll: () => context.push('/guest-wedding-details', extra: event)),
         ]);
       }
-      if (dress.isNotEmpty || wedding.themeColors.isNotEmpty) {
-        body.addAll([KeyedSubtree(key: _dressKey, child: const KitCaps('Dress code')), DashDressCode(text: dress, colors: wedding.themeColors)]);
+      if (dress.isNotEmpty || event.themeColors.isNotEmpty) {
+        body.addAll([KeyedSubtree(key: _dressKey, child: const KitCaps('Dress code')), DashDressCode(text: dress, colors: event.themeColors)]);
       }
       if (more.isNotEmpty) body.addAll([const KitCaps('Mais'), KitGroup(more)]);
       body.add(hosts);
@@ -427,7 +427,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       padding: const EdgeInsets.only(bottom: 130),
       children: [
         DashCover(
-          wedding: wedding,
+          event: event,
           title: title,
           meta: meta,
           onExit: exit,
@@ -441,7 +441,7 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
         ),
       ],
     );
-    final cover = wedding.coverPhotoUrl;
+    final cover = event.coverPhotoUrl;
     return Stack(children: [
       list,
       Positioned(
@@ -454,14 +454,14 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           leading: ReducedTopAction(Hi.arrowLeft, label: 'Sair do evento', onTap: exit),
           thumb: cover != null && cover.isNotEmpty
               ? Image.network(cover, fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) => V2Avatar(wedding.displayNames, size: 32))
-              : V2Avatar(wedding.displayNames, size: 32),
+                  errorBuilder: (context, error, stack) => V2Avatar(event.displayNames, size: 32))
+              : V2Avatar(event.displayNames, size: 32),
           // A capa escurecida por trás da barra (pedido 2026-11-23).
           background: cover != null && cover.isNotEmpty
               ? Image.network(cover, fit: BoxFit.cover,
                   errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFF3A3733)))
               : const ColoredBox(color: Color(0xFF3A3733)),
-          title: wedding.displayNames,
+          title: event.displayNames,
           meta: date == null ? '' : formatShortDatePt(date),
           actions: [
             if (groupOn) ReducedTopAction(Hi.chatBubbleOvalLeft, label: 'Grupo do evento', onTap: openGroup, count: unread),
@@ -484,21 +484,21 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
 /// (uma conta de casal a acompanhar outro casamento como convidado),
 /// distinto do corpo rico de [_GuestHomeBody] (só faz sentido para o
 /// casamento principal de uma conta 100% convidado).
-class GuestWeddingCard extends StatelessWidget {
-  final GuestWedding wedding;
+class GuestHomeEventCard extends StatelessWidget {
+  final GuestEvent event;
   final VoidCallback? onTap;
 
-  const GuestWeddingCard({super.key, required this.wedding, this.onTap});
+  const GuestHomeEventCard({super.key, required this.event, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final date = wedding.weddingDate;
+    final date = event.eventDate;
     final dateLabel = date == null
         ? null
         : '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
     return SnappyTap(
-      onTap: onTap ?? () => context.push('/guest-home/${wedding.weddingId}'),
+      onTap: onTap ?? () => context.push('/guest-home/${event.eventId}'),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: softCard(),
@@ -506,19 +506,19 @@ class GuestWeddingCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              wedding.displayNames,
+              event.displayNames,
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: AppFontSize.lg,
                 color: AppTheme.ink,
               ),
             ),
-            if (dateLabel != null || wedding.venue != null) ...[
+            if (dateLabel != null || event.venue != null) ...[
               const SizedBox(height: 6),
               Text(
                 [
                   if (dateLabel != null) dateLabel,
-                  if (wedding.venue != null) wedding.venue!,
+                  if (event.venue != null) event.venue!,
                 ].join(' · '),
                 style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
               ),

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 
 /// Favoritos reais do casal — liga-se a `favorite_partners`
 /// (039_task_engine.sql). Antes disto, o coração nos cartões de
@@ -23,24 +23,24 @@ class FavoritePartnersState {
 }
 
 class FavoritePartnersController extends Notifier<FavoritePartnersState> {
-  String? _weddingId;
+  String? _eventId;
 
   @override
   FavoritePartnersState build() {
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    _weddingId = weddingId;
-    if (weddingId != null) {
-      Future.microtask(() => load(weddingId));
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+    _eventId = eventId;
+    if (eventId != null) {
+      Future.microtask(() => load(eventId));
     }
     return const FavoritePartnersState();
   }
 
-  Future<void> load(String weddingId) async {
+  Future<void> load(String eventId) async {
     state = state.copyWith(loading: true);
     final rows = await supabase
         .from('favorite_partners')
         .select('partner_id')
-        .eq('wedding_id', weddingId);
+        .eq('wedding_id', eventId);
     state = FavoritePartnersState(
       loading: false,
       partnerIds: (rows as List).map((r) => r['partner_id'] as String).toSet(),
@@ -50,8 +50,8 @@ class FavoritePartnersController extends Notifier<FavoritePartnersState> {
   bool isFavorite(String partnerId) => state.partnerIds.contains(partnerId);
 
   Future<void> toggle(String partnerId) async {
-    final weddingId = _weddingId;
-    if (weddingId == null) return;
+    final eventId = _eventId;
+    if (eventId == null) return;
     final isFav = state.partnerIds.contains(partnerId);
 
     // Otimista — a UI reage já, sem esperar pelo round-trip.
@@ -67,11 +67,11 @@ class FavoritePartnersController extends Notifier<FavoritePartnersState> {
       await supabase
           .from('favorite_partners')
           .delete()
-          .eq('wedding_id', weddingId)
+          .eq('wedding_id', eventId)
           .eq('partner_id', partnerId);
     } else {
       await supabase.from('favorite_partners').upsert({
-        'wedding_id': weddingId,
+        'wedding_id': eventId,
         'partner_id': partnerId,
       });
     }

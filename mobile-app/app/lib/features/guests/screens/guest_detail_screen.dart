@@ -10,7 +10,7 @@ import '../../../core/chat/group_chat.dart' show openDirectChat, DirectChatUnava
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/widgets/organizers_card.dart' show RowPillButton;
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/v2_kit.dart';

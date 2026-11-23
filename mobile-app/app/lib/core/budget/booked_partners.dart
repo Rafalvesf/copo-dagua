@@ -26,13 +26,13 @@ class BookedPartner {
 }
 
 /// Só reservas ativas (proposta aceite, paga ou feita).
-final bookedPartnersProvider = FutureProvider.family<List<BookedPartner>, String>((ref, weddingId) async {
+final bookedPartnersProvider = FutureProvider.family<List<BookedPartner>, String>((ref, eventId) async {
   const active = ['awaiting_deposit', 'confirmed', 'payment_overdue', 'disputed', 'completed'];
   try {
     final rows = await supabase
         .from('bookings')
         .select('status, total_amount, partner_profiles(id, business_name, cover_photo_url, partner_profile_categories(partner_categories(slug)))')
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .inFilter('status', active);
     final out = <BookedPartner>[];
     for (final r in (rows as List).cast<Map<String, dynamic>>()) {
@@ -59,8 +59,8 @@ final bookedPartnersProvider = FutureProvider.family<List<BookedPartner>, String
 /// Ids dos parceiros com reserva ativa no evento (já "aceites"). Serve para
 /// o programa saber se um parceiro escolhido já aparece ou se ainda está à
 /// espera que aceite (2026-11-18).
-final confirmedPartnerIdsProvider = FutureProvider.family<Set<String>, String>((ref, weddingId) async {
-  final list = await ref.watch(bookedPartnersProvider(weddingId).future);
+final confirmedPartnerIdsProvider = FutureProvider.family<Set<String>, String>((ref, eventId) async {
+  final list = await ref.watch(bookedPartnersProvider(eventId).future);
   return {for (final b in list) if (b.id != null && b.id!.isNotEmpty) b.id!};
 });
 
@@ -76,13 +76,13 @@ class EventPartnerPick {
 
 /// Parceiros do evento para escolher no programa: os reservados (aceites) e os
 /// que têm um pedido por responder (pendentes). Sem repetidos, aceites primeiro.
-final eventPartnerPicksProvider = FutureProvider.family<List<EventPartnerPick>, String>((ref, weddingId) async {
+final eventPartnerPicksProvider = FutureProvider.family<List<EventPartnerPick>, String>((ref, eventId) async {
   final out = <EventPartnerPick>[];
   final seen = <String>{};
 
   // 1) Reservados (aceites).
   try {
-    final booked = await ref.watch(bookedPartnersProvider(weddingId).future);
+    final booked = await ref.watch(bookedPartnersProvider(eventId).future);
     for (final b in booked) {
       final id = b.id;
       if (id == null || id.isEmpty || seen.contains(id)) continue;
@@ -96,7 +96,7 @@ final eventPartnerPicksProvider = FutureProvider.family<List<EventPartnerPick>, 
     final rows = await supabase
         .from('quote_requests')
         .select('status, partner_profiles(id, business_name, cover_photo_url)')
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .inFilter('status', ['pending', 'viewed', 'proposal_sent']);
     for (final r in (rows as List).cast<Map<String, dynamic>>()) {
       final pp = r['partner_profiles'] as Map<String, dynamic>?;
@@ -112,8 +112,8 @@ final eventPartnerPicksProvider = FutureProvider.family<List<EventPartnerPick>, 
 });
 
 /// slug → nomes (sem repetidos).
-final bookedPartnersBySlugProvider = FutureProvider.family<Map<String, List<String>>, String>((ref, weddingId) async {
-  final list = await ref.watch(bookedPartnersProvider(weddingId).future);
+final bookedPartnersBySlugProvider = FutureProvider.family<Map<String, List<String>>, String>((ref, eventId) async {
+  final list = await ref.watch(bookedPartnersProvider(eventId).future);
   final out = <String, List<String>>{};
   for (final b in list) {
     final l = out.putIfAbsent(b.slug, () => <String>[]);

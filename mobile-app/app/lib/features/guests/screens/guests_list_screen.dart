@@ -11,7 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/fading_scroll.dart';
@@ -55,10 +55,10 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
   }
 
   Future<void> _addGuest() async {
-    final weddingId = ref
+    final eventId = ref
         .read(guestsControllerProvider.notifier)
-        .currentWeddingId;
-    if (weddingId == null) return;
+        .currentEventId;
+    if (eventId == null) return;
     final result = await showGuestFormSheet(context);
     if (result == null) return;
     ref
@@ -66,7 +66,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
         .addGuest(
           Guest(
             id: '',
-            weddingId: weddingId,
+            eventId: eventId,
             name: result.name,
             email: result.email,
             phone: result.phone,
@@ -82,7 +82,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(guestsControllerProvider);
-    final wedding = ref.watch(weddingControllerProvider).wedding;
+    final event = ref.watch(eventControllerProvider).event;
     final total = state.guests.length;
 
     final groups =
@@ -106,8 +106,8 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
     // Mockup «Páginas do evento · com molduras» → Convidados (2026-11-22):
     // o teto no resumo, os pedidos para entrar e os grupos por resposta,
     // cada um numa moldura.
-    final cap = wedding?.estimatedGuests;
-    final requests = wedding == null ? const <JoinRequest>[] : (ref.watch(joinRequestsProvider(wedding.id)).value ?? const <JoinRequest>[]);
+    final cap = event?.estimatedGuests;
+    final requests = event == null ? const <JoinRequest>[] : (ref.watch(joinRequestsProvider(event.id)).value ?? const <JoinRequest>[]);
     Widget guestRow(Guest guest) => KitRow(
           lead: V2Avatar(guest.name, size: 44),
           title: guest.name,
@@ -145,7 +145,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
               rotateBack: false,
               children: [
                 KitHeader(actions: [
-                  if (wedding != null) V2RoundButton(icon: Hi.arrowUpOnSquare, tooltip: 'Convidar', onTap: () => context.push('/guests/convidar')),
+                  if (event != null) V2RoundButton(icon: Hi.arrowUpOnSquare, tooltip: 'Convidar', onTap: () => context.push('/guests/convidar')),
                   KitAddButton(tooltip: 'Adicionar convidado', onTap: _addGuest),
                 ]),
                 KitTitle('Convidados',
@@ -162,7 +162,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                 // Tocar no resumo muda o teto de convidados (o do
                 // onboarding); sem ele, «Definir o teto».
                 SnappyTap(
-                  onTap: wedding == null ? () {} : () => _editCap(wedding),
+                  onTap: event == null ? () {} : () => _editCap(event),
                   semanticLabel: 'Teto de convidados',
                   child: KitSummary(
                     kicker: 'A vossa lista',
@@ -179,14 +179,14 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                             KitLegend(const Color(0xFFC8553D), '${state.declinedCount}', 'não'),
                           ],
                     footer: cap != null && cap > 0 ? null : 'Quantos convidados no máximo? Ajuda a contar lugares e menus.',
-                    extra: wedding == null
+                    extra: event == null
                         ? null
                         : cap != null && cap > 0
                             ? const Padding(
                                 padding: EdgeInsets.only(top: 8),
                                 child: Text('Mudar o teto ›', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                               )
-                            : FrameButton44('Definir o teto', outlined: true, onTap: () => _editCap(wedding)),
+                            : FrameButton44('Definir o teto', outlined: true, onTap: () => _editCap(event)),
                   ),
                 ),
                 // Pedidos para entrar: até 4 com «Ver»; mais, «+X pedidos».
@@ -223,7 +223,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                       title: 'Ainda sem convidados',
                       text: 'Partilha o convite ou junta-os à mão.',
                       actions: [
-                        if (wedding != null) FrameButton44('Convidar', onTap: () => context.push('/guests/convidar')),
+                        if (event != null) FrameButton44('Convidar', onTap: () => context.push('/guests/convidar')),
                         FrameButton44('+ Juntar à mão', outlined: true, onTap: _addGuest),
                       ],
                     ),
@@ -244,12 +244,12 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
   }
 
   /// Teto de convidados (o do onboarding, `estimated_guests`).
-  Future<void> _editCap(Wedding wedding) async {
-    final controller = TextEditingController(text: (wedding.estimatedGuests ?? 0) > 0 ? '${wedding.estimatedGuests}' : '');
+  Future<void> _editCap(Event event) async {
+    final controller = TextEditingController(text: (event.estimatedGuests ?? 0) > 0 ? '${event.estimatedGuests}' : '');
     final v = await showIslandDialog<int>(
       context: context,
       builder: (d) => IslandAlert(
-        title: Text((wedding.estimatedGuests ?? 0) > 0 ? 'Mudar o teto' : 'Teto de convidados'),
+        title: Text((event.estimatedGuests ?? 0) > 0 ? 'Mudar o teto' : 'Teto de convidados'),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -264,7 +264,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
     );
     if (v == null || v < 0) return;
     try {
-      await ref.read(weddingControllerProvider.notifier).update(wedding.copyWith(estimatedGuests: v));
+      await ref.read(eventControllerProvider.notifier).update(event.copyWith(estimatedGuests: v));
     } catch (_) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar o teto.')));
     }
@@ -281,15 +281,15 @@ String _ago(DateTime d) {
 /// Mensagens, Mail…) com o link e o código (pedido do utilizador,
 /// 2026-10-20). Sem partilha disponível (ex: computador), mostra a folha
 /// com o link e o código para copiar.
-Future<void> shareWeddingInvite(BuildContext context, Wedding wedding) async {
-  final url = wedding.inviteUrl;
-  final code = wedding.guestCode;
+Future<void> shareEventInvite(BuildContext context, Event event) async {
+  final url = event.inviteUrl;
+  final code = event.guestCode;
   if (url != null) {
-    final text = 'Estás convidado/a para o evento de ${wedding.displayNames}! '
+    final text = 'Estás convidado/a para o evento de ${event.displayNames}! '
         'Confirma a tua presença aqui: $url'
         '${code == null ? '' : '\nCódigo do evento: $code'}';
     try {
-      final result = await SharePlus.instance.share(ShareParams(text: text, subject: 'Convite — ${wedding.displayNames}'));
+      final result = await SharePlus.instance.share(ShareParams(text: text, subject: 'Convite — ${event.displayNames}'));
       if (result.status != ShareResultStatus.unavailable) return;
     } catch (_) {}
   }
@@ -297,14 +297,14 @@ Future<void> shareWeddingInvite(BuildContext context, Wedding wedding) async {
   await showIslandSheet(
     context: context,
     isScrollControlled: true,
-    builder: (context) => InviteShareSheet(wedding: wedding),
+    builder: (context) => InviteShareSheet(event: event),
   );
 }
 
 class InviteShareSheet extends StatefulWidget {
-  final Wedding wedding;
+  final Event event;
 
-  const InviteShareSheet({super.key, required this.wedding});
+  const InviteShareSheet({super.key, required this.event});
 
   @override
   State<InviteShareSheet> createState() => InviteShareSheetState();
@@ -315,7 +315,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
   bool _codeCopied = false;
 
   Future<void> _copyLink() async {
-    await copyText(widget.wedding.inviteUrl ?? '');
+    await copyText(widget.event.inviteUrl ?? '');
     if (!mounted) return;
     setState(() => _linkCopied = true);
   }
@@ -328,8 +328,8 @@ class InviteShareSheetState extends State<InviteShareSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final guestCode = widget.wedding.guestCode;
-    final inviteUrl = widget.wedding.inviteUrl;
+    final guestCode = widget.event.guestCode;
+    final inviteUrl = widget.event.inviteUrl;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       child: Column(

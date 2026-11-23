@@ -19,19 +19,19 @@ import '../../../shared/widgets/island_sheet.dart';
 /// Lado do convidado: o alojamento e o transporte que o organizador
 /// preparou. Reserva e paga na app (Stripe), o valor vai para o parceiro.
 class GuestOffersScreen extends ConsumerWidget {
-  final String weddingId;
-  const GuestOffersScreen({super.key, required this.weddingId});
+  final String eventId;
+  const GuestOffersScreen({super.key, required this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final enabled = ref.watch(guestOffersEnabledProvider).asData?.value ?? false;
-    final offersAsync = ref.watch(guestOffersProvider(weddingId));
-    final mineAsync = ref.watch(myGuestReservationsProvider(weddingId));
+    final offersAsync = ref.watch(guestOffersProvider(eventId));
+    final mineAsync = ref.watch(myGuestReservationsProvider(eventId));
     final mine = mineAsync.asData?.value ?? const <GuestReservation>[];
 
     Future<void> refresh() async {
-      ref.invalidate(guestOffersProvider(weddingId));
-      ref.invalidate(myGuestReservationsProvider(weddingId));
+      ref.invalidate(guestOffersProvider(eventId));
+      ref.invalidate(myGuestReservationsProvider(eventId));
     }
 
     return GradientScaffold(
@@ -84,7 +84,7 @@ class GuestOffersScreen extends ConsumerWidget {
                                 style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             const SizedBox(height: 12),
                             for (final o in offers.where((o) => o.kind == kind)) ...[
-                              _OfferCard(offer: o, weddingId: weddingId, onReserved: refresh),
+                              _OfferCard(offer: o, eventId: eventId, onReserved: refresh),
                               const SizedBox(height: 12),
                             ],
                             const SizedBox(height: 8),
@@ -101,9 +101,9 @@ class GuestOffersScreen extends ConsumerWidget {
 
 class _OfferCard extends ConsumerWidget {
   final GuestOffer offer;
-  final String weddingId;
+  final String eventId;
   final Future<void> Function() onReserved;
-  const _OfferCard({required this.offer, required this.weddingId, required this.onReserved});
+  const _OfferCard({required this.offer, required this.eventId, required this.onReserved});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -163,7 +163,7 @@ class _OfferCard extends ConsumerWidget {
                       isScrollControlled: true,
                       backgroundColor: Colors.white,
                       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-                      builder: (_) => _ReserveSheet(offer: o, weddingId: weddingId),
+                      builder: (_) => _ReserveSheet(offer: o, eventId: eventId),
                     );
                     if (paid == true) await onReserved();
                   },
@@ -186,8 +186,8 @@ class _OfferCard extends ConsumerWidget {
 
 class _ReserveSheet extends ConsumerStatefulWidget {
   final GuestOffer offer;
-  final String weddingId;
-  const _ReserveSheet({required this.offer, required this.weddingId});
+  final String eventId;
+  const _ReserveSheet({required this.offer, required this.eventId});
 
   @override
   ConsumerState<_ReserveSheet> createState() => _ReserveSheetState();
@@ -202,7 +202,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
     setState(() => _busy = true);
     try {
       final url = await createGuestReservationCheckoutUrl(
-        weddingId: widget.weddingId,
+        eventId: widget.eventId,
         offerId: widget.offer.id,
         quantity: _qty,
         nights: _nights,

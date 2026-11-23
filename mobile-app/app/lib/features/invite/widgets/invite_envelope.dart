@@ -42,7 +42,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
   late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2600));
   bool _opening = false;
 
-  bool get _wedding => const {EventType.wedding, EventType.engagement, EventType.vowRenewal}.contains(widget.event.eventType);
+  bool get _isWedding => const {EventType.wedding, EventType.engagement, EventType.vowRenewal}.contains(widget.event.eventType);
 
   @override
   void dispose() {
@@ -74,7 +74,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
     final ev = widget.event;
     final d = ev.date;
     final place = ev.location ?? ev.venue;
-    if (_wedding) {
+    if (_isWedding) {
       return [
         if (d != null) '${d.day} · ${_monthsRoman[d.month - 1]} · ${d.year}',
         ?place,
@@ -90,7 +90,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
   @override
   Widget build(BuildContext context) {
     final ev = widget.event;
-    final sealColor = _wedding ? const Color(0xFF7A2E2E) : const Color(0xFF6B7A3F);
+    final sealColor = _isWedding ? const Color(0xFF7A2E2E) : const Color(0xFF6B7A3F);
     // A barra do topo fica da cor do envelope (antes ficava branca).
     return BarColorScope(
       color: _bg,
@@ -106,7 +106,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
             child: Column(
               children: [
                 Text(
-                  (_wedding ? 'Um convite para ti' : '${ev.name1} convidou-te').toUpperCase(),
+                  (_isWedding ? 'Um convite para ti' : '${ev.name1} convidou-te').toUpperCase(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 12, letterSpacing: 2.6, fontWeight: FontWeight.w700, color: _muted),
                 ),
@@ -146,7 +146,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                             right: w * 0.07,
                             bottom: h * 0.12 + rise * h * 0.72,
                             height: h * 0.86,
-                            child: Opacity(opacity: flap >= 0.5 ? 1 : 0, child: _Card(event: ev, wedding: _wedding)),
+                            child: Opacity(opacity: flap >= 0.5 ? 1 : 0, child: _Card(event: ev, isWedding: _isWedding)),
                           ),
                           // Frente do envelope (bolso).
                           Positioned(
@@ -180,9 +180,9 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                               right: 0,
                               bottom: 0,
                               height: h,
-                              child: CustomPaint(painter: _FlapPainter(flap: flap, sprigs: _wedding)),
+                              child: CustomPaint(painter: _FlapPainter(flap: flap, sprigs: _isWedding)),
                             ),
-                          if (!_wedding)
+                          if (!_isWedding)
                             Positioned(
                               right: w * 0.05,
                               bottom: h * 0.85,
@@ -211,7 +211,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                                   seal: CustomPaint(
                                     painter: _SealPainter(color: sealColor),
                                     child: Center(
-                                      child: _wedding
+                                      child: _isWedding
                                           ? Text(_monogram,
                                               style: TextStyle(fontSize: w * 0.06, fontWeight: FontWeight.w700, color: _paper))
                                           : Icon(Hi.beaker, size: w * 0.08, color: _paper),
@@ -235,12 +235,12 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _wedding ? _dateLine.toUpperCase() : _dateLine,
+                  _isWedding ? _dateLine.toUpperCase() : _dateLine,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
-                    letterSpacing: _wedding ? 2.4 : 0,
-                    fontWeight: _wedding ? FontWeight.w700 : FontWeight.w600,
+                    letterSpacing: _isWedding ? 2.4 : 0,
+                    fontWeight: _isWedding ? FontWeight.w700 : FontWeight.w600,
                     color: _muted,
                   ),
                 ),
@@ -278,8 +278,8 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
 /// Cartão que sai do envelope.
 class _Card extends StatelessWidget {
   final InviteEvent event;
-  final bool wedding;
-  const _Card({required this.event, required this.wedding});
+  final bool isWedding;
+  const _Card({required this.event, required this.isWedding});
 
   @override
   Widget build(BuildContext context) => Container(
@@ -298,7 +298,7 @@ class _Card extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(wedding ? 'VAMOS CASAR' : 'ESTÁS CONVIDADO',
+                Text(isWedding ? 'VAMOS CASAR' : 'ESTÁS CONVIDADO',
                     style: const TextStyle(fontSize: 10, letterSpacing: 2.2, fontWeight: FontWeight.w700, color: Color(0xFF5E5D52))),
                 const SizedBox(height: 8),
                 Text(event.displayNames,

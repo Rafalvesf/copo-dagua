@@ -22,7 +22,7 @@ class GuestBottomNav extends ConsumerWidget {
   /// — mantém os 4 separadores todos a apontar para esse casamento
   /// específico em vez do casamento "principal" implícito de uma conta
   /// 100% convidado. `null` = comportamento normal de sempre.
-  final String? weddingId;
+  final String? eventId;
 
   /// Filtros do ecrã ([FilterChipsRow]) ligados por cima dos
   /// separadores, na mesma ilha (redesign 2026-10).
@@ -31,11 +31,11 @@ class GuestBottomNav extends ConsumerWidget {
   const GuestBottomNav({
     super.key,
     required this.current,
-    this.weddingId,
+    this.eventId,
     this.top,
   });
 
-  String _path(String base) => weddingId == null ? base : '$base/$weddingId';
+  String _path(String base) => eventId == null ? base : '$base/$eventId';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -15,7 +15,7 @@ import '../../../core/partner_profile/partner_profile_controller.dart';
 import '../../../core/partners/favorite_partners_controller.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -173,13 +173,13 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
   /// telemóvel, local do evento, pesquisa de localidade ou as zonas onde
   /// já há parceiros.
   Future<void> _showLocationPicker(List<String> options) async {
-    final weddingLocation = ref.read(weddingControllerProvider).wedding?.location;
+    final eventLocation = ref.read(eventControllerProvider).event?.location;
     final result = await showIslandSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xxl))),
-      builder: (context) => LocationPickerSheet(options: options, eventLocation: weddingLocation),
+      builder: (context) => LocationPickerSheet(options: options, eventLocation: eventLocation),
     );
     if (result != null && mounted) setState(() => _selectedLocation = result);
   }
@@ -196,11 +196,11 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
       data: (options) => options.where((o) => o.slug == _filter).firstOrNull?.label,
       orElse: () => null,
     );
-    final weddingLocation = ref.watch(weddingControllerProvider).wedding?.location;
+    final eventLocation = ref.watch(eventControllerProvider).event?.location;
     // Localização efetiva: o que o cliente escolheu explicitamente
     // (incluindo "Todas as localizações", `''`), ou a localização do
     // casamento como sugestão inicial antes de escolher alguma.
-    final effectiveLocation = _selectedLocation ?? weddingLocation ?? '';
+    final effectiveLocation = _selectedLocation ?? eventLocation ?? '';
     final locationOptions = partnersAsync
         .maybeWhen(
           data: (list) => list

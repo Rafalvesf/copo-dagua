@@ -11,7 +11,7 @@ import '../models/models.dart';
 import '../payments/pay_return.dart';
 import '../notifications/push.dart';
 import '../supabase/supabase_config.dart';
-import '../wedding/partner_invite.dart';
+import '../event/partner_invite.dart';
 import '../../shared/widgets/brinde_gate.dart';
 import '../../shared/widgets/tchin_splash.dart';
 import '../invite/public_invite.dart' show claimStoredPublicRsvps;
@@ -352,10 +352,10 @@ class AuthController extends Notifier<AuthState> {
 
   /// Entrar ou criar conta com Google/Apple (pedido 2026-10-17). Abre a
   /// página do Google/Apple; ao voltar, a app retoma a sessão em
-  /// [_restoreSession]. [role] e [weddingCode] vêm do ecrã de registo e
+  /// [_restoreSession]. [role] e [eventCode] vêm do ecrã de registo e
   /// são aplicados à conta nova logo a seguir.
-  Future<void> signInWithProvider(OAuthProvider provider, {UserRole? role, String? weddingCode}) async {
-    await _storePendingSocial(role, weddingCode);
+  Future<void> signInWithProvider(OAuthProvider provider, {UserRole? role, String? eventCode}) async {
+    await _storePendingSocial(role, eventCode);
     // Sem o fornecedor ativo no Supabase, o browser abria uma página de
     // erro em JSON ("provider is not enabled") — avisa aqui em vez disso.
     if (!await _providerEnabled(provider)) {
@@ -397,7 +397,7 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  Future<void> _storePendingSocial(UserRole? role, String? weddingCode) async {
+  Future<void> _storePendingSocial(UserRole? role, String? eventCode) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keepKey, true);
@@ -406,8 +406,8 @@ class AuthController extends Notifier<AuthState> {
       } else {
         await prefs.remove(_pendingRoleKey);
       }
-      if (weddingCode != null && weddingCode.trim().isNotEmpty) {
-        await prefs.setString(_pendingCodeKey, weddingCode.trim());
+      if (eventCode != null && eventCode.trim().isNotEmpty) {
+        await prefs.setString(_pendingCodeKey, eventCode.trim());
       } else {
         await prefs.remove(_pendingCodeKey);
       }
@@ -417,8 +417,8 @@ class AuthController extends Notifier<AuthState> {
   /// Google na web (2026-10-28): o botão oficial do Google devolve um ID
   /// token, que o Supabase valida com o [nonce]. Não sai da app (antes
   /// abria a página de login com o endereço supabase.co).
-  Future<void> signInWithGoogleIdToken(String idToken, String nonce, {UserRole? role, String? weddingCode}) async {
-    await _storePendingSocial(role, weddingCode);
+  Future<void> signInWithGoogleIdToken(String idToken, String nonce, {UserRole? role, String? eventCode}) async {
+    await _storePendingSocial(role, eventCode);
     state = state.copyWith(status: AuthStatus.authenticating, errorMessage: null);
     try {
       await supabase.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken, nonce: nonce);
@@ -474,7 +474,7 @@ class AuthController extends Notifier<AuthState> {
     // chegar aqui por `lookup_wedding_by_guest_code()`
     // (`register_screen.dart`), para nunca criar uma conta presa a um
     // código inválido. Ver `050_wedding_guest_code.sql`.
-    String? weddingCode,
+    String? eventCode,
     String? username,
   }) async {
     BrindeGate.pending = true;
@@ -496,8 +496,8 @@ class AuthController extends Notifier<AuthState> {
           // o email ainda tem de ser confirmado (sem sessão aqui, o
           // `join_wedding_by_code` não pode correr já) — antes o código
           // perdia-se nesse caso e o convidado ficava sem casamento.
-          if (role == UserRole.guest && weddingCode != null && weddingCode.isNotEmpty)
-            'wedding_code': weddingCode.trim(),
+          if (role == UserRole.guest && eventCode != null && eventCode.isNotEmpty)
+            'wedding_code': eventCode.trim(),
           // Convite do par por link (079), pela mesma razão.
           if (role == UserRole.couple && ref.read(pendingPartnerInviteProvider) != null)
             'partner_invite': ref.read(pendingPartnerInviteProvider),
@@ -532,8 +532,8 @@ class AuthController extends Notifier<AuthState> {
         // real de volta em vez de construir um localmente.
         await _applyPendingUsername(user);
         if (role == UserRole.guest &&
-            weddingCode != null &&
-            weddingCode.isNotEmpty) {
+            eventCode != null &&
+            eventCode.isNotEmpty) {
           // Melhor esforço: o código já foi validado antes do signUp
           // (`lookup_wedding_by_guest_code`), por isso uma falha aqui é
           // rara (ex: código apagado entretanto) — não bloqueia a conta
@@ -541,7 +541,7 @@ class AuthController extends Notifier<AuthState> {
           try {
             await supabase.rpc(
               'join_wedding_by_code',
-              params: {'p_code': weddingCode},
+              params: {'p_code': eventCode},
             );
           } catch (_) {}
         }
@@ -613,7 +613,7 @@ class AuthController extends Notifier<AuthState> {
         );
         return;
       }
-      await _applyPendingWeddingCode(user);
+      await _applyPendingEventCode(user);
       final profile = await _loadProfile(user);
       state = AuthState(status: AuthState.statusFor(profile), profile: profile);
     } on AuthException catch (e) {
@@ -714,7 +714,7 @@ class AuthController extends Notifier<AuthState> {
     state = state.copyWith(status: AuthStatus.authenticating);
     final user = supabase.auth.currentUser;
     if (user != null && user.emailConfirmedAt != null) {
-      await _applyPendingWeddingCode(user);
+      await _applyPendingEventCode(user);
       final profile = await _loadProfile(user);
       state = AuthState(status: AuthState.statusFor(profile), profile: profile);
       return;
@@ -738,7 +738,7 @@ class AuthController extends Notifier<AuthState> {
   /// Código do casal guardado no registo (`wedding_code` nos metadados da
   /// conta) e ainda não aplicado — liga o convidado ao casamento e limpa
   /// o código para não repetir. Nunca bloqueia o login.
-  Future<void> _applyPendingWeddingCode(User user) async {
+  Future<void> _applyPendingEventCode(User user) async {
     await _applyPendingUsername(user);
     await _applyPendingPartnerInvite(user);
     final code = user.userMetadata?['wedding_code'] as String?;

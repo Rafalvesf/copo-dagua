@@ -21,18 +21,18 @@ import '../../../shared/widgets/v2_kit.dart';
 /// Sem ilustração de mesa real (nenhum asset próprio existe) — usa um
 /// ícone em vez de inventar uma imagem.
 class GuestTableScreen extends ConsumerWidget {
-  final String weddingId;
+  final String eventId;
   final int? tableNumber;
 
-  const GuestTableScreen({super.key, required this.weddingId, this.tableNumber});
+  const GuestTableScreen({super.key, required this.eventId, this.tableNumber});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rosterAsync = ref.watch(myTableRosterProvider(weddingId));
-    final myGuestAsync = ref.watch(myGuestRowProvider(weddingId));
+    final rosterAsync = ref.watch(myTableRosterProvider(eventId));
+    final myGuestAsync = ref.watch(myGuestRowProvider(eventId));
     // Opções do organizador (Para os convidados › A tua mesa, 2026-11-08).
-    final opts = ref.watch(myEventPassProvider(weddingId)).value?.sections;
-    final date = ref.watch(guestWeddingsProvider).value?.where((w) => w.weddingId == weddingId).firstOrNull?.weddingDate;
+    final opts = ref.watch(myEventPassProvider(eventId)).value?.sections;
+    final date = ref.watch(guestEventsProvider).value?.where((w) => w.eventId == eventId).firstOrNull?.eventDate;
     if (opts != null && (!opts.tableVisible(date) || !opts.tableMates)) {
       final hidden = !opts.tableVisible(date);
       return GradientScaffold(
@@ -62,7 +62,7 @@ class GuestTableScreen extends ConsumerWidget {
  ],
  body: rosterAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myTableRosterProvider(weddingId))),
+                error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myTableRosterProvider(eventId))),
                 data: (roster) {
                   if (roster.isEmpty) {
                     return const EmptyStateView(

@@ -58,7 +58,7 @@ const _gifts = 'gift_list_url, gift_iban, gift_message';
 const _program = 'program, dress_code, venue_address';
 const _coords = 'venue_latitude, venue_longitude';
 
-Future<GuestFacingInfo> loadGuestFacingInfo(String weddingId) async {
+Future<GuestFacingInfo> loadGuestFacingInfo(String eventId) async {
   // Do mais novo para o mais antigo: cada nível cai para o anterior se
   // a migração correspondente ainda não correu.
   final tiers = [
@@ -69,7 +69,7 @@ Future<GuestFacingInfo> loadGuestFacingInfo(String weddingId) async {
   ];
   for (var i = 0; i < tiers.length; i++) {
     try {
-      final r = await supabase.from('events').select(tiers[i]).eq('id', weddingId).single();
+      final r = await supabase.from('events').select(tiers[i]).eq('id', eventId).single();
       return GuestFacingInfo(
         ceremonyTime: r['ceremony_time'] as String?,
         welcomeMessage: r['welcome_message'] as String?,
@@ -96,7 +96,7 @@ Future<GuestFacingInfo> loadGuestFacingInfo(String weddingId) async {
 
 String? _clean(String? v) => (v == null || v.trim().isEmpty) ? null : v.trim();
 
-Future<void> saveGuestFacingInfo(String weddingId, GuestFacingInfo info) async {
+Future<void> saveGuestFacingInfo(String eventId, GuestFacingInfo info) async {
   await supabase.from('events').update({
     'ceremony_time': _clean(info.ceremonyTime),
     'welcome_message': _clean(info.welcomeMessage),
@@ -117,5 +117,5 @@ Future<void> saveGuestFacingInfo(String weddingId, GuestFacingInfo info) async {
       'gift_message': _clean(info.giftMessage),
     },
     'updated_at': DateTime.now().toIso8601String(),
-  }).eq('id', weddingId);
+  }).eq('id', eventId);
 }

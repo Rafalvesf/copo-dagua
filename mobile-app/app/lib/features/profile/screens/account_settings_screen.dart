@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/social/social.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../home/screens/home_feed_screen.dart' show SupportSummaryCard;
 import '../../settings/screens/settings_screen.dart'
     show CoupleAccountSections, GuestAccountSections, SettingsGroup, SettingsRow, SettingsScaffold, SettingsSectionTitle;
@@ -38,7 +38,7 @@ class AccountSettingsScreen extends ConsumerWidget {
               ),
             ]),
           ];
-    final hasEvent = organizer && ref.watch(weddingControllerProvider).wedding != null;
+    final hasEvent = organizer && ref.watch(eventControllerProvider).event != null;
     return SettingsScaffold(
       title: 'Definições',
       children: [

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import 'chat_delete.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 import '../auth/auth_controller.dart';
 import '../live_refresh.dart';
 
@@ -39,7 +39,7 @@ class ChatListController extends Notifier<ChatListState> {
     // Conversas de todos os meus eventos, não só do que está aberto
     // (2026-11-11: "as mensagens não estão a aparecer").
     final ids = ref.watch(
-      weddingControllerProvider.select((s) => s.events.map((w) => w.id).join(',')),
+      eventControllerProvider.select((s) => s.events.map((w) => w.id).join(',')),
     );
     if (ids.isNotEmpty) {
       Future.microtask(() => _loadIds(ids.split(',')));
@@ -47,14 +47,14 @@ class ChatListController extends Notifier<ChatListState> {
     return const ChatListState();
   }
 
-  /// Recarrega (o [weddingId] é mantido por compatibilidade: carrega
+  /// Recarrega (o [eventId] é mantido por compatibilidade: carrega
   /// sempre todos os eventos).
-  Future<void> load(String weddingId) async {
-    final ids = ref.read(weddingControllerProvider).events.map((w) => w.id).toList();
-    await _loadIds(ids.isEmpty ? [weddingId] : ids);
+  Future<void> load(String eventId) async {
+    final ids = ref.read(eventControllerProvider).events.map((w) => w.id).toList();
+    await _loadIds(ids.isEmpty ? [eventId] : ids);
   }
 
-  Future<void> _loadIds(List<String> weddingIds) async {
+  Future<void> _loadIds(List<String> eventIds) async {
     state = state.copyWith(loading: true);
     List rows;
     try {
@@ -64,7 +64,7 @@ class ChatListController extends Notifier<ChatListState> {
             'id, wedding_id, partner_id, last_message, last_message_at, couple_last_read_at, '
             'partner_profiles(business_name, cover_photo_url)',
           )
-          .inFilter('wedding_id', weddingIds)
+          .inFilter('wedding_id', eventIds)
           .order('last_message_at', ascending: false);
     } catch (_) {
       if (ref.mounted) state = state.copyWith(loading: false);
@@ -77,7 +77,7 @@ class ChatListController extends Notifier<ChatListState> {
       final hiddenRows = await supabase
           .from('conversations')
           .select('id, couple_hidden_at')
-          .inFilter('wedding_id', weddingIds)
+          .inFilter('wedding_id', eventIds)
           .not('couple_hidden_at', 'is', null);
       final hidden = {
         for (final h in (hiddenRows as List).cast<Map<String, dynamic>>())
@@ -157,7 +157,7 @@ class ChatListController extends Notifier<ChatListState> {
     final partner = row['partner_profiles'] as Map<String, dynamic>?;
     return ChatConversation(
       id: row['id'] as String,
-      weddingId: row['wedding_id'] as String,
+      eventId: row['wedding_id'] as String,
       partnerId: row['partner_id'] as String,
       name: (partner?['business_name'] as String?)?.trim().isNotEmpty == true
           ? partner!['business_name'] as String
@@ -185,9 +185,9 @@ final unreadMessagesCountProvider = FutureProvider<int>((ref) async {
   keepFresh(ref);
   final me = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (me == null) return 0;
-  final events = ref.watch(weddingControllerProvider.select((s) => {
+  final events = ref.watch(eventControllerProvider.select((s) => {
         for (final e in s.events) e.id,
-        if (s.wedding != null) s.wedding!.id,
+        if (s.event != null) s.event!.id,
       }.join(',')));
   var total = 0;
   if (events.isNotEmpty) {

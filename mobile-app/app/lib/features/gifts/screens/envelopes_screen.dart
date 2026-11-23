@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/gifts/envelopes.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/green_hero.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -18,8 +18,8 @@ class EnvelopesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    final list = weddingId == null ? const <GiftEnvelope>[] : (ref.watch(weddingEnvelopesProvider(weddingId)).value ?? const <GiftEnvelope>[]);
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+    final list = eventId == null ? const <GiftEnvelope>[] : (ref.watch(eventEnvelopesProvider(eventId)).value ?? const <GiftEnvelope>[]);
     final total = list.fold<double>(0, (a, e) => a + e.amount);
     final received = list.where((e) => e.received).fold<double>(0, (a, e) => a + e.amount);
     final toThank = list.where((e) => !e.thanked).length;
@@ -32,7 +32,7 @@ class EnvelopesScreen extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
         }
       }
-      if (weddingId != null) ref.invalidate(weddingEnvelopesProvider(weddingId));
+      if (eventId != null) ref.invalidate(eventEnvelopesProvider(eventId));
     }
 
     return GradientScaffold(
@@ -40,7 +40,7 @@ class EnvelopesScreen extends ConsumerWidget {
       body: SafeArea(top: false, 
         child: RefreshIndicator(
           onRefresh: () async {
-            if (weddingId != null) ref.invalidate(weddingEnvelopesProvider(weddingId));
+            if (eventId != null) ref.invalidate(eventEnvelopesProvider(eventId));
           },
           child: ListView(
             padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),

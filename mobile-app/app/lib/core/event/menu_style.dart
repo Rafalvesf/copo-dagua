@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
-import 'wedding_controller.dart';
+import 'event_controller.dart';
 
 /// Aparência do menu principal do organizador (098, pedido 2026-10-17):
 /// o "clássico" é o de sempre; os outros três ficam como opções.
@@ -170,7 +170,7 @@ class EventMenuStyle {
 
 /// Lê `events.menu_layout`/`menu_color` do evento atual.
 final menuStyleProvider = FutureProvider<EventMenuStyle>((ref) async {
-  final id = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+  final id = ref.watch(eventControllerProvider.select((s) => s.event?.id));
   if (id == null) return EventMenuStyle.fallback;
   try {
     final row = await supabase.from('events').select('menu_layout, menu_color').eq('id', id).maybeSingle();
@@ -191,7 +191,7 @@ final currentMenuStyleProvider = Provider<EventMenuStyle>(
 );
 
 Future<void> saveMenuStyle(WidgetRef ref, {MenuLayout? layout, MenuColor? color}) async {
-  final id = ref.read(weddingControllerProvider).wedding?.id;
+  final id = ref.read(eventControllerProvider).event?.id;
   if (id == null) return;
   await supabase.from('events').update({
     if (layout != null) 'menu_layout': layout.db,

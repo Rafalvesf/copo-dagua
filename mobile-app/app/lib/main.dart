@@ -17,7 +17,7 @@ import 'core/monitoring/error_reporting.dart';
 import 'core/notifications/push.dart';
 import 'core/partners/partner_referrals.dart';
 import 'core/models/models.dart';
-import 'core/wedding/menu_style.dart';
+import 'core/event/menu_style.dart';
 import 'core/supabase/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/phone_frame.dart';

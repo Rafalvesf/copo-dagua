@@ -10,7 +10,7 @@ import '../supabase/supabase_config.dart';
 /// (`/invite/<código>`) e respondem sem conta — nome, acompanhantes, menu
 /// e alergias. A conta é sempre sugerida, nunca obrigatória.
 class InviteEvent {
-  final String weddingId;
+  final String eventId;
   final String code;
   final EventType eventType;
   final String name1;
@@ -34,7 +34,7 @@ class InviteEvent {
   final bool isPublic;
 
   const InviteEvent({
-    required this.weddingId,
+    required this.eventId,
     required this.code,
     required this.eventType,
     required this.name1,
@@ -68,7 +68,7 @@ class InviteEvent {
 
     final quote = s('welcome_message') ?? s('quote');
     return InviteEvent(
-      weddingId: j['wedding_id'] as String,
+      eventId: j['wedding_id'] as String,
       code: (j['guest_code'] as String?) ?? code.trim().toUpperCase(),
       eventType: EventType.fromDb(j['event_type'] as String?),
       name1: s('partner_name_1') ?? '',
@@ -92,11 +92,11 @@ class InviteEvent {
     );
   }
 
-  GuestWedding toGuestWedding() => GuestWedding(
-        weddingId: weddingId,
+  GuestEvent toGuestEvent() => GuestEvent(
+        eventId: eventId,
         partnerName1: name1,
         partnerName2: name2,
-        weddingDate: date,
+        eventDate: date,
         venue: venue,
         location: location,
         coverPhotoUrl: coverPhotoUrl,
@@ -157,9 +157,9 @@ class MyInviteAnswer {
   bool get answered => state == 'confirmed' || state == 'declined' || state.startsWith('awaiting_approval_');
   bool get declined => state == 'declined' || state == 'awaiting_approval_declined';
 
-  Guest toGuest(String weddingId) => Guest(
+  Guest toGuest(String eventId) => Guest(
         id: '',
-        weddingId: weddingId,
+        eventId: eventId,
         name: name,
         maxCompanions: maxCompanions,
         plusOneAllowed: maxCompanions > 0,

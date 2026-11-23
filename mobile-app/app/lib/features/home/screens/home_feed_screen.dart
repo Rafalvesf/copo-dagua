@@ -25,7 +25,7 @@ import '../../../core/models/models.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/tasks/task_models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -46,10 +46,10 @@ import '../../../shared/widgets/first_run_tour.dart' show TourAnchor;
 class HomeFeedScreen extends ConsumerStatefulWidget {
   /// Modo convidado: o evento que se está a ver (`null` numa conta só
   /// de utilizador = o primeiro evento a que tem acesso).
-  final String? guestWeddingId;
+  final String? guestEventId;
   final bool guestMode;
 
-  const HomeFeedScreen({super.key, this.guestWeddingId, this.guestMode = false});
+  const HomeFeedScreen({super.key, this.guestEventId, this.guestMode = false});
 
   @override
   ConsumerState<HomeFeedScreen> createState() => _HomeFeedScreenState();
@@ -98,22 +98,22 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final weddingState = ref.watch(weddingControllerProvider);
-    final wedding = weddingState.wedding;
+    final eventState = ref.watch(eventControllerProvider);
+    final event = eventState.event;
     final profile = ref.watch(
       authControllerProvider.select((s) => s.profile),
     );
     final organizer = profile?.role == UserRole.couple;
     final guestMode = widget.guestMode || !organizer;
-    final invited = guestMode ? (ref.watch(guestWeddingsProvider).value ?? const <GuestWedding>[]) : const <GuestWedding>[];
-    final presenceId = widget.guestWeddingId ?? invited.firstOrNull?.weddingId;
+    final invited = guestMode ? (ref.watch(guestEventsProvider).value ?? const <GuestEvent>[]) : const <GuestEvent>[];
+    final presenceId = widget.guestEventId ?? invited.firstOrNull?.eventId;
     final unreadNotifications = ref.watch(
       taskEngineControllerProvider.select((s) => s.unreadNotificationCount),
     );
 
     return GradientScaffold(
       background: AppBackground.cream,
-      body: profile == null || (organizer && wedding == null)
+      body: profile == null || (organizer && event == null)
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
@@ -147,7 +147,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                               child: Text('Perfil',
                                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             ),
-                            if (wedding != null)
+                            if (event != null)
                               WithCount(
                                 count: unreadNotifications,
                                 child: TourAnchor(
@@ -183,7 +183,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         ],
                         ProfileSectionTitle(
                           'Os meus eventos',
-                          action: 'Ver todos (${(profile.role == UserRole.partner ? 0 : ref.watch(weddingControllerProvider).events.length) + (ref.watch(guestWeddingsProvider).value?.length ?? 0)})',
+                          action: 'Ver todos (${(profile.role == UserRole.partner ? 0 : ref.watch(eventControllerProvider).events.length) + (ref.watch(guestEventsProvider).value?.length ?? 0)})',
                           onAction: () => context.go('/eventos'),
                         ),
                         const MyEventsCarousel(),
@@ -197,7 +197,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                   right: 0,
                   bottom: 0,
                   child: guestMode
-                      ? GuestBottomNav(current: GuestTab.profile, weddingId: widget.guestWeddingId)
+                      ? GuestBottomNav(current: GuestTab.profile, eventId: widget.guestEventId)
                       : const FloatingBottomNav(current: AppTab.home),
                 ),
               ],

@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException,
 import '../models/models.dart';
 import '../partner_profile/partner_profile_controller.dart';
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 
 /// Marketplace real, do lado do casal — substitui
 /// `MockBackend.listPartners`. Só `status = 'published'` é visível
@@ -266,15 +266,15 @@ final partnerRelationshipStatusProvider =
       ref,
       partnerId,
     ) async {
-      final weddingId = ref.watch(
-        weddingControllerProvider.select((s) => s.wedding?.id),
+      final eventId = ref.watch(
+        eventControllerProvider.select((s) => s.event?.id),
       );
-      if (weddingId == null) return PartnerRelationshipStatus.none;
+      if (eventId == null) return PartnerRelationshipStatus.none;
 
       final bookingRows = await supabase
           .from('bookings')
           .select('id')
-          .eq('wedding_id', weddingId)
+          .eq('wedding_id', eventId)
           .eq('partner_id', partnerId)
           .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
       if (bookingRows.isNotEmpty) return PartnerRelationshipStatus.booked;
@@ -282,7 +282,7 @@ final partnerRelationshipStatusProvider =
       final quoteRows = await supabase
           .from('quote_requests')
           .select('id')
-          .eq('wedding_id', weddingId)
+          .eq('wedding_id', eventId)
           .eq('partner_id', partnerId)
           .inFilter('status', ['pending', 'viewed', 'proposal_sent']);
       if (quoteRows.isNotEmpty) return PartnerRelationshipStatus.requestPending;

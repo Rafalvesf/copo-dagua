@@ -6,7 +6,7 @@ import '../../../core/events/events_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/social/social.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/text_case.dart';
 import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -34,7 +34,7 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
   String? _category;
   bool _busy = false;
 
-  Future<void> _review(JoinRequest r, bool approve, String weddingId) async {
+  Future<void> _review(JoinRequest r, bool approve, String eventId) async {
     final messenger = ScaffoldMessenger.of(context);
     final guests = ref.read(guestsControllerProvider.notifier);
     setState(() {
@@ -46,8 +46,8 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
     _category = null;
     try {
       await reviewJoinRequest(r.id, approve: approve, category: category);
-      ref.invalidate(joinRequestsProvider(weddingId));
-      if (approve) await guests.load(weddingId);
+      ref.invalidate(joinRequestsProvider(eventId));
+      if (approve) await guests.load(eventId);
       messenger.showSnackBar(SnackBar(
         content: Text(approve ? '${r.name} está na lista de convidados.' : 'Pedido de ${r.name} recusado.'),
       ));
@@ -61,13 +61,13 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final wedding = ref.watch(weddingControllerProvider).wedding;
-    final weddingId = wedding?.id;
-    final all = weddingId == null ? const <JoinRequest>[] : (ref.watch(joinRequestsProvider(weddingId)).value ?? const <JoinRequest>[]);
+    final event = ref.watch(eventControllerProvider).event;
+    final eventId = event?.id;
+    final all = eventId == null ? const <JoinRequest>[] : (ref.watch(joinRequestsProvider(eventId)).value ?? const <JoinRequest>[]);
     final requests = all.where((r) => !_handled.contains(r.id)).toList();
     final current = requests.where((r) => r.id == _selected).firstOrNull ?? requests.firstOrNull;
     final others = [for (final r in requests) if (r.id != current?.id) r];
-    final eventName = wedding == null ? '' : capFirst(wedding.displayNames);
+    final eventName = event == null ? '' : capFirst(event.displayNames);
 
     return GradientScaffold(
       background: AppBackground.feed,
@@ -98,7 +98,7 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
               category: _category,
               busy: _busy,
               onCategory: (c) => setState(() => _category = _category == c ? null : c),
-              onReview: (approve) => _review(current, approve, weddingId!),
+              onReview: (approve) => _review(current, approve, eventId!),
             ),
             if (others.isNotEmpty)
               SectionFrame(title: 'Outros pedidos · ${others.length}', children: [

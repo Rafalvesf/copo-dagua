@@ -128,9 +128,9 @@ class EventTable {
 }
 
 /// As mesas do evento para este convidado. Vazio antes da migração 190.
-final myEventTablesProvider = FutureProvider.autoDispose.family<List<EventTable>, String>((ref, weddingId) async {
+final myEventTablesProvider = FutureProvider.autoDispose.family<List<EventTable>, String>((ref, eventId) async {
   try {
-    final res = await supabase.rpc('my_event_tables', params: {'p_wedding_id': weddingId});
+    final res = await supabase.rpc('my_event_tables', params: {'p_wedding_id': eventId});
     if (res is! List) return const [];
     return [for (final r in res) if (r is Map) EventTable.fromJson(Map<String, dynamic>.from(r))];
   } catch (_) {

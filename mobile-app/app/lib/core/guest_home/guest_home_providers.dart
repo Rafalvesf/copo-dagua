@@ -11,7 +11,7 @@ import '../supabase/supabase_config.dart';
 /// só um (o código só é pedido uma vez no registo), mas a tabela é
 /// many-to-many de propósito para não bloquear um convidado que use a
 /// mesma conta para mais do que um casamento no futuro.
-final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
+final guestEventsProvider = FutureProvider<List<GuestEvent>>((ref) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (userId == null) return const [];
 
@@ -56,33 +56,33 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
     }
   }
 
-  return rows.map<GuestWedding>((row) {
-    final wedding = row['events'] as Map<String, dynamic>?;
-    final weddingDate = wedding?['wedding_date'] as String?;
-    final updatedAt = wedding?['updated_at'] as String?;
-    return GuestWedding(
-      weddingId: row['wedding_id'] as String,
-      partnerName1: (wedding?['partner_name_1'] as String?) ?? 'Evento',
-      partnerName2: wedding?['partner_name_2'] as String?,
-      weddingDate: weddingDate == null ? null : DateTime.parse(weddingDate),
-      venue: wedding?['venue'] as String?,
-      location: wedding?['location'] as String?,
-      quote: wedding?['quote'] as String?,
-      coverPhotoUrl: wedding?['cover_photo_url'] as String?,
-      ceremonyTime: wedding?['ceremony_time'] as String?,
-      welcomeMessage: wedding?['welcome_message'] as String?,
-      themeColors: (wedding?['theme_colors'] as List?)?.cast<String>() ?? const [],
+  return rows.map<GuestEvent>((row) {
+    final event = row['events'] as Map<String, dynamic>?;
+    final eventDate = event?['wedding_date'] as String?;
+    final updatedAt = event?['updated_at'] as String?;
+    return GuestEvent(
+      eventId: row['wedding_id'] as String,
+      partnerName1: (event?['partner_name_1'] as String?) ?? 'Evento',
+      partnerName2: event?['partner_name_2'] as String?,
+      eventDate: eventDate == null ? null : DateTime.parse(eventDate),
+      venue: event?['venue'] as String?,
+      location: event?['location'] as String?,
+      quote: event?['quote'] as String?,
+      coverPhotoUrl: event?['cover_photo_url'] as String?,
+      ceremonyTime: event?['ceremony_time'] as String?,
+      welcomeMessage: event?['welcome_message'] as String?,
+      themeColors: (event?['theme_colors'] as List?)?.cast<String>() ?? const [],
       updatedAt: updatedAt == null ? null : DateTime.parse(updatedAt),
-      giftListUrl: wedding?['gift_list_url'] as String?,
-      giftIban: wedding?['gift_iban'] as String?,
-      giftMessage: wedding?['gift_message'] as String?,
-      eventType: EventType.fromDb(wedding?['event_type'] as String?),
-      program: ProgramItem.listFrom(wedding?['program']),
-      dressCode: wedding?['dress_code'] as String?,
-      venueAddress: wedding?['venue_address'] as String?,
-      venueLatitude: (wedding?['venue_latitude'] as num?)?.toDouble(),
-      venueLongitude: (wedding?['venue_longitude'] as num?)?.toDouble(),
-      organizers: EventOrganizerRef.listFrom(wedding?['organizers']),
+      giftListUrl: event?['gift_list_url'] as String?,
+      giftIban: event?['gift_iban'] as String?,
+      giftMessage: event?['gift_message'] as String?,
+      eventType: EventType.fromDb(event?['event_type'] as String?),
+      program: ProgramItem.listFrom(event?['program']),
+      dressCode: event?['dress_code'] as String?,
+      venueAddress: event?['venue_address'] as String?,
+      venueLatitude: (event?['venue_latitude'] as num?)?.toDouble(),
+      venueLongitude: (event?['venue_longitude'] as num?)?.toDouble(),
+      organizers: EventOrganizerRef.listFrom(event?['organizers']),
     );
   }).toList();
 });
@@ -92,14 +92,14 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
 /// quando ainda não houve nenhuma correspondência automática por email
 /// no registo (`join_wedding_by_code`); o ecrã de perfil mostra um
 /// estado vazio nesse caso, em vez de assumir dados errados.
-final myGuestRowProvider = FutureProvider.family<Guest?, String>((ref, weddingId) async {
+final myGuestRowProvider = FutureProvider.family<Guest?, String>((ref, eventId) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (userId == null) return null;
 
   final row = await supabase
       .from('guests')
       .select()
-      .eq('wedding_id', weddingId)
+      .eq('wedding_id', eventId)
       .eq('linked_profile_id', userId)
       .maybeSingle();
   if (row == null) return null;
@@ -110,10 +110,10 @@ final myGuestRowProvider = FutureProvider.family<Guest?, String>((ref, weddingId
 /// `067_guest_self_service.sql`) — `null` quando ainda não foi
 /// colocado em nenhuma mesa, ou quando a linha de `guests` não está
 /// ligada a esta conta.
-final mySeatingTableProvider = FutureProvider.family<int?, String>((ref, weddingId) async {
+final mySeatingTableProvider = FutureProvider.family<int?, String>((ref, eventId) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (userId == null) return null;
-  return await supabase.rpc('get_my_seating_table', params: {'p_wedding_id': weddingId}) as int?;
+  return await supabase.rpc('get_my_seating_table', params: {'p_wedding_id': eventId}) as int?;
 });
 
 /// Guarda as alterações do próprio convidado (`update_own_guest_info()`,
@@ -163,11 +163,11 @@ class TableMate {
 /// (`get_my_table_roster()`, `068_guest_table_roster.sql`) — lista
 /// vazia quando ainda não foi colocado em nenhuma mesa, ou quando a
 /// linha de `guests` não está ligada a esta conta.
-final myTableRosterProvider = FutureProvider.family<List<TableMate>, String>((ref, weddingId) async {
+final myTableRosterProvider = FutureProvider.family<List<TableMate>, String>((ref, eventId) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (userId == null) return const [];
 
-  final rows = await supabase.rpc('get_my_table_roster', params: {'p_wedding_id': weddingId}) as List;
+  final rows = await supabase.rpc('get_my_table_roster', params: {'p_wedding_id': eventId}) as List;
   return rows
       .map(
         (row) => TableMate(
@@ -188,13 +188,13 @@ final myTableRosterProvider = FutureProvider.family<List<TableMate>, String>((re
 /// encontrámos a tua entrada"), distinto de a chamada em si ter
 /// sucesso (que só falha com exceção, ex: código inválido).
 class GuestJoinResult {
-  final String weddingId;
+  final String eventId;
   final bool guestMatched;
 
-  const GuestJoinResult({required this.weddingId, required this.guestMatched});
+  const GuestJoinResult({required this.eventId, required this.guestMatched});
 
   factory GuestJoinResult.fromRow(Map<String, dynamic> row) => GuestJoinResult(
-    weddingId: row['wedding_id'] as String,
+    eventId: row['wedding_id'] as String,
     guestMatched: row['guest_matched'] as bool? ?? false,
   );
 }
@@ -204,17 +204,17 @@ class GuestJoinResult {
 /// poder também acompanhar outro casamento como convidado sem precisar de
 /// uma segunda conta (`050_wedding_guest_code.sql`). Lança se o código for
 /// inválido — o chamador decide a mensagem.
-Future<GuestJoinResult> joinWeddingByCode(String code) async {
+Future<GuestJoinResult> joinEventByCode(String code) async {
   final res = await supabase.rpc('join_wedding_by_code', params: {'p_code': code.trim()});
   // Versão antiga da função (antes da 071) devolve só o id.
-  if (res is String) return GuestJoinResult(weddingId: res, guestMatched: false);
+  if (res is String) return GuestJoinResult(eventId: res, guestMatched: false);
   final rows = res as List;
   return GuestJoinResult.fromRow(rows.first as Map<String, dynamic>);
 }
 
 /// Token de convite individual (`/i/:token`, `invite_token_screen.dart`)
 /// aberto por alguém ainda sem sessão — guardado aqui até o login/registo
-/// terminar, para `GuestHomeScreen` completar o `joinWeddingByInviteToken`
+/// terminar, para `GuestHomeScreen` completar o `joinEventByInviteToken`
 /// assim que a conta ficar ativa, sem precisar de um fluxo de registo
 /// paralelo dedicado a tokens. `Notifier` em vez de `StateProvider`
 /// (removido no Riverpod 3, ver `pubspec.yaml`), mesma convenção de
@@ -233,9 +233,9 @@ final pendingInviteTokenProvider = NotifierProvider<PendingInviteTokenNotifier, 
 /// Liga a conta atual a uma linha de `guests` específica através do seu
 /// convite individual (`guests.rsvp_token`, reaproveitado como link/
 /// código individual — ver `071_guest_join_mode_and_invite_token.sql`).
-/// Ao contrário de [joinWeddingByCode], nunca cria uma linha nova — um
+/// Ao contrário de [joinEventByCode], nunca cria uma linha nova — um
 /// token só existe para uma linha que o casal já criou.
-Future<GuestJoinResult> joinWeddingByInviteToken(String token) async {
+Future<GuestJoinResult> joinEventByInviteToken(String token) async {
   final rows =
       await supabase.rpc('join_wedding_by_invite_token', params: {'p_token': token.trim()})
           as List;
@@ -253,7 +253,7 @@ Future<void> completeGuestOnboarding({
   String? dietaryRestrictions,
   required WeddingSide side,
   String? groupLabel,
-  String? weddingId,
+  String? eventId,
 }) async {
   final params = <String, dynamic>{
       'p_attending': attending,
@@ -270,9 +270,9 @@ Future<void> completeGuestOnboarding({
   // Só este evento (migração 211). Antes de a 211 estar aplicada a função
   // não tem `p_wedding_id`: tenta sem ele.
   try {
-    await supabase.rpc('complete_guest_onboarding', params: {...params, if (weddingId != null) 'p_wedding_id': weddingId});
+    await supabase.rpc('complete_guest_onboarding', params: {...params, if (eventId != null) 'p_wedding_id': eventId});
   } on PostgrestException catch (e) {
-    if (weddingId == null || e.code != 'PGRST202') rethrow;
+    if (eventId == null || e.code != 'PGRST202') rethrow;
     await supabase.rpc('complete_guest_onboarding', params: params);
   }
 }
@@ -344,7 +344,7 @@ class GuestCompanion {
 /// nada (o nome continua guardado em `plus_one_name`).
 Future<void> saveGuestCompanions({
   required String guestId,
-  required String weddingId,
+  required String eventId,
   required List<GuestCompanion> companions,
 }) async {
   try {
@@ -352,7 +352,7 @@ Future<void> saveGuestCompanions({
       for (final c in companions)
         {
           'guest_id': guestId,
-          'wedding_id': weddingId,
+          'wedding_id': eventId,
           'name': c.name,
           'is_child': c.isChild || c.ageGroup == 'child',
           'age_group': c.isChild && c.ageGroup == 'adult' ? 'child' : c.ageGroup,
@@ -412,8 +412,8 @@ final guestCompanionsProvider = FutureProvider.family<List<GuestCompanion>, Stri
 
 
 /// Faixa etária do próprio convidado (`set_own_age_group`, 092).
-Future<void> setOwnAgeGroup(String weddingId, String ageGroup) async {
-  await supabase.rpc('set_own_age_group', params: {'p_wedding_id': weddingId, 'p_age_group': ageGroup});
+Future<void> setOwnAgeGroup(String eventId, String ageGroup) async {
+  await supabase.rpc('set_own_age_group', params: {'p_wedding_id': eventId, 'p_age_group': ageGroup});
 }
 
 /// Rótulo em português de 'child' / 'adult' / 'senior'.

@@ -4,7 +4,7 @@ import '../../partners/widgets/partner_cards.dart' show PartnerCarousel;
 import '../../../shared/widgets/partner_suggestion_card.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
-import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
+import 'package:copo_dagua_app/core/event/event_controller.dart';
 import 'package:copo_dagua_app/core/partners/partner_providers.dart';
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -59,7 +59,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     Future.microtask(() => ref.read(taskEngineControllerProvider.notifier).recompute());
   }
 
-  Future<void> _openTask(WeddingTask task) => openTask(context, ref, task);
+  Future<void> _openTask(EventTask task) => openTask(context, ref, task);
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +177,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
   /// «Sugestão» / «Para concluir» + a primeira frase da descrição.
-  static String? _taskSub(WeddingTask task) {
+  static String? _taskSub(EventTask task) {
     final type = task.displayType;
     final typeLabel = type == null ? null : (type == TaskDisplayType.suggestion ? 'Sugestão' : 'Para concluir');
     final desc = task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim();
@@ -314,7 +314,7 @@ class _PartnerSuggestions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location = ref.watch(weddingControllerProvider.select((s) => s.wedding?.location));
+    final location = ref.watch(eventControllerProvider.select((s) => s.event?.location));
     final picks = ref.watch(featuredForMeProvider((location: location, category: null, limit: 4))).value;
     if (picks == null || picks.isEmpty) return const SizedBox.shrink();
     return Padding(

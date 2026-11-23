@@ -27,9 +27,9 @@ class RegisterScreen extends ConsumerStatefulWidget {
   /// (`invite_page_screen.dart`, `?code=...`) — conta passou a ser
   /// obrigatória para o convidado, por isso o link já traz o código do
   /// casal em vez de deixar o convidado de o copiar à mão.
-  final String? initialWeddingCode;
+  final String? initialEventCode;
 
-  const RegisterScreen({super.key, required this.role, this.initialWeddingCode});
+  const RegisterScreen({super.key, required this.role, this.initialEventCode});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -46,7 +46,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phone = TextEditingController();
   String? _phoneError;
   final _password = TextEditingController();
-  final _weddingCode = TextEditingController();
+  final _eventCode = TextEditingController();
   bool _acceptedTerms = false;
   bool _checkingCode = false;
 
@@ -54,7 +54,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _emailError;
   String? _passwordError;
   String? _termsError;
-  String? _weddingCodeError;
+  String? _eventCodeError;
 
   // Pré-visualização em tempo real do casamento encontrado pelo
   // código, enquanto o convidado ainda está a preencher o resto do
@@ -64,15 +64,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   // código de novo no fim, exatamente como antes.
   Timer? _codeDebounce;
   bool _verifyingCode = false;
-  String? _foundWeddingNames;
+  String? _foundEventNames;
 
   @override
   void initState() {
     super.initState();
     Funnel.track('signup_start', ref: widget.role.name);
-    if (widget.initialWeddingCode != null) {
-      _weddingCode.text = widget.initialWeddingCode!;
-      _onWeddingCodeChanged(widget.initialWeddingCode!);
+    if (widget.initialEventCode != null) {
+      _eventCode.text = widget.initialEventCode!;
+      _onEventCodeChanged(widget.initialEventCode!);
     }
   }
 
@@ -85,23 +85,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _email.dispose();
     _phone.dispose();
     _password.dispose();
-    _weddingCode.dispose();
+    _eventCode.dispose();
     super.dispose();
   }
 
-  void _onWeddingCodeChanged(String value) {
+  void _onEventCodeChanged(String value) {
     _codeDebounce?.cancel();
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
-      setState(() => _foundWeddingNames = null);
+      setState(() => _foundEventNames = null);
       return;
     }
-    _codeDebounce = Timer(const Duration(milliseconds: 500), () => _lookupWeddingCode(trimmed));
+    _codeDebounce = Timer(const Duration(milliseconds: 500), () => _lookupEventCode(trimmed));
   }
 
   /// Só uma pré-visualização best-effort — nunca bloqueia nem substitui
   /// a validação real feita em `_submit()` antes do signUp.
-  Future<void> _lookupWeddingCode(String code) async {
+  Future<void> _lookupEventCode(String code) async {
     setState(() => _verifyingCode = true);
     try {
       final rows = await supabase.rpc(
@@ -110,18 +110,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       ) as List;
       if (!mounted) return;
       if (rows.isEmpty) {
-        setState(() => _foundWeddingNames = null);
+        setState(() => _foundEventNames = null);
       } else {
         final row = rows.first as Map<String, dynamic>;
         final name1 = row['partner_name_1'] as String?;
         final name2 = row['partner_name_2'] as String?;
         setState(() {
-          _foundWeddingNames = (name2 != null && name2.isNotEmpty) ? '$name1 & $name2' : (name1 ?? '');
+          _foundEventNames = (name2 != null && name2.isNotEmpty) ? '$name1 & $name2' : (name1 ?? '');
         });
       }
     } catch (_) {
       if (!mounted) return;
-      setState(() => _foundWeddingNames = null);
+      setState(() => _foundEventNames = null);
     } finally {
       if (mounted) setState(() => _verifyingCode = false);
     }
@@ -157,7 +157,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           : 'Confirma que tens 18 anos ou mais e aceitas os termos';
       // Conta única "Utilizador" (2026-11): o código é opcional — quem
       // não foi convidado entra e vê os eventos públicos.
-      if (widget.role == UserRole.guest) _weddingCodeError = null;
+      if (widget.role == UserRole.guest) _eventCodeError = null;
     });
     return _nameError == null &&
         _usernameError == null &&
@@ -165,7 +165,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         _phoneError == null &&
         _passwordError == null &&
         _termsError == null &&
-        _weddingCodeError == null;
+        _eventCodeError == null;
   }
 
   /// Confirma o código do casal (`lookup_wedding_by_guest_code()`,
@@ -176,19 +176,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   /// `AuthController.register()`, já autenticado.
   Future<void> _submit() async {
     if (!_validate()) return;
-    if (widget.role == UserRole.guest && _weddingCode.text.trim().isNotEmpty) {
+    if (widget.role == UserRole.guest && _eventCode.text.trim().isNotEmpty) {
       setState(() => _checkingCode = true);
       final List rows;
       try {
         rows = await supabase.rpc(
           'lookup_wedding_by_guest_code',
-          params: {'p_code': _weddingCode.text.trim()},
+          params: {'p_code': _eventCode.text.trim()},
         ) as List;
       } catch (_) {
         if (!mounted) return;
         setState(() {
           _checkingCode = false;
-          _weddingCodeError = 'Não foi possível verificar o código. Tenta novamente.';
+          _eventCodeError = 'Não foi possível verificar o código. Tenta novamente.';
         });
         return;
       }
@@ -196,7 +196,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _checkingCode = false);
       if (rows.isEmpty) {
         setState(
-          () => _weddingCodeError = 'Código inválido — confirma com quem organiza.',
+          () => _eventCodeError = 'Código inválido — confirma com quem organiza.',
         );
         return;
       }
@@ -237,7 +237,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           phone: _phone.text.trim(),
           password: _password.text,
           role: _signupRole,
-          weddingCode: _codeOrNull,
+          eventCode: _codeOrNull,
           username: _usernameOrNull,
         );
   }
@@ -258,7 +258,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     await ref.read(authControllerProvider.notifier).signInWithProvider(
           provider,
           role: _signupRole,
-          weddingCode: _codeOrNull,
+          eventCode: _codeOrNull,
         );
   }
 
@@ -270,7 +270,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           idToken,
           nonce,
           role: _signupRole,
-          weddingCode: _codeOrNull,
+          eventCode: _codeOrNull,
         );
   }
 
@@ -281,13 +281,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       widget.role == UserRole.guest && _codeOrNull == null ? UserRole.couple : widget.role;
 
   String? get _codeOrNull {
-    final c = _weddingCode.text.trim();
+    final c = _eventCode.text.trim();
     return widget.role == UserRole.guest && c.isNotEmpty ? c : null;
   }
 
   Future<bool> _guestCodeOk() async {
-    if (widget.role == UserRole.guest && _weddingCode.text.trim().isNotEmpty) {
-      final code = _weddingCode.text.trim();
+    if (widget.role == UserRole.guest && _eventCode.text.trim().isNotEmpty) {
+      final code = _eventCode.text.trim();
       setState(() => _checkingCode = true);
       List rows = const [];
       try {
@@ -296,7 +296,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return false;
       setState(() => _checkingCode = false);
       if (rows.isEmpty) {
-        setState(() => _weddingCodeError = 'Código inválido — confirma com quem organiza.');
+        setState(() => _eventCodeError = 'Código inválido — confirma com quem organiza.');
         return false;
       }
     }
@@ -384,21 +384,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (widget.role == UserRole.guest) ...[
           AuthField(
             label: 'Código de um evento (opcional)',
-            controller: _weddingCode,
+            controller: _eventCode,
             hint: 'Ex.: INES-TOMAS-24',
-            errorText: _weddingCodeError,
-            onChanged: _onWeddingCodeChanged,
+            errorText: _eventCodeError,
+            onChanged: _onEventCodeChanged,
           ),
           if (_verifyingCode)
             const Padding(
               padding: EdgeInsets.only(top: 6),
               child: Text('A verificar código...', style: TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
             )
-          else if (_foundWeddingNames != null)
+          else if (_foundEventNames != null)
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Text(
-                'Vais juntar-te ao evento de $_foundWeddingNames',
+                'Vais juntar-te ao evento de $_foundEventNames',
                 style: const TextStyle(color: AppStatusColors.confirmed, fontSize: 12, fontWeight: FontWeight.w700),
               ),
             ),

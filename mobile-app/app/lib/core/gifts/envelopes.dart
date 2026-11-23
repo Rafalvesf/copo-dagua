@@ -38,12 +38,12 @@ class GiftEnvelope {
 }
 
 /// Todos os envelopes do evento (anfitriões). Vazio sem a migração.
-final weddingEnvelopesProvider = FutureProvider.family<List<GiftEnvelope>, String>((ref, weddingId) async {
+final eventEnvelopesProvider = FutureProvider.family<List<GiftEnvelope>, String>((ref, eventId) async {
   try {
     final rows = await supabase
         .from('gift_envelopes')
         .select()
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .order('created_at', ascending: false);
     return [for (final r in (rows as List).cast<Map<String, dynamic>>()) GiftEnvelope.fromRow(r)];
   } on PostgrestException {
@@ -52,14 +52,14 @@ final weddingEnvelopesProvider = FutureProvider.family<List<GiftEnvelope>, Strin
 });
 
 /// Os envelopes que eu (convidado) já ofereci neste evento.
-final myEnvelopesProvider = FutureProvider.family<List<GiftEnvelope>, String>((ref, weddingId) async {
+final myEnvelopesProvider = FutureProvider.family<List<GiftEnvelope>, String>((ref, eventId) async {
   final uid = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (uid == null) return const [];
   try {
     final rows = await supabase
         .from('gift_envelopes')
         .select()
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .eq('guest_profile_id', uid)
         .order('created_at', ascending: false);
     return [for (final r in (rows as List).cast<Map<String, dynamic>>()) GiftEnvelope.fromRow(r)];
@@ -68,8 +68,8 @@ final myEnvelopesProvider = FutureProvider.family<List<GiftEnvelope>, String>((r
   }
 });
 
-Future<void> sendGiftEnvelope({required String weddingId, required double amount, String? message}) async {
-  await supabase.rpc('send_gift_envelope', params: {'p_wedding': weddingId, 'p_amount': amount, 'p_message': message});
+Future<void> sendGiftEnvelope({required String eventId, required double amount, String? message}) async {
+  await supabase.rpc('send_gift_envelope', params: {'p_wedding': eventId, 'p_amount': amount, 'p_message': message});
 }
 
 Future<void> updateGiftEnvelope(String id, {bool? received, bool? thanked}) async {

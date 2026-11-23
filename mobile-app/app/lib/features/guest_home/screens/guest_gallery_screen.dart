@@ -34,39 +34,39 @@ enum _GalleryTab { all, mine, favorites }
 /// manter o mesmo layout e arquitetura" força a não mexer nesse ecrã
 /// partilhado; construir um ecrã novo só para o convidado satisfaz os
 /// dois pedidos ao mesmo tempo. Mesma fonte de dados
-/// (`weddingGalleryPhotosProvider`/`uploadGalleryPhoto`), só a UI é
+/// (`eventGalleryPhotosProvider`/`uploadGalleryPhoto`), só a UI é
 /// diferente. "Favoritas" é só um toque local (sem coluna própria em
 /// `wedding_gallery_photos`), não persiste entre sessões.
 class GuestGalleryScreen extends ConsumerWidget {
   /// `null` = conta 100% convidado, sem "Modo convidado" — resolve o
-  /// casamento sozinho via [guestWeddingsProvider] (`events.first`,
+  /// casamento sozinho via [guestEventsProvider] (`events.first`,
   /// mesmo padrão de [GuestHomeScreen]).
-  final String? weddingId;
+  final String? eventId;
 
-  const GuestGalleryScreen({super.key, this.weddingId});
+  const GuestGalleryScreen({super.key, this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (weddingId != null) return _GuestGalleryBody(weddingId: weddingId!);
+    if (eventId != null) return _GuestGalleryBody(eventId: eventId!);
 
-    final weddingsAsync = ref.watch(guestWeddingsProvider);
-    return weddingsAsync.when(
+    final eventsAsync = ref.watch(guestEventsProvider);
+    return eventsAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (err, st) => Scaffold(body: AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider))),
+      error: (err, st) => Scaffold(body: AsyncErrorView(onRetry: () => ref.invalidate(guestEventsProvider))),
       data: (events) {
         if (events.isEmpty) {
           return const Scaffold(body: EmptyStateView(message: 'Sem casamento associado.', icon: Hi.heartOutline));
         }
-        return _GuestGalleryBody(weddingId: events.first.weddingId);
+        return _GuestGalleryBody(eventId: events.first.eventId);
       },
     );
   }
 }
 
 class _GuestGalleryBody extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
 
-  const _GuestGalleryBody({required this.weddingId});
+  const _GuestGalleryBody({required this.eventId});
 
   @override
   ConsumerState<_GuestGalleryBody> createState() => _GuestGalleryScreenState();
@@ -105,8 +105,8 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
     final file = await ImagePicker().pickImage(source: source);
     if (file == null) return;
     try {
-      await uploadGalleryPhoto(weddingId: widget.weddingId, file: file);
-      ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId));
+      await uploadGalleryPhoto(eventId: widget.eventId, file: file);
+      ref.invalidate(eventGalleryPhotosProvider(widget.eventId));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Foto enviada — aguarda aprovação dos organizadores.')),
@@ -123,15 +123,15 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
 
   @override
   Widget build(BuildContext context) {
-    final photosAsync = ref.watch(weddingGalleryPhotosProvider(widget.weddingId));
+    final photosAsync = ref.watch(eventGalleryPhotosProvider(widget.eventId));
     final myUserId = ref.watch(authControllerProvider).profile?.id;
     // Opções do organizador (Para os convidados › Galeria, 2026-11-08).
-    final opts = ref.watch(myEventPassProvider(widget.weddingId)).value?.sections ?? const GuestSections();
-    final date = ref.watch(guestWeddingsProvider).value?.where((w) => w.weddingId == widget.weddingId).firstOrNull?.weddingDate;
+    final opts = ref.watch(myEventPassProvider(widget.eventId)).value?.sections ?? const GuestSections();
+    final date = ref.watch(guestEventsProvider).value?.where((w) => w.eventId == widget.eventId).firstOrNull?.eventDate;
     final open = opts.galleryOpen(date);
     final canUpload = open && opts.galleryUpload;
 
-    final back = widget.weddingId == null ? '/guest-home' : '/guest-home/${widget.weddingId}';
+    final back = widget.eventId == null ? '/guest-home' : '/guest-home/${widget.eventId}';
     // Mockup «Páginas do convidado» → Galeria (2026-11-14): voltar e «+»
     // em cima, título, filtros em pílula e a grelha; sem barra de baixo.
     return GradientScaffold(
@@ -152,10 +152,10 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
           else
             photosAsync.when(
               loading: () => const Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator())),
-              error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId))),
+              error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(eventGalleryPhotosProvider(widget.eventId))),
               data: (photos) {
                 final all = photos.where((p) => p.status == 'approved').toList();
-                final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
+                final meta = ref.watch(galleryFeedMetaProvider(widget.eventId)).asData?.value ?? const {};
                 final mine = all.where((p) => p.uploadedBy == myUserId).toList();
                 final favs = all.where((p) => meta[p.id]?.likedByMe ?? false).toList();
                 final shown = switch (_tab) {
@@ -176,7 +176,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                   if (shown.isEmpty)
                     const GalleryEmptyState(message: 'Ainda não existem fotos. Carrega as primeiras.')
                   else
-                    GallerySocialGrid(weddingId: widget.weddingId, photos: shown),
+                    GallerySocialGrid(eventId: widget.eventId, photos: shown),
                 ]);
               },
             ),

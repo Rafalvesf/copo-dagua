@@ -13,7 +13,7 @@ import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/text_case.dart';
 import 'couple_bookings_screen.dart' show ReviewAction;
 import '../../../core/home/home_providers.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/money.dart';
 import '../../payments/booking_extras_sheet.dart';
 import '../../../core/payments/payments.dart' show payDay;
@@ -37,10 +37,10 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
     String money(double v) => euros(amountWithCommission(v, fee), cents: true);
     final date = booking.serviceDate;
     final dateLabel = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-    final events = ref.watch(weddingControllerProvider).events;
+    final events = ref.watch(eventControllerProvider).events;
     final eventName = [
       for (final w in events)
-        if (w.id == booking.weddingId) capFirst(w.displayNames),
+        if (w.id == booking.eventId) capFirst(w.displayNames),
     ].firstOrNull;
     final needsFinal = booking.pendingFinalPaymentId != null;
     final paid = booking.amount <= 0 ? 0.0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0).toDouble();
@@ -146,7 +146,7 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
             SectionFrame(
               title: 'Privacidade e ajuda',
               children: [
-                HirePrivacyCard(bookingId: booking.id, weddingId: booking.weddingId, isPrivate: booking.isPrivate),
+                HirePrivacyCard(bookingId: booking.id, eventId: booking.eventId, isPrivate: booking.isPrivate),
                 const SizedBox(height: 12),
                 DisputeCard(bookingId: booking.id, partnerSide: false),
               ],

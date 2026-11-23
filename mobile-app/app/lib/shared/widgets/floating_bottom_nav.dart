@@ -10,9 +10,9 @@ import '../../core/theme/app_theme.dart';
 import 'count_badge.dart';
 import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
-import '../../core/wedding/menu_style.dart';
+import '../../core/event/menu_style.dart';
 
-enum AppTab { home, partners, chat, wedding, events }
+enum AppTab { home, partners, chat, event, events }
 
 /// Raio dos cantos das navbars = raio do círculo do separador ativo mais
 /// a margem à volta (10 + 4 + 21), para os cantos ficarem concêntricos
@@ -90,7 +90,7 @@ class FloatingBottomNav extends ConsumerWidget {
                     activeIcon: Hi.globeEuropeAfricaOutline,
                     // O painel de cada evento abre a partir de Eventos
                     // (separador "O meu evento" retirado, 2026-11-10).
-                    active: current == AppTab.events || current == AppTab.wedding,
+                    active: current == AppTab.events || current == AppTab.event,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
                     onTap: () => context.go('/eventos'),

@@ -14,13 +14,13 @@ class PartnerUnavailableException implements Exception {
 /// pelo botão "Responder" no detalhe de uma reserva/pedido (lado do
 /// parceiro) — os dois lados podem iniciar a conversa.
 Future<String> getOrCreateConversation({
-  required String weddingId,
+  required String eventId,
   required String partnerId,
 }) async {
   final existing = await supabase
       .from('conversations')
       .select('id')
-      .eq('wedding_id', weddingId)
+      .eq('wedding_id', eventId)
       .eq('partner_id', partnerId)
       .maybeSingle();
   if (existing != null) return existing['id'] as String;
@@ -30,7 +30,7 @@ Future<String> getOrCreateConversation({
   bool blocked = false;
   try {
     blocked = await supabase.rpc('partner_blocked_by_secret', params: {
-      'p_wedding_id': weddingId,
+      'p_wedding_id': eventId,
       'p_partner_id': partnerId,
     }) == true;
   } catch (_) {}
@@ -38,7 +38,7 @@ Future<String> getOrCreateConversation({
 
   final row = await supabase
       .from('conversations')
-      .insert({'wedding_id': weddingId, 'partner_id': partnerId})
+      .insert({'wedding_id': eventId, 'partner_id': partnerId})
       .select('id')
       .single();
   return row['id'] as String;
@@ -53,7 +53,7 @@ Future<String> getOrCreateConversation({
 /// rotear por `category` ('parceiros' -> `/partners`), sem noção de qual
 /// parceiro/conversa específica esta tarefa dinâmica representa.
 Future<ChatConversation> resolveProposalConversation({
-  required String weddingId,
+  required String eventId,
   required String proposalId,
 }) async {
   final row = await supabase
@@ -65,13 +65,13 @@ Future<ChatConversation> resolveProposalConversation({
   final partner = row['partner_profiles'] as Map<String, dynamic>?;
 
   final conversationId = await getOrCreateConversation(
-    weddingId: weddingId,
+    eventId: eventId,
     partnerId: partnerId,
   );
 
   return ChatConversation(
     id: conversationId,
-    weddingId: weddingId,
+    eventId: eventId,
     partnerId: partnerId,
     name: (partner?['business_name'] as String?) ?? 'Parceiro',
     avatarSeed: partnerId,
@@ -87,7 +87,7 @@ Future<ChatConversation> resolveProposalConversation({
 /// simples (sem cartão dedicado, ao contrário da proposta) — o pedido
 /// ainda não tem nenhum valor associado para mostrar.
 Future<void> sendQuoteRequestMessage({
-  required String weddingId,
+  required String eventId,
   required String partnerId,
   required String partnerName,
   DateTime? eventDate,
@@ -95,7 +95,7 @@ Future<void> sendQuoteRequestMessage({
   String? message,
 }) async {
   final conversationId = await getOrCreateConversation(
-    weddingId: weddingId,
+    eventId: eventId,
     partnerId: partnerId,
   );
   // Pedido explícito do utilizador (2026-09-05): "Pediu um orçamento

@@ -11,7 +11,7 @@ import '../../../core/invite/public_invite.dart';
 import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/pastel_colors.dart';
+import '../../../core/event/pastel_colors.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/cards.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -110,10 +110,10 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
       _joinMessage = null;
     });
     try {
-      final r = await joinWeddingByCode(ev.code);
+      final r = await joinEventByCode(ev.code);
       if (!mounted) return;
       if (r.guestMatched) {
-        context.go('/guest-home/${r.weddingId}');
+        context.go('/guest-home/${r.eventId}');
       } else {
         setState(() => _joinMessage = 'Pedido enviado. ${ev.name1} vai aceitar na app e avisamos-te.');
       }
@@ -185,10 +185,10 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
       return;
     }
 
-    final guest = answer?.toGuest(ev.weddingId) ??
+    final guest = answer?.toGuest(ev.eventId) ??
         Guest(
           id: '',
-          weddingId: ev.weddingId,
+          eventId: ev.eventId,
           name: name ?? '',
           maxCompanions: max,
           plusOneAllowed: max > 0,
@@ -197,10 +197,10 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
     final nav = Navigator.of(context);
     await nav.push(MaterialPageRoute<void>(
       builder: (_) => GuestOnboardingWizardScreen(
-        weddingId: ev.weddingId,
+        eventId: ev.eventId,
         guest: guest,
         rsvpToken: token,
-        event: ev.toGuestWedding(),
+        event: ev.toGuestEvent(),
         // "Vais?" já foi respondido no convite.
         initialStep: answer?.answered == true ? 0 : 1,
         initialCompanions: answer?.companions ?? const [],

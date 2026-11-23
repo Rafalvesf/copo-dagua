@@ -2,11 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 
 SeatingTable _tableFromRow(Map<String, dynamic> row) => SeatingTable(
   id: row['id'] as String,
-  weddingId: row['wedding_id'] as String,
+  eventId: row['wedding_id'] as String,
   guestIds: (row['guest_ids'] as List?)?.cast<String>() ?? const [],
   rectangular: row['rectangular'] as bool? ?? false,
   name: (row['name'] as String?)?.trim().isEmpty ?? true ? null : (row['name'] as String).trim(),
@@ -121,31 +121,31 @@ class SeatingState {
 class SeatingController extends Notifier<SeatingState> {
   List<VenueTableType> _venueTypes = const [];
 
-  String? currentWeddingId;
+  String? currentEventId;
 
   @override
   SeatingState build() {
-    final wedding = ref.watch(
-      weddingControllerProvider.select((s) => s.wedding),
+    final event = ref.watch(
+      eventControllerProvider.select((s) => s.event),
     );
-    currentWeddingId = wedding?.id;
-    if (wedding != null) {
-      Future.microtask(() => load(wedding));
+    currentEventId = event?.id;
+    if (event != null) {
+      Future.microtask(() => load(event));
     }
     return const SeatingState();
   }
 
-  Future<void> load(Wedding wedding) async {
+  Future<void> load(Event event) async {
     state = state.copyWith(loading: true);
     // As duas leituras ao mesmo tempo (2026-11-09).
     _venueTypes = const [];
     final rowsF = supabase
         .from('seating_tables')
         .select()
-        .eq('wedding_id', wedding.id)
+        .eq('wedding_id', event.id)
         .order('position', ascending: true)
         .then((r) => r);
-    final venueF = _venueTableCountFor(wedding.id);
+    final venueF = _venueTableCountFor(event.id);
     final rows = await rowsF;
     final venueTableCount = await venueF;
     state = SeatingState(
@@ -161,14 +161,14 @@ class SeatingController extends Notifier<SeatingState> {
   /// categoria "venue" para este casamento — ainda não há nenhum número
   /// real. Não-nulo (mesmo que 0) = há um local reservado; o número é a
   /// soma real de `partner_venue_tables.quantity` desse parceiro.
-  Future<int?> _venueTableCountFor(String weddingId) async {
+  Future<int?> _venueTableCountFor(String eventId) async {
     final bookingRows = await supabase
         .from('bookings')
         .select(
           'partner_id, status, '
           'partner_profiles(partner_profile_categories(partner_categories(slug)))',
         )
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .order('created_at', ascending: true);
 
     const inactiveStatuses = {
@@ -221,14 +221,14 @@ class SeatingController extends Notifier<SeatingState> {
   /// atinge [seatsPerTable] convidados; abaixo disso continua como
   /// rascunho na mesma célula.
   Future<void> saveNextTable(List<String> guestIds, {String? name, TableShape? shape}) async {
-    final weddingId = currentWeddingId;
-    if (weddingId == null || guestIds.isEmpty || state.isFull) return;
+    final eventId = currentEventId;
+    if (eventId == null || guestIds.isEmpty || state.isFull) return;
     final draft = state.nextTable;
     if (draft == null) {
       final row = await supabase
           .from('seating_tables')
           .insert({
-            'wedding_id': weddingId,
+            'wedding_id': eventId,
             'guest_ids': guestIds,
             'position': state.tables.length,
             if (name != null) 'name': name.trim().isEmpty ? null : name.trim(),

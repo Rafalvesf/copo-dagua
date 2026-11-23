@@ -30,9 +30,9 @@ import '../../../core/guest_home/event_tables.dart' show EventTable, myEventTabl
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
-import '../../../core/wedding/wedding_controller.dart';
-import '../../../core/wedding/organizers.dart';
+import '../../../core/event/date_format_pt.dart';
+import '../../../core/event/event_controller.dart';
+import '../../../core/event/organizers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -129,7 +129,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
 
   Future<void> _refresh() async {
     ref.invalidate(externalEventsProvider);
-    ref.invalidate(guestWeddingsProvider);
+    ref.invalidate(guestEventsProvider);
     ref.invalidate(publicEventsProvider);
     ref.invalidate(_pendingInvitesProvider);
     ref.invalidate(myOrganizerInvitesProvider);
@@ -144,14 +144,14 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     // Já não há contas só de convidado (2026-11-11): organizadores e
     // convidados são a mesma conta, com a mesma barra de baixo.
     final organizer = role != UserRole.partner;
-    final weddingState = ref.watch(weddingControllerProvider);
-    final myEvents = organizer ? weddingState.events : const <Wedding>[];
-    final activeId = weddingState.wedding?.id;
-    final invited = ref.watch(guestWeddingsProvider).value ?? const <GuestWedding>[];
+    final eventState = ref.watch(eventControllerProvider);
+    final myEvents = organizer ? eventState.events : const <Event>[];
+    final activeId = eventState.event?.id;
+    final invited = ref.watch(guestEventsProvider).value ?? const <GuestEvent>[];
     final publicAsync = ref.watch(publicEventsProvider);
-    final joinedIds = invited.map((w) => w.weddingId).toSet();
+    final joinedIds = invited.map((w) => w.eventId).toSet();
     final allPublic = (publicAsync.value ?? const <PublicEvent>[])
-        .where((e) => !joinedIds.contains(e.weddingId))
+        .where((e) => !joinedIds.contains(e.eventId))
         .toList();
     final publicEvents = allPublic.where(_matches).toList();
     // Eventos reais em Portugal continental (pedido 2026-11-23), os grátis
@@ -173,21 +173,21 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
       if (a == null || b == null) return 0;
       return pa ? b.compareTo(a) : a.compareTo(b);
     }
-    final own = [...myEvents]..sort((a, b) => byDate(a.weddingDate, b.weddingDate));
-    final guest = [...invited]..sort((a, b) => byDate(a.weddingDate, b.weddingDate));
+    final own = [...myEvents]..sort((a, b) => byDate(a.eventDate, b.eventDate));
+    final guest = [...invited]..sort((a, b) => byDate(a.eventDate, b.eventDate));
 
     // Uma só página (pedido 2026-11-10): criar / código, os meus eventos
     // e "Descobrir" — nunca vazia, mesmo numa conta nova.
     // Convites por responder (a pessoa está ligada a um convidado deste
     // evento e ainda não disse se vai) — 2026-11-11.
     final pendingIds = ref.watch(_pendingInvitesProvider).value ?? const <String>{};
-    final pending = [for (final w in guest) if (pendingIds.contains(w.weddingId)) w];
+    final pending = [for (final w in guest) if (pendingIds.contains(w.eventId)) w];
     // Convites para co-organizar, dirigidos a mim e por responder (migração
     // 202) — aparecem aqui, como os convites de convidado.
     final orgInvites = ref.watch(myOrganizerInvitesProvider).value ?? const <OrganizerInvite>[];
 
     final content = <Widget>[
-      if (pending.isNotEmpty) _Pad(_InviteNotice(wedding: pending.first, more: pending.length - 1)),
+      if (pending.isNotEmpty) _Pad(_InviteNotice(event: pending.first, more: pending.length - 1)),
       for (final inv in orgInvites) _Pad(_OrganizerInviteNotice(invite: inv)),
       // Igual ao mockup "Página de eventos" (2026-11-11): o cartão verde
       // com 3 tipos e "Recebeste um convite?", com ou sem eventos.
@@ -202,7 +202,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
           SnapCarousel(
             peek: true,
             itemCount: own.length,
-            itemBuilder: (context, i) => _MyEventCard(wedding: own[i], active: own[i].id == activeId),
+            itemBuilder: (context, i) => _MyEventCard(event: own[i], active: own[i].id == activeId),
           ),
         ],
         if (guest.isNotEmpty) ...[
@@ -211,7 +211,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
           SnapCarousel(
             peek: true,
             itemCount: guest.length,
-            itemBuilder: (context, i) => _InvitedEventCard(wedding: guest[i]),
+            itemBuilder: (context, i) => _InvitedEventCard(event: guest[i]),
           ),
         ],
         // Mais espaço até «Descobrir».
@@ -353,12 +353,12 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
   Future<void> _join() async {
     final e = widget.event;
     if (e.mine) {
-      await ref.read(weddingControllerProvider.notifier).select(e.weddingId);
+      await ref.read(eventControllerProvider.notifier).select(e.eventId);
       if (mounted) context.go('/evento');
       return;
     }
     if (e.joined) {
-      context.go('/guest-home/${e.weddingId}');
+      context.go('/guest-home/${e.eventId}');
       return;
     }
     // Sem lugares (migração 182).
@@ -390,10 +390,10 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
     setState(() => _busy = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      await joinPublicEvent(e.weddingId);
-      ref.invalidate(guestWeddingsProvider);
+      await joinPublicEvent(e.eventId);
+      ref.invalidate(guestEventsProvider);
       ref.invalidate(publicEventsProvider);
-      if (mounted) context.go('/guest-home/${e.weddingId}');
+      if (mounted) context.go('/guest-home/${e.eventId}');
     } catch (err) {
       messenger.showSnackBar(SnackBar(
           content: Text(isEventFull(err) ? 'Este evento está esgotado.' : 'Não foi possível entrar no evento. Tenta outra vez.')));
@@ -431,14 +431,14 @@ class _PosterCard extends StatelessWidget {
     return PhotoCard(
       onTap: onTap ?? () {},
       photo: e.coverPhotoUrl == null
-          ? _PosterPlaceholder(type: e.eventType, seed: e.weddingId.hashCode)
+          ? _PosterPlaceholder(type: e.eventType, seed: e.eventId.hashCode)
           : SizedNetworkImage(e.coverPhotoUrl!, fit: BoxFit.cover),
       leftTag: InfoTag(e.mine ? 'O teu evento' : (e.joined ? 'Vais' : e.eventType.label), green: e.mine || e.joined, onPhoto: true),
       rightTag: date == null ? null : PhotoPill('${date.day} ${_monthsShort[date.month - 1]}'),
       photoAction: busy
           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
           : null,
-      avatar: _HostAvatar(eventId: e.weddingId, fallbackName: e.displayNames),
+      avatar: _HostAvatar(eventId: e.eventId, fallbackName: e.displayNames),
       title: capFirst(e.displayNames),
       // Partilhar o evento por link (2026-11).
       titleAction: SnappyTap(
@@ -455,7 +455,7 @@ class _PosterCard extends StatelessWidget {
       ],
       // Quem confirmou (mockup «Quem vai nos eventos», D, 2026-11-22).
       footerLeft: _Attendees(
-        eventId: e.weddingId,
+        eventId: e.eventId,
         total: e.goingCount,
         // Limite (migração 182): poucos lugares ou esgotado.
         suffix: e.isFull ? 'esgotado' : ((e.spotsLeft ?? 99) <= 10 ? 'restam ${e.spotsLeft}' : null),
@@ -920,28 +920,28 @@ class _Attendees extends ConsumerWidget {
 
 /// Evento que organizo: abre o painel desse evento.
 class _MyEventCard extends ConsumerWidget {
-  final Wedding wedding;
+  final Event event;
   final bool active;
-  const _MyEventCard({required this.wedding, required this.active});
+  const _MyEventCard({required this.event, required this.active});
 
   Future<void> _open(BuildContext context, WidgetRef ref) async {
-    await ref.read(weddingControllerProvider.notifier).select(wedding.id);
+    await ref.read(eventControllerProvider.notifier).select(event.id);
     if (context.mounted) context.go('/evento');
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final place = wedding.venue?.isNotEmpty == true
-        ? wedding.venue
-        : (wedding.location?.isNotEmpty == true ? wedding.location : null);
-    final summary = ref.watch(_orgSummaryProvider(wedding.id)).value ?? const _OrgSummary();
+    final place = event.venue?.isNotEmpty == true
+        ? event.venue
+        : (event.location?.isNotEmpty == true ? event.location : null);
+    final summary = ref.watch(_orgSummaryProvider(event.id)).value ?? const _OrgSummary();
     // Só o que está na lista «Para fazer» do painel (pedido 2026-11-22 —
     // as sugestões não contam): pagamentos com prazo (o sinal logo; o
     // restante só nos 6 dias antes do prazo), propostas dos parceiros e
     // pedidos para entrar.
     final items = <(String, DateTime?, String)>[];
     for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[]) {
-      if (b.weddingId != wedding.id || b.status == BookingStatus.recusado) continue;
+      if (b.eventId != event.id || b.status == BookingStatus.recusado) continue;
       if (b.pendingDepositPaymentId != null) {
         items.add((b.depositIsFull ? 'Pagar · ${b.partnerName}' : 'Pagar o sinal · ${b.partnerName}', b.pendingDepositDueAt, 'Pagar'));
       }
@@ -950,9 +950,9 @@ class _MyEventCard extends ConsumerWidget {
       }
     }
     for (final p in ref.watch(pendingProposalsProvider).value ?? const <ReceivedProposal>[]) {
-      if (p.weddingId == wedding.id) items.add(('Proposta de ${p.partnerName}', null, 'Ver'));
+      if (p.eventId == event.id) items.add(('Proposta de ${p.partnerName}', null, 'Ver'));
     }
-    final requests = ref.watch(joinRequestsProvider(wedding.id)).value?.length ?? 0;
+    final requests = ref.watch(joinRequestsProvider(event.id)).value?.length ?? 0;
     if (requests > 0) {
       items.add(('$requests ${requests == 1 ? 'pedido para entrar' : 'pedidos para entrar'}', null, 'Aceitar'));
     }
@@ -966,7 +966,7 @@ class _MyEventCard extends ConsumerWidget {
     final dues = [for (final i in items) i.$2];
     final todo = items.length;
     final first = items.firstOrNull;
-    final tone = _toneForAll(dues, wedding.weddingDate);
+    final tone = _toneForAll(dues, event.eventDate);
     // Cartão com foto (DESIGN.md §4, 2026-11-22): sem caixa nem sombra,
     // como os parceiros, dentro da moldura. Toque longo: arquivar ou
     // apagar (185).
@@ -975,16 +975,16 @@ class _MyEventCard extends ConsumerWidget {
       filled: true,
       onTap: () => _open(context, ref),
       onLongPress: () => showEventActionsSheet(context, ref,
-          weddingId: wedding.id,
-          name: capFirst(wedding.displayNames),
-          isOwner: wedding.ownerId == ref.read(authControllerProvider).profile?.id),
-      photo: _coverImage(wedding.id, wedding.eventType, wedding.coverPhotoUrl),
+          eventId: event.id,
+          name: capFirst(event.displayNames),
+          isOwner: event.ownerId == ref.read(authControllerProvider).profile?.id),
+      photo: _coverImage(event.id, event.eventType, event.coverPhotoUrl),
       leftTag: const InfoTag('Organizas', green: true),
-      rightTag: _datePill(wedding.weddingDate),
-      avatar: _HostAvatar(eventId: wedding.id, fallbackName: wedding.displayNames),
-      title: capFirst(wedding.displayNames),
+      rightTag: _datePill(event.eventDate),
+      avatar: _HostAvatar(eventId: event.id, fallbackName: event.displayNames),
+      title: capFirst(event.displayNames),
       meta: [
-        wedding.eventType.label,
+        event.eventType.label,
         [
           ?place,
           if (summary.guests > 0) '${summary.guests} ${summary.guests == 1 ? 'convidado' : 'convidados'}',
@@ -993,12 +993,12 @@ class _MyEventCard extends ConsumerWidget {
       // Sempre as 3 fotos (pedido 2026-11-22): quem confirmou ou, sem
       // ninguém, os 3 círculos cinzentos.
       footerLeft: _Attendees(
-        eventId: wedding.id,
+        eventId: event.id,
         total: summary.confirmed,
         onWhite: true,
         emptyText: summary.guests > 0 ? 'Ninguém respondeu ainda' : 'Ainda sem convidados',
       ),
-      footerRight: _countdownBox(wedding.weddingDate),
+      footerRight: _countdownBox(event.eventDate),
       // A tarefa mais urgente com o botão da ação (2026-11-22).
       below: first != null
           ? _TaskPill(
@@ -1016,21 +1016,21 @@ class _MyEventCard extends ConsumerWidget {
 /// Evento onde sou convidado: abre a página de convidado, com os meus
 /// passos (presença, presente) e o próximo em alerta.
 class _InvitedEventCard extends ConsumerWidget {
-  final GuestWedding wedding;
-  const _InvitedEventCard({required this.wedding});
+  final GuestEvent event;
+  const _InvitedEventCard({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final place = wedding.venue?.isNotEmpty == true
-        ? wedding.venue
-        : (wedding.location?.isNotEmpty == true ? wedding.location : null);
-    final open = '/guest-home/${wedding.weddingId}';
-    final stepsAsync = ref.watch(_guestStepsProvider(wedding.weddingId));
+    final place = event.venue?.isNotEmpty == true
+        ? event.venue
+        : (event.location?.isNotEmpty == true ? event.location : null);
+    final open = '/guest-home/${event.eventId}';
+    final stepsAsync = ref.watch(_guestStepsProvider(event.eventId));
     final steps = stepsAsync.value?.steps ?? const <(String, String, bool)>[];
     final next = steps.where((s) => !s.$3).firstOrNull;
     // Mesas (cada um escolhe / cada um paga): escolher conta sempre; pagar
     // a minha parte só nos 6 dias antes do prazo; vermelho nos últimos 3.
-    final tables = ref.watch(myEventTablesProvider(wedding.weddingId)).value ?? const <EventTable>[];
+    final tables = ref.watch(myEventTablesProvider(event.eventId)).value ?? const <EventTable>[];
     final dues = <DateTime?>[
       for (final s in steps)
         if (!s.$3) null,
@@ -1038,7 +1038,7 @@ class _InvitedEventCard extends ConsumerWidget {
         if (t.needsAction && ((t.eachChooses && !t.chose) || (_daysTo(t.choiceDeadline) ?? 0) <= 6)) t.choiceDeadline,
     ];
     final todo = dues.length;
-    final tone = _toneForAll(dues, wedding.weddingDate);
+    final tone = _toneForAll(dues, event.eventDate);
     // A tarefa da pílula: responder primeiro; depois as mesas (escolher e
     // pagar); depois o presente.
     final tableTodo = tables
@@ -1051,19 +1051,19 @@ class _InvitedEventCard extends ConsumerWidget {
             : next?.$1 == 'gift'
                 ? ('Oferece um presente', 'Ver')
                 : null;
-    final going = ref.watch(eventGoingCountProvider(wedding.weddingId)).value;
+    final going = ref.watch(eventGoingCountProvider(event.eventId)).value;
     return PhotoCard(
       frameTone: todo > 0 ? tone : null,
       filled: true,
       onTap: () => context.go(open),
-      photo: _coverImage(wedding.weddingId, wedding.eventType, wedding.coverPhotoUrl),
+      photo: _coverImage(event.eventId, event.eventType, event.coverPhotoUrl),
       leftTag: const InfoTag('Convidado', onPhoto: true),
-      rightTag: _datePill(wedding.weddingDate),
-      avatar: _HostAvatar(eventId: wedding.weddingId, fallbackName: wedding.displayNames),
-      title: capFirst(wedding.displayNames),
+      rightTag: _datePill(event.eventDate),
+      avatar: _HostAvatar(eventId: event.eventId, fallbackName: event.displayNames),
+      title: capFirst(event.displayNames),
       meta: [
-        wedding.eventType.label,
-        [?place, if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!].join(' · '),
+        event.eventType.label,
+        [?place, if (event.ceremonyTime?.isNotEmpty == true) event.ceremonyTime!].join(' · '),
       ],
       // Quem vai (pedido 2026-11-22, mockup «Os meus eventos · cartões
       // brancos»): as 3 fotos, como no organizador; o que falta fazer vai
@@ -1071,12 +1071,12 @@ class _InvitedEventCard extends ConsumerWidget {
       // Sem a migração 220 conta quem se pode ver (amigos e perfis
       // públicos); os 3 círculos aparecem sempre.
       footerLeft: _Attendees(
-        eventId: wedding.weddingId,
-        total: going ?? (ref.watch(eventAttendeesProvider(wedding.weddingId)).value?.length ?? 0),
+        eventId: event.eventId,
+        total: going ?? (ref.watch(eventAttendeesProvider(event.eventId)).value?.length ?? 0),
         onWhite: true,
         emptyText: 'Ninguém confirmou ainda',
       ),
-      footerRight: _countdownBox(wedding.weddingDate),
+      footerRight: _countdownBox(event.eventDate),
       below: todo > 0 && first != null
           ? _TaskPill(tone: tone, task: first.$1, more: todo - 1, action: first.$2, onTap: () => context.go(open))
           : null,
@@ -1098,7 +1098,7 @@ enum _When {
 
 /// Partilha o link de um evento público (abre /evento/<id> na app).
 Future<void> sharePublicEvent(BuildContext context, PublicEvent e) async {
-  final link = publicLink('/evento/${e.weddingId}');
+  final link = publicLink('/evento/${e.eventId}');
   final messenger = ScaffoldMessenger.of(context);
   var shared = false;
   try {
@@ -1119,7 +1119,7 @@ class PublicEventScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(publicEventsProvider);
-    final e = async.value?.where((x) => x.weddingId == id).firstOrNull;
+    final e = async.value?.where((x) => x.eventId == id).firstOrNull;
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(top: false, 
@@ -1170,9 +1170,9 @@ final _pendingInvitesProvider = FutureProvider<Set<String>>((ref) async {
 /// "Convite por responder": quem convidou, para quê e o botão para ir
 /// confirmar.
 class _InviteNotice extends ConsumerStatefulWidget {
-  final GuestWedding wedding;
+  final GuestEvent event;
   final int more;
-  const _InviteNotice({required this.wedding, required this.more});
+  const _InviteNotice({required this.event, required this.more});
 
   @override
   ConsumerState<_InviteNotice> createState() => _InviteNoticeState();
@@ -1185,7 +1185,7 @@ class _InviteNoticeState extends ConsumerState<_InviteNotice> {
   // assistente já não perguntam (só o RSVP pelo link). «Vou» abre o painel,
   // que segue para o assistente (quem vai contigo, idades, alergias).
   Future<void> _answer(bool going) async {
-    final id = widget.wedding.weddingId;
+    final id = widget.event.eventId;
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _busy = true);
     try {
@@ -1209,17 +1209,17 @@ class _InviteNoticeState extends ConsumerState<_InviteNotice> {
 
   @override
   Widget build(BuildContext context) {
-    final wedding = widget.wedding;
+    final event = widget.event;
     final more = widget.more;
-    final two = wedding.partnerName2 != null && wedding.partnerName2!.isNotEmpty;
-    final noun = wedding.eventType.noun;
+    final two = event.partnerName2 != null && event.partnerName2!.isNotEmpty;
+    final noun = event.eventType.noun;
     final fem = noun.startsWith('festa') || noun.startsWith('comunhão') || noun.startsWith('renovação');
     final what = noun == 'evento' ? 'um evento' : '${fem ? 'a' : 'o'} $noun';
-    final date = wedding.weddingDate == null ? null : formatWeddingDateCaps(wedding.weddingDate!);
+    final date = event.eventDate == null ? null : formatEventDateCaps(event.eventDate!);
     // Mockup "Alertas" (2026-11-12): uma linha fina, branca, com
     // contorno verde que brilha uns segundos ao entrar.
     return SnappyTap(
-      onTap: () => context.go('/guest-home/${wedding.weddingId}'),
+      onTap: () => context.go('/guest-home/${event.eventId}'),
       child: AlertOutline(
         tone: AlertTone.invite,
         radius: 22,
@@ -1238,7 +1238,7 @@ class _InviteNoticeState extends ConsumerState<_InviteNotice> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               Text(more > 0 ? 'CONVITES POR RESPONDER · ${more + 1}' : 'CONVITE POR RESPONDER',
                   style: const TextStyle(fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
-              Text('${capFirst(wedding.displayNames)} ${two ? 'convidaram' : 'convidou'}-te para $what',
+              Text('${capFirst(event.displayNames)} ${two ? 'convidaram' : 'convidou'}-te para $what',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 15, height: 1.25, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -1337,10 +1337,10 @@ class MyEventsCarousel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final role = ref.watch(authControllerProvider.select((s) => s.profile?.role));
     final organizer = role != UserRole.partner;
-    final weddingState = ref.watch(weddingControllerProvider);
-    final myEvents = organizer ? weddingState.events : const <Wedding>[];
-    final activeId = weddingState.wedding?.id;
-    final invited = ref.watch(guestWeddingsProvider).value ?? const <GuestWedding>[];
+    final eventState = ref.watch(eventControllerProvider);
+    final myEvents = organizer ? eventState.events : const <Event>[];
+    final activeId = eventState.event?.id;
+    final invited = ref.watch(guestEventsProvider).value ?? const <GuestEvent>[];
     final today = DateTime.now();
     final day0 = DateTime(today.year, today.month, today.day);
     int byDate(DateTime? a, DateTime? b) {
@@ -1349,15 +1349,15 @@ class MyEventsCarousel extends ConsumerWidget {
       if (a == null || b == null) return 0;
       return pa ? b.compareTo(a) : a.compareTo(b);
     }
-    final own = [...myEvents]..sort((a, b) => byDate(a.weddingDate, b.weddingDate));
-    final guest = [...invited]..sort((a, b) => byDate(a.weddingDate, b.weddingDate));
+    final own = [...myEvents]..sort((a, b) => byDate(a.eventDate, b.eventDate));
+    final guest = [...invited]..sort((a, b) => byDate(a.eventDate, b.eventDate));
     if (own.isEmpty && guest.isEmpty) return const SizedBox.shrink();
     return SnapCarousel(
       peek: true,
       itemCount: own.length + guest.length,
       itemBuilder: (context, i) => i < own.length
-          ? _MyEventCard(wedding: own[i], active: own[i].id == activeId)
-          : _InvitedEventCard(wedding: guest[i - own.length]),
+          ? _MyEventCard(event: own[i], active: own[i].id == activeId)
+          : _InvitedEventCard(event: guest[i - own.length]),
     );
   }
 }

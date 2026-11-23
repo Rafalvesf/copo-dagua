@@ -14,8 +14,8 @@ import '../../../core/moderation/word_filter.dart';
 import '../../../core/onboarding/intro_answers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/date_format_pt.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/public_link.dart';
 import '../../../shared/widgets/first_run_tour.dart' show TourRole;
 import '../../../shared/widgets/line_icon.dart';
@@ -87,7 +87,7 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
 class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen> {
   late int _index = widget.initialStep;
   bool _saving = false;
-  Wedding? _createdWedding;
+  Event? _createdEvent;
   bool _permsDone = false;
   late bool _startAnswered = widget.newEvent || widget.initialStep > 0;
 
@@ -271,23 +271,23 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         await auth.commitSignup();
         final id = ref.read(authControllerProvider).profile?.id;
         if (id != null && id.isNotEmpty) {
-          await ref.read(weddingControllerProvider.notifier).load(id);
+          await ref.read(eventControllerProvider.notifier).load(id);
         }
         if (!mounted) return;
       }
-      final existing = widget.newEvent ? null : ref.read(weddingControllerProvider).wedding;
-      final wedding = existing ??
-          await ref.read(weddingControllerProvider.notifier).create(
+      final existing = widget.newEvent ? null : ref.read(eventControllerProvider).event;
+      final event = existing ??
+          await ref.read(eventControllerProvider.notifier).create(
                 // O nome do evento (até 40) é o nome que aparece em todo o lado.
                 partnerName1: _name.text.trim(),
-                weddingDate: _date,
+                eventDate: _date,
                 location: _location.text.trim().isEmpty ? null : _location.text.trim(),
                 estimatedGuests: _people,
                 eventType: _eventType,
               );
       if (existing == null) {
-        await ref.read(weddingControllerProvider.notifier).saveOnboardingExtras(
-              weddingId: wedding.id,
+        await ref.read(eventControllerProvider.notifier).saveOnboardingExtras(
+              eventId: event.id,
               eventTypes: [_eventType],
               otherLabel: _eventType == EventType.other ? _otherLabel.text.trim() : null,
             );
@@ -298,11 +298,11 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             'is_public': public,
             'is_paid': public && (_price ?? 0) > 0,
             'entry_price': public && (_price ?? 0) > 0 ? _price : null,
-          }).eq('id', wedding.id);
+          }).eq('id', event.id);
         } catch (_) {}
         // O máximo de pessoas é também o limite de entradas (182).
         try {
-          await setEventMaxAttendees(wedding.id, _people);
+          await setEventMaxAttendees(event.id, _people);
         } catch (_) {}
         if (ref.read(authControllerProvider).profile?.role == UserRole.guest) {
           await ref.read(authControllerProvider.notifier).becomeOrganizer();
@@ -310,10 +310,10 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       }
       if (!mounted) return;
       setState(() {
-        _createdWedding = wedding;
+        _createdEvent = event;
         _saving = false;
       });
-      if (_inviteOrganizer) _invite(wedding);
+      if (_inviteOrganizer) _invite(event);
     } on SignupFailed catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -348,11 +348,11 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
 
   /// Convidar outro organizador por link (079): menu de partilha; sem
   /// menu, copia o link.
-  Future<void> _invite(Wedding wedding) async {
+  Future<void> _invite(Event event) async {
     final messenger = ScaffoldMessenger.of(context);
     String link;
     try {
-      final token = await ref.read(weddingControllerProvider.notifier).createPartnerInviteToken(wedding.id);
+      final token = await ref.read(eventControllerProvider.notifier).createPartnerInviteToken(event.id);
       link = publicLink('/juntar/$token');
     } catch (_) {
       messenger.showSnackBar(const SnackBar(content: Text('Não foi possível criar o link de convite.')));
@@ -361,7 +361,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     var shared = false;
     try {
       final result = await SharePlus.instance.share(
-        ShareParams(text: 'Junta-te a mim para organizarmos «${wedding.displayNames}» na app À Nossa!: $link'),
+        ShareParams(text: 'Junta-te a mim para organizarmos «${event.displayNames}» na app À Nossa!: $link'),
       );
       shared = result.status != ShareResultStatus.unavailable;
     } catch (_) {}
@@ -474,7 +474,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       );
     }
 
-    final created = _createdWedding;
+    final created = _createdEvent;
     if (created != null && !_permsDone && !widget.newEvent) {
       return PermissionsStep(role: TourRole.organizer, onDone: () => setState(() => _permsDone = true));
     }

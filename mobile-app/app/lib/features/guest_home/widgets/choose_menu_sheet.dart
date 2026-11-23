@@ -71,7 +71,7 @@ class _Pick {
 ///      por quem os junta);
 ///   3. pagar (cartão, Apple Pay ou Google Pay), se houver a minha parte.
 /// O voltar de cada passo regressa ao anterior.
-Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddingId, EventTable t) async {
+Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String eventId, EventTable t) async {
   List<ServicePackage> packages;
   List<ServiceExtra> extras;
   List<MenuPerson> people;
@@ -163,7 +163,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
       if (ok == 'paidFor') {
         // «Nós pagamos por» depois da reserva: escolher, guardar e voltar a
         // carregar as pessoas (passo a escolher o menu delas).
-        final keys = await _editPaidFor(context, weddingId, paidFor);
+        final keys = await _editPaidFor(context, eventId, paidFor);
         if (keys == null || !context.mounted) continue;
         try {
           await setPaidFor(t.bookingId, keys);
@@ -183,7 +183,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
             );
           }
           picks.removeWhere((k, _) => !fresh.any((p) => p.key == k));
-          ref.invalidate(myEventTablesProvider(weddingId));
+          ref.invalidate(myEventTablesProvider(eventId));
         } catch (_) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta outra vez.')));
@@ -255,7 +255,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
       }
       return;
     }
-    ref.invalidate(myEventTablesProvider(weddingId));
+    ref.invalidate(myEventTablesProvider(eventId));
     if (!context.mounted) return;
     final paymentId = res.paymentId;
     if (paymentId == null || res.amount <= 0) {
@@ -280,7 +280,7 @@ Future<void> chooseMenuAndPay(BuildContext context, WidgetRef ref, String weddin
       // Pagamos nós: o pagamento da reserva, como no «Para fazer».
       back = await openPaymentFlow(context, ref, paymentId, step: (total, total));
     }
-    ref.invalidate(myEventTablesProvider(weddingId));
+    ref.invalidate(myEventTablesProvider(eventId));
     if (back != 'back') return;
     stage = inviteExtras.isEmpty ? 0 : 1;
   }
@@ -857,10 +857,10 @@ class _ExtrasStepState extends State<_ExtrasStep> {
 
 /// «Por quem pagamos?» a partir do popup dos menus. Devolve as chaves
 /// escolhidas, ou `null` se fechar.
-Future<List<String>?> _editPaidFor(BuildContext context, String weddingId, List<String> current) async {
+Future<List<String>?> _editPaidFor(BuildContext context, String eventId, List<String> current) async {
   List<Map<String, dynamic>> people;
   try {
-    final res = await supabase.rpc('event_people_for_paying', params: {'p_wedding_id': weddingId});
+    final res = await supabase.rpc('event_people_for_paying', params: {'p_wedding_id': eventId});
     people = [
       for (final r in (res as List? ?? const []))
         if (r is Map && r['is_organizer'] != true) Map<String, dynamic>.from(r),

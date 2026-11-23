@@ -8,7 +8,7 @@ import '../../../core/checklist/checklist_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/category_tag_color.dart';
 import '../../../shared/widgets/assignee_cluster.dart';
 import '../../partners/partner_style.dart';
@@ -44,10 +44,10 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
   final _expandedGroups = <ChecklistStatus>{};
 
   Future<void> _addTask() async {
-    final weddingId = ref
+    final eventId = ref
         .read(checklistControllerProvider.notifier)
-        .currentWeddingId;
-    if (weddingId == null) return;
+        .currentEventId;
+    if (eventId == null) return;
     final result = await _showAddTaskSheet(context);
     if (result == null) return;
     ref
@@ -55,7 +55,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
         .addItem(
           ChecklistItem(
             id: '',
-            weddingId: weddingId,
+            eventId: eventId,
             title: result.title,
             category: result.category,
             dueDate: result.dueDate,
@@ -346,12 +346,12 @@ class _AddTaskResult {
 
 /// «+» do Calendário: a mesma folha de nova tarefa da Checklist.
 Future<void> addChecklistTaskFlow(BuildContext context, WidgetRef ref) async {
-  final weddingId = ref.read(checklistControllerProvider.notifier).currentWeddingId;
-  if (weddingId == null) return;
+  final eventId = ref.read(checklistControllerProvider.notifier).currentEventId;
+  if (eventId == null) return;
   final result = await _showAddTaskSheet(context);
   if (result == null) return;
   ref.read(checklistControllerProvider.notifier).addItem(
-        ChecklistItem(id: '', weddingId: weddingId, title: result.title, category: result.category, dueDate: result.dueDate),
+        ChecklistItem(id: '', eventId: eventId, title: result.title, category: result.category, dueDate: result.dueDate),
       );
 }
 

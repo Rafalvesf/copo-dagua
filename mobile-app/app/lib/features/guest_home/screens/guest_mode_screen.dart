@@ -46,10 +46,10 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
     super.dispose();
   }
 
-  void _open(String weddingId) {
+  void _open(String eventId) {
     final router = GoRouter.of(context);
     Navigator.of(context).pop();
-    router.push('/guest-home/$weddingId');
+    router.push('/guest-home/$eventId');
   }
 
   Future<void> _join() async {
@@ -63,13 +63,13 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
       _codeError = null;
     });
     try {
-      final result = await joinWeddingByCode(code);
+      final result = await joinEventByCode(code);
       if (!mounted) return;
       _code.clear();
-      ref.invalidate(guestWeddingsProvider);
-      ref.invalidate(myGuestRowProvider(result.weddingId));
+      ref.invalidate(guestEventsProvider);
+      ref.invalidate(myGuestRowProvider(result.eventId));
       // Entra logo no evento (antes ficava na folha sem nada acontecer).
-      _open(result.weddingId);
+      _open(result.eventId);
     } catch (e) {
       if (!mounted) return;
       // Evento pago (153): com o código compra-se o bilhete e entra-se logo.

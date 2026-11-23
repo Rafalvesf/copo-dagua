@@ -8,8 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/public_link.dart';
-import '../../../core/wedding/organizers.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/organizers.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
@@ -42,9 +42,9 @@ class OrganizersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final wedding = ref.watch(weddingControllerProvider.select((s) => s.wedding));
-    final listAsync = wedding == null ? null : ref.watch(weddingOrganizersProvider(wedding.id));
-    final mine = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final event = ref.watch(eventControllerProvider.select((s) => s.event));
+    final listAsync = event == null ? null : ref.watch(eventOrganizersProvider(event.id));
+    final mine = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
     final topInset = MediaQuery.paddingOf(context).top;
 
     Widget content;
@@ -70,7 +70,7 @@ class OrganizersScreen extends ConsumerWidget {
               ],
               if (mine.isOwner) ...[
                 const SizedBox(height: 14),
-                _InviteCard(wedding: wedding!),
+                _InviteCard(event: event!),
               ],
               const SizedBox(height: 14),
               _caps('A ORGANIZAR CONTIGO · ${others.length}'),
@@ -79,7 +79,7 @@ class OrganizersScreen extends ConsumerWidget {
                 const _Message('Ainda não há mais ninguém a organizar.')
               else
                 for (final o in others) ...[
-                  _CollaboratorCard(organizer: o, editable: mine.isOwner, weddingId: wedding!.id),
+                  _CollaboratorCard(organizer: o, editable: mine.isOwner, eventId: event!.id),
                   const SizedBox(height: 12),
                 ],
             ],
@@ -227,8 +227,8 @@ class _Avatar extends StatelessWidget {
 class _CollaboratorCard extends ConsumerStatefulWidget {
   final Organizer organizer;
   final bool editable;
-  final String weddingId;
-  const _CollaboratorCard({required this.organizer, required this.editable, required this.weddingId});
+  final String eventId;
+  const _CollaboratorCard({required this.organizer, required this.editable, required this.eventId});
 
   @override
   ConsumerState<_CollaboratorCard> createState() => _CollaboratorCardState();
@@ -251,7 +251,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
     });
     try {
       await setOrganizerPermissions(id, next);
-      ref.invalidate(weddingOrganizersProvider(widget.weddingId));
+      ref.invalidate(eventOrganizersProvider(widget.eventId));
     } catch (_) {
       if (!mounted) return;
       setState(() => _local = before);
@@ -278,7 +278,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
     if (ok != true) return;
     try {
       await removeOrganizer(id);
-      ref.invalidate(weddingOrganizersProvider(widget.weddingId));
+      ref.invalidate(eventOrganizersProvider(widget.eventId));
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível retirar. Tenta outra vez.')));
@@ -460,7 +460,7 @@ class PermissionGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
     if (perms.can(perm)) return child;
     return GradientScaffold(
       background: AppBackground.subtle,
@@ -496,8 +496,8 @@ class PermissionGate extends ConsumerWidget {
 /// Convidar por link: um link por pessoa (o par, um wedding planner, a
 /// família…); quem o abre fica a organizar (migração 079/159).
 class _InviteCard extends ConsumerStatefulWidget {
-  final Wedding wedding;
-  const _InviteCard({required this.wedding});
+  final Event event;
+  const _InviteCard({required this.event});
   @override
   ConsumerState<_InviteCard> createState() => _InviteCardState();
 }
@@ -509,7 +509,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
   Future<void> _inviteFriend(InviteCandidate c) async {
     setState(() => _invited.add(c.id));
     try {
-      await inviteOrganizer(widget.wedding.id, c.id);
+      await inviteOrganizer(widget.event.id, c.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Convite enviado a ${c.name}.')));
       }
@@ -523,7 +523,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
 
   Future<String?> _link() async {
     try {
-      final token = await ref.read(weddingControllerProvider.notifier).createPartnerInviteToken(widget.wedding.id);
+      final token = await ref.read(eventControllerProvider.notifier).createPartnerInviteToken(widget.event.id);
       return publicLink('/juntar/$token');
     } catch (_) {
       if (mounted) {
@@ -557,7 +557,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
 
   @override
   Widget build(BuildContext context) {
-    final candidates = ref.watch(organizerInviteCandidatesProvider(widget.wedding.id)).value ?? const <InviteCandidate>[];
+    final candidates = ref.watch(organizerInviteCandidatesProvider(widget.event.id)).value ?? const <InviteCandidate>[];
     final hasFriends = candidates.isNotEmpty;
     return Container(
       decoration: _card(),

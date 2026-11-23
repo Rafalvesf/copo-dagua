@@ -81,11 +81,11 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
   /// vais?, quem vai contigo, idades, menu, alergias, de quem és
   /// convidado e a relação — gravado pelo `rsvp_token`.
   Future<void> _answer(Map<String, dynamic> d) async {
-    final weddingId = (d['wedding_id'] as String?) ?? '';
+    final eventId = (d['wedding_id'] as String?) ?? '';
     final max = (d['max_companions'] as num?)?.toInt() ?? ((d['plus_one_allowed'] as bool? ?? false) ? 1 : 0);
     final guest = Guest(
       id: (d['guest_id'] as String?) ?? '',
-      weddingId: weddingId,
+      eventId: eventId,
       name: (d['guest_name'] as String?) ?? '',
       maxCompanions: max,
       plusOneAllowed: max > 0,
@@ -101,11 +101,11 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
       dietaryRestrictions: d['dietary_restrictions'] as String?,
       rsvpToken: widget.token,
     );
-    final event = GuestWedding(
-      weddingId: weddingId,
+    final event = GuestEvent(
+      eventId: eventId,
       partnerName1: (d['wedding_partner_name_1'] as String?) ?? '',
       partnerName2: d['wedding_partner_name_2'] as String?,
-      weddingDate: d['wedding_date'] == null ? null : DateTime.tryParse(d['wedding_date'] as String),
+      eventDate: d['wedding_date'] == null ? null : DateTime.tryParse(d['wedding_date'] as String),
       venue: d['venue'] as String?,
       location: (d['location'] as String?) ?? d['wedding_location'] as String?,
       ceremonyTime: d['ceremony_time'] as String?,
@@ -128,7 +128,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
     final nav = Navigator.of(context);
     await nav.push(MaterialPageRoute<void>(
       builder: (route) => GuestOnboardingWizardScreen(
-        weddingId: weddingId,
+        eventId: eventId,
         guest: guest,
         rsvpToken: widget.token,
         event: event,
@@ -192,14 +192,14 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
             final coupleNames = (name2 == null || name2.isEmpty)
                 ? (name1 ?? '')
                 : '$name1 & $name2';
-            final weddingDate = data['wedding_date'] as String?;
+            final eventDate = data['wedding_date'] as String?;
             final location = data['wedding_location'] as String?;
             final guestName = data['guest_name'] as String?;
             
             // Convite "de papel" (pedido 2026-10-17: "faz um mais bonito
             // para casamentos"): cartão branco com moldura fina, nomes em
             // letra de título, ornamento e a data por extenso.
-            final date = weddingDate == null ? null : DateTime.tryParse(weddingDate);
+            final date = eventDate == null ? null : DateTime.tryParse(eventDate);
             final first = (guestName ?? '').trim().split(' ').first;
             final isCouple = (name2 ?? '').trim().isNotEmpty;
             const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
