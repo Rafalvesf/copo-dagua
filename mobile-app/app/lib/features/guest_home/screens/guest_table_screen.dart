@@ -12,6 +12,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// "A tua mesa" — pedido explícito do utilizador (mockup de
 /// referência), aberto a partir da linha "A tua mesa" em
@@ -61,7 +62,7 @@ class GuestTableScreen extends ConsumerWidget {
             const PageHeader(title: 'A tua mesa', centered: true)
  ],
  body: rosterAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const SkeletonList(),
                 error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myTableRosterProvider(eventId))),
                 data: (roster) {
                   if (roster.isEmpty) {

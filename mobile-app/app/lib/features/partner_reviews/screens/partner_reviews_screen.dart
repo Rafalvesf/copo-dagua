@@ -14,6 +14,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 class PartnerReviewsScreen extends ConsumerWidget {
   const PartnerReviewsScreen({super.key});
@@ -103,7 +104,7 @@ class PartnerReviewsScreen extends ConsumerWidget {
             const SizedBox(height: 12)
  ],
  body: reviewsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const SkeletonList(),
                 error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerReviewsProvider)),
                 data: (reviews) => ListView(
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 32),

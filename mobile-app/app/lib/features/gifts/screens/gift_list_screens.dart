@@ -21,6 +21,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show softCard;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import '../../../shared/widgets/address_picker.dart' show AddressField;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Lista de presentes (migração 160).
 ///  • Organizador: desejos (bloco de notas do que precisa) e produtos da
@@ -40,7 +41,7 @@ Widget _photo(String? url, {double size = 56}) => ClipRRect(
               child: Icon(Hi.gift, color: _green),
             )
           : Image.network(url, width: size, height: size, fit: BoxFit.cover, cacheWidth: (size * 3).round(),
-              errorBuilder: (_, e, s) => Container(width: size, height: size, color: AppTheme.accentTint)),
+              errorBuilder: (_, e, s) => Container(width: size, height: size, color: AppTheme.accentTint), frameBuilder: skeletonImageFrame),
     );
 
 String _progress(GiftItem i) => i.wanted == 1
@@ -69,7 +70,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
     return GradientScaffold(
       background: AppBackground.feed,
       body: listAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonList(),
         error: (e, s) => const _Info('Não foi possível carregar a lista.'),
         data: (items) {
           if (items == null) return const _Info('Falta correr a migração 160 na página Migrações do admin.');
@@ -507,7 +508,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
           if (p.photoUrl != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(18),
-              child: AspectRatio(aspectRatio: 4 / 3, child: Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 1100, semanticLabel: p.title)),
+              child: AspectRatio(aspectRatio: 4 / 3, child: Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 1100, semanticLabel: p.title, frameBuilder: skeletonImageFrame, errorBuilder: skeletonImageError)),
             ),
           const SizedBox(height: 14),
           Text(p.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
@@ -613,7 +614,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
       ),
       Expanded(
         child: products.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SkeletonList(),
           error: (e, s) => const _Info('Não foi possível carregar a loja.'),
           data: (items) => items.isEmpty
               ? const _Info('Ainda não há produtos. Os parceiros juntam-nos na sua Loja.')
@@ -699,7 +700,7 @@ class _ProductRow extends StatelessWidget {
               height: 76,
               child: p.photoUrl == null
                   ? Container(color: AppTheme.accentTint, child: Icon(Hi.gift, color: _green))
-                  : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, semanticLabel: p.title, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
+                  : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, semanticLabel: p.title, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint), frameBuilder: skeletonImageFrame),
             ),
           ),
           const SizedBox(width: 12),
@@ -754,7 +755,7 @@ class _FeaturedProductCard extends StatelessWidget {
       onTap: onTap,
       image: p.photoUrl == null
           ? Container(color: AppTheme.accentTint, child: Icon(Hi.gift, size: 40, color: _green))
-          : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, semanticLabel: p.title, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint)),
+          : Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 700, semanticLabel: p.title, errorBuilder: (_, e, s) => Container(color: AppTheme.accentTint), frameBuilder: skeletonImageFrame),
       badge: added
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

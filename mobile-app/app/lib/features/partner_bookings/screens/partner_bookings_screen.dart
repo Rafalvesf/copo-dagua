@@ -16,6 +16,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 enum _BookingSegment { recebidos, confirmados, concluidos }
 
@@ -94,7 +95,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                   ),
               ]),
               ...bookingsAsync.when<List<Widget>>(
-                loading: () => const [Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator()))],
+                loading: () => const [Padding(padding: EdgeInsets.only(top: 60), child: SkeletonList())],
                 error: (err, st) => [AsyncErrorView(onRetry: () => ref.invalidate(partnerBookingsProvider(null)))],
                 data: (allBookings) {
                   final bookings = allBookings.where(_matches).toList();

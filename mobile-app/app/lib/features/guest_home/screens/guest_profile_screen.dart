@@ -21,6 +21,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/page_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
 /// referência): o próprio convidado a ver/editar a sua presença
@@ -59,7 +60,7 @@ class GuestProfileScreen extends ConsumerWidget {
                 // título subia, tal como em `gallery_screen.dart`).
  ],
  body: eventsAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => const SkeletonList(),
                     error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestEventsProvider)),
                     data: (events) {
                       if (events.isEmpty || profile == null) {
@@ -168,7 +169,7 @@ class _GuestProfileBody extends ConsumerWidget {
     final tableAsync = ref.watch(mySeatingTableProvider(eventId));
 
     return guestAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonList(),
       error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myGuestRowProvider(eventId))),
       data: (guest) {
         final companions = guest == null

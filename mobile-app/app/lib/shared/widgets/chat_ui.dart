@@ -9,6 +9,7 @@ import '../money.dart';
 import 'snappy_tap.dart';
 import 'dense_card.dart' show PriceBox;
 import 'v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Peças da conversa exatamente como no design (canvas "Conversa"):
 /// bolhas com o canto do lado de quem fala mais fechado, separador de
@@ -225,7 +226,7 @@ class ChatProposalCard extends StatelessWidget {
               child: Stack(fit: StackFit.expand, children: [
                 imageUrl == null
                     ? Container(color: const Color(0xFFE7D9C3))
-                    : Image.network(imageUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => Container(color: const Color(0xFFE7D9C3))),
+                    : Image.network(imageUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => Container(color: const Color(0xFFE7D9C3)), frameBuilder: skeletonImageFrame),
                 Positioned(
                   left: 12,
                   top: 12,

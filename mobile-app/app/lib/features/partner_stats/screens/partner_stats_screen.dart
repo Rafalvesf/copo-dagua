@@ -15,6 +15,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 const _monthsShort = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
@@ -71,8 +72,8 @@ class _PartnerStatsScreenState extends ConsumerState<PartnerStatsScreen> {
             ),
             async.when(
               loading: () => const Padding(
-                padding: EdgeInsets.all(48),
-                child: Center(child: CircularProgressIndicator()),
+                padding: EdgeInsets.all(AppTheme.screenMargin),
+                child: Column(children: [SkeletonStats(), SizedBox(height: 12), SkeletonStats(), SizedBox(height: 20), SkeletonBox(height: 180)]),
               ),
               error: (err, st) => Padding(
                 padding: const EdgeInsets.only(top: 32),

@@ -17,6 +17,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../core/exports/exports.dart' show bookingRef;
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Um contrato = uma reserva com a proposta que o casal aceitou: o que
 /// foi combinado (título, descrição, condições), o valor e o estado dos
@@ -121,7 +122,7 @@ class PartnerContractsScreen extends ConsumerWidget {
             const PageHeader(title: 'Contratos', centered: true)
  ],
  body: async.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const SkeletonList(),
                 error: (e, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerContractsProvider)),
                 data: (list) => list.isEmpty
                     ? const _Empty()

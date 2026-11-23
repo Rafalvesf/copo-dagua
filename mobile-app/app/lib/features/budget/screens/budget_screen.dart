@@ -37,6 +37,7 @@ import '../../../core/event/event_controller.dart';
 import '../../../core/budget/all_budgets.dart';
 import '../../../shared/widgets/event_pills.dart';
 import '../../../shared/text_case.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 enum _BudgetFilter { all, paid, pending }
 
@@ -440,7 +441,7 @@ class _BookedPartnerCard extends StatelessWidget {
                 child: partner.photoUrl == null
                     ? ColoredBox(color: Colors.white, child: Icon(Hi.buildingStorefront, color: green))
                     : Image.network(partner.photoUrl!, fit: BoxFit.cover, cacheWidth: 144,
-                        errorBuilder: (_, __, ___) => ColoredBox(color: Colors.white, child: Icon(Hi.buildingStorefront, color: green))),
+                        errorBuilder: (_, __, ___) => ColoredBox(color: Colors.white, child: Icon(Hi.buildingStorefront, color: green)), frameBuilder: skeletonImageFrame),
               ),
             ),
             const SizedBox(width: 12),
@@ -808,7 +809,7 @@ class _AllEventsBudget extends ConsumerWidget {
     final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
     double fee(double v, double total) => amountWithCommission(v, orgFee.effectivePct(total));
     return lines.when(
-      loading: () => const Padding(padding: EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator())),
+      loading: () => const Padding(padding: EdgeInsets.only(top: 40), child: SkeletonList()),
       error: (_, _) => FrameEmpty(
         title: 'Não foi possível carregar',
         text: 'Verifica a ligação e tenta outra vez.',

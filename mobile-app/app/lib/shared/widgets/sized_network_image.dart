@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import 'skeleton.dart';
+
 /// Fotos da internet descodificadas no tamanho em que aparecem no ecrã
 /// (pedido 2026-10-25: "limita o tamanho de cada foto ao tamanho em que
 /// aparece no ecrã"). Sem isto, uma foto de 4000 px mostrada como
@@ -56,15 +58,20 @@ class SizedNetworkImage extends StatelessWidget {
     final screen = MediaQuery.sizeOf(context);
     Widget image(Size box) {
       final s = decodeSizeFor(box, dpr);
+      // 2026-11-23 («aparece uma imagem incorreta»): sem `gaplessPlayback`
+      // e com a chave no URL — antes, quando um cartão passava a mostrar
+      // outro evento, ficava a foto antiga até a nova chegar. Agora fica o
+      // esqueleto a pulsar e a foto certa entra com um fade.
       return Image(
+        key: ValueKey(url),
         image: ResizeImage(NetworkImage(url), width: s, height: s, policy: ResizeImagePolicy.fit),
         width: width,
         height: height,
         fit: fit,
         alignment: alignment,
+        frameBuilder: loadingBuilder == null ? skeletonImageFrame : null,
         loadingBuilder: loadingBuilder,
-        errorBuilder: errorBuilder,
-        gaplessPlayback: true,
+        errorBuilder: errorBuilder ?? skeletonImageError,
         semanticLabel: semanticLabel,
         excludeFromSemantics: semanticLabel == null,
       );

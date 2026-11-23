@@ -12,6 +12,7 @@ import '../../../core/event/organizers.dart';
 import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Uma só sombra dos cartões em destaque (DESIGN.md §5).
 const _soft = [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))];
@@ -52,7 +53,7 @@ class OrganizersScreen extends ConsumerWidget {
       content = const SizedBox.shrink();
     } else {
       content = listAsync.when(
-        loading: () => const Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator())),
+        loading: () => const Padding(padding: EdgeInsets.only(top: 60), child: SkeletonList()),
         error: (e, s) => const _Message('Não foi possível carregar os organizadores.'),
         data: (list) {
           if (list == null) {
