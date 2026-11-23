@@ -23,6 +23,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/events/events_providers.dart';
+import '../../../core/events/external_events.dart';
+import 'external_event_screen.dart' show ExternalEventPhoto, externalEventPrice, externalEventWhen;
 import '../../../core/home/home_providers.dart' show coupleBookingsProvider, pendingProposalsProvider;
 import '../../../core/guest_home/event_tables.dart' show EventTable, myEventTablesProvider;
 import '../../../core/guest_home/guest_home_providers.dart';
@@ -99,7 +101,34 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   }
 
 
+  /// Eventos reais (migração 222): os mesmos filtros do Descobrir. Um
+  /// evento de vários dias conta enquanto não acabar.
+  bool _matchesReal(ExternalEvent e) {
+    if (_free && !e.isFree) return false;
+    final q = _search.text.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      final hay = [e.title, e.venue ?? '', e.city, e.district ?? '', e.categoryLabel].join(' ').toLowerCase();
+      if (!q.split(RegExp(r'\s+')).every(hay.contains)) return false;
+    }
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final from = e.startsOn.isBefore(today) ? today : e.startsOn;
+    final to = e.lastDay;
+    bool overlaps(DateTime a, DateTime b) => !to.isBefore(a) && !from.isAfter(b);
+    switch (_when) {
+      case _When.any:
+        return true;
+      case _When.week:
+        return overlaps(today, today.add(Duration(days: 7 - today.weekday)));
+      case _When.month:
+        return overlaps(today, DateTime(now.year, now.month + 1, 0));
+      case _When.next30:
+        return overlaps(today, today.add(const Duration(days: 29)));
+    }
+  }
+
   Future<void> _refresh() async {
+    ref.invalidate(externalEventsProvider);
     ref.invalidate(guestWeddingsProvider);
     ref.invalidate(publicEventsProvider);
     ref.invalidate(_pendingInvitesProvider);
@@ -125,6 +154,13 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         .where((e) => !joinedIds.contains(e.weddingId))
         .toList();
     final publicEvents = allPublic.where(_matches).toList();
+    // Eventos reais em Portugal continental (pedido 2026-11-23), os grátis
+    // primeiro em cada dia.
+    final realEvents = (ref.watch(externalEventsProvider).value ?? const <ExternalEvent>[]).where(_matchesReal).toList()
+      ..sort((a, b) {
+        final c = a.startsOn.compareTo(b.startsOn);
+        return c != 0 ? c : (a.isFree == b.isFree ? 0 : (a.isFree ? -1 : 1));
+      });
     final filtering = _search.text.trim().isNotEmpty || _when != _When.any || _free;
     final hasMine = myEvents.isNotEmpty || invited.isNotEmpty;
 
@@ -208,12 +244,24 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         ),
       ),
       const SizedBox(height: 18),
+      if (realEvents.isNotEmpty) ...[
+        _RowLabel('Em Portugal', realEvents.length),
+        SnapCarousel(
+          peek: true,
+          itemCount: realEvents.length,
+          itemBuilder: (context, i) => _RealEventCard(event: realEvents[i]),
+        ),
+        const SizedBox(height: 16),
+        if (publicEvents.isNotEmpty) _RowLabel('Na À Nossa!', publicEvents.length),
+      ],
       if (publicAsync.isLoading && publicAsync.value == null)
         const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
       else if (publicEvents.isEmpty)
         _Pad(_EmptyNote(filtering
             ? 'Nenhum evento público com estes filtros.'
-            : 'Ainda não há eventos abertos. Cria o teu e abre-o a todos: aparece aqui para quem procura.'))
+            : realEvents.isNotEmpty
+                ? 'Ainda não há eventos abertos na À Nossa!. Cria o teu e abre-o a todos: aparece aqui para quem procura.'
+                : 'Ainda não há eventos abertos. Cria o teu e abre-o a todos: aparece aqui para quem procura.'))
       else
         // Cartões empilhados: linha grossa (2 px #CFCFCF) entre eles
         // (pedido 2026-11-22; só nas listas na vertical, não nos carrosséis).
@@ -413,6 +461,32 @@ class _PosterCard extends StatelessWidget {
         suffix: e.isFull ? 'esgotado' : ((e.spotsLeft ?? 99) <= 10 ? 'restam ${e.spotsLeft}' : null),
       ),
       footerRight: PriceBox('ENTRADA', price, outlined: true),
+    );
+  }
+}
+
+/// Evento real (migração 222) no Descobrir: o mesmo cartão com foto, a
+/// categoria e o dia por cima, a cidade e a entrada (Grátis / DESDE / Paga).
+class _RealEventCard extends StatelessWidget {
+  final ExternalEvent event;
+  const _RealEventCard({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final e = event;
+    final (label, value) = externalEventPrice(e);
+    return PhotoCard(
+      onTap: () => context.push('/evento-real/${e.id}'),
+      photo: ExternalEventPhoto(e),
+      leftTag: InfoTag(e.categoryLabel, onPhoto: true),
+      rightTag: PhotoPill('${e.startsOn.day} ${_monthsShort[e.startsOn.month - 1]}'),
+      title: e.title,
+      meta: [
+        [externalEventWhen(e), ?e.timeLabel].join(' · '),
+        [?e.venue, e.city].join(' · '),
+      ],
+      footerLeft: InfoTag(e.isFree ? 'Grátis' : 'Bilhetes no site', green: e.isFree),
+      footerRight: PriceBox(label, value, outlined: true),
     );
   }
 }
