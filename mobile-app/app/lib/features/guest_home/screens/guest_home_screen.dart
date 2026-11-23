@@ -459,7 +459,8 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           title: wedding.displayNames,
           meta: date == null ? '' : formatShortDatePt(date),
           actions: [
-            if (groupOn) ReducedTopAction(Hi.chatBubbleOvalLeft, label: 'Grupo do evento', onTap: openGroup),
+            if (groupOn) ReducedTopAction(Hi.chatBubbleOvalLeft, label: 'Grupo do evento', onTap: openGroup, count: unread),
+            if (hasPlace && !declined && !isPast) ReducedTopAction(Hi.mapPin, label: 'Como chegar', onTap: goToPlace),
           ],
           sections: [
             ('Para fazer', _todoKey),

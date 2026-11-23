@@ -4,6 +4,8 @@ import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import 'chat_delete.dart';
 import '../wedding/wedding_controller.dart';
+import '../auth/auth_controller.dart';
+import '../live_refresh.dart';
 
 class ChatListState {
   final bool loading;
@@ -177,42 +179,75 @@ class ChatListController extends Notifier<ChatListState> {
 /// vez de derivar de [chatListControllerProvider]) porque a navbar
 /// aparece em ecrãs que não montam a lista de conversas.
 final unreadMessagesCountProvider = FutureProvider<int>((ref) async {
-  final weddingId = ref.watch(
-    weddingControllerProvider.select((s) => s.wedding?.id),
-  );
-  if (weddingId == null) return 0;
-
-  final rows = await supabase
-      .from('conversations')
-      .select('id, couple_last_read_at')
-      .eq('wedding_id', weddingId);
-  final conversations = (rows as List).cast<Map<String, dynamic>>();
-  if (conversations.isEmpty) return 0;
-
-  final lastReadByConversation = <String, DateTime?>{
-    for (final row in conversations)
-      row['id'] as String: (row['couple_last_read_at'] as String?) == null
-          ? null
-          : DateTime.parse(row['couple_last_read_at'] as String),
-  };
-
-  final messageRows = await supabase
-      .from('messages')
-      .select('conversation_id, created_at')
-      .inFilter(
-        'conversation_id',
-        conversations.map((r) => r['id'] as String).toList(),
-      )
-      .eq('sender_role', 'partner');
-
+  // Todas as conversas com parceiros dos eventos que organizo (antes só o
+  // evento aberto) e os grupos (convidados: antes ficava sempre a 0), e
+  // volta a ler-se sozinho (pedido 2026-11-23: «por vezes nem aparece»).
+  keepFresh(ref);
+  final me = ref.watch(authControllerProvider.select((s) => s.profile?.id));
+  if (me == null) return 0;
+  final events = ref.watch(weddingControllerProvider.select((s) => {
+        for (final e in s.events) e.id,
+        if (s.wedding != null) s.wedding!.id,
+      }.join(',')));
   var total = 0;
-  for (final row in (messageRows as List).cast<Map<String, dynamic>>()) {
-    final lastRead = lastReadByConversation[row['conversation_id'] as String];
-    final createdAt = DateTime.parse(row['created_at'] as String);
-    if (lastRead == null || createdAt.isAfter(lastRead)) total++;
+  if (events.isNotEmpty) {
+    try {
+      final rows = await supabase
+          .from('conversations')
+          .select('id, couple_last_read_at')
+          .inFilter('wedding_id', events.split(','));
+      final conversations = (rows as List).cast<Map<String, dynamic>>();
+      if (conversations.isNotEmpty) {
+        final lastRead = <String, DateTime?>{
+          for (final row in conversations)
+            row['id'] as String: DateTime.tryParse(row['couple_last_read_at'] as String? ?? ''),
+        };
+        final messageRows = await supabase
+            .from('messages')
+            .select('conversation_id, created_at')
+            .inFilter('conversation_id', lastRead.keys.toList())
+            .eq('sender_role', 'partner')
+            .order('created_at', ascending: false)
+            .limit(500);
+        for (final row in (messageRows as List).cast<Map<String, dynamic>>()) {
+          final read = lastRead[row['conversation_id'] as String];
+          final at = DateTime.parse(row['created_at'] as String);
+          if (read == null || at.isAfter(read)) total++;
+        }
+      }
+    } catch (_) {}
   }
+  total += await groupUnreadTotal(me);
   return total;
 });
+
+/// Mensagens por ler em todos os grupos de que sou membro.
+Future<int> groupUnreadTotal(String me) async {
+  try {
+    final rows = await supabase.from('chat_group_members').select('group_id, last_read_at').eq('profile_id', me);
+    final members = (rows as List).cast<Map<String, dynamic>>();
+    if (members.isEmpty) return 0;
+    final read = <String, DateTime?>{
+      for (final m in members) m['group_id'] as String: DateTime.tryParse(m['last_read_at'] as String? ?? ''),
+    };
+    final msgs = await supabase
+        .from('chat_group_messages')
+        .select('group_id, created_at')
+        .inFilter('group_id', read.keys.toList())
+        .neq('sender_id', me)
+        .order('created_at', ascending: false)
+        .limit(500);
+    var n = 0;
+    for (final r in (msgs as List).cast<Map<String, dynamic>>()) {
+      final since = read[r['group_id'] as String];
+      final at = DateTime.parse(r['created_at'] as String);
+      if (since == null || at.isAfter(since)) n++;
+    }
+    return n;
+  } catch (_) {
+    return 0;
+  }
+}
 
 final chatListControllerProvider =
     NotifierProvider<ChatListController, ChatListState>(ChatListController.new);

@@ -8,6 +8,7 @@ import '../../../shared/public_link.dart';
 import '../../events/screens/eventos_screen.dart' show MyEventsCarousel;
 import '../../profile/profile_widgets.dart';
 import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
+import 'package:copo_dagua_app/shared/widgets/count_badge.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -147,28 +148,16 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             ),
                             if (wedding != null)
-                              Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  TourAnchor(
-                                    id: 'bell',
-                                    child: _RoundIcon(
-                                      icon: const Icon(Hi.bell, size: 20, color: Colors.white),
-                                      tip: 'Notificações',
-                                      onTap: () => _openNotifications(context),
-                                    ),
+                              WithCount(
+                                count: unreadNotifications,
+                                child: TourAnchor(
+                                  id: 'bell',
+                                  child: _RoundIcon(
+                                    icon: const Icon(Hi.bell, size: 20, color: Colors.white),
+                                    tip: 'Notificações',
+                                    onTap: () => _openNotifications(context),
                                   ),
-                                  if (unreadNotifications > 0)
-                                    Positioned(
-                                      top: 9,
-                                      right: 10,
-                                      child: Container(
-                                        width: 9,
-                                        height: 9,
-                                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                      ),
-                                    ),
-                                ],
+                                ),
                               )
                             else
                               const PartnerNotificationBell(round: true),

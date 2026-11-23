@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../live_refresh.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -366,6 +367,7 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
 /// padrão de `unreadMessagesCountProvider` (`core/chat/chat_list_controller.dart`)
 /// do lado do casal. Pedido explícito do utilizador (2026-09-05).
 final partnerUnreadMessagesCountProvider = FutureProvider<int>((ref) async {
+  keepFresh(ref);
   final partnerId = _partnerId(ref);
   final rows = await supabase
       .from('conversations')

@@ -1077,22 +1077,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               },
             ),
           ),
-          // Atalhos para as secções, por baixo do topo reduzido (D).
-          Positioned(
-            left: 0,
-            right: 0,
-            top: topPad + 68,
-            child: _SectionTabs(
-              scroll: _scroll,
-              topPad: topPad,
-              sections: [
-                if (packages.isNotEmpty) (menusOnly ? 'Menus' : 'Pacotes', _packagesKey),
-                if (portfolioPhotos.isNotEmpty) ('Portfólio', _portfolioKey),
-                if (partner.location.isNotEmpty) ('Onde fica', _mapKey),
-                ('Avaliações', _reviewsKey),
-              ],
-            ),
-          ),
+          // Sem os atalhos para as secções por baixo do topo reduzido
+          // (pedido 2026-11-23).
           // Barra fixa: a largura das caixas de conteúdo e os cantos da navbar.
           Positioned(
             left: AppTheme.screenMargin,
@@ -1895,18 +1881,14 @@ class _PartnerHero extends StatelessWidget {
                         ),
                       ),
                   ] else ...[
-                    // Reduzida, fica só o favorito (D).
-                    if (mini < 0.5) ...[
-                      const SizedBox(width: 10),
-                      Opacity(
-                        opacity: 1 - mini * 2,
-                        child: _GlassButton(
-                          icon: const Icon(Hi.arrowUpOnSquare, size: 20, color: Colors.white),
-                          label: 'Partilhar',
-                          onTap: onShare,
-                        ),
-                      ),
-                    ],
+                    // Reduzida, ficam os mesmos botões do topo (pedido
+                    // 2026-11-23): partilhar e favorito.
+                    const SizedBox(width: 10),
+                    _GlassButton(
+                      icon: const Icon(Hi.arrowUpOnSquare, size: 20, color: Colors.white),
+                      label: 'Partilhar',
+                      onTap: onShare,
+                    ),
                     const SizedBox(width: 10),
                     _GlassButton(
                       icon: Icon(favorited ? Hi.heart : Hi.heartOutline, size: 20, color: Colors.white),
@@ -2203,84 +2185,5 @@ class _BottomBar extends StatelessWidget {
             ),
           ),
         ]),
-      );
-}
-
-
-/// Atalhos para as secções da página do parceiro (mockup «Topo reduzido», D,
-/// 2026-11-22): aparecem com o topo reduzido; pílulas 32 brancas, a da
-/// secção onde estás a preto. Tocar leva à secção.
-class _SectionTabs extends StatelessWidget {
-  final ScrollController scroll;
-  final double topPad;
-  final List<(String, GlobalKey)> sections;
-  const _SectionTabs({required this.scroll, required this.topPad, required this.sections});
-
-  double? _top(GlobalKey k) {
-    final box = k.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.attached || !box.hasSize) return null;
-    try {
-      return box.localToGlobal(Offset.zero).dy;
-    } catch (_) {
-      // Ainda sem layout (p. ex. ao rodar o telemóvel): ignora (Sentry COPO-DAGUA-D).
-      return null;
-    }
-  }
-
-  void _go(GlobalKey k) {
-    final top = _top(k);
-    if (top == null || !scroll.hasClients) return;
-    final line = topPad + 68 + 10 + 32 + 8;
-    final target = (scroll.offset + top - line).clamp(0.0, scroll.position.maxScrollExtent);
-    scroll.animateTo(target, duration: const Duration(milliseconds: 450), curve: Curves.easeOutCubic);
-  }
-
-  @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-        animation: scroll,
-        builder: (context, _) {
-          final y = scroll.hasClients ? math.max(0.0, scroll.offset) : 0.0;
-          final range = math.max(1.0, _kHeroHeight - (topPad + 68));
-          final show = ((y - range + 50) / 50).clamp(0.0, 1.0).toDouble();
-          if (show <= 0 || sections.isEmpty) return const SizedBox.shrink();
-          // A secção ativa: a última cujo título já passou a linha dos atalhos.
-          final line = topPad + 68 + 10 + 32 + 24;
-          var active = 0;
-          for (var i = 0; i < sections.length; i++) {
-            final t = _top(sections[i].$2);
-            if (t != null && t <= line) active = i;
-          }
-          // Fundo da página por trás dos atalhos, para o conteúdo não se ver
-          // a passar entre as pílulas.
-          return Opacity(
-            opacity: show,
-            child: Container(
-              color: AppTheme.background,
-              padding: const EdgeInsets.only(top: 10, bottom: 8),
-              height: 50,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                itemCount: sections.length,
-                separatorBuilder: (context, i) => const SizedBox(width: 6),
-                itemBuilder: (context, i) {
-                  final on = i == active;
-                  return SnappyTap(
-                    onTap: () => _go(sections[i].$2),
-                    semanticLabel: sections[i].$1,
-                    child: Container(
-                      height: 32,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(color: on ? AppTheme.ink : Colors.white, borderRadius: BorderRadius.circular(16)),
-                      child: Text(sections[i].$1,
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        },
       );
 }

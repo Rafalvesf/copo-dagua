@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
+import 'count_badge.dart';
 import 'scroll_aware_back_button.dart' show SafeScrollOffset;
 
 /// Topo reduzido (mockup «Topo reduzido», D, dos parceiros — aplicado aos
@@ -151,17 +152,23 @@ class ReducedTopAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const ReducedTopAction(this.icon, {super.key, required this.label, required this.onTap});
+
+  /// Contador por cima (§2), p. ex. mensagens por ler no grupo.
+  final int count;
+  const ReducedTopAction(this.icon, {super.key, required this.label, required this.onTap, this.count = 0});
 
   @override
   Widget build(BuildContext context) => SnappyTap(
         onTap: onTap,
         semanticLabel: label,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-          child: Icon(icon, size: 20, color: Colors.white),
+        child: WithCount(
+          count: count,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+            child: Icon(icon, size: 20, color: Colors.white),
+          ),
         ),
       );
 }

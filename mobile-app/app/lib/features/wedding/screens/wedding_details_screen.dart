@@ -249,6 +249,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
               if (wedding.weddingDate != null) formatShortDatePt(wedding.weddingDate!),
             ].join(' · '),
             actions: [
+              ReducedTopAction(Hi.arrowUpOnSquare, label: 'Partilhar o convite', onTap: () => shareWeddingInvite(context, wedding)),
               ReducedTopAction(Hi.ellipsisHorizontal, label: 'Mais opções', onTap: () => showEventActionsSheet(context, ref,
                   weddingId: wedding.id,
                   name: capFirst(wedding.displayNames),

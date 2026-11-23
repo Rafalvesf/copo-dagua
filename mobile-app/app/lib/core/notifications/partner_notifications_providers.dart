@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_controller.dart';
+import '../live_refresh.dart';
+import '../wedding/wedding_controller.dart';
 import '../supabase/supabase_config.dart';
 import '../tasks/task_models.dart' show joinNotificationSubtitle;
 
@@ -41,13 +43,24 @@ final partnerNotificationsProvider = FutureProvider<List<PartnerNotification>>((
 ) async {
   final partnerId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
   if (partnerId == null) return const [];
+  keepFresh(ref);
+  // Também as dos eventos que organizo (2026-11-23): o sino da página
+  // Eventos é o mesmo para toda a gente e antes não as mostrava.
+  final events = ref.watch(weddingControllerProvider.select((s) => {
+        for (final e in s.events) e.id,
+        if (s.wedding != null) s.wedding!.id,
+      }.join(',')));
 
   List rows;
   try {
     rows = await supabase
         .from('notifications')
         .select() // inclui `subtitle` (migração 157) quando já existe
-        .or('partner_id.eq.$partnerId,profile_id.eq.$partnerId')
+        .or([
+          'partner_id.eq.$partnerId',
+          'profile_id.eq.$partnerId',
+          if (events.isNotEmpty) 'wedding_id.in.($events)',
+        ].join(','))
         .order('created_at', ascending: false)
         .limit(50);
   } catch (_) {

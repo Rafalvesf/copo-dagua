@@ -229,11 +229,21 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         if (p.username?.isNotEmpty == true) '@${p.username}',
                         if (p.city?.isNotEmpty == true) p.city!,
                       ].join(' · '),
-                      actions: [ReducedTopAction(Hi.arrowUpOnSquare, label: 'Partilhar perfil', onTap: () => _share(p))],
-                      sections: [
-                        if (p.upcoming.isNotEmpty) ('Próximos eventos', _eventsKey),
-                        ('A seguir', _followingKey),
-                        ('Avaliações', _reviewsKey),
+                      actions: [
+                        ReducedTopAction(Hi.arrowUpOnSquare, label: 'Partilhar perfil', onTap: () => _share(p)),
+                        if (!p.isMe)
+                          IslandMenuButton<String>(
+                            tooltip: 'Mais opções',
+                            onSelected: (_) => blockProfile(context, ref, p.id, p.name),
+                            itemBuilder: (_) => const [PopupMenuItem(value: 'block', child: Text('Bloquear'))],
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              alignment: Alignment.center,
+                              decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                              child: const Icon(Hi.ellipsisHorizontal, size: 20, color: Colors.white),
+                            ),
+                          ),
                       ],
                     ),
                   ),

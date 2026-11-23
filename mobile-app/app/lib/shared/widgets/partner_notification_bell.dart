@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/notifications/partner_notifications_providers.dart';
 import '../../core/theme/app_theme.dart';
+import 'count_badge.dart';
 import 'feedback.dart';
 import 'island_sheet.dart';
 import 'push_opt_in.dart';
@@ -13,70 +14,42 @@ import 'push_opt_in.dart';
 /// (`home_feed_screen.dart`, `_NotificationsSheet`), sem os separadores
 /// Todas/Não lidas/Lidas. Ver `partner_notifications_providers.dart`.
 class PartnerNotificationBell extends ConsumerWidget {
-  /// Botão redondo branco de 44 (mockup "Perfil", 2026-11-12).
+  /// Já não muda nada: o sino é sempre o redondo preto 44.
   final bool round;
   const PartnerNotificationBell({super.key, this.round = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unread = ref.watch(partnerUnreadNotificationsCountProvider);
-    if (round) {
-      return Tooltip(
-        message: 'Notificações',
+    // Sempre o botão redondo preto 44 com o sino branco e o número por ler
+    // (DESIGN.md §2; pedido 2026-11-23 — antes, fora do perfil, era um sino
+    // solto com um ponto verde).
+    return Tooltip(
+      message: 'Notificações',
+      excludeFromSemantics: true,
+      child: Semantics(
+        button: true,
+        label: unread > 0 ? 'Notificações, $unread por ler' : 'Notificações',
         child: GestureDetector(
-          onTap: () => showIslandSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (context) => const _PartnerNotificationsSheet(),
-          ),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-            child: Stack(children: [
-              const Center(child: Icon(Hi.bell, size: 20, color: Colors.white)),
-              if (unread > 0)
-                Positioned(
-                  top: 9,
-                  right: 10,
-                  child: Container(
-                    width: 9,
-                    height: 9,
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  ),
-                ),
-            ]),
-          ),
-        ),
-      );
-    }
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          tooltip: 'Notificações',
-          icon: const Icon(Hi.bell, color: AppTheme.ink),
-          onPressed: () => showIslandSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (context) => const _PartnerNotificationsSheet(),
-          ),
-        ),
-        if (unread > 0)
-          Positioned(
-            top: 6,
-            right: 6,
+          onTap: () async {
+            await showIslandSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => const _PartnerNotificationsSheet(),
+            );
+            ref.invalidate(partnerNotificationsProvider);
+          },
+          child: WithCount(
+            count: unread,
             child: Container(
-              width: 9,
-              height: 9,
-              decoration: BoxDecoration(
-                color: AppTheme.accentOliveDark,
-                shape: BoxShape.circle,
-              ),
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+              child: const Center(child: Icon(Hi.bell, size: 20, color: Colors.white)),
             ),
           ),
-      ],
+        ),
+      ),
     );
   }
 }
