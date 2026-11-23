@@ -54,7 +54,7 @@ class MockBackend {
       onboardingComplete: true,
       category: PartnerCategory.photography,
       businessDescription:
-          'Conta aos casais um pouco sobre o teu negócio e o teu estilo.',
+          'Conta aos organizadores um pouco sobre o teu negócio e o teu estilo.',
       location: 'Lisboa, Portugal',
       serviceAreas: ['Lisboa', 'Sintra', 'Cascais'],
       yearsExperience: 6,

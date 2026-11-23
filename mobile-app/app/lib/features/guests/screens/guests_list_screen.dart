@@ -378,7 +378,7 @@ class InviteShareSheetState extends State<InviteShareSheet> {
           if (guestCode != null) ...[
             const SizedBox(height: 24),
             Text(
-              'Código do casal',
+              'Código do evento',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 6),

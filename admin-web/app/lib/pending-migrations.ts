@@ -553,6 +553,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Põe uma foto livre do local (Wikimedia Commons, com o autor e a licença) em cada um dos 14 eventos reais. Corre depois da 222 e da 223.",
     check: { kind: "marker", id: "224" },
   },
+  {
+    file: "225_guest_code_sem_casal.sql",
+    date: "2026-11-23",
+    title: "Código do evento sem «CASAL»",
+    what: "Eventos sem nome passam a ter o código a começar por EVENTO (antes CASAL). Os códigos que já existem não mudam.",
+    check: { kind: "marker", id: "225" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

@@ -141,7 +141,7 @@ class GalleryScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Foto enviada — aguarda aprovação do casal.'),
+            content: Text('Foto enviada — aguarda aprovação dos organizadores.'),
           ),
         );
       }

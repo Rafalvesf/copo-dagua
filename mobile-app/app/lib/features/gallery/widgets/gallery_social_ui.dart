@@ -868,7 +868,7 @@ class _MemberSheet extends ConsumerWidget {
                               ),
                               child: Text(
                                 m.isCouple
-                                    ? 'Casal'
+                                    ? 'Organizador'
                                     : (m.groupLabel?.isNotEmpty == true ? 'Convidado · ${m.groupLabel}' : 'Convidado'),
                                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark),
                               ),

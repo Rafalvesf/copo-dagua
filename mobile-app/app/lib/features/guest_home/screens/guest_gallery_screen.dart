@@ -109,7 +109,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
       ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto enviada — aguarda aprovação do casal.')),
+          const SnackBar(content: Text('Foto enviada — aguarda aprovação dos organizadores.')),
         );
       }
     } catch (_) {
