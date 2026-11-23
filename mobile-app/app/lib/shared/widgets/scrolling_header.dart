@@ -54,13 +54,15 @@ class _PinnedBackFrameState extends State<PinnedBackFrame> {
     final top = MediaQuery.paddingOf(context).top;
     return PinnedBackScope(
       hasBack: _hasBack,
-      child: Stack(children: [
+      // fit expand: com só filhos posicionados o Stack ficava 0×0 e a
+      // página em branco.
+      child: Stack(fit: StackFit.expand, children: [
         Positioned.fill(child: widget.child),
         ValueListenableBuilder<bool>(
           valueListenable: _hasBack,
           builder: (context, has, _) => has
               ? Positioned(left: AppTheme.screenMargin, top: top + 12, child: const CircleBackButton())
-              : const SizedBox.shrink(),
+              : const Positioned(left: 0, top: 0, child: SizedBox.shrink()),
         ),
       ]),
     );
