@@ -264,7 +264,7 @@ Future<ReportData> loadSingleBookingReport(String bookingId, {bool partnerSide =
 }
 
 /// Número da reserva com o nome do parceiro (2026-10-20): os números
-/// repetem-se entre parceiros (WED-1 de cada um, migração 107).
+/// repetem-se entre parceiros (CAS-1 de cada um, migração 107).
 String bookingRef(Object? number, String partnerName) {
   final n = (number ?? '').toString();
   if (n.isEmpty) return partnerName;

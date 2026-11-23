@@ -588,6 +588,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Quem paga guarda um cartão (na Stripe) e mostra o QR da conta; o parceiro ou organizador lê-o, escreve o valor e o servidor cobra o cartão na hora, por Stripe Connect. Sem saldo guardado. Limites: 50 € por cobrança, 300 € por pessoa e evento, confirmação na app acima de 25 €. Depois: publicar a Edge Function event-pay e ligar no webhook da Stripe payment_intent.payment_failed e payment_intent.canceled. Corre depois da 228.",
     check: { kind: "table", table: "event_payments" },
   },
+  {
+    file: "230_booking_prefix_pt.sql",
+    date: "2026-11-23",
+    title: "Referência das reservas em português",
+    what: "O número da reserva passa a ter o prefixo do tipo de evento em português, sem repetidos: CAS (casamento), BAT, ANI, COM, NOI, REN, CUR, EMP (empresa), CHA, FES (festa), NOT (noite), CON (concerto), FTV (festival), EVT (outro). As reservas existentes mudam só o prefixo (WED-3 → CAS-3); a numeração continua por parceiro.",
+    check: { kind: "marker", id: "230" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

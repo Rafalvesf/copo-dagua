@@ -8,7 +8,7 @@ import { Card, Empty, PageHeader } from "@/components/ui";
 
 // Pesquisa global do admin (2026-10-20): substitui a caixa "Pesquisar..."
 // que não fazia nada. Procura em utilizadores, parceiros, eventos e
-// reservas (pelo número, ex: WED-1).
+// reservas (pelo número, ex: CAS-1).
 export default async function SearchPage({ searchParams }: PageProps<"/search">) {
   await requireAdmin();
   const params = await searchParams;
@@ -42,7 +42,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
     <div className="page" style={{ maxWidth: 860 }}>
       <PageHeader title="Pesquisa" subtitle={q ? `${total} ${total === 1 ? "resultado" : "resultados"} para “${q}”` : "Pessoas, parceiros, eventos e reservas."} />
       <form action="/search" className="row" style={{ flexWrap: "nowrap" }}>
-        <input type="search" name="q" defaultValue={raw} autoFocus placeholder="Nome, parceiro, local ou número da reserva (ex.: WED-1)" className="input" style={{ flex: 1, minWidth: 0, height: 42 }} />
+        <input type="search" name="q" defaultValue={raw} autoFocus placeholder="Nome, parceiro, local ou número da reserva (ex.: CAS-1)" className="input" style={{ flex: 1, minWidth: 0, height: 42 }} />
         <button type="submit" className="btn btn-primary" style={{ height: 42 }}>
           Pesquisar
         </button>
