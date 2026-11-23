@@ -67,8 +67,9 @@ class ReducedTopBar extends StatelessWidget {
         final show = ((y - showAfter) / 40).clamp(0.0, 1.0).toDouble();
         if (show <= 0) return const SizedBox.shrink();
         final barBottom = topPad + _barBody;
-        // Só os atalhos das secções que estão mesmo na página.
-        final present = [for (final s in sections) if (_top(s.$2) != null) s];
+        // Sem a lista de secções por baixo da barra (pedido do Rafael,
+        // 2026-11-23): fica só a barra branca, bloqueada no topo.
+        final present = const <(String, GlobalKey)>[];
         final line = barBottom + (present.isEmpty ? 8 : 50);
         var active = 0;
         for (var i = 0; i < present.length; i++) {

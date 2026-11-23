@@ -8,7 +8,7 @@ import '../../settings/screens/settings_screen.dart' show EditEventPage, PanelPa
 import '../widgets/event_program_section.dart';
 import '../widgets/organizer_suggestions.dart';
 import '../../guest_home/widgets/guest_dashboard.dart' show DashSummary, DashNow, DashAllDone, DashTasksEmpty, DashPhotos, DashButton36, dashWhenAt;
-import '../../../shared/widgets/page_kit.dart' show KitCaps, KitGroup, KitRow, KitTag, KitTagKind;
+import '../../../shared/widgets/page_kit.dart' show KitCaps, KitGroup, KitRow, KitTag, KitTagKind, LockedTopBar;
 import '../../../core/events/event_pass.dart' show GuestSection, GuestSections, guestSectionsProvider;
 import '../../../shared/text_case.dart';
 import '../../../core/auth/auth_controller.dart';
@@ -2823,10 +2823,12 @@ class _EventSettingsPage extends ConsumerStatefulWidget {
 
 class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
   final _scroll = ScrollController();
+  final _barTitle = ValueNotifier<String?>('Definições do evento');
 
   @override
   void dispose() {
     _scroll.dispose();
+    _barTitle.dispose();
     super.dispose();
   }
 
@@ -2989,6 +2991,8 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
                 ),
             ],
           ),
+          // Barra do topo bloqueada (pedido 2026-11-23).
+          Positioned(top: 0, left: 0, right: 0, child: LockedTopBar(controller: _scroll, title: _barTitle)),
           Positioned(
             left: AppTheme.screenMargin,
             top: topInset + 12,
@@ -4098,16 +4102,13 @@ class _OrgInvite extends StatelessWidget {
     final code = wedding.guestCode;
     return SectionFrame(title: 'Convite', children: [
       KitGroup([
+        // Tocar abre a página «Convidar» (Convidados / Organizadores),
+        // pedido 2026-11-23.
         KitRow(
           title: code ?? 'O convite',
-          sub: code == null ? 'Envia o link do convite' : 'Código para entrar · toca para copiar o link',
-          trailing: DashButton36('Partilhar', outlined: true, onTap: () => shareWeddingInvite(context, wedding)),
-          onTap: code == null
-              ? null
-              : () {
-                  copyText(wedding.inviteUrl ?? code);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link do convite copiado.')));
-                },
+          sub: code == null ? 'Convida pela app ou por link' : 'Código para entrar · convida pela app ou por link',
+          trailing: DashButton36('Convidar', onTap: () => context.push('/guests/convidar')),
+          onTap: () => context.push('/guests/convidar'),
         ),
         if (code != null) KitRow(title: 'Ver como convidado', chevron: true, onTap: () => context.push('/invite/$code')),
       ]),

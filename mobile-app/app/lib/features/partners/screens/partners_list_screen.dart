@@ -588,7 +588,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                           ),
                       ];
                       return EdgeFade(
-                        topFadeHeight: 32,
+                        topFadeHeight: 0, // sem o desvanecer branco no topo (2026-11-23)
                         bottomFadeHeight: 140,
                         child: ListView.builder(
                           padding: EdgeInsets.fromLTRB(

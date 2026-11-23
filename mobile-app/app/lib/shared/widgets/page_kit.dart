@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -42,7 +43,7 @@ class KitPage extends StatefulWidget {
     this.controller,
     this.pinnedBack = false,
     this.onBack,
-    this.rotateBack = true,
+    this.rotateBack = false,
   });
 
   @override
@@ -53,11 +54,56 @@ class KitPage extends StatefulWidget {
 /// [KitHeader] saber que não deve desenhar o seu próprio voltar.
 class _KitPageScope extends InheritedWidget {
   final bool pinnedBack;
-  const _KitPageScope({required this.pinnedBack, required super.child});
+
+  /// O título da página (o [KitTitle] escreve-o aqui) para a barra do topo.
+  final ValueNotifier<String?>? title;
+  const _KitPageScope({required this.pinnedBack, this.title, required super.child});
   static _KitPageScope? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_KitPageScope>();
   @override
-  bool updateShouldNotify(_KitPageScope old) => old.pinnedBack != pinnedBack;
+  bool updateShouldNotify(_KitPageScope old) => old.pinnedBack != pinnedBack || old.title != title;
+}
+
+/// Barra do topo bloqueada (pedido do Rafael, 2026-11-23): depois de passar
+/// o título, fica uma barra branca fixa no topo (cantos 35 em baixo, sombra
+/// da navbar) com o título 16; a seta de voltar fica por cima dela, no
+/// mesmo sítio. Substitui o «nevoeiro» branco do topo.
+class LockedTopBar extends StatelessWidget {
+  final ScrollController controller;
+  final ValueListenable<String?> title;
+  final double showAfter;
+  const LockedTopBar({super.key, required this.controller, required this.title, this.showAfter = 64});
+
+  @override
+  Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
+    return AnimatedBuilder(
+      animation: Listenable.merge([controller, title]),
+      builder: (context, _) {
+        final y = controller.hasClients ? controller.offset : 0.0;
+        final show = ((y - showAfter) / 24).clamp(0.0, 1.0).toDouble();
+        if (show <= 0) return const SizedBox.shrink();
+        return IgnorePointer(
+          ignoring: show < 1,
+          child: Opacity(
+            opacity: show,
+            child: Container(
+              height: topInset + 68,
+              padding: EdgeInsets.fromLTRB(AppTheme.screenMargin + 44 + 12, topInset + 12, AppTheme.screenMargin, 12),
+              alignment: Alignment.centerLeft,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(35)),
+                boxShadow: [BoxShadow(color: Color(0x1F171713), blurRadius: 24, offset: Offset(0, 8))],
+              ),
+              child: Text(title.value ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// Envolve um ecrã com scroll próprio (que não usa [KitPage]) e dá-lhe a seta
@@ -81,10 +127,12 @@ class ScrollBackView extends StatefulWidget {
 
 class _ScrollBackViewState extends State<ScrollBackView> {
   final _controller = ScrollController();
+  final _title = ValueNotifier<String?>(null);
 
   @override
   void dispose() {
     _controller.dispose();
+    _title.dispose();
     super.dispose();
   }
 
@@ -93,8 +141,10 @@ class _ScrollBackViewState extends State<ScrollBackView> {
     final topInset = MediaQuery.paddingOf(context).top;
     return _KitPageScope(
       pinnedBack: true,
+      title: _title,
       child: Stack(children: [
         Positioned.fill(child: widget.builder(context, _controller)),
+        Positioned(top: 0, left: 0, right: 0, child: LockedTopBar(controller: _controller, title: _title)),
         Positioned(
           left: AppTheme.screenMargin,
           top: topInset + 12,
@@ -117,6 +167,7 @@ class _KitPageState extends State<KitPage> {
 
   // Mostra o botão de "voltar ao topo" depois de passar o cabeçalho.
   bool _scrolled = false;
+  final _title = ValueNotifier<String?>(null);
 
   void _onScroll() {
     final v = _controller.hasClients && _controller.offset > 120;
@@ -133,6 +184,7 @@ class _KitPageState extends State<KitPage> {
   void dispose() {
     _controller.removeListener(_onScroll);
     _own?.dispose();
+    _title.dispose();
     super.dispose();
   }
 
@@ -141,6 +193,7 @@ class _KitPageState extends State<KitPage> {
     final topInset = MediaQuery.paddingOf(context).top;
     return _KitPageScope(
       pinnedBack: widget.pinnedBack,
+      title: _title,
       child: Stack(children: [
         Positioned.fill(
           child: ListView(
@@ -159,6 +212,8 @@ class _KitPageState extends State<KitPage> {
         // ecrã, roda de ← para ↑ ao descer e passa a subir ao topo (é o
         // ScrollAwareBackButton; o KitHeader deixa de desenhar o seu voltar).
         // Sem [pinnedBack]: mantém-se o botão ↑ que aparece ao fazer scroll.
+        if (widget.pinnedBack)
+          Positioned(top: 0, left: 0, right: 0, child: LockedTopBar(controller: _controller, title: _title)),
         if (widget.pinnedBack)
           Positioned(
             left: AppTheme.screenMargin,
@@ -258,7 +313,16 @@ class KitTitle extends StatelessWidget {
   const KitTitle(this.title, {super.key, this.subtitle, this.top = 20});
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    // Dá o título à barra do topo bloqueada.
+    final holder = _KitPageScope.of(context)?.title;
+    if (holder != null && holder.value != title) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => holder.value = title);
+    }
+    return _build();
+  }
+
+  Widget _build() => Padding(
         padding: EdgeInsets.only(top: top),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1.15)),

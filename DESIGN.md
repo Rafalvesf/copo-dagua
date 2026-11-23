@@ -324,12 +324,16 @@ ecrãs. O resto da app mantém a tabela acima.
   herói) os botões redondos são os **pretos cheios 44** do §2, como em todo
   o lado — já não há botões translúcidos (pedido do Rafael, 2026-11-21;
   substitui a regra da transparência de 2026-11-16).
-  Em **todas** as páginas que fazem scroll (com imagem ou sem), a **seta de
-  voltar** (canto superior esquerdo) muda com o scroll: ao descer, o ícone
-  **roda de ← para ↑** e o toque passa a **subir a página até ao topo** (com
-  animação) em vez de voltar atrás; ao chegar ao topo, volta a ser a seta de
-  voltar (←). Os restantes botões (definições, ⋯) não mudam. A rotação é
-  sempre animada, nunca instantânea.
+  **A seta de voltar já não roda** (pedido do Rafael, 2026-11-23, em toda a
+  app): fica sempre fixa no canto superior esquerdo e é sempre «voltar».
+  **Barra do topo bloqueada** (pedido 2026-11-23): em todas as páginas com
+  a seta fixa (`KitPage(pinnedBack)`, `ScrollBackView`), depois de passar o
+  título aparece uma **barra branca fixa** no topo (cantos 35 em baixo,
+  sombra da navbar) com o título 16, e a seta por cima dela
+  (`LockedTopBar`, `page_kit.dart`). **Sem o nevoeiro/desvanecer branco** no
+  topo das páginas (saiu do `GradientScaffold`). No painel do evento e nos
+  perfis, o topo reduzido (§6.5) **já não tem a lista de secções** por
+  baixo — só a barra.
   - **Componente:** a seta fixa é o `ScrollAwareBackButton`
     (`shared/widgets/scroll_aware_back_button.dart`): recebe o
     `ScrollController` da lista do ecrã, a ação de voltar e `imageExtent` (os px
