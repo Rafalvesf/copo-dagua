@@ -567,6 +567,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Cada parceiro vê só o que precisa: todos a hora, o local e o programa; a comida as pessoas, os menus (das escolhas por pessoa), as alergias e as mesas; foto e música o dress code; flores e decoração as cores. As alergias deixam de ir para quem não serve comida. Sem contactos.",
     check: { kind: "marker", id: "226" },
   },
+  {
+    file: "227_cadeirinha.sql",
+    date: "2026-11-23",
+    title: "Cadeirinha das crianças",
+    what: "O convidado diz se a criança que leva precisa de cadeirinha; o organizador vê-o na ficha do convidado e a comida, o transporte, o aluguer e a animação infantil veem quantas são (e, nas mesas, de quem). Corre depois da 226.",
+    check: { kind: "marker", id: "227" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

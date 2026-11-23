@@ -236,6 +236,7 @@ Future<MyInviteAnswer?> loadMyInviteAnswer(String code) async {
             childAge: (c['child_age'] as num?)?.toInt(),
             menu: c['menu'] as String?,
             allergies: ((c['allergies'] as List?) ?? const []).whereType<String>().toList(),
+            highChair: c['high_chair'] as bool? ?? false,
           ),
       ],
     );

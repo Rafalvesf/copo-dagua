@@ -305,6 +305,9 @@ class GuestCompanion {
   final String? menu;
   final List<String> allergies;
 
+  /// Criança que precisa de cadeirinha à mesa (227).
+  final bool highChair;
+
   /// 'child', 'teen', 'adult' ou 'senior' (092/094).
   final String ageGroup;
 
@@ -333,6 +336,7 @@ class GuestCompanion {
     this.phone,
     this.menu,
     this.allergies = const [],
+    this.highChair = false,
   });
 }
 
@@ -361,6 +365,7 @@ Future<void> saveGuestCompanions({
           'will_install_app': c.willInstallApp,
           'menu': c.menu,
           'allergies': c.allergies,
+          'high_chair': (c.isChild || c.ageGroup == 'child') && c.highChair,
         },
     ]);
   } catch (_) {}
@@ -388,6 +393,7 @@ final guestCompanionsProvider = FutureProvider.family<List<GuestCompanion>, Stri
           linkedGuestId: r['linked_guest_id'] as String?,
           menu: r['menu'] as String?,
           allergies: ((r['allergies'] as List?) ?? const []).cast<String>(),
+          highChair: r['high_chair'] as bool? ?? false,
         ),
     ];
   } catch (_) {

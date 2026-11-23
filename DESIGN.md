@@ -546,7 +546,9 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   confirmada, em molduras — **todos**: «Quando e onde» (hora, local, morada,
   convidados previstos, `VenueMap` + «Como chegar») e «Programa · N» (os
   momentos dele com a etiqueta verde «Contigo»); **comida** (catering,
-  restaurantes, bolo, espaço): «Pessoas» (confirmados, crianças e idades),
+  restaurantes, bolo, espaço): «Pessoas» (confirmados, crianças e idades,
+  e quantas **cadeirinhas** — migração 227; nas mesas, «Cadeirinha» ao lado
+  da criança),
   «Menus» (das escolhas por pessoa), «Alergias» e «Mesas»; **foto, música,
   banda, animação**: «Estilo» com o dress code; **flores e decoração, bolo,
   convites**: «Estilo» com as cores; **transporte, aluguer, animação

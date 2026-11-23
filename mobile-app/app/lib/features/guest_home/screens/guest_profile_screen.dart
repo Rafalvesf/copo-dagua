@@ -274,7 +274,7 @@ class _GuestProfileBody extends ConsumerWidget {
                   _PersonLine(
                     initials: _initialsOf(c.name),
                     color: AppTheme.accentTint,
-                    name: c.isChild && c.childAge != null ? '${c.name} · ${c.childAge} anos' : c.name,
+                    name: [c.name, if (c.isChild && c.childAge != null) '${c.childAge} anos', if (c.isChild && c.highChair) 'cadeirinha'].join(' · '),
                     detail: c.allergies.isEmpty ? 'Sem alergias' : c.allergies.join(', '),
                     status: c.phone?.isNotEmpty == true ? 'Telemóvel ${c.phone}' : 'Sem contacto',
                     muted: c.phone?.isNotEmpty != true,
@@ -667,6 +667,7 @@ class _CompanionFormState extends State<_CompanionForm> {
   late final _email = TextEditingController(text: widget.existing?.email ?? '');
   late final _age = TextEditingController(text: widget.existing?.childAge?.toString() ?? '');
   late String _group = widget.existing?.ageGroup ?? 'adult';
+  late bool _highChair = widget.existing?.highChair ?? false;
   String? _error;
 
   static const _groups = [('adult', 'Adulto'), ('teen', 'Adolescente'), ('child', 'Criança'), ('senior', 'Sénior')];
@@ -702,6 +703,7 @@ class _CompanionFormState extends State<_CompanionForm> {
       accompaniedBy: e?.accompaniedBy,
       linkedGuestId: e?.linkedGuestId,
       willInstallApp: phone.isNotEmpty || email.isNotEmpty || (e?.willInstallApp ?? false),
+      highChair: _group == 'child' && _highChair,
     ));
   }
 
@@ -756,6 +758,13 @@ class _CompanionFormState extends State<_CompanionForm> {
           if (_group == 'child') ...[
             const SizedBox(height: 12),
             TextField(controller: _age, keyboardType: TextInputType.number, decoration: _dec('Idade')),
+            const SizedBox(height: 4),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: _highChair,
+              onChanged: (v) => setState(() => _highChair = v),
+              title: const Text('Precisa de cadeirinha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ),
           ],
           const SizedBox(height: 12),
           TextField(

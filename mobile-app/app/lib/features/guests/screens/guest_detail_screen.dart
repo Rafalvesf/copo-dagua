@@ -237,7 +237,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
     final history = _buildHistory(guest);
     final companions = ref.watch(guestCompanionsProvider(guest.id)).asData?.value ?? const [];
     final limit = guest.maxCompanions == 0 ? 'Vem sozinho' : 'Pode trazer ${CompanionLimitRow.label(guest.maxCompanions)}';
-    final bringing = companions.map((c) => c.name.split(' ').first).join(', ');
+    final bringing = companions.map((c) => '${c.name.split(' ').first}${c.highChair ? ' (cadeirinha)' : ''}').join(', ');
 
     Widget action(IconData icon, String label, VoidCallback? onTap) => Expanded(
           child: Opacity(

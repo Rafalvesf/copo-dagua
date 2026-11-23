@@ -84,6 +84,9 @@ class _Person {
 
   /// Vai instalar a app (095).
   bool willInstall;
+
+  /// Criança que precisa de cadeirinha à mesa (227).
+  bool highChair;
   String? menu;
   final Set<String> allergies;
   String otherAllergy;
@@ -96,6 +99,7 @@ class _Person {
     this.email = '',
     this.accompaniedBy,
     this.willInstall = false,
+    this.highChair = false,
     this.menu,
     Set<String>? allergies,
     this.otherAllergy = '',
@@ -153,6 +157,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         email: c.email ?? '',
         accompaniedBy: c.accompaniedBy,
         willInstall: c.willInstallApp,
+        highChair: c.highChair,
         menu: c.menu,
         allergies: c.allergies.toSet(),
       ));
@@ -229,6 +234,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         'allergies': c.allAllergies,
         'accompanied_by': c.ageGroup == 'adult' ? null : (c.accompaniedBy ?? _me.name),
         'will_install_app': c.willInstall,
+        'high_chair': c.isChild && c.highChair,
       };
 
   Future<void> _finish({required bool attending}) async {
@@ -308,6 +314,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 email: c.email.trim().isEmpty ? null : c.email.trim(),
                 accompaniedBy: c.ageGroup == 'adult' ? null : (c.accompaniedBy ?? _me.name),
                 willInstallApp: c.willInstall,
+                highChair: c.isChild && c.highChair,
                 menu: c.menu,
                 allergies: c.allAllergies,
               ),
@@ -363,7 +370,8 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           ..phone = result.phone
           ..email = result.email
           ..accompaniedBy = result.accompaniedBy
-          ..willInstall = result.willInstall;
+          ..willInstall = result.willInstall
+          ..highChair = result.highChair;
         if (existing.isChild && existing.menu != null && !_childMenus.contains(existing.menu)) existing.menu = null;
       }
     });
@@ -556,7 +564,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   initials: _initials(c.name),
                   name: c.name,
                   subtitle: [
-                    c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}' : ageGroupLabel(c.ageGroup),
+                    c.isChild ? 'Criança${c.age != null ? ' · ${c.age} anos' : ''}${c.highChair ? ' · cadeirinha' : ''}' : ageGroupLabel(c.ageGroup),
                     if (c.ageGroup != 'adult' && c.accompaniedBy != null) 'vai com ${c.accompaniedBy == _me.name ? 'contigo' : c.accompaniedBy}',
                   ].join(' · '),
                   onEdit: () => _editCompanion(c),
@@ -925,6 +933,7 @@ class _CompanionPageState extends State<_CompanionPage> {
   late final _phone = TextEditingController(text: widget.existing?.phone ?? '');
   late String? _with = widget.existing?.accompaniedBy ?? (widget.others.isEmpty ? null : widget.others.first);
   late String _group = widget.existing?.ageGroup ?? 'adult';
+  late bool _highChair = widget.existing?.highChair ?? false;
   bool get _child => _group == 'child';
 
   @override
@@ -951,6 +960,7 @@ class _CompanionPageState extends State<_CompanionPage> {
         age: _child ? int.tryParse(_age.text.trim()) : null,
         accompaniedBy: _adult ? null : _with,
         willInstall: (widget.existing?.willInstall ?? false) || _phone.text.trim().isNotEmpty,
+        highChair: _child && _highChair,
         phone: _phone.text.trim(),
       ),
     );
@@ -983,6 +993,16 @@ class _CompanionPageState extends State<_CompanionPage> {
             _AgeChip(label: l, selected: _group == k, onTap: () => setState(() => _group = k)),
         ]),
         if (_child) AuthField(label: 'Idade', controller: _age, keyboardType: TextInputType.number),
+        // Cadeirinha à mesa (pedido 2026-11-23): o restaurante/catering vê-a.
+        if (_child) ...[
+          const SizedBox(height: 16),
+          const OnbGroupLabel('Precisa de cadeirinha?'),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            _AgeChip(label: 'Não', selected: !_highChair, onTap: () => setState(() => _highChair = false)),
+            _AgeChip(label: 'Sim', selected: _highChair, onTap: () => setState(() => _highChair = true)),
+          ]),
+        ],
         // Telemóvel do acompanhante (opcional, 2026-10-19): permite-lhe
         // entrar na app depois e ficar ligado a esta resposta.
         if (!_adult && widget.others.isNotEmpty) ...[

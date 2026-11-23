@@ -58,6 +58,7 @@ class PartnerEventBrief extends ConsumerWidget {
         final total = (b['total'] as num?)?.toInt() ?? 0;
         final children = (b['children'] as num?)?.toInt() ?? 0;
         final ages = [for (final a in ((b['child_ages'] as List?) ?? const [])) (a as num).toInt()];
+        final highChairs = (b['high_chairs'] as num?)?.toInt() ?? 0;
         final menus = ((b['menus'] as List?) ?? const []).cast<Map>();
         final dietary = ((b['dietary'] as List?) ?? const []).cast<Map>();
         final tables = ((b['tables'] as List?) ?? const []).cast<Map>();
@@ -108,6 +109,8 @@ class PartnerEventBrief extends ConsumerWidget {
                 FrameNumber('Confirmados', '$total', total == 1 ? 'pessoa' : 'pessoas'),
                 FrameNumber('Crianças', '$children', ages.isEmpty ? (children == 1 ? 'criança' : 'crianças') : 'com ${_ages(ages)}'),
               ]),
+              if (highChairs > 0)
+                FrameNote(highChairs == 1 ? '1 criança precisa de cadeirinha.' : '$highChairs crianças precisam de cadeirinha.', top: 10),
             ]),
           if (showFood) ...[
             SectionFrame(title: 'Menus', children: [
@@ -136,7 +139,7 @@ class PartnerEventBrief extends ConsumerWidget {
                             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Expanded(child: Text('${g['name']}', style: const TextStyle(fontSize: 14, color: AppTheme.ink))),
                               Flexible(
-                                child: Text([if (g['menu'] != null) g['menu'], if (g['dietary'] != null) 'Alergia: ${g['dietary']}'].join(' · '),
+                                child: Text([if (g['menu'] != null) g['menu'], if (g['high_chair'] == true) 'Cadeirinha', if (g['dietary'] != null) 'Alergia: ${g['dietary']}'].join(' · '),
                                     textAlign: TextAlign.right, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                               ),
                             ]),
