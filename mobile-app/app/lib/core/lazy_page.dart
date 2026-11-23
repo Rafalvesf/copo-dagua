@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'lazy_reload_stub.dart' if (dart.library.js_interop) 'lazy_reload_web.dart';
 
@@ -31,17 +32,30 @@ class _LazyPageState extends State<LazyPage> {
   }
 
   Future<void> _load() async {
-    try {
-      await Future.wait([for (final l in widget.loads) l()]);
-      LazyPage._loaded.addAll(widget.loads);
-      if (mounted) setState(() => _ready = true);
-    } catch (e) {
-      // Na web isto acontece quando sai uma versão nova com a app aberta:
-      // o código antigo já não encaixa nos ficheiros novos. Recarrega a
-      // página (uma vez) para ficar com a versão nova — a ligação está boa.
-      if (reloadForNewVersion()) return;
-      if (mounted) setState(() => _error = e);
+    // Rede fraca ou uma publicação nova a meio (2026-11-23: «a app está a
+    // bugar constantemente»): tenta mais umas vezes, com pausas, antes de
+    // recarregar a página ou de mostrar o erro.
+    const waits = [Duration(seconds: 1), Duration(seconds: 2), Duration(seconds: 4)];
+    Object? last;
+    for (var attempt = 0; attempt <= waits.length; attempt++) {
+      try {
+        await Future.wait([for (final l in widget.loads) l()]);
+        LazyPage._loaded.addAll(widget.loads);
+        if (mounted) setState(() => _ready = true);
+        return;
+      } catch (e) {
+        last = e;
+        if (!mounted) return;
+        if (attempt < waits.length) await Future<void>.delayed(waits[attempt]);
+        if (!mounted) return;
+      }
     }
+    Sentry.captureException(last).ignore();
+    // Na web isto acontece quando sai uma versão nova com a app aberta:
+    // o código antigo já não encaixa nos ficheiros novos. Recarrega a
+    // página (uma vez por minuto) para ficar com a versão nova.
+    if (reloadForNewVersion()) return;
+    if (mounted) setState(() => _error = last);
   }
 
   @override
