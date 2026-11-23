@@ -1,4 +1,4 @@
-import 'ticket_pass_screens.dart' show MyQrCard;
+import 'ticket_pass_screens.dart' show MyQrScreen;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
@@ -289,17 +289,27 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                 children: [
                   // Sino com os avisos pessoais (convites, lembretes) — 2026-11-11.
                   // À esquerda, como Parceiros (pedido 2026-11-12).
-                  const PageHeader(title: 'Eventos', showBack: false, titleFontSize: 28, trailing: PartnerNotificationBell()),
+                  PageHeader(
+                    title: 'Eventos',
+                    showBack: false,
+                    titleFontSize: 28,
+                    // QR da conta ao lado do sino (pedido 2026-11-23: "adiciona
+                    // um icon do qr code ao lado do das notificações na página
+                    // dos eventos"; migração 228). Abre «O teu QR».
+                    trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                      if (role != null) ...[
+                        V2RoundButton(
+                          icon: Hi.qrCode,
+                          tooltip: 'O teu QR',
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyQrScreen())),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                      const PartnerNotificationBell(),
+                    ]),
+                  ),
                   const SizedBox(height: 14),
                   const TeamBannerCard(),
-                  // Um QR por conta, na página principal (pedido 2026-11-23:
-                  // "apenas um qr code para todos os eventos … assim posso
-                  // colocar na página principal"; migração 228).
-                  if (role != null)
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14),
-                      child: MyQrCard(),
-                    ),
                   // Quem não tem Chat vê aqui a conversa com a equipa.
                   ...content,
                 ],
