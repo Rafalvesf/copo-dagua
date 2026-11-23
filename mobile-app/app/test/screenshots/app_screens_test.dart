@@ -750,7 +750,6 @@ void main() {
     ('23_casal_reservas', '/bookings'),
     ('24_casal_definicoes', '/settings'),
     ('25_casal_suporte', '/support'),
-    ('26_casal_servicos', '/service-preferences'),
     ('28_casal_para_convidados', '/guest-page'),
     ('29_casal_presentes', '/gift-list'),
     ('29b_casal_pedidos', '/guests/pedidos'),

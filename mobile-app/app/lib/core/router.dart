@@ -39,7 +39,6 @@ import '../features/budget/screens/budget_screen.dart' deferred as l10;
 import '../features/chat/screens/chat_list_screen.dart' deferred as l11;
 import '../features/chat/screens/chat_thread_screen.dart' deferred as l12;
 import '../features/checklist/screens/checklist_screen.dart' deferred as l13;
-import '../features/tasks/screens/service_preferences_screen.dart' deferred as l14;
 import '../features/tasks/screens/tasks_screen.dart' deferred as l15;
 import '../features/events/screens/eventos_screen.dart' deferred as l16;
 import '../features/events/screens/mode_switch_screen.dart';
@@ -643,7 +642,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/service-preferences',
-        builder: (context, state) =>lazyPage([l14.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.orcamento, child: l14.ServicePreferencesScreen())),
+        // Passou para dentro das Reservas (2026-11-23).
+        redirect: (context, state) => '/bookings',
       ),
       GoRoute(
         path: '/guest-page',
@@ -823,7 +823,7 @@ Future<void> preloadDeferredPages() async {
   LazyPage.markLoaded(_deferredPages);
 }
 
-List<Future<void> Function()> get _deferredPages => <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l14.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
+List<Future<void> Function()> get _deferredPages => <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
 
 /// Ecrã de arranque (splash). Mostrado só no primeiro instante, enquanto a
 /// app recupera a sessão guardada — evita que a página «criar conta» pisque

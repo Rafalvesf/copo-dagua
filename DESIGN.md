@@ -870,6 +870,13 @@ tratado» —, título 16, frase 13 e a ação), `FrameNote`, `FrameButton36`,
 - **Reservas:** **só as reservas do evento aberto** (pedido 2026-11-23;
   saíram as pílulas por evento), «Os parceiros de <evento>»; **«Para fazer»** com os pagamentos
   («Pagar», abre os popups) e as **propostas recebidas** (linha amarela).
+  Por baixo dos serviços, a moldura **«Já têm tratado? · N de M»**
+  (pedido 2026-11-23: a página «Serviços tratados» juntou-se às Reservas):
+  uma linha por categoria (nome 16, «Na app · …» / «Fora da app» / «Não
+  precisam» 13, etiqueta «Tratado» / «Dispensado» / «Por tratar» e seta);
+  tocar abre o popup com «Ainda precisamos» · «Já tratámos» · «Não
+  precisamos» (círculo verde com o visto), «Com quem?» se foi fora da app,
+  e «Guardar» preto 52.
 - **Mesas:** **sem Mesa de Honra nem pista de dança**; mesas em caixas
   brancas com os lugares à volta, «n/8» ao centro e o estado por baixo
   («6 de 8», «Completa», «Bloqueada» — **sem cadeado**); a mesa escolhida

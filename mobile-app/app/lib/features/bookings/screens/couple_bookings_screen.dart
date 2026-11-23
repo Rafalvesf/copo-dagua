@@ -36,6 +36,7 @@ import '../../../core/payments/refunds.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import '../widgets/service_preferences_frame.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -139,6 +140,11 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                           ),
                         ]),
                       ),
+                      if (ev != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                          child: ServicePreferencesFrame(weddingId: ev),
+                        ),
                     ]);
                   }
                   return ListView(
@@ -217,6 +223,9 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                             _CoupleBookingRow(booking: booking, eventName: names[booking.weddingId]),
                           ],
                         ]),
+                      // «Já têm tratado?» (antes a página «Serviços tratados»,
+                      // pedido 2026-11-23).
+                      if (ev != null) ServicePreferencesFrame(weddingId: ev),
                       FrameButton44('Ver parceiros', outlined: true, onTap: () => context.push('/partners')),
                       ]),
                       ),
@@ -306,7 +315,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
       // O sinal pendente já foi marcado `failed` por `cancel_booking_by_couple()`
       // — recomputar agora dispensa a tarefa "Pagar sinal" desatualizada
       // em vez de esperar por um recompute não relacionado (próximo
-      // carregamento do Home). Mesmo padrão de `service_preferences_screen.dart`.
+      // carregamento do Home). Mesmo padrão de `service_preferences_frame.dart`.
       ref.read(taskEngineControllerProvider.notifier).recompute();
     }
   }

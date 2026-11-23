@@ -990,8 +990,9 @@ List<_Shortcut> _shortcuts(WidgetRef ref) {
     _Shortcut(Hi.rectangleStack, 'Galeria',
         pending > 0 ? '$pending ${plural(pending, 'foto por aprovar', 'fotos por aprovar')}' : approved == 0 ? decor.galleryEmpty : '$approved ${plural(approved, 'foto', 'fotos')}', '/gallery'),
     const _Shortcut(Hi.gift, 'Para os convidados', 'Programa e presentes', '/guest-page'),
-    _Shortcut(Hi.clipboardDocumentList, 'Serviços tratados',
-        handled == null ? '—' : handled == 0 ? 'Nenhum ainda' : '$handled ${plural(handled, 'categoria', 'categorias')}', '/service-preferences'),
+    // «Serviços tratados» passou para dentro das Reservas (2026-11-23).
+    _Shortcut(Hi.clipboardDocumentList, 'Reservas',
+        handled == null ? '—' : handled == 0 ? 'Nenhum serviço tratado' : '$handled ${plural(handled, 'serviço tratado', 'serviços tratados')}', '/bookings'),
   ];
 }
 
@@ -2844,7 +2845,6 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
     // dono (Organizadores, Arquivo) ficam só para o dono.
     final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
     final canEvento = perms.can(OrganizerPerm.evento);
-    final canOrcamento = perms.can(OrganizerPerm.orcamento);
     final canBilhetes = perms.can(OrganizerPerm.bilhetes);
     final isOwner = perms.isOwner;
 
@@ -2865,7 +2865,6 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
         if (canEvento) ('Galeria', '', () => push('/gallery')),
         if (canEvento && fourth == _Fourth.gifts) ('Lista de presentes', '', () => push('/gift-list')),
         if (canBilhetes && fourth == _Fourth.tickets) ('Bilhetes', '', () => push('/bilhetes')),
-        if (canOrcamento) ('Serviços tratados', '', () => push('/service-preferences')),
       ]),
       ('Arquivo', [
         if (isOwner) ('Eventos arquivados e apagados', '', () => push('/eventos-arquivados')),

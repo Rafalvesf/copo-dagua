@@ -3,17 +3,8 @@ name: Native build (Android + iOS)
 # Confirma que a app compila em Android e iOS (sem assinatura). Os
 # builds para as lojas (assinados) ficam para um workflow próprio quando
 # houver as contas Apple Developer e Google Play.
+# Só à mão (pedido 2026-11-23): por agora a app é só web.
 on:
-  pull_request:
-    paths:
-      - 'mobile-app/app/**'
-      - '.github/workflows/native-build.yml'
-  push:
-    branches:
-      - master
-    paths:
-      - 'mobile-app/app/**'
-      - '.github/workflows/native-build.yml'
   workflow_dispatch:
 
 concurrency:
