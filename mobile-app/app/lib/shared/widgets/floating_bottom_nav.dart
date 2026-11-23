@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/chat/chat_list_controller.dart';
 import '../../core/theme/app_theme.dart';
+import 'count_badge.dart';
 import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import '../../core/wedding/menu_style.dart';
@@ -221,9 +222,10 @@ class _NavIcon extends StatelessWidget {
                   ),
                   if (badgeCount > 0)
                     Positioned(
-                      top: 0,
-                      right: 2,
-                      child: _UnreadBadge(count: badgeCount, color: accent, onColor: onAccent),
+                      top: -4,
+                      right: -2,
+                      // O mesmo contador do §2 (pílula branca, aro preto).
+                      child: CountBadge(badgeCount),
                     ),
                 ],
               ),
@@ -237,41 +239,6 @@ class _NavIcon extends StatelessWidget {
         ),
       ),
     )));
-  }
-}
-
-/// Selo de contagem — mesma cor/estilo já usado em `cards.dart` para o
-/// mesmo `unreadCount` na lista de conversas (verde-oliva da marca),
-/// só mais pequeno para caber sobre o ícone da navbar. `99+` em vez de
-/// deixar o número crescer sem limite.
-class _UnreadBadge extends StatelessWidget {
-  final int count;
-  final Color color;
-  final Color onColor;
-
-  const _UnreadBadge({required this.count, this.color = AppTheme.brandGreen, this.onColor = Colors.white});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-      child: Text(
-        count > 99 ? '99+' : '$count',
-        style: TextStyle(
-          color: onColor,
-          fontSize: AppFontSize.xxxs,
-          fontWeight: FontWeight.w700,
-          height: 1,
-        ),
-      ),
-    );
   }
 }
 
