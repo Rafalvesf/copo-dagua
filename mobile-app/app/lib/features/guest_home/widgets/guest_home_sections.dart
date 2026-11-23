@@ -17,8 +17,8 @@ import '../../../shared/money.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
-import '../../../core/wedding/wedding_venue.dart';
+import '../../../core/event/date_format_pt.dart';
+import '../../../core/event/event_venue.dart';
 import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/sized_network_image.dart';
@@ -78,14 +78,14 @@ class _Circles extends StatelessWidget {
 
 /// Capa verde com contagem e "Vais com …".
 class GuestHero extends StatelessWidget {
-  final GuestWedding wedding;
+  final GuestEvent event;
   final String place;
   final String? goingWith;
-  const GuestHero({super.key, required this.wedding, required this.place, this.goingWith});
+  const GuestHero({super.key, required this.event, required this.place, this.goingWith});
 
   @override
   Widget build(BuildContext context) {
-    final date = wedding.weddingDate;
+    final date = event.eventDate;
     final today = DateTime.now();
     final days = date == null
         ? null
@@ -94,14 +94,14 @@ class GuestHero extends StatelessWidget {
     // maiúsculas, nome do evento 28 e a data/hora/local por baixo.
     final when = [
       if (date != null) '${date.day} ${monthNamesPt[date.month - 1].substring(0, 3).toLowerCase()} ${date.year}',
-      if (wedding.ceremonyTime?.isNotEmpty == true) wedding.ceremonyTime!,
+      if (event.ceremonyTime?.isNotEmpty == true) event.ceremonyTime!,
       if (place.isNotEmpty) place,
     ].join(' · ');
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(wedding.eventType.label.toUpperCase(),
+      Text(event.eventType.label.toUpperCase(),
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
       const SizedBox(height: 6),
-      Text(wedding.displayNames,
+      Text(event.displayNames,
           style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       if (when.isNotEmpty) ...[
         const SizedBox(height: 6),
@@ -193,12 +193,12 @@ class _SectionTitle extends StatelessWidget {
 /// A tua resposta: tu e quem vem contigo, com menu e alergias.
 class GuestAnswerCard extends ConsumerWidget {
   final Guest guest;
-  final String weddingId;
-  const GuestAnswerCard({super.key, required this.guest, required this.weddingId});
+  final String eventId;
+  const GuestAnswerCard({super.key, required this.guest, required this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    void edit() => context.push('/guest-presenca/$weddingId');
+    void edit() => context.push('/guest-presenca/$eventId');
     if (guest.rsvpStatus != RsvpStatus.confirmed) {
       final declined = guest.rsvpStatus == RsvpStatus.declined;
       return Container(
@@ -254,15 +254,15 @@ class GuestAnswerCard extends ConsumerWidget {
 
 /// O dia: os momentos do programa em cartões horizontais.
 class GuestDayStrip extends StatelessWidget {
-  final GuestWedding wedding;
-  const GuestDayStrip({super.key, required this.wedding});
+  final GuestEvent event;
+  const GuestDayStrip({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
-    final items = wedding.program;
+    final items = event.program;
     if (items.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      _SectionTitle('O dia', action: 'Ver tudo', onAction: () => context.push('/guest-wedding-details', extra: wedding)),
+      _SectionTitle('O dia', action: 'Ver tudo', onAction: () => context.push('/guest-wedding-details', extra: event)),
       SizedBox(
         height: 104,
         child: ListView.separated(
@@ -295,20 +295,20 @@ class GuestDayStrip extends StatelessWidget {
 
 /// Local com Como chegar e dress code à vista.
 class GuestPlaceCard extends ConsumerWidget {
-  final GuestWedding wedding;
-  const GuestPlaceCard({super.key, required this.wedding});
+  final GuestEvent event;
+  const GuestPlaceCard({super.key, required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appVenue = (wedding.venueAddress?.isNotEmpty == true && wedding.venueLatitude != null)
+    final appVenue = (event.venueAddress?.isNotEmpty == true && event.venueLatitude != null)
         ? null
-        : ref.watch(weddingVenueProvider(wedding.weddingId)).asData?.value;
-    final name = wedding.venue?.isNotEmpty == true ? wedding.venue : (appVenue?.name ?? wedding.location);
-    final address = wedding.venueAddress?.isNotEmpty == true
-        ? wedding.venueAddress
-        : (appVenue?.address ?? (wedding.venue?.isNotEmpty == true ? wedding.location : null));
-    final lat = wedding.venueLatitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.latitude);
-    final lng = wedding.venueLongitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.longitude);
+        : ref.watch(eventVenueProvider(event.eventId)).asData?.value;
+    final name = event.venue?.isNotEmpty == true ? event.venue : (appVenue?.name ?? event.location);
+    final address = event.venueAddress?.isNotEmpty == true
+        ? event.venueAddress
+        : (appVenue?.address ?? (event.venue?.isNotEmpty == true ? event.location : null));
+    final lat = event.venueLatitude ?? (event.venueAddress?.isNotEmpty == true ? null : appVenue?.latitude);
+    final lng = event.venueLongitude ?? (event.venueAddress?.isNotEmpty == true ? null : appVenue?.longitude);
     if (name?.isNotEmpty != true && address?.isNotEmpty != true) return const SizedBox.shrink();
     final title = name?.isNotEmpty == true ? name! : address!;
     // Mockup «Páginas do convidado» → Início (2026-11-15): «Como chegar»
@@ -374,14 +374,14 @@ class GuestPlaceCard extends ConsumerWidget {
 /// trás das horas, com voltar e o sino por cima; o nome e a data num
 /// painel que sobe por cima da foto.
 class GuestCover extends StatelessWidget {
-  final GuestWedding wedding;
+  final GuestEvent event;
   final Widget hero;
-  const GuestCover({super.key, required this.wedding, required this.hero});
+  const GuestCover({super.key, required this.event, required this.hero});
 
   @override
   Widget build(BuildContext context) {
     final inset = MediaQuery.paddingOf(context).top;
-    final photo = wedding.coverPhotoUrl;
+    final photo = event.coverPhotoUrl;
     final h = 260 + inset;
     return Stack(children: [
       SizedBox(
@@ -465,12 +465,12 @@ class GuestGroupRow extends StatelessWidget {
 
 /// Capa verde "É hoje!".
 class GuestTodayHero extends StatelessWidget {
-  final GuestWedding wedding;
-  const GuestTodayHero({super.key, required this.wedding});
+  final GuestEvent event;
+  const GuestTodayHero({super.key, required this.event});
 
   @override
   Widget build(BuildContext context) {
-    final place = wedding.venue?.isNotEmpty == true ? wedding.venue! : (wedding.location ?? '');
+    final place = event.venue?.isNotEmpty == true ? event.venue! : (event.location ?? '');
     final weekday = _weekdays[DateTime.now().weekday - 1];
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -480,7 +480,7 @@ class GuestTodayHero extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(wedding.displayNames.toUpperCase(),
+            Text(event.displayNames.toUpperCase(),
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: Color(0xCCFFFFFF))),
             const SizedBox(height: 4),
             Text('É hoje!', style: AppTypography.displaySerif(fontSize: 40, fontWeight: FontWeight.w800, color: Colors.white)),
@@ -706,8 +706,8 @@ class GuestTimeline extends StatelessWidget {
 /// menu por escolher»): linha fina amarela com o próximo passo e botão
 /// preto. Vermelho quando a escolha fecha em 3 dias ou menos.
 class GuestTablesAlerts extends ConsumerWidget {
-  final String weddingId;
-  const GuestTablesAlerts({super.key, required this.weddingId});
+  final String eventId;
+  const GuestTablesAlerts({super.key, required this.eventId});
 
   Future<void> _pay(BuildContext context, WidgetRef ref, EventTable t) async {
     try {
@@ -721,7 +721,7 @@ class GuestTablesAlerts extends ConsumerWidget {
         amount: amountWithCommission(share.amount, pct),
         baseAmount: share.amount,
       ));
-      ref.invalidate(myEventTablesProvider(weddingId));
+      ref.invalidate(myEventTablesProvider(eventId));
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível abrir o pagamento.')));
@@ -733,7 +733,7 @@ class GuestTablesAlerts extends ConsumerWidget {
     final id = t.myPayment?['id'] as String?;
     final amount = (t.myPayment?['amount'] as num?)?.toDouble();
     if (id == null || amount == null) {
-      await chooseMenuAndPay(context, ref, weddingId, t);
+      await chooseMenuAndPay(context, ref, eventId, t);
       return;
     }
     final pct = await guestShareFeePct(ref, t.partnerId, t.totalAmount ?? 0, amount);
@@ -745,12 +745,12 @@ class GuestTablesAlerts extends ConsumerWidget {
       amount: amountWithCommission(amount, pct),
       baseAmount: amount,
     ));
-    ref.invalidate(myEventTablesProvider(weddingId));
+    ref.invalidate(myEventTablesProvider(eventId));
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tables = ref.watch(myEventTablesProvider(weddingId)).value ?? const <EventTable>[];
+    final tables = ref.watch(myEventTablesProvider(eventId)).value ?? const <EventTable>[];
     final todo = tables.where((t) => t.needsAction).toList();
     if (todo.isEmpty) return const SizedBox.shrink();
     return Column(children: [
@@ -787,7 +787,7 @@ class GuestTablesAlerts extends ConsumerWidget {
         cta = t.eachPays ? 'Escolher e pagar' : 'Escolher';
       }
       sub = [?until, t.partnerName].join(' · ');
-      onTap = () => chooseMenuAndPay(context, ref, weddingId, t);
+      onTap = () => chooseMenuAndPay(context, ref, eventId, t);
     } else if (t.eachChooses) {
       caps = 'FALTA PAGAR';
       title = 'A tua parte · ${euros(t.myAmount ?? 0)}';

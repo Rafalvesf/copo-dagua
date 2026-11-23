@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/checklist/checklist_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/month_calendar_grid.dart';
 import '../../../shared/widgets/page_kit.dart';

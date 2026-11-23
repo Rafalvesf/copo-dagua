@@ -206,14 +206,14 @@ Future<ReportData> loadPartnerReport() async {
   return _assemble(business, 'Lucros e clientes', rows, pays, partnerSide: true);
 }
 
-/// Gastos e parceiros do casamento [weddingId] (organizador).
-Future<ReportData> loadCoupleReport(String weddingId) async {
+/// Gastos e parceiros do casamento [eventId] (organizador).
+Future<ReportData> loadCoupleReport(String eventId) async {
   await _loadCommission();
-  final wedding = await supabase.from('events').select('partner_name_1, partner_name_2').eq('id', weddingId).maybeSingle();
+  final event = await supabase.from('events').select('partner_name_1, partner_name_2').eq('id', eventId).maybeSingle();
   final rows = await supabase
       .from('bookings')
       .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), events(partner_name_1, partner_name_2, location), proposals(title)')
-      .eq('wedding_id', weddingId)
+      .eq('wedding_id', eventId)
       .order('event_date', ascending: false);
   final ids = [for (final r in rows) r['id'] as String];
   final pays = ids.isEmpty
@@ -223,10 +223,10 @@ Future<ReportData> loadCoupleReport(String weddingId) async {
           .select('booking_id, type, status, amount, paid_at, due_at, provider')
           .inFilter('booking_id', ids)
           .order('created_at');
-  final exps = await supabase.from('expenses').select('title, category, amount, due_date, paid').eq('wedding_id', weddingId).order('due_date');
-  final cats = await supabase.from('budget_categories').select('name, amount').eq('wedding_id', weddingId).order('position');
-  final budget = await supabase.from('budgets').select('total').eq('wedding_id', weddingId).maybeSingle();
-  final base = _assemble(_couple(wedding), 'Gastos e parceiros', rows, pays, partnerSide: false);
+  final exps = await supabase.from('expenses').select('title, category, amount, due_date, paid').eq('wedding_id', eventId).order('due_date');
+  final cats = await supabase.from('budget_categories').select('name, amount').eq('wedding_id', eventId).order('position');
+  final budget = await supabase.from('budgets').select('total').eq('wedding_id', eventId).maybeSingle();
+  final base = _assemble(_couple(event), 'Gastos e parceiros', rows, pays, partnerSide: false);
   return ReportData(
     title: base.title,
     owner: base.owner,

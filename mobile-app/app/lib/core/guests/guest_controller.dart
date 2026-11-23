@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 
 enum GuestFilter { all, confirmed, pending, declined }
 
@@ -75,7 +75,7 @@ String _rsvpToDb(RsvpStatus status) => switch (status) {
 
 Guest guestFromRow(Map<String, dynamic> row) => Guest(
   id: row['id'] as String,
-  weddingId: row['wedding_id'] as String,
+  eventId: row['wedding_id'] as String,
   name: row['full_name'] as String,
   email: row['email'] as String?,
   phone: row['phone'] as String?,
@@ -118,24 +118,24 @@ Guest guestFromRow(Map<String, dynamic> row) => Guest(
 /// limiting) e já estava documentada como "fora desta primeira versão"
 /// antes desta ligação a dados reais.
 class GuestsController extends Notifier<GuestsState> {
-  String? currentWeddingId;
+  String? currentEventId;
 
   @override
   GuestsState build() {
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    currentWeddingId = weddingId;
-    if (weddingId != null) {
-      Future.microtask(() => load(weddingId));
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+    currentEventId = eventId;
+    if (eventId != null) {
+      Future.microtask(() => load(eventId));
     }
     return const GuestsState();
   }
 
-  Future<void> load(String weddingId) async {
+  Future<void> load(String eventId) async {
     state = state.copyWith(loading: true);
     final rows = await supabase
         .from('guests')
         .select()
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .order('created_at', ascending: true);
     state = state.copyWith(loading: false, guests: rows.map(guestFromRow).toList());
   }
@@ -148,7 +148,7 @@ class GuestsController extends Notifier<GuestsState> {
     final row = await supabase
         .from('guests')
         .insert({
-          'wedding_id': guest.weddingId,
+          'wedding_id': guest.eventId,
           'full_name': guest.name,
           'email': guest.email,
           'phone': guest.phone,

@@ -19,9 +19,9 @@ import '../../partners/screens/partner_detail_screen.dart' show PackageChoiceCar
 /// menu e extras na app, antes de pagar (mockup «Restaurante · perfil»,
 /// «Cada um escolhe»). Se cada um paga o seu, segue para o pagamento.
 class ChooseMenuScreen extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final EventTable table;
-  const ChooseMenuScreen({super.key, required this.weddingId, required this.table});
+  const ChooseMenuScreen({super.key, required this.eventId, required this.table});
 
   @override
   ConsumerState<ChooseMenuScreen> createState() => _ChooseMenuScreenState();
@@ -63,7 +63,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
         extraIds: _extras.toList(),
         allergies: _allergies.text.trim().isEmpty ? null : _allergies.text.trim(),
       );
-      ref.invalidate(myEventTablesProvider(widget.weddingId));
+      ref.invalidate(myEventTablesProvider(widget.eventId));
       if (!mounted) return;
       final paymentId = r.paymentId;
       if (paymentId == null) {
@@ -81,7 +81,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
         amount: amountWithCommission(r.amount, pct),
         baseAmount: r.amount,
       ));
-      ref.invalidate(myEventTablesProvider(widget.weddingId));
+      ref.invalidate(myEventTablesProvider(widget.eventId));
       if (mounted) context.pop();
     } on PostgrestException catch (e) {
       if (!mounted) return;

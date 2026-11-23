@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../supabase/supabase_config.dart';
-import 'wedding_controller.dart';
+import 'event_controller.dart';
 
 /// O que cada co-organizador pode fazer (migração 159). O dono pode tudo.
 enum OrganizerPerm {
@@ -42,8 +42,8 @@ class OrganizerPerms {
 }
 
 /// O que eu posso no evento ativo.
-final myWeddingPermsProvider = FutureProvider<OrganizerPerms>((ref) async {
-  final id = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+final myEventPermsProvider = FutureProvider<OrganizerPerms>((ref) async {
+  final id = ref.watch(eventControllerProvider.select((s) => s.event?.id));
   if (id == null) return OrganizerPerms.all;
   try {
     final r = await supabase.rpc('my_event_permissions', params: {'p_wedding': id});
@@ -71,9 +71,9 @@ class Organizer {
   });
 }
 
-final weddingOrganizersProvider = FutureProvider.family<List<Organizer>?, String>((ref, weddingId) async {
+final eventOrganizersProvider = FutureProvider.family<List<Organizer>?, String>((ref, eventId) async {
   try {
-    final rows = await supabase.rpc('wedding_organizers', params: {'p_wedding': weddingId}) as List;
+    final rows = await supabase.rpc('wedding_organizers', params: {'p_wedding': eventId}) as List;
     return [
       for (final r in rows.cast<Map<String, dynamic>>())
         Organizer(
@@ -111,9 +111,9 @@ class InviteCandidate {
 
 /// Amigos (seguir recíproco) que podes convidar para organizar este evento.
 final organizerInviteCandidatesProvider =
-    FutureProvider.autoDispose.family<List<InviteCandidate>, String>((ref, weddingId) async {
+    FutureProvider.autoDispose.family<List<InviteCandidate>, String>((ref, eventId) async {
   try {
-    final r = await supabase.rpc('organizer_invite_candidates', params: {'p_wedding': weddingId}) as List;
+    final r = await supabase.rpc('organizer_invite_candidates', params: {'p_wedding': eventId}) as List;
     return [
       for (final m in r.cast<Map>())
         InviteCandidate(
@@ -129,18 +129,18 @@ final organizerInviteCandidatesProvider =
 });
 
 /// Convida um amigo para organizar: cria o convite e notifica-o (aceita no link).
-Future<void> inviteOrganizer(String weddingId, String userId) async {
-  await supabase.rpc('invite_organizer', params: {'p_wedding': weddingId, 'p_user': userId});
+Future<void> inviteOrganizer(String eventId, String userId) async {
+  await supabase.rpc('invite_organizer', params: {'p_wedding': eventId, 'p_user': userId});
 }
 
 /// Um convite para co-organizar um evento, dirigido a mim e ainda por
 /// responder — aparece na aba dos eventos (migração 202).
 class OrganizerInvite {
   final String token;
-  final String weddingId;
+  final String eventId;
   final String? eventName;
   final String? inviterName;
-  const OrganizerInvite({required this.token, required this.weddingId, this.eventName, this.inviterName});
+  const OrganizerInvite({required this.token, required this.eventId, this.eventName, this.inviterName});
 }
 
 /// Convites de organização que recebi e ainda não respondi (para a aba dos
@@ -152,7 +152,7 @@ final myOrganizerInvitesProvider = FutureProvider.autoDispose<List<OrganizerInvi
       for (final m in r.cast<Map>())
         OrganizerInvite(
           token: m['token'] as String,
-          weddingId: m['wedding_id'] as String,
+          eventId: m['wedding_id'] as String,
           eventName: (m['event_name'] as String?)?.trim().isNotEmpty ?? false ? (m['event_name'] as String).trim() : null,
           inviterName: (m['inviter_name'] as String?)?.trim().isNotEmpty ?? false ? (m['inviter_name'] as String).trim() : null,
         ),

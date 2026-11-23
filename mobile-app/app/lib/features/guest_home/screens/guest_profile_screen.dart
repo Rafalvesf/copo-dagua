@@ -10,7 +10,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -33,14 +33,14 @@ import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 class GuestProfileScreen extends ConsumerWidget {
   /// Presente só quando aberto a partir de "Modo convidado"
   /// (conta de casal a acompanhar outro casamento), ver [GuestHomeScreen].
-  final String? weddingId;
+  final String? eventId;
 
-  const GuestProfileScreen({super.key, this.weddingId});
+  const GuestProfileScreen({super.key, this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(authControllerProvider).profile;
-    final weddingsAsync = ref.watch(guestWeddingsProvider);
+    final eventsAsync = ref.watch(guestEventsProvider);
     final isCouple = profile?.role == UserRole.couple;
 
     return GradientScaffold(
@@ -58,17 +58,17 @@ class GuestProfileScreen extends ConsumerWidget {
                 // de definições mantém a linha de ícones (senão o
                 // título subia, tal como em `gallery_screen.dart`).
  ],
- body: weddingsAsync.when(
+ body: eventsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider)),
+                    error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestEventsProvider)),
                     data: (events) {
                       if (events.isEmpty || profile == null) {
                         return const EmptyStateView(message: 'Ainda sem casamento associado.', icon: Hi.heartOutline);
                       }
-                      final resolvedWeddingId = weddingId == null
-                          ? events.first.weddingId
-                          : (events.any((w) => w.weddingId == weddingId) ? weddingId! : events.first.weddingId);
-                      return _GuestProfileBody(weddingId: resolvedWeddingId, profile: profile, onMore: () => _openSettings(context, ref, isCouple));
+                      final resolvedEventId = eventId == null
+                          ? events.first.eventId
+                          : (events.any((w) => w.eventId == eventId) ? eventId! : events.first.eventId);
+                      return _GuestProfileBody(eventId: resolvedEventId, profile: profile, onMore: () => _openSettings(context, ref, isCouple));
                     },
                   ),
 ),
@@ -80,12 +80,12 @@ class GuestProfileScreen extends ConsumerWidget {
 }
 
 /// Uma conta de casal a acompanhar outro casamento em "Modo convidado"
-/// tem o seu próprio casamento em `weddingControllerProvider`, por isso
+/// tem o seu próprio casamento em `eventControllerProvider`, por isso
 /// `/settings` (`settings_screen.dart`) funciona normalmente — mostra
 /// as definições do casamento REAL do casal, não do casamento que estão
 /// a visitar como convidados, o que é o comportamento certo. Uma conta
 /// 100% convidada não tem casamento próprio (`SettingsScreen` fica
-/// perpetuamente a carregar à espera de `weddingControllerProvider`),
+/// perpetuamente a carregar à espera de `eventControllerProvider`),
 /// por isso mostra uma folha mínima com só "Sair" em vez de abrir esse
 /// ecrã, que nunca foi desenhado para este caso.
 void _openSettings(BuildContext context, WidgetRef ref, bool isCouple) {
@@ -116,12 +116,12 @@ Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref) async {
 
 
 class _GuestProfileBody extends ConsumerWidget {
-  final String weddingId;
+  final String eventId;
   final Profile profile;
 
   final VoidCallback onMore;
 
-  const _GuestProfileBody({required this.weddingId, required this.profile, required this.onMore});
+  const _GuestProfileBody({required this.eventId, required this.profile, required this.onMore});
 
   Future<void> _editField(
     BuildContext context,
@@ -157,19 +157,19 @@ class _GuestProfileBody extends ConsumerWidget {
       }
       return;
     }
-    ref.invalidate(myGuestRowProvider(weddingId));
+    ref.invalidate(myGuestRowProvider(eventId));
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Canvas "Convidado · A tua presença".
-    final guestAsync = ref.watch(myGuestRowProvider(weddingId));
-    final isOrganizer = ref.watch(weddingControllerProvider.select((s) => s.events.any((w) => w.id == weddingId)));
-    final tableAsync = ref.watch(mySeatingTableProvider(weddingId));
+    final guestAsync = ref.watch(myGuestRowProvider(eventId));
+    final isOrganizer = ref.watch(eventControllerProvider.select((s) => s.events.any((w) => w.id == eventId)));
+    final tableAsync = ref.watch(mySeatingTableProvider(eventId));
 
     return guestAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myGuestRowProvider(weddingId))),
+      error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(myGuestRowProvider(eventId))),
       data: (guest) {
         final companions = guest == null
             ? const <GuestCompanion>[]
@@ -248,8 +248,8 @@ class _GuestProfileBody extends ConsumerWidget {
                   if (going == (guest.rsvpStatus != RsvpStatus.declined) && guest.rsvpStatus != RsvpStatus.pending) return;
                   try {
                     await setMyRsvp(guest, going);
-                    ref.invalidate(myGuestRowProvider(weddingId));
-                    ref.invalidate(guestWeddingsProvider);
+                    ref.invalidate(myGuestRowProvider(eventId));
+                    ref.invalidate(guestEventsProvider);
                   } catch (_) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível mudar a resposta.')));
@@ -283,7 +283,7 @@ class _GuestProfileBody extends ConsumerWidget {
                       if (edited == null) return;
                       await saveGuestCompanions(
                         guestId: guest.id,
-                        weddingId: weddingId,
+                        eventId: eventId,
                         companions: [
                           for (final o in companions)
                             if (!identical(o, c)) o else if (edited.name.isNotEmpty) edited,
@@ -313,7 +313,7 @@ class _GuestProfileBody extends ConsumerWidget {
                         if (added == null) return;
                         await saveGuestCompanions(
                           guestId: guest.id,
-                          weddingId: weddingId,
+                          eventId: eventId,
                           companions: [...companions, added],
                         );
                         ref.invalidate(guestCompanionsProvider(guest.id));
@@ -336,7 +336,7 @@ class _GuestProfileBody extends ConsumerWidget {
                 onTap: tableAsync.maybeWhen(data: (t) => t, orElse: () => null) == null
                     ? null
                     : () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => GuestTableScreen(weddingId: weddingId, tableNumber: tableAsync.value)),
+                          MaterialPageRoute(builder: (_) => GuestTableScreen(eventId: eventId, tableNumber: tableAsync.value)),
                         ),
               ),
               KitSetRow(

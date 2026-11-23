@@ -126,7 +126,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
       // criada se a conversa/mensagem falhar por algum motivo).
       try {
         final conversationId = await getOrCreateConversation(
-          weddingId: widget.booking.weddingId,
+          eventId: widget.booking.eventId,
           partnerId: supabase.auth.currentUser!.id,
         );
         await sendProposalMessage(

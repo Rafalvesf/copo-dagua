@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_controller.dart';
 import '../live_refresh.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 import '../supabase/supabase_config.dart';
 import '../tasks/task_models.dart' show joinNotificationSubtitle;
 
@@ -46,9 +46,9 @@ final partnerNotificationsProvider = FutureProvider<List<PartnerNotification>>((
   keepFresh(ref);
   // Também as dos eventos que organizo (2026-11-23): o sino da página
   // Eventos é o mesmo para toda a gente e antes não as mostrava.
-  final events = ref.watch(weddingControllerProvider.select((s) => {
+  final events = ref.watch(eventControllerProvider.select((s) => {
         for (final e in s.events) e.id,
-        if (s.wedding != null) s.wedding!.id,
+        if (s.event != null) s.event!.id,
       }.join(',')));
 
   List rows;

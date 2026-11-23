@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 
 class ChecklistState {
   final bool loading;
@@ -31,7 +31,7 @@ class ChecklistState {
 
 ChecklistItem _itemFromRow(Map<String, dynamic> row) => ChecklistItem(
   id: row['id'] as String,
-  weddingId: row['wedding_id'] as String,
+  eventId: row['wedding_id'] as String,
   title: row['title'] as String,
   category: row['category'] as String? ?? 'Geral',
   done: row['done'] as bool? ?? false,
@@ -51,24 +51,24 @@ ChecklistItem _itemFromRow(Map<String, dynamic> row) => ChecklistItem(
 /// `MockBackend.listChecklistItems/addChecklistItem/
 /// updateChecklistItem/removeChecklistItem`.
 class ChecklistController extends Notifier<ChecklistState> {
-  String? currentWeddingId;
+  String? currentEventId;
 
   @override
   ChecklistState build() {
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    currentWeddingId = weddingId;
-    if (weddingId != null) {
-      Future.microtask(() => load(weddingId));
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+    currentEventId = eventId;
+    if (eventId != null) {
+      Future.microtask(() => load(eventId));
     }
     return const ChecklistState();
   }
 
-  Future<void> load(String weddingId) async {
+  Future<void> load(String eventId) async {
     state = state.copyWith(loading: true);
     final rows = await supabase
         .from('checklist_items')
         .select()
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .order('created_at', ascending: true);
     state = ChecklistState(loading: false, items: rows.map(_itemFromRow).toList());
   }
@@ -77,7 +77,7 @@ class ChecklistController extends Notifier<ChecklistState> {
     final row = await supabase
         .from('checklist_items')
         .insert({
-          'wedding_id': item.weddingId,
+          'wedding_id': item.eventId,
           'title': item.title,
           'category': item.category,
           'due_date': item.dueDate?.toIso8601String().split('T').first,

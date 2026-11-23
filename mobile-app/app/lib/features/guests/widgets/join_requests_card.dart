@@ -20,8 +20,8 @@ const guestCategories = ['Família', 'Amigos', 'Trabalho', 'Vizinhos', 'Escola /
 /// ficam num carrossel como «Os meus eventos»; cada um sai assim que é
 /// aceite ou recusado e aparece o seguinte, até acabarem.
 class JoinRequestsCard extends ConsumerStatefulWidget {
-  final String weddingId;
-  const JoinRequestsCard({super.key, required this.weddingId});
+  final String eventId;
+  const JoinRequestsCard({super.key, required this.eventId});
 
   @override
   ConsumerState<JoinRequestsCard> createState() => _JoinRequestsCardState();
@@ -33,7 +33,7 @@ class _JoinRequestsCardState extends ConsumerState<JoinRequestsCard> {
 
   @override
   Widget build(BuildContext context) {
-    final requests = (ref.watch(joinRequestsProvider(widget.weddingId)).value ?? const <JoinRequest>[])
+    final requests = (ref.watch(joinRequestsProvider(widget.eventId)).value ?? const <JoinRequest>[])
         .where((r) => !_handled.contains(r.id))
         .toList();
     if (requests.isEmpty) return const SizedBox.shrink();
@@ -48,7 +48,7 @@ class _JoinRequestsCardState extends ConsumerState<JoinRequestsCard> {
           itemCount: requests.length,
           itemBuilder: (context, i) => _RequestCard(
             key: ValueKey(requests[i].id),
-            weddingId: widget.weddingId,
+            eventId: widget.eventId,
             request: requests[i],
             onHandled: () => setState(() => _handled.add(requests[i].id)),
             // Se falhar, o pedido volta ao carrossel.
@@ -63,13 +63,13 @@ class _JoinRequestsCardState extends ConsumerState<JoinRequestsCard> {
 }
 
 class _RequestCard extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final JoinRequest request;
   final VoidCallback onHandled;
   final VoidCallback onFailed;
   const _RequestCard({
     super.key,
-    required this.weddingId,
+    required this.eventId,
     required this.request,
     required this.onHandled,
     required this.onFailed,
@@ -96,8 +96,8 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
     widget.onHandled();
     try {
       await reviewJoinRequest(r.id, approve: approve, category: category);
-      container.invalidate(joinRequestsProvider(widget.weddingId));
-      if (approve) await guests.load(widget.weddingId);
+      container.invalidate(joinRequestsProvider(widget.eventId));
+      if (approve) await guests.load(widget.eventId);
       messenger.showSnackBar(SnackBar(
         content: Text(approve ? '${r.name} está na lista de convidados.' : 'Pedido de ${r.name} recusado.'),
       ));

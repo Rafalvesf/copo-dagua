@@ -8,8 +8,8 @@ import '../../../shared/widgets/count_badge.dart';
 import '../../../core/guest_home/guest_home_providers.dart' show TableMate;
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
-import '../../../core/wedding/pastel_colors.dart';
+import '../../../core/event/date_format_pt.dart';
+import '../../../core/event/pastel_colors.dart';
 import '../../../shared/widgets/app_progress.dart';
 import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/page_kit.dart';
@@ -58,7 +58,7 @@ class DashButton36 extends StatelessWidget {
 /// Topo: a foto do evento com a seta para sair à esquerda e, à direita, o
 /// grupo do evento e «Como chegar» (botões redondos pretos, §2).
 class DashCover extends StatelessWidget {
-  final GuestWedding wedding;
+  final GuestEvent event;
   final String title;
   final String meta;
   final VoidCallback onExit;
@@ -69,7 +69,7 @@ class DashCover extends StatelessWidget {
   final int groupUnread;
   const DashCover({
     super.key,
-    required this.wedding,
+    required this.event,
     required this.title,
     required this.meta,
     required this.onExit,
@@ -81,7 +81,7 @@ class DashCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final inset = MediaQuery.paddingOf(context).top;
-    final photo = wedding.coverPhotoUrl;
+    final photo = event.coverPhotoUrl;
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(40)),
       child: SizedBox(
@@ -122,7 +122,7 @@ class DashCover extends StatelessWidget {
             right: AppTheme.screenMargin,
             bottom: 22,
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(wedding.eventType.label.toUpperCase(),
+              Text(event.eventType.label.toUpperCase(),
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: Color(0xE6FFFFFF))),
               const SizedBox(height: 4),
               Text(title,
@@ -639,7 +639,7 @@ Widget _big(String label, VoidCallback onTap, {bool outlined = false}) => Snappy
     );
 
 /// Quando é, para o resumo: (rótulo, número grande, unidade).
-(String, String, String) dashWhen(GuestWedding w) => dashWhenAt(w.weddingDate, w.ceremonyTime);
+(String, String, String) dashWhen(GuestEvent w) => dashWhenAt(w.eventDate, w.ceremonyTime);
 
 /// O mesmo para qualquer evento (data e hora de início); depois do evento,
 /// «Foi há N dias» (painel do organizador, 2026-11-21).

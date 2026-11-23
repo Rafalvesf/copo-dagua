@@ -2,7 +2,7 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../core/wedding/date_format_pt.dart';
+import '../../core/event/date_format_pt.dart';
 import 'snappy_tap.dart';
 
 DateTime dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);

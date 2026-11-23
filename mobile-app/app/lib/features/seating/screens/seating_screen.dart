@@ -15,7 +15,7 @@ import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/seating/seating_controller.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -133,11 +133,11 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(seatingControllerProvider);
     final guestsState = ref.watch(guestsControllerProvider);
-    final wedding = ref.watch(weddingControllerProvider).wedding;
+    final event = ref.watch(eventControllerProvider).event;
 
     final filled = state.nextIndex;
     final total = state.totalTables;
-    final loading = state.loading || wedding == null;
+    final loading = state.loading || event == null;
     final seatedIds = {for (final t in state.tables) ...t.guestIds};
     final invited = guestsState.guests.where((g) => g.rsvpStatus != RsvpStatus.declined).toList();
     final unseated = invited.where((g) => !seatedIds.contains(g.id)).toList();
@@ -185,7 +185,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                                   ),
                           ),
                         ]),
-                        KitTitle('Mesas', subtitle: wedding?.venue?.isNotEmpty == true ? wedding!.venue : null),
+                        KitTitle('Mesas', subtitle: event?.venue?.isNotEmpty == true ? event!.venue : null),
                         if (!noTables)
                           KitPills([
                             KitPill(label: 'Planta', selected: _view == _PlanView.plan, onTap: () => setState(() => _view = _PlanView.plan)),

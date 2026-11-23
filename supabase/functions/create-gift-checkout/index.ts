@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
   // Só convidados (ou organizadores) do evento.
   const [{ data: member }, { data: w }] = await Promise.all([
     admin.from("wedding_guest_members").select("guest_id").eq("wedding_id", item.wedding_id).eq("guest_id", user.id).maybeSingle(),
-    admin.from("weddings").select("id, owner_id, pending_deletion_at").eq("id", item.wedding_id).maybeSingle(),
+    admin.from("events").select("id, owner_id, pending_deletion_at").eq("id", item.wedding_id).maybeSingle(),
   ]);
   if (!w || w.pending_deletion_at) return json({ error: "not_found" }, 404);
   if (!member) {

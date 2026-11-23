@@ -23,7 +23,7 @@ import '../payments/fee_config.dart';
 /// — substitui `MockBackend.listBookingsForCouple`. Filtra por `couple_id`
 /// (não por `wedding_id`) porque é assim que a RLS de `bookings` decide
 /// visibilidade (`Participants can view bookings`) — filtrar pela mesma
-/// coluna evita depender de `weddingControllerProvider` já ter carregado.
+/// coluna evita depender de `eventControllerProvider` já ter carregado.
 /// Ver `ROADMAP.md`, 2026-08-31, Fase 4.
 final coupleBookingsProvider = FutureProvider<List<CoupleBooking>>((ref) async {
   final userId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
@@ -77,7 +77,7 @@ CoupleBooking _coupleBookingFromRow(Map<String, dynamic> row) {
 
   return CoupleBooking(
     id: row['id'] as String,
-    weddingId: row['wedding_id'] as String,
+    eventId: row['wedding_id'] as String,
     partnerName: (partner?['business_name'] as String?) ?? 'Parceiro',
     partnerId: row['partner_id'] as String?,
     partnerLogoUrl: partner?['cover_photo_url'] as String?,
@@ -139,7 +139,7 @@ ReceivedProposal _receivedProposalFromRow(Map<String, dynamic> row) {
 
   return ReceivedProposal(
     id: row['id'] as String,
-    weddingId: quoteRequest?['wedding_id'] as String,
+    eventId: quoteRequest?['wedding_id'] as String,
     partnerName: (partner?['business_name'] as String?) ?? 'Parceiro',
     partnerId: row['partner_id'] as String?,
     category: firstCategory?['label_pt'] as String?,

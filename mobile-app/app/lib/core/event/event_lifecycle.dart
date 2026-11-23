@@ -52,19 +52,19 @@ String eventActionError(Object e) {
 }
 
 /// Porque é que não se pode apagar (null = pode).
-Future<String?> eventDeleteBlocker(String weddingId) async {
+Future<String?> eventDeleteBlocker(String eventId) async {
   try {
-    return await supabase.rpc('event_delete_blocker', params: {'p_wedding': weddingId}) as String?;
+    return await supabase.rpc('event_delete_blocker', params: {'p_wedding': eventId}) as String?;
   } on PostgrestException {
     return null;
   }
 }
 
-Future<void> archiveEvent(String weddingId, {bool archived = true}) =>
-    supabase.rpc('set_event_archived', params: {'p_wedding': weddingId, 'p_archived': archived});
+Future<void> archiveEvent(String eventId, {bool archived = true}) =>
+    supabase.rpc('set_event_archived', params: {'p_wedding': eventId, 'p_archived': archived});
 
-Future<void> deleteEvent(String weddingId) => supabase.rpc('delete_event', params: {'p_wedding': weddingId});
+Future<void> deleteEvent(String eventId) => supabase.rpc('delete_event', params: {'p_wedding': eventId});
 
-Future<void> restoreEvent(String weddingId) => supabase.rpc('restore_event', params: {'p_wedding': weddingId});
+Future<void> restoreEvent(String eventId) => supabase.rpc('restore_event', params: {'p_wedding': eventId});
 
-Future<void> purgeEvent(String weddingId) => supabase.rpc('purge_event', params: {'p_wedding': weddingId});
+Future<void> purgeEvent(String eventId) => supabase.rpc('purge_event', params: {'p_wedding': eventId});

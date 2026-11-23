@@ -31,13 +31,13 @@ final publicReviewsForPartnerProvider = FutureProvider.family<List<Review>, Stri
   // explícito do utilizador (2026-09-13): mostrar nome+ícone no cartão
   // de avaliação do perfil público do parceiro.
   final authorRows = await supabase.rpc('get_review_authors', params: {'p_partner_id': partnerId}) as List;
-  final authorsByWeddingId = {
+  final authorsByEventId = {
     for (final a in authorRows.cast<Map<String, dynamic>>()) a['wedding_id'] as String: a,
   };
 
   return (rows as List).map((r) {
     final row = r as Map<String, dynamic>;
-    final author = authorsByWeddingId[row['wedding_id']];
+    final author = authorsByEventId[row['wedding_id']];
     return Review.fromRow({
       ...row,
       if (author != null)

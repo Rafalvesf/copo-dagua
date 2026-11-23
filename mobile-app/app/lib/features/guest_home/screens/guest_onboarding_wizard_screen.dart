@@ -11,7 +11,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
@@ -23,7 +23,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 /// acompanhantes, refeição e alergias de cada pessoa e telemóvel de cada
 /// acompanhante (`081_onboarding_v2.sql`, `guest_companions`).
 class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final Guest guest;
 
   /// Só para as capturas de ecrã (`?step=N`).
@@ -35,7 +35,7 @@ class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
   final String? rsvpToken;
 
   /// Dados do evento quando não vêm da lista do convidado (modo RSVP).
-  final GuestWedding? event;
+  final GuestEvent? event;
 
   /// Acompanhantes já guardados (para mudar a resposta).
   final List<GuestCompanion> initialCompanions;
@@ -45,7 +45,7 @@ class GuestOnboardingWizardScreen extends ConsumerStatefulWidget {
 
   const GuestOnboardingWizardScreen({
     super.key,
-    required this.weddingId,
+    required this.eventId,
     required this.guest,
     this.initialStep = 0,
     this.rsvpToken,
@@ -166,16 +166,16 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
     if (_companions.isEmpty && plusOne != null && plusOne.isNotEmpty) _companions.add(_Person(name: plusOne));
   }
 
-  GuestWedding? get _wedding {
+  GuestEvent? get _event {
     if (widget.event != null) return widget.event;
-    final list = ref.watch(guestWeddingsProvider).value ?? const [];
+    final list = ref.watch(guestEventsProvider).value ?? const [];
     for (final w in list) {
-      if (w.weddingId == widget.weddingId) return w;
+      if (w.eventId == widget.eventId) return w;
     }
     return null;
   }
 
-  EventType get _eventType => _wedding?.eventType ?? EventType.wedding;
+  EventType get _eventType => _event?.eventType ?? EventType.wedding;
 
   /// Limite definido pelo organizador (091); antes era sempre 5.
   int get _limit => widget.guest.maxCompanions > 0 ? widget.guest.maxCompanions : (widget.guest.plusOneAllowed ? 1 : 0);
@@ -198,7 +198,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
   List<_Person> get _people => [_me, ..._companions];
 
   // Opções do organizador (Para os convidados › Acompanhantes, 2026-11-08).
-  GuestSections get _opts => ref.watch(myEventPassProvider(widget.weddingId)).value?.sections ?? const GuestSections();
+  GuestSections get _opts => ref.watch(myEventPassProvider(widget.eventId)).value?.sections ?? const GuestSections();
 
   /// Quem tem de escolher menu e alergias: todos, ou só tu se o
   /// organizador não pedir os dados dos acompanhantes.
@@ -294,15 +294,15 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         menuSelection: _me.menu,
         dietaryRestrictions: _me.allAllergies.isEmpty ? null : _me.allAllergies.join(', '),
         side: _side ?? widget.guest.side,
-        weddingId: widget.weddingId,
+        eventId: widget.eventId,
       );
       if (attending) {
         try {
-          await setOwnAgeGroup(widget.weddingId, _me.ageGroup);
+          await setOwnAgeGroup(widget.eventId, _me.ageGroup);
         } catch (_) {}
         await saveGuestCompanions(
           guestId: widget.guest.id,
-          weddingId: widget.weddingId,
+          eventId: widget.eventId,
           companions: [
             for (final c in _companions)
               GuestCompanion(
@@ -321,13 +321,13 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
           ],
         );
       }
-      ref.invalidate(myGuestRowProvider(widget.weddingId));
+      ref.invalidate(myGuestRowProvider(widget.eventId));
       if (!mounted) return;
       if (attending) {
         setState(() => _confirmed = true);
         return;
       }
-      context.go('/guest-home/${widget.weddingId}');
+      context.go('/guest-home/${widget.eventId}');
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -398,7 +398,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
         rsvp: widget.rsvpToken != null,
         onContinue: widget.rsvpToken != null
             ? (widget.onDone ?? () {})
-            : () => context.go('/guest-home/${widget.weddingId}'),
+            : () => context.go('/guest-home/${widget.eventId}'),
       );
     }
     final steps = _steps;
@@ -427,7 +427,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                           ? () => setState(() => _index--)
                           : widget.rsvpToken != null
                               ? () => Navigator.of(context).maybePop()
-                              : () => context.go('/guest-home/${widget.weddingId}'),
+                              : () => context.go('/guest-home/${widget.eventId}'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(child: OnbProgress(value: 0.2 + 0.8 * (_index + 1) / (steps.length + 1))),
@@ -532,14 +532,14 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
     switch (step) {
       case _Step.attending:
         final sub = [
-            if (_wedding?.weddingDate != null) formatWeddingDateCaps(_wedding!.weddingDate!),
-            if (_wedding?.venue?.isNotEmpty == true) _wedding!.venue!,
+            if (_event?.eventDate != null) formatEventDateCaps(_event!.eventDate!),
+            if (_event?.venue?.isNotEmpty == true) _event!.venue!,
           ].join(' · ');
         // Já indicado como acompanhante por outra pessoa (093): os dados
         // vêm preenchidos, só falta confirmar.
         final prefilled = widget.guest.rsvpStatus == RsvpStatus.confirmed && widget.guest.onboardingCompletedAt == null;
         return _StepScaffold(
-          question: 'Vais ao ${_eventType.noun}${_wedding == null ? '' : ' de ${_wedding!.displayNames}'}?',
+          question: 'Vais ao ${_eventType.noun}${_event == null ? '' : ' de ${_event!.displayNames}'}?',
           subtitle: prefilled
               ? 'Já tínhamos a tua resposta e preenchemos o que sabíamos. Só tens de confirmar nos próximos passos.'
               : (sub.isEmpty ? null : sub),

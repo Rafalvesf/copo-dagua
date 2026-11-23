@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 
 class ExpenseState {
   final bool loading;
@@ -23,7 +23,7 @@ class ExpenseState {
 
 Expense _expenseFromRow(Map<String, dynamic> row) => Expense(
   id: row['id'] as String,
-  weddingId: row['wedding_id'] as String,
+  eventId: row['wedding_id'] as String,
   title: row['title'] as String,
   category: _enumFor(_slugFor(row['category'] as String?)),
   categorySlug: _slugFor(row['category'] as String?),
@@ -54,26 +54,26 @@ PartnerCategory? _enumFor(String? slug) => switch (slug) {
 /// — substitui `MockBackend.listExpenses/addExpense/updateExpense`.
 /// Mesmo padrão de `ChecklistController`.
 class ExpenseController extends Notifier<ExpenseState> {
-  String? currentWeddingId;
+  String? currentEventId;
 
   @override
   ExpenseState build() {
-    final weddingId = ref.watch(
-      weddingControllerProvider.select((s) => s.wedding?.id),
+    final eventId = ref.watch(
+      eventControllerProvider.select((s) => s.event?.id),
     );
-    currentWeddingId = weddingId;
-    if (weddingId != null) {
-      Future.microtask(() => load(weddingId));
+    currentEventId = eventId;
+    if (eventId != null) {
+      Future.microtask(() => load(eventId));
     }
     return const ExpenseState();
   }
 
-  Future<void> load(String weddingId) async {
+  Future<void> load(String eventId) async {
     state = state.copyWith(loading: true);
     final rows = await supabase
         .from('expenses')
         .select()
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .order('created_at', ascending: true);
     state = ExpenseState(loading: false, expenses: rows.map(_expenseFromRow).toList());
   }
@@ -82,7 +82,7 @@ class ExpenseController extends Notifier<ExpenseState> {
     final row = await supabase
         .from('expenses')
         .insert({
-          'wedding_id': expense.weddingId,
+          'wedding_id': expense.eventId,
           'title': expense.title,
           'category': expense.categorySlug ?? expense.category?.name,
           'amount': expense.amount,

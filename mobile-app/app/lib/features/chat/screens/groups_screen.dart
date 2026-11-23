@@ -1,7 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider;
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,28 +27,28 @@ import '../../../shared/widgets/v2_kit.dart';
 /// Grupos do evento — organizadores e convidados (pedido do utilizador,
 /// 2026-10-20).
 class GroupsScreen extends ConsumerWidget {
-  final String weddingId;
-  const GroupsScreen({super.key, required this.weddingId});
+  final String eventId;
+  const GroupsScreen({super.key, required this.eventId});
 
   Future<void> _newGroup(BuildContext context, WidgetRef ref) async {
     final id = await showIslandSheet<String>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => NewGroupSheet(weddingId: weddingId),
+      builder: (_) => NewGroupSheet(eventId: eventId),
     );
     if (id == null || !context.mounted) return;
-    ref.invalidate(chatGroupsProvider(weddingId));
-    final groups = await ref.read(chatGroupsProvider(weddingId).future);
+    ref.invalidate(chatGroupsProvider(eventId));
+    final groups = await ref.read(chatGroupsProvider(eventId).future);
     final g = groups.where((x) => x.id == id).firstOrNull;
     if (g != null && context.mounted) context.push('/group/${g.id}', extra: g);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(chatGroupsProvider(weddingId));
+    final async = ref.watch(chatGroupsProvider(eventId));
     // Convidados só criam grupos se o organizador deixar (2026-11-08).
-    final organizer = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id)) == weddingId;
-    final canCreate = organizer || (ref.watch(myEventPassProvider(weddingId)).value?.sections.groupsCreate ?? true);
+    final organizer = ref.watch(eventControllerProvider.select((s) => s.event?.id)) == eventId;
+    final canCreate = organizer || (ref.watch(myEventPassProvider(eventId)).value?.sections.groupsCreate ?? true);
     return GradientScaffold(
       background: AppBackground.feed,
       body: SafeArea(top: false, 
@@ -76,7 +76,7 @@ class GroupsScreen extends ConsumerWidget {
                       action: canCreate ? () => _newGroup(context, ref) : null,
                     )
                   : RefreshIndicator(
-                      onRefresh: () async => ref.invalidate(chatGroupsProvider(weddingId)),
+                      onRefresh: () async => ref.invalidate(chatGroupsProvider(eventId)),
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
                         itemCount: groups.length,
@@ -159,8 +159,8 @@ class _Empty extends StatelessWidget {
 
 /// Nome do grupo + escolha das pessoas do evento. Devolve o id do grupo.
 class NewGroupSheet extends ConsumerStatefulWidget {
-  final String weddingId;
-  const NewGroupSheet({super.key, required this.weddingId});
+  final String eventId;
+  const NewGroupSheet({super.key, required this.eventId});
 
   @override
   ConsumerState<NewGroupSheet> createState() => _NewGroupSheetState();
@@ -181,7 +181,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
     if (_name.text.trim().isEmpty || _picked.isEmpty) return;
     setState(() => _saving = true);
     try {
-      final id = await createChatGroup(widget.weddingId, _name.text.trim(), _picked.toList());
+      final id = await createChatGroup(widget.eventId, _name.text.trim(), _picked.toList());
       if (mounted) Navigator.of(context).pop(id);
     } catch (_) {
       if (mounted) {
@@ -193,7 +193,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final people = ref.watch(eventPeopleProvider(widget.weddingId));
+    final people = ref.watch(eventPeopleProvider(widget.eventId));
     final me = currentUserId();
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.75,
@@ -298,10 +298,10 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
     final people = <EventPerson>[...?ref.read(groupPeopleProvider(widget.group.id)).value?.values];
     // Os anfitriões (quem organiza) aparecem em primeiro, como na lista de
     // convidados (212); a etiqueta diz quem são.
-    final hosts = widget.group.weddingId.isEmpty
+    final hosts = widget.group.eventId.isEmpty
         ? const <String>{}
         : {
-            for (final p in await ref.read(eventPeopleProvider(widget.group.weddingId).future).catchError((_) => const <EventPerson>[]))
+            for (final p in await ref.read(eventPeopleProvider(widget.group.eventId).future).catchError((_) => const <EventPerson>[]))
               if (p.role == 'organizador') p.id,
           };
     if (!mounted) return;
@@ -358,7 +358,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
           cta: 'Apagar grupo');
       if (!ok || !mounted) return;
       if (await runChatDelete(context, () => deleteChatGroup(widget.group.id))) {
-        ref.invalidate(chatGroupsProvider(widget.group.weddingId));
+        ref.invalidate(chatGroupsProvider(widget.group.eventId));
         ref.invalidate(myChatGroupsProvider);
         if (mounted) context.pop();
       }
@@ -366,11 +366,11 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
     }
     if (action == 'leave') {
       await leaveChatGroup(widget.group.id);
-      ref.invalidate(chatGroupsProvider(widget.group.weddingId));
+      ref.invalidate(chatGroupsProvider(widget.group.eventId));
       ref.invalidate(myChatGroupsProvider);
       if (mounted) context.pop();
     } else if (action == 'add') {
-      final all = await ref.read(eventPeopleProvider(widget.group.weddingId).future);
+      final all = await ref.read(eventPeopleProvider(widget.group.eventId).future);
       final inGroup = people.map((p) => p.id).toSet();
       if (!mounted) return;
       final picked = await showIslandSheet<List<String>>(
@@ -395,8 +395,8 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
     final others = people.values.where((p) => p.id != me).toList();
     // Faixa do evento (mockup "Grupo do evento", 2026-11-12).
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    final ev = ref.watch(weddingControllerProvider).events.where((w) => w.id == widget.group.weddingId).firstOrNull;
-    final evDate = ev?.weddingDate;
+    final ev = ref.watch(eventControllerProvider).events.where((w) => w.id == widget.group.eventId).firstOrNull;
+    final evDate = ev?.eventDate;
     final eventTitle = ev == null
         ? null
         : [ev.displayNames, if (evDate != null) '${evDate.day} ${months[evDate.month - 1]} ${evDate.year}'].join(' · ');

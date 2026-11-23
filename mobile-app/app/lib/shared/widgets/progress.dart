@@ -30,15 +30,15 @@ class StepProgressBar extends StatelessWidget {
 }
 
 class CountdownBadge extends StatelessWidget {
-  final DateTime? weddingDate;
+  final DateTime? eventDate;
   final bool light;
 
-  const CountdownBadge({super.key, required this.weddingDate, this.light = false});
+  const CountdownBadge({super.key, required this.eventDate, this.light = false});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final date = weddingDate;
+    final date = eventDate;
     final text = date == null
         ? 'Data por definir'
         : () {

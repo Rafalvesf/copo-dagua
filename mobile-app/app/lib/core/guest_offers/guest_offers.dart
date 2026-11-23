@@ -162,27 +162,27 @@ final guestOffersEnabledProvider = FutureProvider<bool>((ref) async {
 });
 
 /// Ofertas de um evento (o organizador vê também as escondidas).
-final guestOffersProvider = FutureProvider.autoDispose.family<List<GuestOffer>, String>((ref, weddingId) async {
-  final rows = await supabase.rpc('get_guest_offers', params: {'p_wedding_id': weddingId}) as List;
+final guestOffersProvider = FutureProvider.autoDispose.family<List<GuestOffer>, String>((ref, eventId) async {
+  final rows = await supabase.rpc('get_guest_offers', params: {'p_wedding_id': eventId}) as List;
   return rows.map((r) => GuestOffer.fromRow(r as Map<String, dynamic>)).toList();
 });
 
 /// Reservas de todos os convidados (só o organizador).
-final weddingGuestReservationsProvider =
-    FutureProvider.autoDispose.family<List<GuestReservation>, String>((ref, weddingId) async {
-  final rows = await supabase.rpc('get_guest_offer_reservations', params: {'p_wedding_id': weddingId}) as List;
+final eventGuestReservationsProvider =
+    FutureProvider.autoDispose.family<List<GuestReservation>, String>((ref, eventId) async {
+  final rows = await supabase.rpc('get_guest_offer_reservations', params: {'p_wedding_id': eventId}) as List;
   return rows.map((r) => GuestReservation.fromRow(r as Map<String, dynamic>)).toList();
 });
 
 /// As reservas do próprio convidado neste evento.
 final myGuestReservationsProvider =
-    FutureProvider.autoDispose.family<List<GuestReservation>, String>((ref, weddingId) async {
+    FutureProvider.autoDispose.family<List<GuestReservation>, String>((ref, eventId) async {
   final uid = supabase.auth.currentUser?.id;
   if (uid == null) return const [];
   final rows = await supabase
       .from('guest_offer_reservations')
       .select('id, offer_id, quantity, nights, amount, status, created_at, guest_offers(title, kind)')
-      .eq('wedding_id', weddingId)
+      .eq('wedding_id', eventId)
       .eq('guest_id', uid)
       .neq('status', 'cancelled')
       .order('created_at', ascending: false);
@@ -192,11 +192,11 @@ final myGuestReservationsProvider =
 /// Parceiros com quem o evento já tem reserva — só a esses se pode ligar
 /// uma oferta (é para a conta deles que vai o pagamento).
 final bookedPartnersProvider =
-    FutureProvider.autoDispose.family<List<({String id, String name})>, String>((ref, weddingId) async {
+    FutureProvider.autoDispose.family<List<({String id, String name})>, String>((ref, eventId) async {
   final rows = await supabase
       .from('bookings')
       .select('partner_id, partner_profiles(business_name)')
-      .eq('wedding_id', weddingId);
+      .eq('wedding_id', eventId);
   final seen = <String>{};
   final out = <({String id, String name})>[];
   for (final r in rows) {
@@ -212,7 +212,7 @@ String _date(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
 Future<void> createGuestOffer({
-  required String weddingId,
+  required String eventId,
   required String partnerId,
   required GuestOfferKind kind,
   required String title,
@@ -224,7 +224,7 @@ Future<void> createGuestOffer({
   DateTime? departureAt,
 }) async {
   await supabase.from('guest_offers').insert({
-    'wedding_id': weddingId,
+    'wedding_id': eventId,
     'partner_id': partnerId,
     'kind': kind.db,
     'title': title.trim(),
@@ -250,12 +250,12 @@ Future<void> cancelGuestReservation(String reservationId) async {
 /// Reserva e devolve o URL do checkout Stripe. Erros conhecidos chegam
 /// como [CheckoutUnavailable] (`sold_out`, `partner_not_onboarded`, …).
 Future<String> createGuestReservationCheckoutUrl({
-  required String weddingId,
+  required String eventId,
   required String offerId,
   required int quantity,
   int nights = 1,
 }) async {
-  final back = kIsWeb ? publicLink('/guest-stay/$weddingId') : 'anossa://payment-success';
+  final back = kIsWeb ? publicLink('/guest-stay/$eventId') : 'anossa://payment-success';
   final FunctionResponse response;
   try {
     response = await supabase.functions.invoke(

@@ -103,9 +103,9 @@ class EventPass {
 
 /// O que o convidado vê e o seu bilhete (`my_event_pass`, migração 158).
 /// Antes da migração mostra tudo, como antes.
-final myEventPassProvider = FutureProvider.family<EventPass, String>((ref, weddingId) async {
+final myEventPassProvider = FutureProvider.family<EventPass, String>((ref, eventId) async {
   try {
-    final r = await supabase.rpc('my_event_pass', params: {'p_wedding': weddingId});
+    final r = await supabase.rpc('my_event_pass', params: {'p_wedding': eventId});
     if (r is! Map) return const EventPass();
     final t = r['ticket'];
     return EventPass(
@@ -126,9 +126,9 @@ final myEventPassProvider = FutureProvider.family<EventPass, String>((ref, weddi
 });
 
 /// O organizador: o que os convidados veem neste evento.
-final guestSectionsProvider = FutureProvider.family<GuestSections?, String>((ref, weddingId) async {
+final guestSectionsProvider = FutureProvider.family<GuestSections?, String>((ref, eventId) async {
   try {
-    final row = await supabase.from('events').select('guest_sections').eq('id', weddingId).maybeSingle();
+    final row = await supabase.from('events').select('guest_sections').eq('id', eventId).maybeSingle();
     return GuestSections.fromJson(row?['guest_sections']);
   } on PostgrestException {
     // Antes da migração 158.
@@ -136,8 +136,8 @@ final guestSectionsProvider = FutureProvider.family<GuestSections?, String>((ref
   }
 });
 
-Future<void> saveGuestSections(String weddingId, GuestSections sections) async {
-  await supabase.rpc('set_guest_sections', params: {'p_wedding': weddingId, 'p_sections': sections.toJson()});
+Future<void> saveGuestSections(String eventId, GuestSections sections) async {
+  await supabase.rpc('set_guest_sections', params: {'p_wedding': eventId, 'p_sections': sections.toJson()});
 }
 
 enum CheckInResult { ok, already, notFound, notOrganizer, refunded, notPaid, error }

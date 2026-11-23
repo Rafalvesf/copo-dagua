@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/wedding/wedding_controller.dart';
+import '../../core/event/event_controller.dart';
 import '../text_case.dart';
 import 'page_kit.dart';
 
@@ -16,7 +16,7 @@ class EventPills extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final events = ref.watch(weddingControllerProvider.select((s) => s.events));
+    final events = ref.watch(eventControllerProvider.select((s) => s.events));
     if (events.length < 2) return const SizedBox.shrink();
     return KitPills(top: top, [
       KitPill(label: 'Todos', selected: selected == null, onTap: () => onSelect(null)),

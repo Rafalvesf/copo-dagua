@@ -28,9 +28,9 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 class GuestGiftsScreen extends ConsumerWidget {
   /// Presente só quando aberto a partir de "Modo convidado"
   /// (conta de casal a acompanhar outro casamento), ver [GuestHomeScreen].
-  final String? weddingId;
+  final String? eventId;
 
-  const GuestGiftsScreen({super.key, this.weddingId});
+  const GuestGiftsScreen({super.key, this.eventId});
 
   void _notSet(BuildContext context, String what) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -38,7 +38,7 @@ class GuestGiftsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _openList(BuildContext context, GuestWedding? w) async {
+  Future<void> _openList(BuildContext context, GuestEvent? w) async {
     final url = w?.giftListUrl?.trim();
     if (url == null || url.isEmpty) return _notSet(context, 'uma lista de presentes');
     final uri = Uri.tryParse(url.startsWith('http') ? url : 'https://$url');
@@ -51,7 +51,7 @@ class GuestGiftsScreen extends ConsumerWidget {
     }
   }
 
-  void _showIban(BuildContext context, GuestWedding? w) {
+  void _showIban(BuildContext context, GuestEvent? w) {
     final iban = w?.giftIban?.trim();
     if (iban == null || iban.isEmpty) return _notSet(context, 'um IBAN para contribuições');
     showIslandSheet<void>(
@@ -101,17 +101,17 @@ class GuestGiftsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final events = ref.watch(guestWeddingsProvider).asData?.value ?? const <GuestWedding>[];
-    GuestWedding? wedding;
+    final events = ref.watch(guestEventsProvider).asData?.value ?? const <GuestEvent>[];
+    GuestEvent? event;
     for (final w in events) {
-      if (weddingId == null || w.weddingId == weddingId) {
-        wedding = w;
+      if (eventId == null || w.eventId == eventId) {
+        event = w;
         break;
       }
     }
-    final message = wedding?.giftMessage?.trim();
-    final iban = wedding?.giftIban?.trim();
-    final hasList = wedding?.giftListUrl?.trim().isNotEmpty == true;
+    final message = event?.giftMessage?.trim();
+    final iban = event?.giftIban?.trim();
+    final hasList = event?.giftListUrl?.trim().isNotEmpty == true;
     // Canvas "Convidado · Presentes".
     return GradientScaffold(
       background: AppBackground.feed,
@@ -127,7 +127,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: GuestEventsPill(to: weddingId == null ? '/guest-home' : '/guest-home/$weddingId'),
+                    child: GuestEventsPill(to: eventId == null ? '/guest-home' : '/guest-home/$eventId'),
                   ),
                 ),
                 Padding(
@@ -151,7 +151,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                         ]),
                       ),
                       // Lista de presentes na app (migração 160).
-                      if (wedding != null) ...[const SizedBox(height: 14), GuestGiftListSection(weddingId: wedding.weddingId)],
+                      if (event != null) ...[const SizedBox(height: 14), GuestGiftListSection(eventId: event.eventId)],
                       const KitSection('Como oferecer'),
                       if (hasList || iban?.isNotEmpty != true)
                         KitGroup([
@@ -166,7 +166,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                               title: 'Lista de presentes',
                               sub: 'Abre a lista dos anfitriões',
                               chevron: true,
-                              onTap: () => _openList(context, wedding),
+                              onTap: () => _openList(context, event),
                             ),
                         ]),
                       if (iban?.isNotEmpty == true) ...[
@@ -195,9 +195,9 @@ class GuestGiftsScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                             // Envelope digital (migração 156): valor + mensagem,
                             // transferência direta e confirmação para os anfitriões.
-                            if (iban?.isNotEmpty == true && wedding != null) ...[
+                            if (iban?.isNotEmpty == true && event != null) ...[
                               FilledButton.icon(
-                                onPressed: () => showEnvelopeSheet(context, wedding!),
+                                onPressed: () => showEnvelopeSheet(context, event!),
                                 icon: const Icon(Hi.envelope, size: 18),
                                 label: const Text('Oferecer um envelope'),
                                 style: FilledButton.styleFrom(
@@ -237,7 +237,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                               )
                             else
                               const Text('Os anfitriões ainda não indicaram um IBAN.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                            if (wedding != null) _MyEnvelopes(weddingId: wedding.weddingId),
+                            if (event != null) _MyEnvelopes(eventId: event.eventId),
                           ],
                         ),
                       ),
@@ -256,12 +256,12 @@ class GuestGiftsScreen extends ConsumerWidget {
 
 /// Os envelopes que este convidado já ofereceu.
 class _MyEnvelopes extends ConsumerWidget {
-  final String weddingId;
-  const _MyEnvelopes({required this.weddingId});
+  final String eventId;
+  const _MyEnvelopes({required this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final list = ref.watch(myEnvelopesProvider(weddingId)).value ?? const <GiftEnvelope>[];
+    final list = ref.watch(myEnvelopesProvider(eventId)).value ?? const <GiftEnvelope>[];
     if (list.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 12),

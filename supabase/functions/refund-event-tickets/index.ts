@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
   if (migErr) return json({ error: "not_configured" }, 503);
 
   async function ownerOf(weddingId: string): Promise<boolean> {
-    const { data: w } = await admin.from("weddings").select("owner_id").eq("id", weddingId).maybeSingle();
+    const { data: w } = await admin.from("events").select("owner_id").eq("id", weddingId).maybeSingle();
     return !!w && w.owner_id === user!.id;
   }
 

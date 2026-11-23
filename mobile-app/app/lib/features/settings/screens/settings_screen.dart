@@ -15,11 +15,11 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../shared/text_case.dart';
-import '../../../core/wedding/event_lifecycle.dart';
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/event_lifecycle.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/widgets/line_icon.dart';
 import 'package:copo_dagua_app/shared/widgets/gradient_scaffold.dart';
-import '../../../core/wedding/organizers.dart' show myWeddingPermsProvider;
+import '../../../core/event/organizers.dart' show myEventPermsProvider;
 import '../../../core/events/events_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,7 +34,7 @@ import '../../../core/models/models.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/partner_profile/partner_location.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/public_link.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
@@ -310,7 +310,7 @@ class _CoupleSettings extends ConsumerWidget {
   final bool fromGuestMode;
   const _CoupleSettings({required this.fromGuestMode});
 
-  List<Widget> _sections(BuildContext context, WidgetRef ref, Wedding wedding,
+  List<Widget> _sections(BuildContext context, WidgetRef ref, Event event,
       {bool help = true, bool signOut = true, List<Widget> afterOrganization = const []}) {
     return [
       // A secção "Organização" passou para "Definições deste evento", no
@@ -331,14 +331,14 @@ class _CoupleSettings extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final wedding = ref.watch(weddingControllerProvider).wedding;
-    if (wedding == null) {
+    final event = ref.watch(eventControllerProvider).event;
+    if (event == null) {
       return const Scaffold(backgroundColor: _pageBackground, body: Center(child: CircularProgressIndicator()));
     }
     return _SettingsPage(
       title: 'Definições',
       children: [
-        ..._sections(context, ref, wedding),
+        ..._sections(context, ref, event),
       ],
     );
   }
@@ -355,12 +355,12 @@ class CoupleAccountSections extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final wedding = ref.watch(weddingControllerProvider).wedding;
-    if (wedding == null) return const SizedBox.shrink();
+    final event = ref.watch(eventControllerProvider).event;
+    if (event == null) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: const _CoupleSettings(fromGuestMode: false)
-          ._sections(context, ref, wedding, help: help, signOut: signOut, afterOrganization: afterOrganization),
+          ._sections(context, ref, event, help: help, signOut: signOut, afterOrganization: afterOrganization),
     );
   }
 }
@@ -445,8 +445,8 @@ class GuestAccountSections extends StatelessWidget {
 }
 
 class EditEventPage extends ConsumerStatefulWidget {
-  final Wedding wedding;
-  const EditEventPage({required this.wedding});
+  final Event event;
+  const EditEventPage({required this.event});
 
   @override
   ConsumerState<EditEventPage> createState() => _EditEventPageState();
@@ -454,14 +454,14 @@ class EditEventPage extends ConsumerStatefulWidget {
 
 class _EditEventPageState extends ConsumerState<EditEventPage> {
   // Nome do evento (até 40) — o que aparece em todo o lado.
-  late final _name = TextEditingController(text: widget.wedding.displayNames);
-  late EventType _type = widget.wedding.eventType;
-  late final _location = TextEditingController(text: widget.wedding.location ?? '');
-  late final _venue = TextEditingController(text: widget.wedding.venue ?? '');
-  late final _quote = TextEditingController(text: widget.wedding.quote ?? '');
-  late DateTime? _date = widget.wedding.weddingDate;
-  late CeremonyType _ceremonyType = widget.wedding.ceremonyType;
-  late final _typeName = TextEditingController(text: widget.wedding.eventTypeOther ?? '');
+  late final _name = TextEditingController(text: widget.event.displayNames);
+  late EventType _type = widget.event.eventType;
+  late final _location = TextEditingController(text: widget.event.location ?? '');
+  late final _venue = TextEditingController(text: widget.event.venue ?? '');
+  late final _quote = TextEditingController(text: widget.event.quote ?? '');
+  late DateTime? _date = widget.event.eventDate;
+  late CeremonyType _ceremonyType = widget.event.ceremonyType;
+  late final _typeName = TextEditingController(text: widget.event.eventTypeOther ?? '');
 
   @override
   void dispose() {
@@ -481,23 +481,23 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
       messenger.showSnackBar(SnackBar(content: Text(name.isEmpty ? 'Escreve o nome do evento.' : WordFilter.message)));
       return;
     }
-    final w = ref.read(weddingControllerProvider).wedding ?? widget.wedding;
+    final w = ref.read(eventControllerProvider).event ?? widget.event;
     // Nome igual ao de antes: mantém os dois nomes do casal.
     final same = name == w.displayNames;
     try {
-      await ref.read(weddingControllerProvider.notifier).update(
+      await ref.read(eventControllerProvider.notifier).update(
             w.copyWith(
               partnerName1: same ? w.partnerName1 : name,
               partnerName2: same ? (w.partnerName2 ?? '') : '',
               location: _location.text.trim(),
               venue: _venue.text.trim(),
               quote: _quote.text.trim(),
-              weddingDate: _date,
+              eventDate: _date,
               ceremonyType: _ceremonyType,
             ),
           );
       if (_type != w.eventType || (_type == EventType.other && _typeName.text.trim() != (w.eventTypeOther ?? ''))) {
-        await ref.read(weddingControllerProvider.notifier).setEventType(_type, otherLabel: _typeName.text);
+        await ref.read(eventControllerProvider.notifier).setEventType(_type, otherLabel: _typeName.text);
       }
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(WordFilter.serverMessage(e) ?? 'Não foi possível guardar.')));
@@ -549,7 +549,7 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isWedding = widget.wedding.eventType == EventType.wedding;
+    final isWedding = widget.event.eventType == EventType.wedding;
     String dmy(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
     String? v(TextEditingController c) => c.text.trim().isEmpty ? 'Adicionar' : c.text.trim();
     // Mockup «Páginas do evento» → Detalhes do evento (2026-11-14): a
@@ -661,9 +661,9 @@ class PanelPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final w = ref.watch(weddingControllerProvider).wedding;
+    final w = ref.watch(eventControllerProvider).event;
     if (w == null) return const SizedBox.shrink();
-    final c = ref.read(weddingControllerProvider.notifier);
+    final c = ref.read(eventControllerProvider.notifier);
     final fourth = switch (w.eventType) {
       EventType.wedding || EventType.vowRenewal || EventType.baptism || EventType.communion || EventType.corporate => 'Mesas',
       EventType.graduation || EventType.party || EventType.nightlife || EventType.concert || EventType.festival => 'Bilhetes',
@@ -1257,7 +1257,7 @@ class _HiddenEventRowState extends ConsumerState<_HiddenEventRow> {
     try {
       await action();
       final me = ref.read(authControllerProvider).profile?.id;
-      if (me != null) await ref.read(weddingControllerProvider.notifier).load(me);
+      if (me != null) await ref.read(eventControllerProvider.notifier).load(me);
       ref.invalidate(hiddenEventsProvider);
       messenger.showSnackBar(SnackBar(content: Text(ok)));
     } catch (e) {
@@ -1290,7 +1290,7 @@ class _HiddenEventRowState extends ConsumerState<_HiddenEventRow> {
   @override
   Widget build(BuildContext context) {
     final e = widget.event;
-    final date = e.date == null ? null : formatWeddingDateCaps(e.date!);
+    final date = e.date == null ? null : formatEventDateCaps(e.date!);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

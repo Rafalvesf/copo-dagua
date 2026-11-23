@@ -8,7 +8,7 @@ import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../widgets/guest_home_sections.dart' show guestCard;
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -24,13 +24,13 @@ class GuestEventsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final weddingsAsync = ref.watch(guestWeddingsProvider);
+    final eventsAsync = ref.watch(guestEventsProvider);
     return GradientScaffold(
       background: AppBackground.subtle,
       body: SafeArea(
-        child: weddingsAsync.when(
+        child: eventsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestWeddingsProvider)),
+          error: (e, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestEventsProvider)),
           data: (events) => ListView(
             padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
             children: [
@@ -49,7 +49,7 @@ class GuestEventsScreen extends ConsumerWidget {
               for (final w in events)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 10),
-                  child: GuestEventCard(wedding: w),
+                  child: GuestEventCard(event: w),
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
@@ -111,13 +111,13 @@ class DashedBorderPainter extends CustomPainter {
 }
 
 class GuestEventCard extends ConsumerWidget {
-  final GuestWedding wedding;
-  const GuestEventCard({super.key, required this.wedding});
+  final GuestEvent event;
+  const GuestEventCard({super.key, required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final guest = ref.watch(myGuestRowProvider(wedding.weddingId)).value;
-    final d = wedding.weddingDate;
+    final guest = ref.watch(myGuestRowProvider(event.eventId)).value;
+    final d = event.eventDate;
     final n = DateTime.now();
     final past = d != null && DateTime(d.year, d.month, d.day).isBefore(DateTime(n.year, n.month, n.day));
     final (label, bg, fg) = switch (guest?.rsvpStatus) {
@@ -127,26 +127,26 @@ class GuestEventCard extends ConsumerWidget {
       _ => ('Por responder', const Color(0xFFFBEFD3), const Color(0xFF8A5A00)),
     };
     final meta = [
-      if (wedding.weddingDate != null) formatWeddingDateCaps(wedding.weddingDate!),
-      if (wedding.venue?.isNotEmpty == true) wedding.venue! else if (wedding.location?.isNotEmpty == true) wedding.location!,
+      if (event.eventDate != null) formatEventDateCaps(event.eventDate!),
+      if (event.venue?.isNotEmpty == true) event.venue! else if (event.location?.isNotEmpty == true) event.location!,
     ].join(' · ');
     return SnappyTap(
-      onTap: () => context.go('/guest-home/${wedding.weddingId}'),
+      onTap: () => context.go('/guest-home/${event.eventId}'),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: guestCard(),
         child: Row(
           children: [
-            wedding.coverPhotoUrl == null
-                ? StickerIcon(switch (wedding.eventType) {
+            event.coverPhotoUrl == null
+                ? StickerIcon(switch (event.eventType) {
                     EventType.wedding => Hi.heartOutline,
                     EventType.birthday => Hi.cake,
                     EventType.baptism => Hi.sparkles,
                     _ => Hi.sparkles,
-                  }, turns: StickerIcon.tilt(wedding.weddingId.hashCode))
+                  }, turns: StickerIcon.tilt(event.eventId.hashCode))
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(14),
-                    child: SizedNetworkImage(wedding.coverPhotoUrlCacheBusted!, width: 44, height: 44, fit: BoxFit.cover),
+                    child: SizedNetworkImage(event.coverPhotoUrlCacheBusted!, width: 44, height: 44, fit: BoxFit.cover),
                   ),
             const SizedBox(width: 14),
             Expanded(
@@ -154,11 +154,11 @@ class GuestEventCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    wedding.eventType.label.toUpperCase(),
+                    event.eventType.label.toUpperCase(),
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: AppTheme.accentOliveDark),
                   ),
                   const SizedBox(height: 2),
-                  Text(capFirst(wedding.displayNames), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text(capFirst(event.displayNames), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ],
               ),

@@ -18,7 +18,7 @@ enum UserRole { couple, partner, guest }
 
 enum CeremonyType { civil, religious, both }
 
-enum WeddingStatus { planning, completed }
+enum EventStatus { planning, completed }
 
 /// Tipo de evento escolhido no onboarding (pedido do utilizador
 /// 2026-10-16: "adiciona uma opção para as pessoas escolherem entre
@@ -259,21 +259,21 @@ class Profile {
   }
 }
 
-class Wedding {
+class Event {
   final String id;
   final String ownerId;
   final String partnerName1;
   final String? partnerName2;
   final int? partner1Age;
   final int? partner2Age;
-  final DateTime? weddingDate;
+  final DateTime? eventDate;
   final String? location;
   final String? venue;
   final CeremonyType ceremonyType;
   final EventType eventType;
   final int? estimatedGuests;
   final double? estimatedBudget;
-  final WeddingStatus status;
+  final EventStatus status;
 
   /// Frase de destaque mostrada no ecrã "Os noivos" — editável nas
   /// Definições, com um valor de exemplo por defeito quando ainda não
@@ -313,21 +313,21 @@ class Wedding {
   /// evento, migração 177).
   final List<String> panelHidden;
 
-  const Wedding({
+  const Event({
     required this.id,
     required this.ownerId,
     required this.partnerName1,
     this.partnerName2,
     this.partner1Age,
     this.partner2Age,
-    this.weddingDate,
+    this.eventDate,
     this.location,
     this.venue,
     this.ceremonyType = CeremonyType.civil,
     this.eventType = EventType.wedding,
     this.estimatedGuests,
     this.estimatedBudget,
-    this.status = WeddingStatus.planning,
+    this.status = EventStatus.planning,
     this.quote,
     this.coverPhotoUrl,
     this.profilePhotoUrl,
@@ -384,19 +384,19 @@ class Wedding {
   /// — `null` enquanto o casamento ainda não tem código de convidado.
   String? get inviteUrl => guestCode == null ? null : publicLink('/invite/$guestCode');
 
-  Wedding copyWith({
+  Event copyWith({
     String? partnerName1,
     String? partnerName2,
     Object? partner1Age = _unset,
     Object? partner2Age = _unset,
-    DateTime? weddingDate,
+    DateTime? eventDate,
     String? location,
     String? venue,
     CeremonyType? ceremonyType,
     EventType? eventType,
     int? estimatedGuests,
     double? estimatedBudget,
-    WeddingStatus? status,
+    EventStatus? status,
     String? quote,
     String? coverPhotoUrl,
     String? profilePhotoUrl,
@@ -405,7 +405,7 @@ class Wedding {
     String? eventTypeOther,
     List<String>? panelHidden,
   }) {
-    return Wedding(
+    return Event(
       id: id,
       ownerId: ownerId,
       partnerName1: partnerName1 ?? this.partnerName1,
@@ -416,7 +416,7 @@ class Wedding {
       partner2Age: identical(partner2Age, _unset)
           ? this.partner2Age
           : partner2Age as int?,
-      weddingDate: weddingDate ?? this.weddingDate,
+      eventDate: eventDate ?? this.eventDate,
       location: location ?? this.location,
       venue: venue ?? this.venue,
       ceremonyType: ceremonyType ?? this.ceremonyType,
@@ -451,7 +451,7 @@ class Collaborator {
 
 class Guest {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String name;
   final String? email;
   final String? phone;
@@ -520,7 +520,7 @@ class Guest {
 
   const Guest({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     required this.name,
     this.email,
     this.phone,
@@ -562,7 +562,7 @@ class Guest {
   }) {
     return Guest(
       id: id,
-      weddingId: weddingId,
+      eventId: eventId,
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
@@ -686,11 +686,11 @@ class EventOrganizerRef {
       : const [];
 }
 
-class GuestWedding {
-  final String weddingId;
+class GuestEvent {
+  final String eventId;
   final String partnerName1;
   final String? partnerName2;
-  final DateTime? weddingDate;
+  final DateTime? eventDate;
   final String? venue;
   final String? location;
   final String? quote;
@@ -713,11 +713,11 @@ class GuestWedding {
   /// convidado.
   final DateTime? updatedAt;
 
-  const GuestWedding({
-    required this.weddingId,
+  const GuestEvent({
+    required this.eventId,
     required this.partnerName1,
     this.partnerName2,
-    this.weddingDate,
+    this.eventDate,
     this.venue,
     this.location,
     this.quote,
@@ -793,7 +793,7 @@ enum ChecklistStatus { todo, inProgress, done }
 
 class ChecklistItem {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String title;
   final String category;
   final bool done;
@@ -813,7 +813,7 @@ class ChecklistItem {
 
   const ChecklistItem({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     required this.title,
     this.category = 'Geral',
     this.done = false,
@@ -842,7 +842,7 @@ class ChecklistItem {
   }) {
     return ChecklistItem(
       id: id,
-      weddingId: weddingId,
+      eventId: eventId,
       title: title ?? this.title,
       category: category ?? this.category,
       done: done ?? this.done,
@@ -956,7 +956,7 @@ extension BookingStatusLabel on BookingStatus {
 class Booking {
   final String id;
   final String partnerId;
-  final String weddingId;
+  final String eventId;
   final String clientName;
   final String avatarSeed;
   final DateTime eventDate;
@@ -1025,7 +1025,7 @@ class Booking {
   const Booking({
     required this.id,
     required this.partnerId,
-    required this.weddingId,
+    required this.eventId,
     required this.clientName,
     required this.avatarSeed,
     required this.eventDate,
@@ -1059,7 +1059,7 @@ class Booking {
     clientAvatarUrl: clientAvatarUrl,
     id: id,
     partnerId: partnerId,
-    weddingId: weddingId,
+    eventId: eventId,
     clientName: clientName,
     avatarSeed: avatarSeed,
     eventDate: eventDate,
@@ -1245,7 +1245,7 @@ class Review {
   /// Restantes campos "interessantes mas não secretos" pedidos pelo
   /// utilizador — já públicos no próprio wizard de onboarding do
   /// casal, nenhum é pessoal/sensível (nem orçamento, nem contactos).
-  final DateTime? weddingDate;
+  final DateTime? eventDate;
   final String? location;
   final int? estimatedGuests;
 
@@ -1263,16 +1263,16 @@ class Review {
     this.coupleDisplayName = 'Organizadores',
     this.coupleAvatarUrl,
     required this.accountCreatedAt,
-    this.weddingDate,
+    this.eventDate,
     this.location,
     this.estimatedGuests,
   });
 
   factory Review.fromRow(Map<String, dynamic> row) {
-    final wedding = row['events'] as Map<String, dynamic>?;
+    final event = row['events'] as Map<String, dynamic>?;
     final profile = row['profiles'] as Map<String, dynamic>?;
-    final name1 = wedding?['partner_name_1'] as String?;
-    final name2 = wedding?['partner_name_2'] as String?;
+    final name1 = event?['partner_name_1'] as String?;
+    final name2 = event?['partner_name_2'] as String?;
     final displayName = (name1 == null || name1.isEmpty)
         ? 'Organizadores'
         : (name2 == null || name2.isEmpty)
@@ -1293,15 +1293,15 @@ class Review {
       status: row['status'] as String? ?? 'published',
       coupleId: row['couple_id'] as String?,
       coupleDisplayName: displayName,
-      coupleAvatarUrl: wedding?['cover_photo_url'] as String?,
+      coupleAvatarUrl: event?['cover_photo_url'] as String?,
       accountCreatedAt: profile?['created_at'] == null
           ? DateTime.parse(row['created_at'] as String)
           : DateTime.parse(profile!['created_at'] as String),
-      weddingDate: wedding?['wedding_date'] == null
+      eventDate: event?['wedding_date'] == null
           ? null
-          : DateTime.parse(wedding!['wedding_date'] as String),
-      location: wedding?['location'] as String?,
-      estimatedGuests: wedding?['estimated_guests'] as int?,
+          : DateTime.parse(event!['wedding_date'] as String),
+      location: event?['location'] as String?,
+      estimatedGuests: event?['estimated_guests'] as int?,
     );
   }
 }
@@ -1440,7 +1440,7 @@ class SupportTicket {
 /// motor real ligado nesta app.
 class CoupleBooking {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String partnerName;
 
   /// Para "Pedir nova proposta" depois de um cancelamento (2026-10-21).
@@ -1509,7 +1509,7 @@ class CoupleBooking {
 
   const CoupleBooking({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     required this.partnerName,
     this.partnerId,
     this.partnerLogoUrl,
@@ -1546,7 +1546,7 @@ class CoupleBooking {
 /// `couple_bookings_screen.dart`.
 class ReceivedProposal {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String partnerName;
   final String? partnerId;
   final String? category;
@@ -1562,7 +1562,7 @@ class ReceivedProposal {
 
   const ReceivedProposal({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     required this.partnerName,
     this.partnerId,
     required this.category,
@@ -1651,7 +1651,7 @@ class ChatConversation {
   final String name;
   final String avatarSeed;
   final String? avatarUrl;
-  final String? weddingId;
+  final String? eventId;
   final String? partnerId;
   final String? lastMessage;
   final DateTime? lastMessageAt;
@@ -1662,7 +1662,7 @@ class ChatConversation {
     required this.name,
     required this.avatarSeed,
     this.avatarUrl,
-    this.weddingId,
+    this.eventId,
     this.partnerId,
     this.lastMessage,
     this.lastMessageAt,
@@ -1677,7 +1677,7 @@ class ChatConversation {
 /// remover uma mesa do meio reajusta automaticamente a sequência.
 class SeatingTable {
   final String id;
-  final String weddingId;
+  final String eventId;
   final List<String> guestIds;
 
   /// Forma da mesa na planta (Lugares) — retangular ou redonda
@@ -1693,7 +1693,7 @@ class SeatingTable {
 
   const SeatingTable({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     this.guestIds = const [],
     this.rectangular = false,
     this.name,
@@ -1703,7 +1703,7 @@ class SeatingTable {
   SeatingTable copyWith({List<String>? guestIds}) {
     return SeatingTable(
       id: id,
-      weddingId: weddingId,
+      eventId: eventId,
       guestIds: guestIds ?? this.guestIds,
       rectangular: rectangular,
       name: name,
@@ -1783,7 +1783,7 @@ class BudgetCategory {
 /// "Pagamentos próximos" em Orçamento.
 class Expense {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String title;
   final PartnerCategory? category;
 
@@ -1796,7 +1796,7 @@ class Expense {
 
   const Expense({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     required this.title,
     this.category,
     this.categorySlug,
@@ -1808,7 +1808,7 @@ class Expense {
   Expense copyWith({bool? paid}) {
     return Expense(
       id: id,
-      weddingId: weddingId,
+      eventId: eventId,
       title: title,
       category: category,
       categorySlug: categorySlug,
@@ -1820,12 +1820,12 @@ class Expense {
 }
 
 class Budget {
-  final String weddingId;
+  final String eventId;
   final double total;
   final List<BudgetCategory> categories;
 
   const Budget({
-    required this.weddingId,
+    required this.eventId,
     required this.total,
     required this.categories,
   });

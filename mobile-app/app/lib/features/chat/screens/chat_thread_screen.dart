@@ -17,7 +17,7 @@ import '../../../core/chat/chat_helpers.dart' show PartnerUnavailableException;
 import '../../../core/payments/payments.dart' show PayArgs;
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -151,9 +151,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         : ref.watch(partnerByIdProvider(widget.conversation.partnerId!)).value;
     // Faixa do evento: "Sofia & Tiago · 12 set 2027".
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    final events = ref.watch(weddingControllerProvider).events;
-    final ev = events.where((w) => w.id == widget.conversation.weddingId).firstOrNull;
-    final evDate = ev?.weddingDate;
+    final events = ref.watch(eventControllerProvider).events;
+    final ev = events.where((w) => w.id == widget.conversation.eventId).firstOrNull;
+    final evDate = ev?.eventDate;
     final eventTitle = ev == null
         ? null
         : [ev.displayNames, if (evDate != null) '${evDate.day} ${months[evDate.month - 1]} ${evDate.year}'].join(' · ');
@@ -464,7 +464,7 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
 
   Future<void> _accept() async {
     // Partilhar com os outros organizadores ou guardar em segredo (2026-10-21).
-    final secret = await askHirePrivacy(context, ref.read(weddingControllerProvider).wedding?.id, 'este parceiro');
+    final secret = await askHirePrivacy(context, ref.read(eventControllerProvider).event?.id, 'este parceiro');
     if (secret == null || !mounted) return;
     setState(() => _accepting = true);
     try {
@@ -546,12 +546,12 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   Widget build(BuildContext context) {
     final message = widget.message;
     // Como no design: "Casamento · 12 jun 2027" e o serviço por baixo.
-    final wedding = ref.watch(weddingControllerProvider).wedding;
-    final date = wedding?.weddingDate;
+    final event = ref.watch(eventControllerProvider).event;
+    final date = event?.eventDate;
     const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
     final heading = date == null
         ? null
-        : '${wedding!.eventType.label} · ${date.day} ${months[date.month - 1]} ${date.year}';
+        : '${event!.eventType.label} · ${date.day} ${months[date.month - 1]} ${date.year}';
     final pct = (widget.fee(ref, watch: true) ?? const FeeConfig())
         .effectivePct(message.proposalPrice ?? 0);
     double withFee(double v) => amountWithCommission(v, pct);

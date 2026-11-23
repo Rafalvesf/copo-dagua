@@ -1,7 +1,7 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/booked_partner_badge.dart';
-import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
+import 'package:copo_dagua_app/core/event/event_controller.dart';
 import 'package:copo_dagua_app/core/budget/booked_partners.dart';
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,7 +33,7 @@ import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../core/budget/all_budgets.dart';
 import '../../../shared/widgets/event_pills.dart';
 import '../../../shared/text_case.dart';
@@ -63,8 +63,8 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
       return;
     }
     setState(() => _all = false);
-    final current = ref.read(weddingControllerProvider).wedding?.id;
-    if (id != current) await ref.read(weddingControllerProvider.notifier).select(id);
+    final current = ref.read(eventControllerProvider).event?.id;
+    if (id != current) await ref.read(eventControllerProvider.notifier).select(id);
   }
 
   @override
@@ -75,10 +75,10 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   }
 
   Future<void> _addExpense() async {
-    final weddingId = ref
+    final eventId = ref
         .read(expenseControllerProvider.notifier)
-        .currentWeddingId;
-    if (weddingId == null) return;
+        .currentEventId;
+    if (eventId == null) return;
     final result = await showIslandSheet<_AddExpenseResult>(
       context: context,
       isScrollControlled: true,
@@ -90,7 +90,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
         .addExpense(
           Expense(
             id: '',
-            weddingId: weddingId,
+            eventId: eventId,
             title: result.title,
             amount: result.amount,
             dueDate: result.dueDate,
@@ -112,7 +112,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     // pago, sinal ou restante por pagar), não só as despesas manuais —
     // antes ficavam vazios para quem só tinha reservas (2026-10-18).
     final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
-    final currentId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    final currentId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
     if (_all) {
       return GradientScaffold(
         background: AppBackground.feed,
@@ -129,7 +129,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
       );
     }
     // Só as reservas do evento aberto (antes entravam as de todos).
-    final active = bookings.where((b) => b.status != BookingStatus.recusado && b.weddingId == currentId);
+    final active = bookings.where((b) => b.status != BookingStatus.recusado && b.eventId == currentId);
     // Valores com a comissão: é o que o casal paga de facto (igual às
     // Reservas e ao ecrã de pagamento) — 2026-10-19.
     final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
@@ -138,7 +138,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
       ...expenseState.paid,
       for (final b in active)
         if (b.paidAmount > 0)
-          Expense(id: 'booking:${b.id}:paid', weddingId: b.weddingId, title: 'Pago · ${b.partnerName}', amount: fee(b.paidAmount, b.amount), paid: true),
+          Expense(id: 'booking:${b.id}:paid', eventId: b.eventId, title: 'Pago · ${b.partnerName}', amount: fee(b.paidAmount, b.amount), paid: true),
     ];
     final pending = [
       ...expenseState.pending,
@@ -146,7 +146,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
         if (b.pendingDepositPaymentId != null)
           Expense(
             id: 'booking:${b.id}:pay:${b.pendingDepositPaymentId}',
-            weddingId: b.weddingId,
+            eventId: b.eventId,
             title: 'Sinal · ${b.partnerName}',
             amount: fee(b.depositAmount ?? 0, b.amount),
             dueDate: b.pendingDepositDueAt,
@@ -154,7 +154,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
         if (b.pendingFinalPaymentId != null)
           Expense(
             id: 'booking:${b.id}:pay:${b.pendingFinalPaymentId}',
-            weddingId: b.weddingId,
+            eventId: b.eventId,
             title: 'Restante · ${b.partnerName}',
             amount: fee(b.finalPaymentAmount ?? 0, b.amount),
             dueDate: b.finalPaymentDueAt,
@@ -236,7 +236,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   ExportCard(
                     reportLabel: 'Gastos e parceiros',
                     partnerSide: false,
-                    load: () => loadCoupleReport(ref.read(weddingControllerProvider).wedding!.id),
+                    load: () => loadCoupleReport(ref.read(eventControllerProvider).event!.id),
                   ),
                 ]),
               ],
@@ -379,8 +379,8 @@ class _CategoryRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final allocated = category.allocated;
     // Empresa contratada na app para esta categoria (pedido 2026-11).
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    final booked = weddingId == null ? const <String, List<String>>{} : (ref.watch(bookedPartnersBySlugProvider(weddingId)).value ?? const {});
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+    final booked = eventId == null ? const <String, List<String>>{} : (ref.watch(bookedPartnersBySlugProvider(eventId)).value ?? const {});
     final partners = [for (final slug in slugsForBudgetCategory(category.base.partnerCategory)) ...?booked[slug]];
     final ratio = allocated == 0 ? 0.0 : category.amount / allocated;
     void open() => showIslandSheet<void>(
@@ -680,11 +680,11 @@ class _CategorySheet extends ConsumerWidget {
         .toList()
       ..sort((a, b) => (a.dueDate ?? DateTime(2100)).compareTo(b.dueDate ?? DateTime(2100)));
     // Empresas contratadas na app nesta categoria (2026-11).
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
     final slugs = slugsForBudgetCategory(category.partnerCategory);
-    final booked = weddingId == null
+    final booked = eventId == null
         ? const <BookedPartner>[]
-        : (ref.watch(bookedPartnersProvider(weddingId)).value ?? const <BookedPartner>[])
+        : (ref.watch(bookedPartnersProvider(eventId)).value ?? const <BookedPartner>[])
             .where((b) => slugs.contains(b.slug))
             .toList();
 
@@ -803,7 +803,7 @@ class _AllEventsBudget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final events = ref.watch(weddingControllerProvider.select((s) => s.events));
+    final events = ref.watch(eventControllerProvider.select((s) => s.events));
     final lines = ref.watch(allEventBudgetsProvider);
     final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
     double fee(double v, double total) => amountWithCommission(v, orgFee.effectivePct(total));
@@ -818,14 +818,14 @@ class _AllEventsBudget extends ConsumerWidget {
         // Reservas: o contratado conta como gasto; o por pagar, com a taxa
         // de serviço (igual ao Orçamento de cada evento).
         double bookedOf(String id) => bookings
-            .where((b) => b.weddingId == id && b.status != BookingStatus.recusado)
+            .where((b) => b.eventId == id && b.status != BookingStatus.recusado)
             .fold(0.0, (t, b) => t + b.amount);
         double toPayOf(String id) => bookings
-            .where((b) => b.weddingId == id && b.status != BookingStatus.recusado)
+            .where((b) => b.eventId == id && b.status != BookingStatus.recusado)
             .fold(0.0, (t, b) => t + (b.pendingDepositPaymentId != null ? fee(b.depositAmount ?? 0, b.amount) : 0) + (b.pendingFinalPaymentId != null ? fee(b.finalPaymentAmount ?? 0, b.amount) : 0));
         final total = lines.fold(0.0, (t, l) => t + l.total);
-        final spent = lines.fold(0.0, (t, l) => t + l.spentByHand + bookedOf(l.weddingId));
-        final toPay = lines.fold(0.0, (t, l) => t + l.unpaidByHand + toPayOf(l.weddingId));
+        final spent = lines.fold(0.0, (t, l) => t + l.spentByHand + bookedOf(l.eventId));
+        final toPay = lines.fold(0.0, (t, l) => t + l.unpaidByHand + toPayOf(l.eventId));
         final names = {for (final e in events) e.id: capFirst(e.displayNames)};
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           KitSummary(
@@ -845,7 +845,7 @@ class _AllEventsBudget extends ConsumerWidget {
             for (final (i, l) in lines.indexed) ...[
               if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
               SnappyTap(
-                onTap: () => onOpen(l.weddingId),
+                onTap: () => onOpen(l.eventId),
                 child: Container(
                   constraints: const BoxConstraints(minHeight: 56),
                   color: Colors.transparent,
@@ -853,7 +853,7 @@ class _AllEventsBudget extends ConsumerWidget {
                   child: Row(children: [
                     Expanded(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(names[l.weddingId] ?? 'Evento',
+                        Text(names[l.eventId] ?? 'Evento',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
@@ -861,14 +861,14 @@ class _AllEventsBudget extends ConsumerWidget {
                         Text(
                           [
                             l.total > 0 ? 'Teto ${euros(l.total)}' : 'Sem teto',
-                            if (l.unpaidByHand + toPayOf(l.weddingId) > 0) 'por pagar ${euros(l.unpaidByHand + toPayOf(l.weddingId))}',
+                            if (l.unpaidByHand + toPayOf(l.eventId) > 0) 'por pagar ${euros(l.unpaidByHand + toPayOf(l.eventId))}',
                           ].join(' · '),
                           style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                         ),
                       ]),
                     ),
                     const SizedBox(width: 10),
-                    Text(euros(l.spentByHand + bookedOf(l.weddingId)),
+                    Text(euros(l.spentByHand + bookedOf(l.eventId)),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     const SizedBox(width: 6),
                     const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),

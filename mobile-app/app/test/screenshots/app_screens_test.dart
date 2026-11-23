@@ -52,11 +52,11 @@ import 'package:copo_dagua_app/core/invite/public_invite.dart';
 import 'package:copo_dagua_app/core/seating/seating_controller.dart';
 import 'package:copo_dagua_app/core/tasks/task_engine_controller.dart';
 import 'package:copo_dagua_app/core/tasks/task_models.dart';
-import 'package:copo_dagua_app/core/wedding/wedding_controller.dart';
+import 'package:copo_dagua_app/core/event/event_controller.dart';
 import 'package:copo_dagua_app/features/partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/features/partners/screens/partners_list_screen.dart';
 import 'package:copo_dagua_app/features/invite/screens/rsvp_page_screen.dart';
-import 'package:copo_dagua_app/core/wedding/menu_style.dart';
+import 'package:copo_dagua_app/core/event/menu_style.dart';
 import 'package:copo_dagua_app/main.dart';
 import 'package:copo_dagua_app/shared/widgets/page_header.dart' show AddActionButton;
 
@@ -103,14 +103,14 @@ const _guestProfile = Profile(
   onboardingComplete: true,
 );
 
-Wedding _wedding = _baseWedding;
+Event _event = _baseEvent;
 
-final _baseWedding = Wedding(
+final _baseEvent = Event(
   id: 'w1',
   ownerId: 'u-couple',
   partnerName1: 'Sofia',
   partnerName2: 'Tiago',
-  weddingDate: _days(214),
+  eventDate: _days(214),
   location: 'Sintra',
   venue: 'Quinta do Lago Azul',
   estimatedGuests: 120,
@@ -132,7 +132,7 @@ final _guests = [
   ].indexed)
     Guest(
       id: 'g$i',
-      weddingId: 'w1',
+      eventId: 'w1',
       name: g.$1,
       group: g.$2,
       rsvpStatus: g.$3,
@@ -144,15 +144,15 @@ final _guests = [
 ];
 
 final _checklist = [
-  ChecklistItem(id: 'c1', weddingId: 'w1', title: 'Escolher o local', category: 'Espaço', done: true, dueDate: _days(-20)),
-  ChecklistItem(id: 'c2', weddingId: 'w1', title: 'Reservar fotógrafo', category: 'Fotografia', dueDate: _days(12), progressPercent: 40),
-  ChecklistItem(id: 'c3', weddingId: 'w1', title: 'Provar o menu', category: 'Catering', dueDate: _days(30)),
-  ChecklistItem(id: 'c4', weddingId: 'w1', title: 'Enviar convites', category: 'Convidados', dueDate: _days(45)),
+  ChecklistItem(id: 'c1', eventId: 'w1', title: 'Escolher o local', category: 'Espaço', done: true, dueDate: _days(-20)),
+  ChecklistItem(id: 'c2', eventId: 'w1', title: 'Reservar fotógrafo', category: 'Fotografia', dueDate: _days(12), progressPercent: 40),
+  ChecklistItem(id: 'c3', eventId: 'w1', title: 'Provar o menu', category: 'Catering', dueDate: _days(30)),
+  ChecklistItem(id: 'c4', eventId: 'w1', title: 'Enviar convites', category: 'Convidados', dueDate: _days(45)),
 ];
 
-WeddingTask _task(String id, String title, String category, {int due = 10, TaskStatus status = TaskStatus.active}) => WeddingTask(
+EventTask _task(String id, String title, String category, {int due = 10, TaskStatus status = TaskStatus.active}) => EventTask(
       id: id,
-      weddingId: 'w1',
+      eventId: 'w1',
       source: TaskSource.system,
       title: title,
       description: 'Sugestão com base no que já fizeste.',
@@ -172,12 +172,12 @@ final _taskState = TaskEngineState(
   ],
   systemDone: [_task('t4', 'Escolher a data', 'wedding', due: -10, status: TaskStatus.completed)],
   notifications: [
-    AppNotification(id: 'n1', weddingId: 'w1', type: 'task', title: 'Nova tarefa: pedir orçamentos', read: false, createdAt: _days(-1)),
+    AppNotification(id: 'n1', eventId: 'w1', type: 'task', title: 'Nova tarefa: pedir orçamentos', read: false, createdAt: _days(-1)),
   ],
 );
 
 const _budget = Budget(
-  weddingId: 'w1',
+  eventId: 'w1',
   total: 25000,
   categories: [
     BudgetCategory(name: 'Espaço', amount: 8000, allocated: 9000, partnerCategory: PartnerCategory.venue),
@@ -189,10 +189,10 @@ const _budget = Budget(
 );
 
 final _expenses = [
-  Expense(id: 'e1', weddingId: 'w1', title: 'Sinal da quinta', category: PartnerCategory.venue, amount: 2400, dueDate: _days(-40), paid: true),
-  Expense(id: 'e2', weddingId: 'w1', title: 'Catering — 1.ª prestação', category: PartnerCategory.catering, amount: 3100, dueDate: _days(20)),
-  Expense(id: 'e3', weddingId: 'w1', title: 'Fotógrafo — sinal', category: PartnerCategory.photography, amount: 600, dueDate: _days(8)),
-  Expense(id: 'e4', weddingId: 'w1', title: 'DJ', category: PartnerCategory.music, amount: 900, dueDate: _days(60)),
+  Expense(id: 'e1', eventId: 'w1', title: 'Sinal da quinta', category: PartnerCategory.venue, amount: 2400, dueDate: _days(-40), paid: true),
+  Expense(id: 'e2', eventId: 'w1', title: 'Catering — 1.ª prestação', category: PartnerCategory.catering, amount: 3100, dueDate: _days(20)),
+  Expense(id: 'e3', eventId: 'w1', title: 'Fotógrafo — sinal', category: PartnerCategory.photography, amount: 600, dueDate: _days(8)),
+  Expense(id: 'e4', eventId: 'w1', title: 'DJ', category: PartnerCategory.music, amount: 900, dueDate: _days(60)),
 ];
 
 final _partners = [
@@ -227,7 +227,7 @@ final _reviews = [
     createdAt: _days(-40),
     coupleDisplayName: 'Inês & João',
     accountCreatedAt: _days(-300),
-    weddingDate: _days(-50),
+    eventDate: _days(-50),
     location: 'Sintra',
     estimatedGuests: 90,
   ),
@@ -244,9 +244,9 @@ final _reviews = [
 ];
 
 final _conversations = [
-  ChatConversation(id: 'cv1', name: 'Quinta do Lago Azul', avatarSeed: 'a', weddingId: 'w1', partnerId: 'p0', lastMessage: 'Temos disponibilidade para essa data!', lastMessageAt: _days(0), unreadCount: 2),
-  ChatConversation(id: 'cv2', name: 'Luz & Grão Fotografia', avatarSeed: 'b', weddingId: 'w1', partnerId: 'p1', lastMessage: 'Enviei a proposta, vê quando puderes.', lastMessageAt: _days(-1)),
-  ChatConversation(id: 'cv3', name: 'Sabores da Serra', avatarSeed: 'c', weddingId: 'w1', partnerId: 'p2', lastMessage: 'Obrigado!', lastMessageAt: _days(-4)),
+  ChatConversation(id: 'cv1', name: 'Quinta do Lago Azul', avatarSeed: 'a', eventId: 'w1', partnerId: 'p0', lastMessage: 'Temos disponibilidade para essa data!', lastMessageAt: _days(0), unreadCount: 2),
+  ChatConversation(id: 'cv2', name: 'Luz & Grão Fotografia', avatarSeed: 'b', eventId: 'w1', partnerId: 'p1', lastMessage: 'Enviei a proposta, vê quando puderes.', lastMessageAt: _days(-1)),
+  ChatConversation(id: 'cv3', name: 'Sabores da Serra', avatarSeed: 'c', eventId: 'w1', partnerId: 'p2', lastMessage: 'Obrigado!', lastMessageAt: _days(-4)),
 ];
 
 final _messages = [
@@ -257,10 +257,10 @@ final _messages = [
 ];
 
 final _bookings = [
-  Booking(id: 'b1', partnerId: 'u-partner', weddingId: 'w1', clientName: 'Sofia & Tiago', avatarSeed: 'a', eventDate: _days(214), city: 'Sintra', category: 'Espaços', packageLabel: 'Pacote Jardim', messageFromCouple: 'Olá! Queríamos saber se têm disponibilidade para a nossa data, somos cerca de 120 pessoas.', fromQuoteRequest: true),
-  Booking(id: 'b2', partnerId: 'u-partner', weddingId: 'w2', clientName: 'Inês & João', avatarSeed: 'b', eventDate: _days(120), city: 'Cascais', category: 'Espaços', packageLabel: 'Pacote Clássico', status: BookingStatus.emAnalise, fromQuoteRequest: true, proposalSent: true),
-  Booking(id: 'b3', partnerId: 'u-partner', weddingId: 'w3', clientName: 'Marta & Rui', avatarSeed: 'c', eventDate: _days(40), city: 'Lisboa', category: 'Espaços', packageLabel: 'Pacote Jardim', status: BookingStatus.confirmado),
-  Booking(id: 'b4', partnerId: 'u-partner', weddingId: 'w4', clientName: 'Ana & Pedro', avatarSeed: 'd', eventDate: _days(-30), city: 'Sintra', category: 'Espaços', packageLabel: 'Pacote Clássico', status: BookingStatus.concluido),
+  Booking(id: 'b1', partnerId: 'u-partner', eventId: 'w1', clientName: 'Sofia & Tiago', avatarSeed: 'a', eventDate: _days(214), city: 'Sintra', category: 'Espaços', packageLabel: 'Pacote Jardim', messageFromCouple: 'Olá! Queríamos saber se têm disponibilidade para a nossa data, somos cerca de 120 pessoas.', fromQuoteRequest: true),
+  Booking(id: 'b2', partnerId: 'u-partner', eventId: 'w2', clientName: 'Inês & João', avatarSeed: 'b', eventDate: _days(120), city: 'Cascais', category: 'Espaços', packageLabel: 'Pacote Clássico', status: BookingStatus.emAnalise, fromQuoteRequest: true, proposalSent: true),
+  Booking(id: 'b3', partnerId: 'u-partner', eventId: 'w3', clientName: 'Marta & Rui', avatarSeed: 'c', eventDate: _days(40), city: 'Lisboa', category: 'Espaços', packageLabel: 'Pacote Jardim', status: BookingStatus.confirmado),
+  Booking(id: 'b4', partnerId: 'u-partner', eventId: 'w4', clientName: 'Ana & Pedro', avatarSeed: 'd', eventDate: _days(-30), city: 'Sintra', category: 'Espaços', packageLabel: 'Pacote Clássico', status: BookingStatus.concluido),
 ];
 
 List<Booking> _bookingsFor(BookingStatus? s) {
@@ -304,8 +304,8 @@ PartnerAnalytics _analytics(AnalyticsPeriod period) {
   );
 }
 
-const _guestWedding = GuestWedding(
-  weddingId: 'w1',
+const _guestEvent = GuestEvent(
+  eventId: 'w1',
   partnerName1: 'Sofia',
   partnerName2: 'Tiago',
   venue: 'Quinta do Lago Azul',
@@ -324,11 +324,11 @@ class _FakeAuth extends AuthController {
   AuthState build() => initial;
 }
 
-class _FakeWedding extends WeddingController {
-  _FakeWedding(this.wedding);
-  final Wedding? wedding;
+class _FakeEvent extends EventController {
+  _FakeEvent(this.event);
+  final Event? event;
   @override
-  WeddingState build() => WeddingState(wedding: wedding);
+  EventState build() => EventState(event: event);
 }
 
 class _FakeGuests extends GuestsController {
@@ -362,7 +362,7 @@ class _FakeChatList extends ChatListController {
   @override
   ChatListState build() => ChatListState(conversations: _conversations);
   @override
-  Future<void> load(String weddingId) async {}
+  Future<void> load(String eventId) async {}
 }
 
 class _FakeFavorites extends FavoritePartnersController {
@@ -376,8 +376,8 @@ class _FakeSeating extends SeatingController {
         hasVenue: true,
         totalTables: 12,
         tables: [
-          SeatingTable(id: 's1', weddingId: 'w1', name: 'Família da noiva', guestIds: [for (var i = 0; i < 8; i++) 'g$i']),
-          const SeatingTable(id: 's2', weddingId: 'w1', name: 'Amigos da faculdade', guestIds: ['g0', 'g1', 'g4']),
+          SeatingTable(id: 's1', eventId: 'w1', name: 'Família da noiva', guestIds: [for (var i = 0; i < 8; i++) 'g$i']),
+          const SeatingTable(id: 's2', eventId: 'w1', name: 'Amigos da faculdade', guestIds: ['g0', 'g1', 'g4']),
         ],
         venueTypes: const [
           VenueTableType(id: 'vt1', partnerId: 'p0', shape: TableShape.round, seats: 8, quantity: 6),
@@ -419,8 +419,8 @@ class _FakePartnerChatThread extends PartnerChatThreadController {
 List<Override> _overrides(AuthState auth) => [
       authControllerProvider.overrideWith(() => _FakeAuth(auth)),
       maintenanceControllerProvider.overrideWith(_FakeMaintenance.new),
-      weddingControllerProvider.overrideWith(
-        () => _FakeWedding(auth.profile?.role == UserRole.couple && auth.status == AuthStatus.active ? _wedding : null),
+      eventControllerProvider.overrideWith(
+        () => _FakeEvent(auth.profile?.role == UserRole.couple && auth.status == AuthStatus.active ? _event : null),
       ),
       guestsControllerProvider.overrideWith(_FakeGuests.new),
       budgetControllerProvider.overrideWith(_FakeBudget.new),
@@ -436,11 +436,11 @@ List<Override> _overrides(AuthState auth) => [
       unreadMessagesCountProvider.overrideWith((ref) async => 2),
       partnerUnreadMessagesCountProvider.overrideWith((ref) async => 1),
       coupleBookingsProvider.overrideWith((ref) async => [
-            CoupleBooking(id: 'cb1', weddingId: 'w1', partnerName: 'Quinta do Lago Azul', category: 'Espaços', serviceDate: _days(214), amount: 8500, status: BookingStatus.confirmado),
-            CoupleBooking(id: 'cb2', weddingId: 'w1', partnerName: 'Luz & Grão Fotografia', category: 'Fotografia', serviceDate: _days(214), amount: 1800, status: BookingStatus.aceite, pendingDepositPaymentId: 'pay1', depositAmount: 540),
+            CoupleBooking(id: 'cb1', eventId: 'w1', partnerName: 'Quinta do Lago Azul', category: 'Espaços', serviceDate: _days(214), amount: 8500, status: BookingStatus.confirmado),
+            CoupleBooking(id: 'cb2', eventId: 'w1', partnerName: 'Luz & Grão Fotografia', category: 'Fotografia', serviceDate: _days(214), amount: 1800, status: BookingStatus.aceite, pendingDepositPaymentId: 'pay1', depositAmount: 540),
           ]),
       pendingProposalsProvider.overrideWith((ref) async => [
-            ReceivedProposal(id: 'pr1', weddingId: 'w1', partnerName: 'Sabores da Serra', category: 'Catering', title: 'Menu Primavera', description: 'Entradas, prato principal e sobremesa.', price: 6600, depositAmount: 1980, eventDate: _days(214)),
+            ReceivedProposal(id: 'pr1', eventId: 'w1', partnerName: 'Sabores da Serra', category: 'Catering', title: 'Menu Primavera', description: 'Entradas, prato principal e sobremesa.', price: 6600, depositAmount: 1980, eventDate: _days(214)),
           ]),
       platformCommissionPercentageProvider.overrideWith((ref) async => 10),
       platformDepositPercentageProvider.overrideWith((ref) async => 30),
@@ -465,9 +465,9 @@ List<Override> _overrides(AuthState auth) => [
       partnerPortfolioForProvider.overrideWith((ref, id) async => const []),
       partnerRelationshipStatusProvider.overrideWith((ref, id) async => PartnerRelationshipStatus.none),
       publicReviewsForPartnerProvider.overrideWith((ref, id) async => _reviews),
-      weddingGalleryPhotosProvider.overrideWith((ref, id) async => [
+      eventGalleryPhotosProvider.overrideWith((ref, id) async => [
             for (var i = 0; i < 9; i++)
-              GalleryPhoto(id: 'ph$i', weddingId: 'w1', uploadedBy: 'u-guest', storagePath: 'x/$i.jpg', imageUrl: 'https://example.invalid/$i.jpg', status: i < 2 ? 'pending' : 'approved', createdAt: _days(-i)),
+              GalleryPhoto(id: 'ph$i', eventId: 'w1', uploadedBy: 'u-guest', storagePath: 'x/$i.jpg', imageUrl: 'https://example.invalid/$i.jpg', status: i < 2 ? 'pending' : 'approved', createdAt: _days(-i)),
           ]),
       // Publicações (galeria social): autor, gostos e comentários.
       galleryFeedMetaProvider.overrideWith((ref, id) async => {
@@ -489,7 +489,7 @@ List<Override> _overrides(AuthState auth) => [
       galleryCommentsProvider.overrideWith((ref, id) async => [
             GalleryComment(id: 'cm1', profileId: 'u-ar', authorName: 'Avó Rosa', body: 'Que bonito!', createdAt: _days(0)),
           ]),
-      guestWeddingsProvider.overrideWith((ref) async => const [_guestWedding]),
+      guestEventsProvider.overrideWith((ref) async => const [_guestEvent]),
       myGuestRowProvider.overrideWith((ref, id) async => _guests.first),
       mySeatingTableProvider.overrideWith((ref, id) async => 3),
       myTableRosterProvider.overrideWith((ref, id) async => const [
@@ -811,7 +811,7 @@ void main() {
           '/guest-onboarding/w1?step=$i',
           extra: Guest(
             id: 'g0',
-            weddingId: 'w1',
+            eventId: 'w1',
             name: 'Rita Mendes',
             rsvpStatus: RsvpStatus.pending,
             plusOneAllowed: true,
@@ -827,17 +827,17 @@ void main() {
           '/onboarding?step=$i',
         ));
   }
-  testWidgets('54_convidado_detalhes', (t) => _shoot(t, '54_convidado_detalhes', guest, '/guest-wedding-details', extra: _guestWedding));
+  testWidgets('54_convidado_detalhes', (t) => _shoot(t, '54_convidado_detalhes', guest, '/guest-wedding-details', extra: _guestEvent));
 
   // Páginas e folhas abertas por botões (revisão 2026-10-17: "cada
   // botão de cada página tem uma aba, alguns nem foram refeitos").
   for (final (name, auth, path, after) in [
     ('60_sub_editar_evento', couple, '/settings', _tapText('Detalhes do evento')),
-    ('61_sub_novo_convidado', couple, '/guests', _addWith((c) => c.read(guestsControllerProvider.notifier).currentWeddingId = 'w1')),
-    ('62_sub_nova_despesa', couple, '/budget', _addWith((c) => c.read(expenseControllerProvider.notifier).currentWeddingId = 'w1')),
+    ('61_sub_novo_convidado', couple, '/guests', _addWith((c) => c.read(guestsControllerProvider.notifier).currentEventId = 'w1')),
+    ('62_sub_nova_despesa', couple, '/budget', _addWith((c) => c.read(expenseControllerProvider.notifier).currentEventId = 'w1')),
     ('63_sub_categoria', couple, '/budget', _tapText('Catering')),
     ('64_sub_nova_tarefa', couple, '/tasks', _tapAdd()),
-    ('65_sub_checklist_nova', couple, '/checklist', _addWith((c) => c.read(checklistControllerProvider.notifier).currentWeddingId = 'w1')),
+    ('65_sub_checklist_nova', couple, '/checklist', _addWith((c) => c.read(checklistControllerProvider.notifier).currentEventId = 'w1')),
     ('66_sub_mesa', couple, '/seating', _tapAdd()),
     ('67_sub_reserva', couple, '/bookings', _tapText('Quinta do Lago Azul')),
     ('68_sub_suporte_novo', couple, '/support', _tapText('Novo pedido de suporte')),
@@ -913,7 +913,7 @@ void main() {
   }
   // Convite com dados (envelope, convite aberto), sem rede.
   final sampleInvite = InviteEvent(
-    weddingId: 'w-demo',
+    eventId: 'w-demo',
     code: 'SOFIATIAGO24',
     eventType: EventType.wedding,
     name1: 'Sofia',
@@ -1024,12 +1024,12 @@ void main() {
   ]) {
     final name = '95_menu_tipo_${type.name}';
     testWidgets(name, (t) async {
-      _wedding = Wedding(
+      _event = Event(
         id: 'w1',
         ownerId: 'u-couple',
         partnerName1: name1,
         partnerName2: name2,
-        weddingDate: _days(214),
+        eventDate: _days(214),
         location: 'Sintra',
         estimatedGuests: 120,
         estimatedBudget: 25000,
@@ -1041,7 +1041,7 @@ void main() {
         await _shoot(t, name, couple, '/wedding');
       } finally {
         debugMenuStyle = null;
-        _wedding = _baseWedding;
+        _event = _baseEvent;
       }
     });
   }
@@ -1049,10 +1049,10 @@ void main() {
   testWidgets('91_publicacoes', (t) => _shoot(t, '91_publicacoes', couple, '/gallery', after: (t) async {
         final photos = [
           for (var i = 2; i < 9; i++)
-            GalleryPhoto(id: 'ph$i', weddingId: 'w1', uploadedBy: 'u-guest', storagePath: 'x/$i.jpg', imageUrl: 'https://example.invalid/$i.jpg', caption: i == 2 ? 'O brinde mais bonito do ano' : null, status: 'approved', createdAt: _days(-i)),
+            GalleryPhoto(id: 'ph$i', eventId: 'w1', uploadedBy: 'u-guest', storagePath: 'x/$i.jpg', imageUrl: 'https://example.invalid/$i.jpg', caption: i == 2 ? 'O brinde mais bonito do ano' : null, status: 'approved', createdAt: _days(-i)),
         ];
         Navigator.of(t.element(find.byType(Navigator).first)).push(
-          MaterialPageRoute<void>(builder: (_) => GalleryPostsScreen(weddingId: 'w1', photos: photos, initialIndex: 0)),
+          MaterialPageRoute<void>(builder: (_) => GalleryPostsScreen(eventId: 'w1', photos: photos, initialIndex: 0)),
         );
       }));
   testWidgets('88_manutencao', (t) async {
@@ -1070,7 +1070,7 @@ void main() {
         '/guest-onboarding/w1?step=1',
         extra: Guest(
           id: 'g0',
-          weddingId: 'w1',
+          eventId: 'w1',
           name: 'Rita Mendes',
           rsvpStatus: RsvpStatus.pending,
           plusOneAllowed: true,

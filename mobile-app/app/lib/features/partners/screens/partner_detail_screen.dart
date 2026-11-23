@@ -28,8 +28,8 @@ import '../../../core/partners/partner_providers.dart';
 import '../../../core/reviews/review_providers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
-import '../../../core/wedding/organizers.dart';
+import '../../../core/event/event_controller.dart';
+import '../../../core/event/organizers.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../partner_style.dart';
 import '../widgets/partner_cards.dart';
@@ -63,10 +63,10 @@ import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 const double _kHeroHeight = 200;
 
 final _partnerBookableEventsProvider =
-    FutureProvider.autoDispose.family<List<Wedding>, String>((ref, partnerId) async {
+    FutureProvider.autoDispose.family<List<Event>, String>((ref, partnerId) async {
   final myId = ref.watch(authControllerProvider).profile?.id;
-  final events = ref.watch(weddingControllerProvider.select((s) => s.events));
-  final out = <Wedding>[];
+  final events = ref.watch(eventControllerProvider.select((s) => s.events));
+  final out = <Event>[];
   for (final w in events) {
     if (w.ownerId != myId) {
       try {
@@ -176,12 +176,12 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// Escolhe o evento para onde reservar, entre os eventos **reserváveis**
   /// (elegíveis e onde ainda não pedi — [_partnerBookableEventsProvider]).
   /// Com um só, usa-o direto; com mais do que um, mostra o popup.
-  Future<Wedding?> _chooseEvent() async {
+  Future<Event?> _chooseEvent() async {
     final bookable = await ref.read(_partnerBookableEventsProvider(widget.partner.id).future);
-    if (bookable.isEmpty) return ref.read(weddingControllerProvider).wedding;
+    if (bookable.isEmpty) return ref.read(eventControllerProvider).event;
     if (bookable.length == 1) return bookable.first;
     if (!mounted) return null;
-    return showIslandSheet<Wedding>(
+    return showIslandSheet<Event>(
       // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
       confirmExit: true,
       context: context,
@@ -197,10 +197,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// «Pedir este pacote» (188): pacote, extras, pessoas e mensagem. Antes
   /// da migração (função em falta) cai no pedido de orçamento normal com
   /// o pacote na mensagem.
-  Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people, {Wedding? event, ReserveFlowResult? flow}) async {
+  Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people, {Event? event, ReserveFlowResult? flow}) async {
     if (_requestingQuote) return;
-    final wedding = event ?? await _chooseEvent();
-    if (wedding == null || !mounted) return;
+    final pickedEvent = event ?? await _chooseEvent();
+    if (pickedEvent == null || !mounted) return;
     final chosen = flow?.extras ?? extras.where((e) => _selectedExtras.contains(e.id)).toList();
     final summary = [
       'Pacote "${pkg.name}"',
@@ -214,20 +214,20 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     try {
       final quoteId = await supabase.rpc('request_package', params: {
         'p_partner_id': widget.partner.id,
-        'p_wedding_id': wedding.id,
+        'p_wedding_id': pickedEvent.id,
         'p_package_id': pkg.id,
         'p_extra_ids': chosen.map((e) => e.id).toList(),
         'p_people': people,
-        'p_event_date': wedding.weddingDate?.toIso8601String().split('T').first,
+        'p_event_date': pickedEvent.eventDate?.toIso8601String().split('T').first,
         'p_message': note.isEmpty ? null : note,
         if (_eachPays) 'p_payer_mode': 'each',
       });
       try {
         await sendQuoteRequestMessage(
-          weddingId: wedding.id,
+          eventId: pickedEvent.id,
           partnerId: widget.partner.id,
           partnerName: widget.partner.name,
-          eventDate: wedding.weddingDate,
+          eventDate: pickedEvent.eventDate,
           message: [summary, if (note.isNotEmpty) note].join('\n'),
         );
       } catch (_) {}
@@ -236,14 +236,14 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       if (mounted) {
         double each(String unit, double price) => unit == 'person' ? price * people : price;
         final total = each(pkg.priceUnit, pkg.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
-        final due = wedding.weddingDate?.subtract(const Duration(days: 3));
+        final due = pickedEvent.eventDate?.subtract(const Duration(days: 3));
         final noDeposit = (flow != null) && _depositPct >= 100;
         // Com sinal (pedido do Rafael, 2026-11-22): «Reserva feita!» e logo
         // a seguir o popup «Pagar o sinal» («Pagar mais tarde» / «Pagar
         // agora»). Pago já, fica cativo até o parceiro aceitar.
         final offerDeposit = flow != null && quoteId is String && !_eachPays && !noDeposit && !pkg.isStartingPrice && total > 0;
         final recapTitle = [pkg.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra'].join(' ');
-        final recapMeta = [wedding.displayNames, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · ');
+        final recapMeta = [pickedEvent.displayNames, if (_eventMeta(pickedEvent).isNotEmpty) _eventMeta(pickedEvent).split(' · ').first].join(' · ');
         await _showRequestSent(
           title: offerDeposit ? 'Reserva feita!' : 'Reserva pedida',
           body: _eachPays
@@ -256,11 +256,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           recapTitle: recapTitle,
           recapMeta: recapMeta,
           recapValue: pkg.isStartingPrice ? null : euros(total),
-          event: wedding,
+          event: pickedEvent,
           continueLabel: offerDeposit ? 'Continuar' : null,
         );
         if (offerDeposit && mounted) {
-          await _askPayDeposit(quoteId, wedding: wedding, total: total);
+          await _askPayDeposit(quoteId, pickedEvent: pickedEvent, total: total);
         }
       }
     } on PostgrestException catch (e) {
@@ -289,10 +289,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
 
   /// «Reservar mesa» (190): cada um escolhe o seu menu e extras na app.
   /// A reserva não tem sinal; quem paga é decidido em [_eachPays].
-  Future<void> _requestTable(int people, {Wedding? event, ReserveFlowResult? flow}) async {
+  Future<void> _requestTable(int people, {Event? event, ReserveFlowResult? flow}) async {
     if (_requestingQuote) return;
-    final wedding = event ?? await _chooseEvent();
-    if (wedding == null || !mounted) return;
+    final pickedEvent = event ?? await _chooseEvent();
+    if (pickedEvent == null || !mounted) return;
     final note = flow?.summary() ?? _packageMessage.text.trim();
     final summary = 'Mesa para $people pessoas · cada um escolhe${_eachPays ? ' e paga' : ''} o seu';
     setState(() => _requestingQuote = true);
@@ -300,9 +300,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     try {
       final quoteId = await supabase.rpc('request_table', params: {
         'p_partner_id': widget.partner.id,
-        'p_wedding_id': wedding.id,
+        'p_wedding_id': pickedEvent.id,
         'p_people': people,
-        'p_event_date': wedding.weddingDate?.toIso8601String().split('T').first,
+        'p_event_date': pickedEvent.eventDate?.toIso8601String().split('T').first,
         'p_message': note.isEmpty ? null : note,
         'p_payer_mode': _eachPays ? 'each' : 'organizer',
       });
@@ -319,10 +319,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       }
       try {
         await sendQuoteRequestMessage(
-          weddingId: wedding.id,
+          eventId: pickedEvent.id,
           partnerId: widget.partner.id,
           partnerName: widget.partner.name,
-          eventDate: wedding.weddingDate,
+          eventDate: pickedEvent.eventDate,
           message: [summary, if (note.isNotEmpty) note].join('\n'),
         );
       } catch (_) {}
@@ -333,9 +333,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           title: 'Reserva pedida',
           body: '${widget.partner.name} aceita ou recusa e avisamos-te. Depois, cada convidado escolhe o seu menu na app${_eachPays ? ' e cada convite paga a sua parte' : ''}.',
           recapTitle: 'Mesa para $people',
-          recapMeta: wedding.displayNames,
+          recapMeta: pickedEvent.displayNames,
           recapValue: 'Grátis',
-          event: wedding,
+          event: pickedEvent,
         );
       }
     } on PostgrestException catch (e) {
@@ -389,10 +389,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// 2026-11-22): o resumo, o que acontece ao sinal e «Pagar mais tarde» /
   /// «Pagar agora». Pago já (migração 207), fica cativo até o parceiro
   /// aceitar; aceite, cancela-se com devolução até 48 h depois de pagar.
-  Future<void> _askPayDeposit(String quoteId, {required Wedding wedding, required double total}) async {
+  Future<void> _askPayDeposit(String quoteId, {required Event pickedEvent, required double total}) async {
     final deposit = double.parse((total * _depositPct / 100).toStringAsFixed(2));
     final name = widget.partner.name;
-    final meta = [name, if (_eventMeta(wedding).isNotEmpty) _eventMeta(wedding).split(' · ').first].join(' · ');
+    final meta = [name, if (_eventMeta(pickedEvent).isNotEmpty) _eventMeta(pickedEvent).split(' · ').first].join(' · ');
     final now = await showIslandSheet<bool>(
       confirmExit: true,
       context: context,
@@ -462,7 +462,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       await _showRequestSent(
         title: 'Sinal pago',
         body: 'Fica cativo até $name aceitar. Se aceitar, podes cancelar até 48 h depois de pagar; depois disso, não é reembolsável.',
-        event: wedding,
+        event: pickedEvent,
         paid: true,
       );
     }
@@ -474,7 +474,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     String? recapTitle,
     String? recapMeta,
     String? recapValue,
-    Wedding? event,
+    Event? event,
     bool paid = false,
     /// Só um botão preto (p. ex. «Continuar» para pagar o sinal a seguir).
     String? continueLabel,
@@ -550,14 +550,14 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     if (chat == true && mounted) await _openChat(event: event);
   }
 
-  Future<void> _openChat({Wedding? event}) async {
-    final wedding = event ?? ref.read(weddingControllerProvider).wedding;
-    if (wedding == null || _openingChat) return;
+  Future<void> _openChat({Event? event}) async {
+    final pickedEvent = event ?? ref.read(eventControllerProvider).event;
+    if (pickedEvent == null || _openingChat) return;
     setState(() => _openingChat = true);
     try {
       final partner = widget.partner;
       final conversationId = await getOrCreateConversation(
-        weddingId: wedding.id,
+        eventId: pickedEvent.id,
         partnerId: partner.id,
       );
       if (!mounted) return;
@@ -565,7 +565,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         '/chat/$conversationId',
         extra: ChatConversation(
           id: conversationId,
-          weddingId: wedding.id,
+          eventId: pickedEvent.id,
           partnerId: partner.id,
           name: partner.name,
           avatarSeed: partner.id,
@@ -605,8 +605,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       ),
     );
     if (result == null || !mounted) return;
-    final wedding = result.event;
-    final place = (wedding.venue?.trim().isNotEmpty == true) ? wedding.venue!.trim() : wedding.location?.trim();
+    final pickedEvent = result.event;
+    final place = (pickedEvent.venue?.trim().isNotEmpty == true) ? pickedEvent.venue!.trim() : pickedEvent.location?.trim();
     final quoteMessage = [result.summary(), if (result.message != null) result.message!].join('\n');
 
     setState(() => _requestingQuote = true);
@@ -619,8 +619,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
         'request_quote',
         params: {
           'p_partner_id': widget.partner.id,
-          'p_wedding_id': wedding.id,
-          'p_event_date': wedding.weddingDate?.toIso8601String().split('T').first,
+          'p_wedding_id': pickedEvent.id,
+          'p_event_date': pickedEvent.eventDate?.toIso8601String().split('T').first,
           'p_location': (place == null || place.isEmpty) ? null : place,
           // O parceiro define o preço na proposta (`send_proposal_screen.dart`)
           // — o casal deixou de indicar orçamento min./máx. aqui, pedido
@@ -636,10 +636,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       // desfaz o pedido já criado se isto falhar.
       try {
         await sendQuoteRequestMessage(
-          weddingId: wedding.id,
+          eventId: pickedEvent.id,
           partnerId: widget.partner.id,
           partnerName: widget.partner.name,
-          eventDate: wedding.weddingDate,
+          eventDate: pickedEvent.eventDate,
           location: (place == null || place.isEmpty) ? null : place,
           message: quoteMessage,
         );
@@ -652,8 +652,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           title: 'Orçamento pedido',
           body: '${partner.name} responde com uma proposta e avisamos-te. Não pagas nada agora.',
           recapTitle: 'Só orçamento',
-          recapMeta: wedding.displayNames,
-          event: wedding,
+          recapMeta: pickedEvent.displayNames,
+          event: pickedEvent,
         );
       }
     } on PostgrestException catch (e) {
@@ -717,7 +717,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final extras = ref
         .watch(partnerExtrasForProvider(partner.id))
         .maybeWhen(data: (e) => e, orElse: () => const <ServiceExtra>[]);
-    final weddingGuests = ref.watch(weddingControllerProvider.select((s) => s.wedding?.estimatedGuests));
+    final eventGuests = ref.watch(eventControllerProvider.select((s) => s.event?.estimatedGuests));
     // Menus por pessoa (restaurantes, catering): pessoas e «Como escolhem»
     // no topo da carta (190).
     final perPersonMenus = !widget.selectionMode && !widget.publicView && packages.any((p) => p.perPerson);
@@ -729,7 +729,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final selPkg = !_eachChooses && _selectedPackage != null && _selectedPackage! < packages.length ? packages[_selectedPackage!] : null;
     final peopleMin = selPkg?.minPeople ?? 1;
     final peopleMax = selPkg?.maxPeople ?? 9999;
-    final topPeople = (_people ?? weddingGuests ?? peopleMin).clamp(peopleMin, peopleMax);
+    final topPeople = (_people ?? eventGuests ?? peopleMin).clamp(peopleMin, peopleMax);
     final portfolio = ref
         .watch(partnerPortfolioForProvider(partner.id))
         .maybeWhen(data: (p) => p, orElse: () => const <PortfolioItem>[]);
@@ -836,7 +836,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                 selPkgBar,
                 extras.where((e) => e.appliesTo(selPkgBar.id)).toList(),
                 perPersonMenus ? topPeople : null,
-                weddingGuests,
+                eventGuests,
               );
     } else {
       barLabel = 'Escolher pacote';
@@ -849,7 +849,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       final booked = relationshipStatus == PartnerRelationshipStatus.booked;
       final tone = booked ? AlertTone.invite : AlertTone.pending;
       // Diz qual é o evento (pedido 2026-11-22): o estado é do evento ativo.
-      final ev = ref.watch(weddingControllerProvider.select((s) => s.wedding));
+      final ev = ref.watch(eventControllerProvider.select((s) => s.event));
       final evName = ev == null ? 'este evento' : capFirst(ev.displayNames);
       return AlertOutline(
         tone: tone,
@@ -1128,10 +1128,10 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   }
 
   /// Eventos para escolher nos popups: os reserváveis; sem nenhum, o atual.
-  Future<List<Wedding>> _eventsForSheet() async {
+  Future<List<Event>> _eventsForSheet() async {
     final bookable = await ref.read(_partnerBookableEventsProvider(widget.partner.id).future);
     if (bookable.isNotEmpty) return bookable;
-    final current = ref.read(weddingControllerProvider).wedding;
+    final current = ref.read(eventControllerProvider).event;
     return current == null ? const [] : [current];
   }
 
@@ -1562,7 +1562,7 @@ class ExtraChoiceRow extends StatelessWidget {
 /// Popup "Para qual evento?" — escolhe o evento onde reservar o parceiro
 /// quando há mais do que um evento elegível (DESIGN.md §2/§4).
 class _EventPickerSheet extends StatelessWidget {
-  final List<Wedding> events;
+  final List<Event> events;
   final String partnerName;
   final String? myId;
   const _EventPickerSheet({required this.events, required this.partnerName, this.myId});
@@ -1581,9 +1581,9 @@ class _EventPickerSheet extends StatelessWidget {
                 color: owner ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
       );
 
-  String _meta(Wedding w) {
+  String _meta(Event w) {
     final parts = <String>[];
-    final d = w.weddingDate;
+    final d = w.eventDate;
     if (d != null) {
       const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
       parts.add('${d.day} ${meses[d.month - 1]} ${d.year}');
@@ -1683,9 +1683,9 @@ class _EventPickerSheet extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 /// «12 jun 2027 · Sintra» para a linha do evento nos popups.
-String _eventMeta(Wedding w) {
+String _eventMeta(Event w) {
   final parts = <String>[];
-  final d = w.weddingDate;
+  final d = w.eventDate;
   if (d != null) {
     const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
     parts.add('${d.day} ${meses[d.month - 1]} ${d.year}');

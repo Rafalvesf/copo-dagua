@@ -94,15 +94,15 @@ BookingStatus _mapQuoteRequestStatus(String status) => switch (status) {
 /// do que o nome da conta individual de quem enviou o pedido
 /// (`profiles.full_name`), que só serve de segundo fallback.
 /// Foto do casal: a do casamento, senão a capa, senão a da conta.
-String? _clientAvatar(Map<String, dynamic>? wedding, Map<String, dynamic>? profile) =>
-    (wedding?['profile_photo_url'] as String?) ?? (wedding?['cover_photo_url'] as String?) ?? (profile?['avatar_url'] as String?);
+String? _clientAvatar(Map<String, dynamic>? event, Map<String, dynamic>? profile) =>
+    (event?['profile_photo_url'] as String?) ?? (event?['cover_photo_url'] as String?) ?? (profile?['avatar_url'] as String?);
 
 String _clientDisplayName(
-  Map<String, dynamic>? wedding,
+  Map<String, dynamic>? event,
   Map<String, dynamic>? profile,
 ) {
-  final name1 = wedding?['partner_name_1'] as String?;
-  final name2 = wedding?['partner_name_2'] as String?;
+  final name1 = event?['partner_name_1'] as String?;
+  final name2 = event?['partner_name_2'] as String?;
   if (name1 != null && name1.isNotEmpty) {
     return (name2 == null || name2.isEmpty) ? name1 : '$name1 & $name2';
   }
@@ -115,7 +115,7 @@ Booking _bookingFromQuoteRequestRow(
   String? category,
 ) {
   final couple = row['profiles'] as Map<String, dynamic>?;
-  final wedding = row['events'] as Map<String, dynamic>?;
+  final event = row['events'] as Map<String, dynamic>?;
   final coupleId = row['couple_id'] as String;
   return Booking(
     packageSnapshot: (row['package_snapshot'] as Map?)?.cast<String, dynamic>(),
@@ -126,8 +126,8 @@ Booking _bookingFromQuoteRequestRow(
     payerMode: (row['payer_mode'] as String?) ?? 'organizer',
     id: row['id'] as String,
     partnerId: row['partner_id'] as String,
-    weddingId: row['wedding_id'] as String,
-    clientName: _clientDisplayName(wedding, couple),
+    eventId: row['wedding_id'] as String,
+    clientName: _clientDisplayName(event, couple),
     avatarSeed: coupleId,
     // `event_date` é opcional em `quote_requests` (o casal pode não ter
     // escolhido data ainda) — sem equivalente honesto, cai em "hoje" só
@@ -140,8 +140,8 @@ Booking _bookingFromQuoteRequestRow(
     packageLabel: 'Pedido de orçamento',
     status: _mapQuoteRequestStatus(row['status'] as String),
     messageFromCouple: row['message'] as String?,
-    eventType: EventType.fromDb(wedding?['event_type'] as String?),
-    clientAvatarUrl: _clientAvatar(wedding, couple),
+    eventType: EventType.fromDb(event?['event_type'] as String?),
+    clientAvatarUrl: _clientAvatar(event, couple),
     fromQuoteRequest: true,
     proposalSent: row['status'] == 'proposal_sent',
   );
@@ -150,21 +150,21 @@ Booking _bookingFromQuoteRequestRow(
 Booking _bookingFromBookingRow(Map<String, dynamic> row, String? category) {
   final couple = row['profiles'] as Map<String, dynamic>?;
   final proposal = row['proposals'] as Map<String, dynamic>?;
-  final wedding = row['events'] as Map<String, dynamic>?;
+  final event = row['events'] as Map<String, dynamic>?;
   final coupleId = row['couple_id'] as String;
   return Booking(
     id: row['id'] as String,
     partnerId: row['partner_id'] as String,
-    weddingId: row['wedding_id'] as String,
-    clientName: _clientDisplayName(wedding, couple),
+    eventId: row['wedding_id'] as String,
+    clientName: _clientDisplayName(event, couple),
     avatarSeed: coupleId,
     eventDate: DateTime.parse(row['event_date'] as String),
-    city: (wedding?['location'] as String?) ?? 'Localização a combinar',
+    city: (event?['location'] as String?) ?? 'Localização a combinar',
     category: category,
     packageLabel: (proposal?['title'] as String?) ?? 'Serviço contratado',
     status: mapRealBookingStatus(row['status'] as String),
-    eventType: EventType.fromDb(wedding?['event_type'] as String?),
-    clientAvatarUrl: _clientAvatar(wedding, couple),
+    eventType: EventType.fromDb(event?['event_type'] as String?),
+    clientAvatarUrl: _clientAvatar(event, couple),
     fromQuoteRequest: false,
     people: (row['people'] as num?)?.toInt(),
     totalAmount: (row['total_amount'] as num?)?.toDouble(),
@@ -339,9 +339,9 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
       .order('last_message_at', ascending: false);
   return (rows as List).map((r) {
     final row = r as Map<String, dynamic>;
-    final wedding = row['events'] as Map<String, dynamic>?;
-    final name1 = wedding?['partner_name_1'] as String?;
-    final name2 = wedding?['partner_name_2'] as String?;
+    final event = row['events'] as Map<String, dynamic>?;
+    final name1 = event?['partner_name_1'] as String?;
+    final name2 = event?['partner_name_2'] as String?;
     final name = (name1 == null || name1.isEmpty)
         ? 'Cliente'
         : (name2 == null || name2.isEmpty)
@@ -349,11 +349,11 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
         : '$name1 & $name2';
     return ChatConversation(
       id: row['id'] as String,
-      weddingId: row['wedding_id'] as String,
+      eventId: row['wedding_id'] as String,
       partnerId: row['partner_id'] as String,
       name: name,
       avatarSeed: row['wedding_id'] as String,
-      avatarUrl: _clientAvatar(wedding, null),
+      avatarUrl: _clientAvatar(event, null),
       lastMessage: row['last_message'] as String?,
       lastMessageAt: row['last_message_at'] == null
           ? null

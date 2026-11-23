@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 import 'task_models.dart';
 import '../../shared/money.dart';
 
@@ -13,9 +13,9 @@ const int kMaxActiveSystemTasks = 4;
 
 class TaskEngineState {
   final bool loading;
-  final List<WeddingTask> systemActive;
-  final List<WeddingTask> systemDone;
-  final List<WeddingTask> userTasks;
+  final List<EventTask> systemActive;
+  final List<EventTask> systemDone;
+  final List<EventTask> userTasks;
   final List<AppNotification> notifications;
 
   const TaskEngineState({
@@ -31,9 +31,9 @@ class TaskEngineState {
 
   TaskEngineState copyWith({
     bool? loading,
-    List<WeddingTask>? systemActive,
-    List<WeddingTask>? systemDone,
-    List<WeddingTask>? userTasks,
+    List<EventTask>? systemActive,
+    List<EventTask>? systemDone,
+    List<EventTask>? userTasks,
     List<AppNotification>? notifications,
   }) {
     return TaskEngineState(
@@ -102,21 +102,21 @@ const _categoryRules = {
 };
 
 class TaskEngineController extends Notifier<TaskEngineState> {
-  String? _weddingId;
+  String? _eventId;
   bool _recomputing = false;
   bool _loadedOnce = false;
 
   @override
   TaskEngineState build() {
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    _weddingId = weddingId;
-    if (weddingId != null) {
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+    _eventId = eventId;
+    if (eventId != null) {
       // Mostra logo o que já está guardado (uma consulta) e só depois
       // recalcula — antes a barra "Planeamento" e "Para fazer agora" só
       // apareciam no fim do recálculo inteiro (2026-11-09).
       Future.microtask(() async {
         try {
-          if (_weddingId == weddingId && !_loadedOnce) await _load(weddingId);
+          if (_eventId == eventId && !_loadedOnce) await _load(eventId);
         } catch (_) {}
         await recompute();
       });
@@ -124,15 +124,15 @@ class TaskEngineController extends Notifier<TaskEngineState> {
     return const TaskEngineState();
   }
 
-  Future<void> _load(String weddingId) async {
+  Future<void> _load(String eventId) async {
     final taskRows = await supabase
         .from('wedding_tasks')
         .select()
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .order('priority', ascending: false)
         .order('created_at', ascending: true);
     final tasks = (taskRows as List)
-        .map((r) => WeddingTask.fromRow(r as Map<String, dynamic>))
+        .map((r) => EventTask.fromRow(r as Map<String, dynamic>))
         .toList();
 
     // Do evento + pessoais (grupos, suporte — migração 114).
@@ -142,14 +142,14 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       notificationRows = await supabase
           .from('notifications')
           .select()
-          .or(me == null ? 'wedding_id.eq.$weddingId' : 'wedding_id.eq.$weddingId,profile_id.eq.$me')
+          .or(me == null ? 'wedding_id.eq.$eventId' : 'wedding_id.eq.$eventId,profile_id.eq.$me')
           .order('created_at', ascending: false)
           .limit(50);
     } catch (_) {
       notificationRows = await supabase
           .from('notifications')
           .select()
-          .eq('wedding_id', weddingId)
+          .eq('wedding_id', eventId)
           .order('created_at', ascending: false)
           .limit(50);
     }
@@ -161,7 +161,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         tasks.where((t) => t.source == TaskSource.system && t.status == TaskStatus.completed).toList()
           ..sort((a, b) => (b.completedAt ?? b.createdAt).compareTo(a.completedAt ?? a.createdAt));
 
-    if (!ref.mounted || _weddingId != weddingId) return;
+    if (!ref.mounted || _eventId != eventId) return;
     _loadedOnce = true;
     state = state.copyWith(
       loading: false,
@@ -178,11 +178,11 @@ class TaskEngineController extends Notifier<TaskEngineState> {
   /// satisfazem, cria linhas `upcoming` para templates recém-elegíveis
   /// e promove a `active` até preencher [kMaxActiveSystemTasks].
   Future<void> recompute() async {
-    final weddingId = _weddingId;
-    if (weddingId == null || _recomputing) return;
+    final eventId = _eventId;
+    if (eventId == null || _recomputing) return;
     _recomputing = true;
     try {
-      final ctxF = _gatherContext(weddingId);
+      final ctxF = _gatherContext(eventId);
       final templatesF = _loadTemplates();
       final ctx = await ctxF;
       final templates = await templatesF;
@@ -190,10 +190,10 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       final existingRows = await supabase
           .from('wedding_tasks')
           .select()
-          .eq('wedding_id', weddingId)
+          .eq('wedding_id', eventId)
           .eq('source', 'system');
       final existing = (existingRows as List)
-          .map((r) => WeddingTask.fromRow(r as Map<String, dynamic>))
+          .map((r) => EventTask.fromRow(r as Map<String, dynamic>))
           .toList();
       final existingByTemplate = {
         for (final t in existing)
@@ -281,7 +281,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
           continue; // já satisfeita antes de sequer aparecer — não vale a pena criar.
         }
         writes.add(supabase.from('wedding_tasks').insert({
-            'wedding_id': weddingId,
+            'wedding_id': eventId,
             'task_template_id': template.id,
             'source': 'system',
             'title': template.title,
@@ -304,10 +304,10 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       final refreshedRows = await supabase
           .from('wedding_tasks')
           .select()
-          .eq('wedding_id', weddingId)
+          .eq('wedding_id', eventId)
           .eq('source', 'system');
       final refreshed = (refreshedRows as List)
-          .map((r) => WeddingTask.fromRow(r as Map<String, dynamic>))
+          .map((r) => EventTask.fromRow(r as Map<String, dynamic>))
           .toList();
 
       var active = refreshed.where((t) => t.status == TaskStatus.active).toList();
@@ -359,7 +359,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
             'updated_at': DateTime.now().toIso8601String(),
           }).eq('id', candidate.id);
           await supabase.from('notifications').insert({
-            'wedding_id': weddingId,
+            'wedding_id': eventId,
             'type': 'new_task',
             'title': 'Nova tarefa',
             'body': candidate.description ?? candidate.title,
@@ -370,9 +370,9 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       }
       await Future.wait(writes);
 
-      await _syncDynamicTasks(weddingId);
+      await _syncDynamicTasks(eventId);
 
-      await _load(weddingId);
+      await _load(eventId);
     } finally {
       _recomputing = false;
     }
@@ -384,28 +384,28 @@ class TaskEngineController extends Notifier<TaskEngineState> {
   /// diretamente em `active` (são sempre poucas e sempre urgentes por
   /// natureza) e são concluídas assim que o registo de origem já não as
   /// justifica — não passam pela fila de [kMaxActiveSystemTasks].
-  Future<void> _syncDynamicTasks(String weddingId) async {
+  Future<void> _syncDynamicTasks(String eventId) async {
     // As três leituras de partida não dependem umas das outras.
     final existingF = supabase
         .from('wedding_tasks')
         .select()
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .not('source_entity_id', 'is', null)
         .then((r) => r);
     final bookingF = supabase
         .from('bookings')
         .select('id, status, partner_profiles(business_name)')
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .then((r) => r);
     final quoteF = supabase
         .from('quote_requests')
         .select('id, partner_id, partner_profiles(business_name)')
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .then((r) => r);
     final existingRows = await existingF;
     final existingByEntity = {
       for (final r in (existingRows as List).cast<Map<String, dynamic>>())
-        r['source_entity_id'] as String: WeddingTask.fromRow(r),
+        r['source_entity_id'] as String: EventTask.fromRow(r),
     };
 
     final bookingRows = await bookingF;
@@ -464,7 +464,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
           final inserted = await supabase
               .from('wedding_tasks')
               .insert({
-                'wedding_id': weddingId,
+                'wedding_id': eventId,
                 'source': 'system',
                 'source_entity_id': paymentId,
                 'title': 'Pagar $typeLabel — $partnerName',
@@ -481,7 +481,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
               .select()
               .single();
           await supabase.from('notifications').insert({
-            'wedding_id': weddingId,
+            'wedding_id': eventId,
             'type': 'new_task',
             'title': 'Nova tarefa',
             'body': 'Pagar $typeLabel — $partnerName',
@@ -536,7 +536,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
           await supabase
               .from('wedding_tasks')
               .insert({
-                'wedding_id': weddingId,
+                'wedding_id': eventId,
                 'source': 'system',
                 'source_entity_id': proposalId,
                 'title': 'Rever proposta — $partnerName',
@@ -591,7 +591,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
           final inserted = await supabase
               .from('wedding_tasks')
               .insert({
-                'wedding_id': weddingId,
+                'wedding_id': eventId,
                 'source': 'system',
                 'source_entity_id': bookingId,
                 'title': 'Avaliar — $partnerName',
@@ -605,7 +605,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
               .select()
               .single();
           await supabase.from('notifications').insert({
-            'wedding_id': weddingId,
+            'wedding_id': eventId,
             'type': 'new_task',
             'title': 'Nova tarefa',
             'body': 'Avaliar — $partnerName',
@@ -624,50 +624,50 @@ class TaskEngineController extends Notifier<TaskEngineState> {
   Future<List<TaskTemplate>> _loadTemplates() async {
     final rows = await supabase.from('task_templates').select().eq('active', true);
     // Só os templates deste tipo de evento (ou de todos) — 2026-10-20.
-    final eventType = ref.read(weddingControllerProvider).wedding?.eventType.dbValue ?? 'wedding';
+    final eventType = ref.read(eventControllerProvider).event?.eventType.dbValue ?? 'wedding';
     return (rows as List)
         .map((r) => TaskTemplate.fromRow(r as Map<String, dynamic>))
         .where((t) => t.appliesTo(eventType))
         .toList();
   }
 
-  Future<_TaskContext> _gatherContext(String weddingId) async {
+  Future<_TaskContext> _gatherContext(String eventId) async {
     // Todos os pedidos arrancam já, em paralelo (2026-11-09: início do
     // organizador lento); `.then` dispara os builders preguiçosos.
     final budgetRowF = supabase
         .from('budgets')
         .select('wedding_id')
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .maybeSingle().then((r) => r);
     final guestRowsF = supabase
         .from('guests')
         .select('rsvp_status')
-        .eq('wedding_id', weddingId).then((r) => r);
+        .eq('wedding_id', eventId).then((r) => r);
     final seatingRowsF = supabase
         .from('seating_tables')
         .select('id')
-        .eq('wedding_id', weddingId).then((r) => r);
+        .eq('wedding_id', eventId).then((r) => r);
     final prefRowsF = supabase
         .from('wedding_service_preferences')
         .select('partner_category_slug, preference')
-        .eq('wedding_id', weddingId).then((r) => r);
+        .eq('wedding_id', eventId).then((r) => r);
     final favRowsF = supabase
         .from('favorite_partners')
         .select('partner_id')
-        .eq('wedding_id', weddingId).then((r) => r);
+        .eq('wedding_id', eventId).then((r) => r);
     final liveBookingRowsF = supabase
         .from('bookings')
         .select('partner_id, status')
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed', 'payment_overdue', 'disputed']).then((r) => r);
     final quoteRowsF = supabase
         .from('quote_requests')
         .select('id, partner_id, status')
-        .eq('wedding_id', weddingId).then((r) => r);
+        .eq('wedding_id', eventId).then((r) => r);
     final secretRowsF = supabase
           .from('conversations')
           .select('partner_id')
-          .eq('wedding_id', weddingId)
+          .eq('wedding_id', eventId)
           .not('private_owner', 'is', null).then<List<dynamic>>((r) => r, onError: (_) => const <dynamic>[]);
 
     final budgetRow = await budgetRowF;
@@ -775,7 +775,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
     final exploredRows = await supabase
         .from('wedding_tasks')
         .select('task_templates(key, partner_category_slug)')
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .eq('status', 'completed')
         .not('task_template_id', 'is', null);
     final exploredCategorySlugs = <String>{};
@@ -876,10 +876,10 @@ class TaskEngineController extends Notifier<TaskEngineState> {
     TaskPriority priority = TaskPriority.normal,
     String? category,
   }) async {
-    final weddingId = _weddingId;
-    if (weddingId == null) return;
+    final eventId = _eventId;
+    if (eventId == null) return;
     await supabase.from('wedding_tasks').insert({
-      'wedding_id': weddingId,
+      'wedding_id': eventId,
       'source': 'user',
       'title': title,
       'description': description,
@@ -890,12 +890,12 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       'completion_behavior': 'manual',
       'display_type': 'required',
     });
-    await _load(weddingId);
+    await _load(eventId);
   }
 
   Future<void> completeTask(String taskId) async {
-    final weddingId = _weddingId;
-    if (weddingId == null) return;
+    final eventId = _eventId;
+    if (eventId == null) return;
     await supabase.from('wedding_tasks').update({
       'status': 'completed',
       'completed_at': DateTime.now().toIso8601String(),
@@ -914,8 +914,8 @@ class TaskEngineController extends Notifier<TaskEngineState> {
   /// de devolver — a navegação para o CTA não deve ficar bloqueada à
   /// espera da rede.
   Future<void> completeCtaTask(String taskId) async {
-    final weddingId = _weddingId;
-    if (weddingId == null) return;
+    final eventId = _eventId;
+    if (eventId == null) return;
     await supabase.from('wedding_tasks').update({
       'status': 'completed',
       'completed_at': DateTime.now().toIso8601String(),
@@ -928,23 +928,23 @@ class TaskEngineController extends Notifier<TaskEngineState> {
 
   Future<void> markTaskSeen(String taskId) async {
     await supabase.from('wedding_tasks').update({'seen': true}).eq('id', taskId);
-    final weddingId = _weddingId;
-    if (weddingId != null) await _load(weddingId);
+    final eventId = _eventId;
+    if (eventId != null) await _load(eventId);
   }
 
   Future<void> markNotificationRead(String notificationId) async {
     await supabase.from('notifications').update({'read': true}).eq('id', notificationId);
-    final weddingId = _weddingId;
-    if (weddingId != null) await _load(weddingId);
+    final eventId = _eventId;
+    if (eventId != null) await _load(eventId);
   }
 
   Future<void> markAllNotificationsRead() async {
-    final weddingId = _weddingId;
-    if (weddingId == null) return;
+    final eventId = _eventId;
+    if (eventId == null) return;
     await supabase
         .from('notifications')
         .update({'read': true})
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .eq('read', false);
     final me = supabase.auth.currentUser?.id;
     if (me != null) {
@@ -952,7 +952,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         await supabase.from('notifications').update({'read': true}).eq('profile_id', me).eq('read', false);
       } catch (_) {}
     }
-    await _load(weddingId);
+    await _load(eventId);
   }
 }
 

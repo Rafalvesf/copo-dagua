@@ -14,14 +14,14 @@ import 'chat_delete.dart';
 
 class ChatGroup {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String name;
   final String? lastMessage;
   final DateTime? lastMessageAt;
   final bool unread;
   final String? createdBy;
 
-  /// Conversa direta entre duas pessoas (192): sem evento (`weddingId`
+  /// Conversa direta entre duas pessoas (192): sem evento (`eventId`
   /// vazio); mostra-se com o nome e a foto da outra pessoa.
   final bool isDirect;
 
@@ -32,7 +32,7 @@ class ChatGroup {
   final String? description;
   const ChatGroup({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     required this.name,
     this.lastMessage,
     this.lastMessageAt,
@@ -101,11 +101,11 @@ String get _me => supabase.auth.currentUser!.id;
 /// sempre (reportado 2026-10-20).
 Duration? _noRetry(int count, Object error) => null;
 
-final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, String>((ref, weddingId) async {
+final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, String>((ref, eventId) async {
   final rows = await supabase
       .from('chat_groups')
       .select('*')
-      .eq('wedding_id', weddingId)
+      .eq('wedding_id', eventId)
       .order('last_message_at', ascending: false, nullsFirst: false);
   final reads = await supabase.from('chat_group_members').select('group_id, last_read_at').eq('profile_id', _me);
   final readAt = {
@@ -119,7 +119,7 @@ final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, St
         final read = readAt[r['id']];
         return ChatGroup(
           id: r['id'] as String,
-          weddingId: (r['wedding_id'] as String?) ?? '',
+          eventId: (r['wedding_id'] as String?) ?? '',
           name: r['name'] as String,
           lastMessage: r['last_message'] as String?,
           lastMessageAt: last,
@@ -159,7 +159,7 @@ final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) a
           final read = readAt[r['id']];
           return ChatGroup(
             id: r['id'] as String,
-            weddingId: (r['wedding_id'] as String?) ?? '',
+            eventId: (r['wedding_id'] as String?) ?? '',
             name: r['name'] as String,
             lastMessage: r['last_message'] as String?,
             lastMessageAt: last,
@@ -174,8 +174,8 @@ final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) a
   ];
 }, retry: _noRetry);
 
-final eventPeopleProvider = FutureProvider.autoDispose.family<List<EventPerson>, String>((ref, weddingId) async {
-  final rows = await supabase.rpc('event_chat_people', params: {'p_wedding_id': weddingId}) as List;
+final eventPeopleProvider = FutureProvider.autoDispose.family<List<EventPerson>, String>((ref, eventId) async {
+  final rows = await supabase.rpc('event_chat_people', params: {'p_wedding_id': eventId}) as List;
   return [
     for (final r in rows.cast<Map<String, dynamic>>())
       EventPerson(r['profile_id'] as String, r['full_name'] as String, r['avatar_url'] as String?, r['role'] as String),
@@ -190,9 +190,9 @@ final groupPeopleProvider = FutureProvider.autoDispose.family<Map<String, EventP
   };
 }, retry: _noRetry);
 
-Future<String> createChatGroup(String weddingId, String name, List<String> memberIds) async {
+Future<String> createChatGroup(String eventId, String name, List<String> memberIds) async {
   final id = await supabase.rpc('create_chat_group', params: {
-    'p_wedding_id': weddingId,
+    'p_wedding_id': eventId,
     'p_name': name,
     'p_member_ids': memberIds,
   });
@@ -317,9 +317,9 @@ String currentUserId() => _me;
 
 
 /// Grupo «todos» do evento (189). Null se a migração ainda não correu.
-Future<ChatGroup?> openEventGroup(String weddingId) async {
+Future<ChatGroup?> openEventGroup(String eventId) async {
   try {
-    final id = await supabase.rpc('my_event_group', params: {'p_wedding_id': weddingId});
+    final id = await supabase.rpc('my_event_group', params: {'p_wedding_id': eventId});
     if (id is! String) return null;
     final r = await supabase
         .from('chat_groups')
@@ -329,7 +329,7 @@ Future<ChatGroup?> openEventGroup(String weddingId) async {
     if (r == null) return null;
     return ChatGroup(
       id: r['id'] as String,
-      weddingId: (r['wedding_id'] as String?) ?? '',
+      eventId: (r['wedding_id'] as String?) ?? '',
       name: r['name'] as String,
       lastMessage: r['last_message'] as String?,
       lastMessageAt: r['last_message_at'] == null ? null : DateTime.parse(r['last_message_at'] as String),
@@ -369,7 +369,7 @@ Future<ChatGroup> openDirectChat(String profileId) async {
   final r = await supabase.from('chat_groups').select('*').eq('id', id as String).single();
   return ChatGroup(
     id: r['id'] as String,
-    weddingId: (r['wedding_id'] as String?) ?? '',
+    eventId: (r['wedding_id'] as String?) ?? '',
     name: r['name'] as String,
     lastMessage: r['last_message'] as String?,
     lastMessageAt: r['last_message_at'] == null ? null : DateTime.parse(r['last_message_at'] as String),
@@ -381,9 +381,9 @@ Future<ChatGroup> openDirectChat(String profileId) async {
 /// Mensagens por ler no grupo do evento («todos», migração 189) — o número
 /// no botão do grupo no topo do painel do convidado (2026-11-21). 0 se não
 /// houver grupo ou se algo falhar.
-final eventGroupUnreadProvider = FutureProvider.autoDispose.family<int, String>((ref, weddingId) async {
+final eventGroupUnreadProvider = FutureProvider.autoDispose.family<int, String>((ref, eventId) async {
   try {
-    final id = await supabase.rpc('my_event_group', params: {'p_wedding_id': weddingId});
+    final id = await supabase.rpc('my_event_group', params: {'p_wedding_id': eventId});
     if (id is! String) return 0;
     final read = await supabase
         .from('chat_group_members')

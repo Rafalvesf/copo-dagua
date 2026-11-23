@@ -8,8 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/partner_invite.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/partner_invite.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 
@@ -53,7 +53,7 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
     setState(() => _joining = true);
     try {
       await acceptPartnerInvite(widget.token);
-      ref.invalidate(weddingControllerProvider);
+      ref.invalidate(eventControllerProvider);
       if (!mounted) return;
       context.go('/evento');
     } catch (e) {

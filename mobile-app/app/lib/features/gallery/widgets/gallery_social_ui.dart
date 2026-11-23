@@ -12,7 +12,7 @@ import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/moderation/moderation.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gallery_placeholder.dart';
 import '../../../shared/widgets/initials_avatar.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -41,14 +41,14 @@ Widget _avatar(String name, String? url, double radius) => V2Avatar(name, size: 
 
 /// Grelha 3 colunas. Coração vermelho no canto das fotos de que gostaste.
 class GallerySocialGrid extends ConsumerWidget {
-  final String weddingId;
+  final String eventId;
   final List<GalleryPhoto> photos;
 
-  const GallerySocialGrid({super.key, required this.weddingId, required this.photos});
+  const GallerySocialGrid({super.key, required this.eventId, required this.photos});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meta = ref.watch(galleryFeedMetaProvider(weddingId)).asData?.value ?? const {};
+    final meta = ref.watch(galleryFeedMetaProvider(eventId)).asData?.value ?? const {};
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -62,7 +62,7 @@ class GallerySocialGrid extends ConsumerWidget {
         final photo = photos[index];
         final m = meta[photo.id];
         return SnappyTap(
-          onTap: () => openGalleryPosts(context, weddingId: weddingId, photos: photos, initialIndex: index),
+          onTap: () => openGalleryPosts(context, eventId: eventId, photos: photos, initialIndex: index),
           child: ClipRRect(
             borderRadius: galleryTileRadius(index, photos.length),
             child: Stack(
@@ -97,13 +97,13 @@ class GallerySocialGrid extends ConsumerWidget {
 
 void openGalleryPosts(
   BuildContext context, {
-  required String weddingId,
+  required String eventId,
   required List<GalleryPhoto> photos,
   required int initialIndex,
 }) {
   Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) => GalleryPostsScreen(weddingId: weddingId, photos: photos, initialIndex: initialIndex),
+      builder: (_) => GalleryPostsScreen(eventId: eventId, photos: photos, initialIndex: initialIndex),
     ),
   );
 }
@@ -111,13 +111,13 @@ void openGalleryPosts(
 /// Publicações em lista (como o feed do Instagram), a começar na foto
 /// tocada.
 class GalleryPostsScreen extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final List<GalleryPhoto> photos;
   final int initialIndex;
 
   const GalleryPostsScreen({
     super.key,
-    required this.weddingId,
+    required this.eventId,
     required this.photos,
     required this.initialIndex,
   });
@@ -144,16 +144,16 @@ class _GalleryPostsScreenState extends ConsumerState<GalleryPostsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
+    final meta = ref.watch(galleryFeedMetaProvider(widget.eventId)).asData?.value ?? const {};
     final me = ref.watch(authControllerProvider).profile;
     // Nome do evento por baixo do título (canvas "Galeria — publicação").
     String? eventName;
-    final own = ref.watch(weddingControllerProvider).wedding;
-    if (own != null && own.id == widget.weddingId) {
+    final own = ref.watch(eventControllerProvider).event;
+    if (own != null && own.id == widget.eventId) {
       eventName = '${own.eventType.label} · ${own.displayNames}';
     } else {
-      for (final w in ref.watch(guestWeddingsProvider).value ?? const <GuestWedding>[]) {
-        if (w.weddingId == widget.weddingId) eventName = '${w.eventType.label} · ${w.displayNames}';
+      for (final w in ref.watch(guestEventsProvider).value ?? const <GuestEvent>[]) {
+        if (w.eventId == widget.eventId) eventName = '${w.eventType.label} · ${w.displayNames}';
       }
     }
     // Sem a parte social (078) ainda ativa, mostra na mesma o autor e as
@@ -165,7 +165,7 @@ class _GalleryPostsScreenState extends ConsumerState<GalleryPostsScreen> {
           uploadedBy: p.uploadedBy,
           authorName: p.uploadedBy == me?.id ? (me?.fullName ?? 'Tu') : 'Convidado',
           // Sem a 078: quem organiza este evento e publicou é anfitrião.
-          authorIsCouple: p.uploadedBy == me?.id && own != null && own.id == widget.weddingId,
+          authorIsCouple: p.uploadedBy == me?.id && own != null && own.id == widget.eventId,
           likeCount: 0,
           likedByMe: false,
           commentCount: 0,
@@ -183,7 +183,7 @@ class _GalleryPostsScreenState extends ConsumerState<GalleryPostsScreen> {
               for (var i = 0; i < widget.photos.length; i++)
                 _PostCard(
                   key: i == widget.initialIndex ? _initialKey : ValueKey(widget.photos[i].id),
-                  weddingId: widget.weddingId,
+                  eventId: widget.eventId,
                   photo: widget.photos[i],
                   meta: metaFor(widget.photos[i]),
                   tint: galleryTint(i),
@@ -199,7 +199,7 @@ class _GalleryPostsScreenState extends ConsumerState<GalleryPostsScreen> {
 }
 
 class _PostCard extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final GalleryPhoto photo;
   final GalleryPostMeta? meta;
   final Color tint;
@@ -207,7 +207,7 @@ class _PostCard extends ConsumerStatefulWidget {
 
   const _PostCard({
     super.key,
-    required this.weddingId,
+    required this.eventId,
     required this.photo,
     required this.meta,
     required this.tint,
@@ -247,7 +247,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
     });
     try {
       await setGalleryLike(widget.photo.id, me, next);
-      ref.invalidate(galleryFeedMetaProvider(widget.weddingId));
+      ref.invalidate(galleryFeedMetaProvider(widget.eventId));
       ref.invalidate(galleryLikersProvider(widget.photo.id));
     } catch (_) {
       if (mounted) {
@@ -274,7 +274,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
   void _openAuthor() {
     final m = widget.meta;
     if (m == null) return;
-    showGalleryMember(context, weddingId: widget.weddingId, profileId: m.uploadedBy, allPhotos: widget.allPhotos);
+    showGalleryMember(context, eventId: widget.eventId, profileId: m.uploadedBy, allPhotos: widget.allPhotos);
   }
 
   Future<void> _share() async {
@@ -387,7 +387,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                   icon: Hi.chatBubbleOvalLeft,
                   label: comments > 0 ? '$comments' : null,
                   tooltip: 'Comentar',
-                  onTap: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
+                  onTap: () => showGalleryComments(context, eventId: widget.eventId, photoId: widget.photo.id),
                 ),
                 _Action(icon: Hi.arrowUpOnSquare, tooltip: 'Partilhar', onTap: _share),
                 const Spacer(),
@@ -416,7 +416,7 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
               _CommentPreview(photoId: widget.photo.id),
               const SizedBox(height: 4),
               SnappyTap(
-                onTap: () => showGalleryComments(context, weddingId: widget.weddingId, photoId: widget.photo.id),
+                onTap: () => showGalleryComments(context, eventId: widget.eventId, photoId: widget.photo.id),
                 child: Text(
                   comments == 1 ? 'Ver 1 comentário' : 'Ver os $comments comentários',
                   style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted),
@@ -569,21 +569,21 @@ class _Action extends StatelessWidget {
 
 // ------------------------------------------------------------ comentários
 
-Future<void> showGalleryComments(BuildContext context, {required String weddingId, required String photoId}) {
+Future<void> showGalleryComments(BuildContext context, {required String eventId, required String photoId}) {
   return showIslandSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
-    builder: (_) => _CommentsSheet(weddingId: weddingId, photoId: photoId),
+    builder: (_) => _CommentsSheet(eventId: eventId, photoId: photoId),
   );
 }
 
 class _CommentsSheet extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final String photoId;
 
-  const _CommentsSheet({required this.weddingId, required this.photoId});
+  const _CommentsSheet({required this.eventId, required this.photoId});
 
   @override
   ConsumerState<_CommentsSheet> createState() => _CommentsSheetState();
@@ -608,7 +608,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
       await addGalleryComment(widget.photoId, me, body);
       _text.clear();
       ref.invalidate(galleryCommentsProvider(widget.photoId));
-      ref.invalidate(galleryFeedMetaProvider(widget.weddingId));
+      ref.invalidate(galleryFeedMetaProvider(widget.eventId));
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -635,7 +635,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
     try {
       await deleteGalleryComment(c.id);
       ref.invalidate(galleryCommentsProvider(widget.photoId));
-      ref.invalidate(galleryFeedMetaProvider(widget.weddingId));
+      ref.invalidate(galleryFeedMetaProvider(widget.eventId));
     } catch (_) {}
   }
 
@@ -807,7 +807,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
 
 Future<void> showGalleryMember(
   BuildContext context, {
-  required String weddingId,
+  required String eventId,
   required String profileId,
   required List<GalleryPhoto> allPhotos,
 }) {
@@ -816,20 +816,20 @@ Future<void> showGalleryMember(
     isScrollControlled: true,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
-    builder: (_) => _MemberSheet(weddingId: weddingId, profileId: profileId, allPhotos: allPhotos),
+    builder: (_) => _MemberSheet(eventId: eventId, profileId: profileId, allPhotos: allPhotos),
   );
 }
 
 class _MemberSheet extends ConsumerWidget {
-  final String weddingId;
+  final String eventId;
   final String profileId;
   final List<GalleryPhoto> allPhotos;
 
-  const _MemberSheet({required this.weddingId, required this.profileId, required this.allPhotos});
+  const _MemberSheet({required this.eventId, required this.profileId, required this.allPhotos});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final member = ref.watch(galleryMemberProvider((weddingId: weddingId, profileId: profileId)));
+    final member = ref.watch(galleryMemberProvider((eventId: eventId, profileId: profileId)));
     final theirs = allPhotos.where((p) => p.uploadedBy == profileId).toList();
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
@@ -890,7 +890,7 @@ class _MemberSheet extends ConsumerWidget {
                   if (theirs.isEmpty)
                     const InfoNote('Ainda sem fotos publicadas.', icon: Hi.photo)
                   else
-                    GallerySocialGrid(weddingId: weddingId, photos: theirs),
+                    GallerySocialGrid(eventId: eventId, photos: theirs),
                 ],
               ),
       ),

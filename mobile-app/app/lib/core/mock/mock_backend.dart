@@ -24,8 +24,8 @@ class MockBackend {
   static const demoPassword = 'teste1234';
 
   final List<Profile> profiles = [];
-  final List<Wedding> events = [];
-  final List<Collaborator> collaboratorsByWedding = [];
+  final List<Event> events = [];
+  final List<Collaborator> collaboratorsByEvent = [];
   final List<Guest> guests = [];
   final List<ChatMessage> chatMessages = [];
   final List<ChatConversation> chatConversations = [];
@@ -67,24 +67,24 @@ class MockBackend {
     );
     profiles.add(demoPartner);
 
-    final wedding = Wedding(
+    final event = Event(
       id: 'demo-wedding',
       ownerId: demo.id,
       partnerName1: 'Sofia',
       partnerName2: 'André',
       partner1Age: 29,
       partner2Age: 31,
-      weddingDate: DateTime.now().add(const Duration(days: 214)),
+      eventDate: DateTime.now().add(const Duration(days: 214)),
       location: 'Sintra, Portugal',
       venue: 'Quinta da Regaleira',
       ceremonyType: CeremonyType.both,
       estimatedGuests: 120,
       estimatedBudget: 25000,
-      status: WeddingStatus.planning,
+      status: EventStatus.planning,
     );
-    events.add(wedding);
+    events.add(event);
 
-    collaboratorsByWedding.addAll([
+    collaboratorsByEvent.addAll([
       Collaborator(
         id: 'c1',
         name: 'Sofia Silva',
@@ -108,7 +108,7 @@ class MockBackend {
     guests.addAll([
       Guest(
         id: 'g1',
-        weddingId: wedding.id,
+        eventId: event.id,
         name: 'Rita Almeida',
         email: 'rita@exemplo.com',
         group: 'Família noiva',
@@ -121,7 +121,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g2',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'Carlos Ferreira',
         email: 'carlos@exemplo.com',
         group: 'Amigos',
@@ -130,7 +130,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g3',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'Sofia Martins',
         phone: '912345678',
         group: 'Trabalho',
@@ -139,7 +139,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g4',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'Tiago Rocha',
         email: 'tiago@exemplo.com',
         group: 'Família noivo',
@@ -149,7 +149,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g5',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'Beatriz Nunes',
         email: 'beatriz@exemplo.com',
         group: 'Amigos',
@@ -158,7 +158,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g6',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'Miguel Sousa',
         email: 'miguel.sousa@exemplo.com',
         group: 'Família noivo',
@@ -167,7 +167,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g7',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'Inês Pereira',
         email: 'ines@exemplo.com',
         group: 'Amigos',
@@ -176,7 +176,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g8',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'Duarte Costa',
         email: 'duarte@exemplo.com',
         group: 'Trabalho',
@@ -185,7 +185,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g9',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'Marta Lopes',
         email: 'marta@exemplo.com',
         group: 'Família noiva',
@@ -194,7 +194,7 @@ class MockBackend {
       ),
       const Guest(
         id: 'g10',
-        weddingId: 'demo-wedding',
+        eventId: 'demo-wedding',
         name: 'André Ramos',
         email: 'andre@exemplo.com',
         group: 'Amigos',
@@ -475,32 +475,32 @@ class MockBackend {
     return updated;
   }
 
-  Future<Wedding> createWedding({
+  Future<Event> createEvent({
     required String ownerId,
     required String partnerName1,
     String? partnerName2,
     int? partner1Age,
     int? partner2Age,
-    DateTime? weddingDate,
+    DateTime? eventDate,
     String? location,
     int? estimatedGuests,
     double? estimatedBudget,
   }) async {
     await Future.delayed(_latency);
-    final wedding = Wedding(
+    final event = Event(
       id: _nextId('wedding'),
       ownerId: ownerId,
       partnerName1: partnerName1,
       partnerName2: partnerName2,
       partner1Age: partner1Age,
       partner2Age: partner2Age,
-      weddingDate: weddingDate,
+      eventDate: eventDate,
       location: location,
       estimatedGuests: estimatedGuests,
       estimatedBudget: estimatedBudget,
     );
-    events.add(wedding);
-    collaboratorsByWedding.add(
+    events.add(event);
+    collaboratorsByEvent.add(
       Collaborator(
         id: _nextId('collab'),
         name: partnerName1,
@@ -515,33 +515,33 @@ class MockBackend {
         onboardingComplete: true,
       );
     }
-    return wedding;
+    return event;
   }
 
-  Future<Wedding?> getWeddingForOwner(String ownerId) async {
+  Future<Event?> getEventForOwner(String ownerId) async {
     await Future.delayed(_latency ~/ 2);
     return events.where((w) => w.ownerId == ownerId).firstOrNull;
   }
 
-  Future<Wedding?> getWeddingBySlug(String slug) async {
+  Future<Event?> getEventBySlug(String slug) async {
     await Future.delayed(_latency ~/ 2);
     return events.where((w) => w.inviteSlug == slug).firstOrNull;
   }
 
-  Future<Wedding> updateWedding(Wedding wedding) async {
+  Future<Event> updateEvent(Event event) async {
     await Future.delayed(_latency);
-    final index = events.indexWhere((w) => w.id == wedding.id);
-    if (index != -1) events[index] = wedding;
-    return wedding;
+    final index = events.indexWhere((w) => w.id == event.id);
+    if (index != -1) events[index] = event;
+    return event;
   }
 
-  Future<List<Collaborator>> listCollaborators(String weddingId) async {
+  Future<List<Collaborator>> listCollaborators(String eventId) async {
     await Future.delayed(_latency ~/ 2);
-    return List.unmodifiable(collaboratorsByWedding);
+    return List.unmodifiable(collaboratorsByEvent);
   }
 
   Future<Collaborator> inviteCollaborator({
-    required String weddingId,
+    required String eventId,
     required String email,
   }) async {
     await Future.delayed(_latency);
@@ -551,20 +551,20 @@ class MockBackend {
       email: email,
       status: CollaboratorStatus.pending,
     );
-    collaboratorsByWedding.add(invite);
+    collaboratorsByEvent.add(invite);
     return invite;
   }
 
-  Future<List<Guest>> listGuests(String weddingId) async {
+  Future<List<Guest>> listGuests(String eventId) async {
     await Future.delayed(_latency ~/ 2);
-    return guests.where((g) => g.weddingId == weddingId).toList();
+    return guests.where((g) => g.eventId == eventId).toList();
   }
 
   Future<Guest> addGuest(Guest guest) async {
     await Future.delayed(_latency);
     final withId = Guest(
       id: _nextId('guest'),
-      weddingId: guest.weddingId,
+      eventId: guest.eventId,
       name: guest.name,
       email: guest.email,
       phone: guest.phone,

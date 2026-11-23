@@ -66,9 +66,9 @@ class _TourAnchorState extends State<TourAnchor> {
 /// e, na primeira vez, abre o guia.
 class TourHost extends ConsumerStatefulWidget {
   final TourRole role;
-  final String? guestWeddingId;
+  final String? guestEventId;
   final Widget child;
-  const TourHost({super.key, required this.role, this.guestWeddingId, required this.child});
+  const TourHost({super.key, required this.role, this.guestEventId, required this.child});
 
   @override
   ConsumerState<TourHost> createState() => _TourHostState();
@@ -79,7 +79,7 @@ class _TourHostState extends ConsumerState<TourHost> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) FirstRunTour.maybeShow(context, widget.role, guestWeddingId: widget.guestWeddingId);
+      if (mounted) FirstRunTour.maybeShow(context, widget.role, guestEventId: widget.guestEventId);
       // Pop-up de classificação (só depois de alguns dias de uso).
       if (mounted) RatingPrompt.maybeAsk(context, ref);
     });
@@ -98,7 +98,7 @@ class FirstRunTour {
 
   static String _key(TourRole role, String uid) => 'first_tour_v1_${role.name}_$uid';
 
-  static Future<void> maybeShow(BuildContext context, TourRole role, {String? guestWeddingId}) async {
+  static Future<void> maybeShow(BuildContext context, TourRole role, {String? guestEventId}) async {
     if (_running) return;
     final uid = supabase.auth.currentUser?.id;
     if (uid == null) return;
@@ -127,7 +127,7 @@ class FirstRunTour {
         barrierDismissible: false,
         barrierColor: Colors.transparent,
         transitionDuration: const Duration(milliseconds: 220),
-        pageBuilder: (ctx, _, __) => _TourOverlay(role: role, guestWeddingId: guestWeddingId),
+        pageBuilder: (ctx, _, __) => _TourOverlay(role: role, guestEventId: guestEventId),
         transitionBuilder: (ctx, anim, _, child) => FadeTransition(opacity: anim, child: child),
       );
       try {
@@ -240,8 +240,8 @@ const _copy = {
 
 class _TourOverlay extends StatefulWidget {
   final TourRole role;
-  final String? guestWeddingId;
-  const _TourOverlay({required this.role, this.guestWeddingId});
+  final String? guestEventId;
+  const _TourOverlay({required this.role, this.guestEventId});
 
   @override
   State<_TourOverlay> createState() => _TourOverlayState();
@@ -302,7 +302,7 @@ class _TourOverlayState extends State<_TourOverlay> {
       case TourRole.partner:
         router.push('/partner-payments/setup');
       case TourRole.guest:
-        final id = widget.guestWeddingId;
+        final id = widget.guestEventId;
         router.go(id == null ? '/guest-profile' : '/guest-profile/$id');
     }
   }

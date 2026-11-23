@@ -8,7 +8,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/guest_bottom_nav.dart';
 import '../../../shared/widgets/page_kit.dart';
@@ -23,8 +23,8 @@ enum _GalleryTab { all, mine, favorites }
 
 /// Galeria moderada do casamento (`061_wedding_gallery.sql`) — pedido
 /// explícito do utilizador: fotos de todos (convidados e casal), só
-/// visíveis depois de aprovadas pelo casal. `weddingId` explícito
-/// (em vez de ler sempre `weddingControllerProvider`) porque um
+/// visíveis depois de aprovadas pelo casal. `eventId` explícito
+/// (em vez de ler sempre `eventControllerProvider`) porque um
 /// convidado pode pertencer a mais do que um casamento
 /// (`wedding_guest_members`) — nesse caso `null` aqui, resolvido a
 /// partir de quem entrou no ecrã. Pedido explícito do utilizador
@@ -34,29 +34,29 @@ enum _GalleryTab { all, mine, favorites }
 /// `guest_gallery_screen.dart`; só a secção de pendentes de aprovação
 /// (exclusiva do casal) continua a existir aqui.
 class GalleryScreen extends ConsumerWidget {
-  final String? weddingId;
+  final String? eventId;
 
-  const GalleryScreen({super.key, this.weddingId});
+  const GalleryScreen({super.key, this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(authControllerProvider).profile;
-    final resolvedWeddingId =
-        weddingId ?? ref.watch(weddingControllerProvider).wedding?.id;
+    final resolvedEventId =
+        eventId ?? ref.watch(eventControllerProvider).event?.id;
     final isCouple = profile?.role == UserRole.couple;
     final isGuest = profile?.role == UserRole.guest;
     // O casal abre a Galeria a partir do Casamento (atalho ao lado de
     // Orçamento/Convidados/…) — deixou de ter separador na navbar
     // (pedido 2026-10-17), por isso aqui tem seta de voltar e os
     // filtros flutuam sozinhos.
-    // Um `weddingId` explícito só acontece hoje vindo de "Modo
-    // convidado" (`GuestWeddingCard`, uma conta de casal a acompanhar
+    // Um `eventId` explícito só acontece hoje vindo de "Modo
+    // convidado" (`GuestHomeEventCard`, uma conta de casal a acompanhar
     // OUTRO casamento) — esse caso também mostra a navbar de
     // convidado, com os outros 3 separadores presos a esse mesmo
-    // `weddingId` (ver `GuestBottomNav`).
-    final showGuestNav = isGuest || weddingId != null;
+    // `eventId` (ver `GuestBottomNav`).
+    final showGuestNav = isGuest || eventId != null;
 
-    if (resolvedWeddingId == null) {
+    if (resolvedEventId == null) {
       return GradientScaffold(
         background: AppBackground.subtle,
         body: const EmptyStateView(message: 'Sem casamento associado.', icon: Hi.heartOutline),
@@ -76,14 +76,14 @@ class GalleryScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     KitHeader(actions: [
-                      KitAddButton(tooltip: 'Carregar fotos', onTap: () => _upload(context, ref, resolvedWeddingId)),
+                      KitAddButton(tooltip: 'Carregar fotos', onTap: () => _upload(context, ref, resolvedEventId)),
                     ]),
                     const KitTitle('Galeria', subtitle: 'Fotos vossas e dos convidados.'),
                   ]),
                 ),
                 Expanded(
                   child: _GalleryBody(
-                    weddingId: resolvedWeddingId,
+                    eventId: resolvedEventId,
                     isCouple: isCouple,
                     currentUserId: profile?.id,
                     aboveNav: showGuestNav,
@@ -92,7 +92,7 @@ class GalleryScreen extends ConsumerWidget {
                     navBuilder: showGuestNav
                         ? (top) => GuestBottomNav(
                             current: GuestTab.gallery,
-                            weddingId: weddingId,
+                            eventId: eventId,
                             top: top,
                           )
                         : null,
@@ -106,7 +106,7 @@ class GalleryScreen extends ConsumerWidget {
     );
   }
 
-  static Future<void> _upload(BuildContext context, WidgetRef ref, String weddingId) async {
+  static Future<void> _upload(BuildContext context, WidgetRef ref, String eventId) async {
     final source = await showIslandSheet<ImageSource>(
       context: context,
       builder: (context) => SafeArea(
@@ -136,8 +136,8 @@ class GalleryScreen extends ConsumerWidget {
     final file = await ImagePicker().pickImage(source: source);
     if (file == null) return;
     try {
-      await uploadGalleryPhoto(weddingId: weddingId, file: file, autoApprove: true);
-      ref.invalidate(weddingGalleryPhotosProvider(weddingId));
+      await uploadGalleryPhoto(eventId: eventId, file: file, autoApprove: true);
+      ref.invalidate(eventGalleryPhotosProvider(eventId));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -156,14 +156,14 @@ class GalleryScreen extends ConsumerWidget {
 }
 
 class _GalleryBody extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final bool isCouple;
   final String? currentUserId;
   final bool aboveNav;
   final Widget Function(Widget? top)? navBuilder;
 
   const _GalleryBody({
-    required this.weddingId,
+    required this.eventId,
     required this.isCouple,
     required this.currentUserId,
     required this.aboveNav,
@@ -180,7 +180,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
 
   @override
   Widget build(BuildContext context) {
-    final photosAsync = ref.watch(weddingGalleryPhotosProvider(widget.weddingId));
+    final photosAsync = ref.watch(eventGalleryPhotosProvider(widget.eventId));
 
     Widget withNav(Widget child, {Widget? top}) => Stack(
           children: [
@@ -197,13 +197,13 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
 
     return photosAsync.when(
       loading: () => withNav(const Center(child: CircularProgressIndicator())),
-      error: (err, st) => withNav(AsyncErrorView(onRetry: () => ref.invalidate(weddingGalleryPhotosProvider(widget.weddingId)))),
+      error: (err, st) => withNav(AsyncErrorView(onRetry: () => ref.invalidate(eventGalleryPhotosProvider(widget.eventId)))),
       data: (photos) {
         final pending = widget.isCouple
             ? photos.where((p) => p.status == 'pending').toList()
             : const <GalleryPhoto>[];
         var approved = photos.where((p) => p.status == 'approved').toList();
-        final meta = ref.watch(galleryFeedMetaProvider(widget.weddingId)).asData?.value ?? const {};
+        final meta = ref.watch(galleryFeedMetaProvider(widget.eventId)).asData?.value ?? const {};
         final allCount = approved.length;
         final mineCount = approved.where((p) => p.uploadedBy == widget.currentUserId).length;
         final favCount = approved.where((p) => meta[p.id]?.likedByMe ?? false).length;
@@ -231,7 +231,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                 for (final photo in pending)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _PendingPhotoCard(photo: photo, weddingId: widget.weddingId),
+                    child: _PendingPhotoCard(photo: photo, eventId: widget.eventId),
                   ),
               ],
             ],
@@ -255,7 +255,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
             else
               // Grelha → publicações com autor, gostos e comentários
               // (galeria social, `gallery_social_ui.dart`).
-              GallerySocialGrid(weddingId: widget.weddingId, photos: approved),
+              GallerySocialGrid(eventId: widget.eventId, photos: approved),
           ],
         );
         return withNav(list);
@@ -267,9 +267,9 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
 
 class _PendingPhotoCard extends ConsumerWidget {
   final GalleryPhoto photo;
-  final String weddingId;
+  final String eventId;
 
-  const _PendingPhotoCard({required this.photo, required this.weddingId});
+  const _PendingPhotoCard({required this.photo, required this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -303,7 +303,7 @@ class _PendingPhotoCard extends ConsumerWidget {
             icon: const Icon(Hi.checkCircle, color: AppStatusColors.confirmed),
             onPressed: () async {
               await moderateGalleryPhoto(photo.id, true);
-              ref.invalidate(weddingGalleryPhotosProvider(weddingId));
+              ref.invalidate(eventGalleryPhotosProvider(eventId));
             },
           ),
           IconButton(
@@ -311,7 +311,7 @@ class _PendingPhotoCard extends ConsumerWidget {
             icon: const Icon(Hi.xCircle, color: AppStatusColors.declined),
             onPressed: () async {
               await moderateGalleryPhoto(photo.id, false);
-              ref.invalidate(weddingGalleryPhotosProvider(weddingId));
+              ref.invalidate(eventGalleryPhotosProvider(eventId));
             },
           ),
         ],

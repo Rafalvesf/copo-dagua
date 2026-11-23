@@ -16,7 +16,7 @@ import '../supabase/supabase_config.dart';
 /// omissão.
 class GalleryPhoto {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String uploadedBy;
   final String storagePath;
   final String imageUrl;
@@ -26,7 +26,7 @@ class GalleryPhoto {
 
   const GalleryPhoto({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     required this.uploadedBy,
     required this.storagePath,
     required this.imageUrl,
@@ -42,14 +42,14 @@ class GalleryPhoto {
 /// Dart. Signed URLs pedidos um a um (âmbito de uma galeria de
 /// casamento, não milhares de fotos) — `createSignedUrl` em vez de
 /// `getPublicUrl()` porque o bucket é privado.
-final weddingGalleryPhotosProvider =
-    FutureProvider.family<List<GalleryPhoto>, String>((ref, weddingId) async {
+final eventGalleryPhotosProvider =
+    FutureProvider.family<List<GalleryPhoto>, String>((ref, eventId) async {
       // Pessoas bloqueadas (migração 130): as fotografias delas não aparecem.
       final blocked = await ref.watch(blockedProfilesProvider.future);
       final rows = await supabase
           .from('wedding_gallery_photos')
           .select()
-          .eq('wedding_id', weddingId)
+          .eq('wedding_id', eventId)
           .order('created_at', ascending: false);
 
       final photos = <GalleryPhoto>[];
@@ -62,7 +62,7 @@ final weddingGalleryPhotosProvider =
         photos.add(
           GalleryPhoto(
             id: row['id'] as String,
-            weddingId: row['wedding_id'] as String,
+            eventId: row['wedding_id'] as String,
             uploadedBy: row['uploaded_by'] as String,
             storagePath: path,
             imageUrl: signedUrl,
@@ -84,7 +84,7 @@ final weddingGalleryPhotosProvider =
 /// `030_portfolio_storage_select_policy.sql`, ver nota em
 /// `061_wedding_gallery.sql`).
 Future<void> uploadGalleryPhoto({
-  required String weddingId,
+  required String eventId,
   required XFile file,
   String? caption,
   /// Fotos de quem organiza ficam logo aprovadas (pedido 2026-10-17:
@@ -95,12 +95,12 @@ Future<void> uploadGalleryPhoto({
   final userId = supabase.auth.currentUser!.id;
   final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
   final token = '${DateTime.now().microsecondsSinceEpoch}_${userId.substring(0, 8)}';
-  final path = '$weddingId/$token.$ext';
+  final path = '$eventId/$token.$ext';
 
   final row = await supabase
       .from('wedding_gallery_photos')
       .insert({
-        'wedding_id': weddingId,
+        'wedding_id': eventId,
         'uploaded_by': userId,
         'storage_path': path,
         'caption': caption,

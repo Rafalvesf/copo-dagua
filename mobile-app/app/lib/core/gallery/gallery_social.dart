@@ -44,9 +44,9 @@ class GalleryPostMeta {
 /// Vazio se a migração 078 ainda não correu — a galeria continua a
 /// funcionar, só sem a parte social.
 final galleryFeedMetaProvider =
-    FutureProvider.family<Map<String, GalleryPostMeta>, String>((ref, weddingId) async {
+    FutureProvider.family<Map<String, GalleryPostMeta>, String>((ref, eventId) async {
   try {
-    final rows = await supabase.rpc('get_gallery_feed', params: {'p_wedding_id': weddingId}) as List;
+    final rows = await supabase.rpc('get_gallery_feed', params: {'p_wedding_id': eventId}) as List;
     return {
       for (final r in rows.cast<Map<String, dynamic>>())
         r['photo_id'] as String: GalleryPostMeta(
@@ -141,13 +141,13 @@ class GalleryMember {
   });
 }
 
-typedef GalleryMemberKey = ({String weddingId, String profileId});
+typedef GalleryMemberKey = ({String eventId, String profileId});
 
 final galleryMemberProvider =
     FutureProvider.family<GalleryMember?, GalleryMemberKey>((ref, key) async {
   final rows = await supabase.rpc(
     'get_gallery_member',
-    params: {'p_wedding_id': key.weddingId, 'p_profile_id': key.profileId},
+    params: {'p_wedding_id': key.eventId, 'p_profile_id': key.profileId},
   ) as List;
   if (rows.isEmpty) return null;
   final r = rows.first as Map<String, dynamic>;

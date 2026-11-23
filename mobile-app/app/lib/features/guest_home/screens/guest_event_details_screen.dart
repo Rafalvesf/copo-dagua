@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
-import '../../../core/wedding/pastel_colors.dart';
-import '../../../core/wedding/wedding_venue.dart';
+import '../../../core/event/date_format_pt.dart';
+import '../../../core/event/pastel_colors.dart';
+import '../../../core/event/event_venue.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/navigation_sheet.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -22,27 +22,27 @@ import '../widgets/guest_home_sections.dart';
 /// existiam; `ceremonyTime`/`welcomeMessage`/`themeColors` são novos
 /// (`067_guest_self_service.sql`) — todos opcionais, mostrados só
 /// quando o casal os preencher (ainda sem ecrã de edição próprio).
-class GuestWeddingDetailsScreen extends ConsumerWidget {
-  final GuestWedding wedding;
+class GuestEventDetailsScreen extends ConsumerWidget {
+  final GuestEvent event;
 
   /// Aberto pelo casal em "Para os convidados" para ver como fica — sem
   /// a navbar do convidado.
   final bool preview;
 
-  const GuestWeddingDetailsScreen({super.key, required this.wedding, this.preview = false});
+  const GuestEventDetailsScreen({super.key, required this.event, this.preview = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Sem morada escrita pelo casal, usa a do local escolhido na app.
-    final appVenue = (wedding.venueAddress?.isNotEmpty == true && wedding.venueLatitude != null)
+    final appVenue = (event.venueAddress?.isNotEmpty == true && event.venueLatitude != null)
         ? null
-        : ref.watch(weddingVenueProvider(wedding.weddingId)).asData?.value;
-    final placeName = wedding.venue?.isNotEmpty == true ? wedding.venue : (appVenue?.name ?? wedding.location);
-    final placeAddress = wedding.venueAddress?.isNotEmpty == true
-        ? wedding.venueAddress
-        : (appVenue?.address ?? (wedding.venue?.isNotEmpty == true ? wedding.location : null));
-    final lat = wedding.venueLatitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.latitude);
-    final lng = wedding.venueLongitude ?? (wedding.venueAddress?.isNotEmpty == true ? null : appVenue?.longitude);
+        : ref.watch(eventVenueProvider(event.eventId)).asData?.value;
+    final placeName = event.venue?.isNotEmpty == true ? event.venue : (appVenue?.name ?? event.location);
+    final placeAddress = event.venueAddress?.isNotEmpty == true
+        ? event.venueAddress
+        : (appVenue?.address ?? (event.venue?.isNotEmpty == true ? event.location : null));
+    final lat = event.venueLatitude ?? (event.venueAddress?.isNotEmpty == true ? null : appVenue?.latitude);
+    final lng = event.venueLongitude ?? (event.venueAddress?.isNotEmpty == true ? null : appVenue?.longitude);
     return GradientScaffold(
       background: AppBackground.feed,
       body: Stack(
@@ -59,7 +59,7 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                       // Redesign 2026-10-19 (canvas "Convidado — programa
                       // (redesign)"): mensagem num cartão verde, o dia em
                       // cartões com hora e autocolante, local e dress code.
-                      if (wedding.welcomeMessage?.isNotEmpty == true) ...[
+                      if (event.welcomeMessage?.isNotEmpty == true) ...[
                         // Mockup «Páginas do convidado» → Programa.
                         Container(
                           padding: const EdgeInsets.all(16),
@@ -68,34 +68,34 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                             const Text('DOS ANFITRIÕES',
                                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
                             const SizedBox(height: 8),
-                            Text('«${wedding.welcomeMessage}»',
+                            Text('«${event.welcomeMessage}»',
                                 style: const TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             const SizedBox(height: 6),
-                            Text(wedding.displayNames, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                            Text(event.displayNames, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                           ]),
                         ),
                       ],
                       SectionTitle(
                         'O dia',
-                        trailing: wedding.weddingDate == null
+                        trailing: event.eventDate == null
                             ? null
-                            : Text(formatWeddingDateCaps(wedding.weddingDate!),
+                            : Text(formatEventDateCaps(event.eventDate!),
                                 style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
                       ),
                       // Linha do tempo com o momento atual marcado no dia
                       // e o local com Como chegar (canvas 2026-11-07).
                       Builder(builder: (context) {
-                        final program = wedding.program.isNotEmpty
-                            ? wedding.program
+                        final program = event.program.isNotEmpty
+                            ? event.program
                             : [
                                 ProgramItem(
-                                  time: wedding.ceremonyTime?.isNotEmpty == true ? wedding.ceremonyTime! : '—',
+                                  time: event.ceremonyTime?.isNotEmpty == true ? event.ceremonyTime! : '—',
                                   title: 'Cerimónia',
-                                  place: wedding.venue?.isNotEmpty == true ? wedding.venue! : 'Local a confirmar',
+                                  place: event.venue?.isNotEmpty == true ? event.venue! : 'Local a confirmar',
                                 ),
                               ];
                         // No dia, a linha do tempo com o momento atual.
-                        if (_isToday(wedding.weddingDate)) return GuestTimeline(program: program, live: true);
+                        if (_isToday(event.eventDate)) return GuestTimeline(program: program, live: true);
                         return KitGroup([
                           for (final it in program)
                             KitRow(
@@ -110,27 +110,27 @@ class GuestWeddingDetailsScreen extends ConsumerWidget {
                         ]);
                       }),
                       const SectionTitle('Onde'),
-                      GuestPlaceCard(wedding: wedding),
-                      if (wedding.themeColors.isNotEmpty) ...[
+                      GuestPlaceCard(event: event),
+                      if (event.themeColors.isNotEmpty) ...[
                         const SizedBox(height: 10),
                         V2RowCard(
                           lead: StickerIcon(Hi.shoppingBag, turns: StickerIcon.tilt(2)),
                           title: 'Dress code',
-                          sub: wedding.dressCode?.isNotEmpty == true ? wedding.dressCode! : 'Cores do evento',
-                          trailing: wedding.themeColors.isEmpty
+                          sub: event.dressCode?.isNotEmpty == true ? event.dressCode! : 'Cores do evento',
+                          trailing: event.themeColors.isEmpty
                               ? null
                               : Row(mainAxisSize: MainAxisSize.min, children: [
-                                  for (final hex in wedding.themeColors.take(4)) ...[
+                                  for (final hex in event.themeColors.take(4)) ...[
                                     const SizedBox(width: 4),
                                     Tooltip(message: pastelName(hex) ?? hex, child: _ColorSwatch(hex: hex)),
                                   ],
                                 ]),
                         ),
                       ],
-                      if (wedding.quote?.isNotEmpty == true) ...[
+                      if (event.quote?.isNotEmpty == true) ...[
                         const SizedBox(height: 24),
                         Text(
-                          '«${wedding.quote}»',
+                          '«${event.quote}»',
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: AppTheme.inkMuted, fontSize: 14),
                         ),

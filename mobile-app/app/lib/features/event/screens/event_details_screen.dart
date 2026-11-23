@@ -33,11 +33,11 @@ import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
-import '../../../core/wedding/wedding_controller.dart';
-import '../../../core/wedding/menu_style.dart';
-import '../../../core/wedding/organizers.dart';
-import '../../guests/screens/guests_list_screen.dart' show shareWeddingInvite;
+import '../../../core/event/date_format_pt.dart';
+import '../../../core/event/event_controller.dart';
+import '../../../core/event/menu_style.dart';
+import '../../../core/event/organizers.dart';
+import '../../guests/screens/guests_list_screen.dart' show shareEventInvite;
 import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/scroll_aware_back_button.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
@@ -88,7 +88,7 @@ class _Look {
 }
 
 final _lookProvider = Provider<_Look>((ref) {
-  final type = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding;
+  final type = ref.watch(eventControllerProvider.select((s) => s.event?.eventType)) ?? EventType.wedding;
   final c = ref.watch(currentMenuStyleProvider).color;
   final d = EventDecor.of(type);
   return _Look(color: c.color, on: c.on, accent: c.accent, tint: c.tint, comp: c.comp, tagline: d.tagline, motif: d.motif, doodles: d.doodles);
@@ -106,18 +106,18 @@ const _softShadow = [
 /// conteúdo do os noivos, sem mexer no conteúdo" — este ecrã passou a
 /// ter o conteúdo que antes vivia em `home_feed_screen.dart`
 /// (`HomeFeedScreen`), sem nenhuma alteração ao próprio conteúdo.
-class WeddingDetailsScreen extends ConsumerStatefulWidget {
+class EventDetailsScreen extends ConsumerStatefulWidget {
   final bool startEditing;
-  const WeddingDetailsScreen({super.key, this.startEditing = false});
+  const EventDetailsScreen({super.key, this.startEditing = false});
 
   @override
-  ConsumerState<WeddingDetailsScreen> createState() => _WeddingDetailsScreenState();
+  ConsumerState<EventDetailsScreen> createState() => _EventDetailsScreenState();
 }
 
 /// Toque longo na página (pedido 2026-10-18): a própria página encolhe,
 /// como trocar o mostrador do Apple Watch, e ao deslizar passa pelos
 /// estilos reais (com os dados do evento); por baixo, as cores.
-class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
+class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
   bool _editing = false;
   bool _saving = false;
   int _layout = 0;
@@ -138,7 +138,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
     super.initState();
     if (widget.startEditing) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && ref.read(weddingControllerProvider).wedding != null) _startEditing();
+        if (mounted && ref.read(eventControllerProvider).event != null) _startEditing();
       });
     }
   }
@@ -182,14 +182,14 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final wedding = ref.watch(weddingControllerProvider).wedding;
+    final event = ref.watch(eventControllerProvider).event;
     final layout = ref.watch(currentMenuStyleProvider).layout;
 
     return GradientScaffold(
       // Fundo liso #F2F2F2, sem o degradê para branco (pedido 2026-11-22).
       gradientOverride: const LinearGradient(colors: [AppTheme.background, AppTheme.background]),
-      body: wedding == null
-          ? const _WeddingSkeleton()
+      body: event == null
+          ? const _EventSkeleton()
           : PopScope(
               canPop: !_editing,
               onPopInvokedWithResult: (didPop, _) {
@@ -204,15 +204,15 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
                       builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
-                      child: _editor(context, wedding),
+                      child: _editor(context, event),
                     )
-                  : _normal(context, wedding, layout),
+                  : _normal(context, event, layout),
             ),
     );
   }
 
-  Widget _normal(BuildContext context, Wedding wedding, MenuLayout layout) {
-    final hasCover = wedding.coverPhotoUrlCacheBusted != null;
+  Widget _normal(BuildContext context, Event event, MenuLayout layout) {
+    final hasCover = event.coverPhotoUrlCacheBusted != null;
     final topInset = MediaQuery.paddingOf(context).top;
     return Stack(
       key: const ValueKey('normal'),
@@ -227,7 +227,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
             behavior: HitTestBehavior.translucent,
             onLongPress: _startEditing,
             // Sem o desvanecer branco em cima e em baixo (pedido 2026-11-22).
-            child: _PageBody(wedding: wedding, layout: layout, controller: _scroll, sectionKeys: _sectionKeys),
+            child: _PageBody(event: event, layout: layout, controller: _scroll, sectionKeys: _sectionKeys),
           ),
         ),
         // Topo reduzido como nos parceiros (pedido 2026-11-22): a barra
@@ -240,25 +240,25 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
             scroll: _scroll,
             showAfter: layout == MenuLayout.classic ? 170 : 110,
             thumb: hasCover
-                ? Image.network(wedding.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => V2Avatar(capFirst(wedding.displayNames), size: 32))
-                : V2Avatar(capFirst(wedding.displayNames), size: 32),
+                ? Image.network(event.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => V2Avatar(capFirst(event.displayNames), size: 32))
+                : V2Avatar(capFirst(event.displayNames), size: 32),
             // A capa escurecida por trás da barra (pedido 2026-11-23).
             background: hasCover
-                ? Image.network(wedding.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
+                ? Image.network(event.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFF3A3733)))
                 : const ColoredBox(color: Color(0xFF3A3733)),
-            title: capFirst(wedding.displayNames),
+            title: capFirst(event.displayNames),
             meta: [
-              wedding.eventType.label,
-              if (wedding.weddingDate != null) formatShortDatePt(wedding.weddingDate!),
+              event.eventType.label,
+              if (event.eventDate != null) formatShortDatePt(event.eventDate!),
             ].join(' · '),
             actions: [
-              ReducedTopAction(Hi.arrowUpOnSquare, label: 'Partilhar o convite', onTap: () => shareWeddingInvite(context, wedding)),
+              ReducedTopAction(Hi.arrowUpOnSquare, label: 'Partilhar o convite', onTap: () => shareEventInvite(context, event)),
               ReducedTopAction(Hi.ellipsisHorizontal, label: 'Mais opções', onTap: () => showEventActionsSheet(context, ref,
-                  weddingId: wedding.id,
-                  name: capFirst(wedding.displayNames),
-                  isOwner: wedding.ownerId == ref.read(authControllerProvider).profile?.id)),
+                  eventId: event.id,
+                  name: capFirst(event.displayNames),
+                  isOwner: event.ownerId == ref.read(authControllerProvider).profile?.id)),
             ],
             sections: [
               ('Para fazer', _sectionKeys['todo']!),
@@ -287,13 +287,13 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
           left: 0,
           right: 0,
           bottom: 0,
-          child: FloatingBottomNav(current: AppTab.wedding),
+          child: FloatingBottomNav(current: AppTab.event),
         ),
       ],
     );
   }
 
-  Widget _editor(BuildContext context, Wedding wedding) {
+  Widget _editor(BuildContext context, Event event) {
     final color = MenuColor.all[_color];
     final layout = MenuLayout.values[_layout];
     return SafeArea(
@@ -387,7 +387,7 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                                 maxHeight: double.infinity,
                                 child: _StylePreview(
                                   style: EventMenuStyle(MenuLayout.values[i], color),
-                                  child: _PageBody(wedding: wedding, layout: MenuLayout.values[i], scrollable: false),
+                                  child: _PageBody(event: event, layout: MenuLayout.values[i], scrollable: false),
                                 ),
                               ),
                             ),
@@ -479,7 +479,7 @@ class _StylePreview extends InheritedWidget {
 _Look _look(BuildContext context, WidgetRef ref) {
   final preview = context.dependOnInheritedWidgetOfExactType<_StylePreview>();
   if (preview == null) return ref.watch(_lookProvider);
-  final type = ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding;
+  final type = ref.watch(eventControllerProvider.select((s) => s.event?.eventType)) ?? EventType.wedding;
   final c = preview.style.color;
   final d = EventDecor.of(type);
   return _Look(color: c.color, on: c.on, accent: c.accent, tint: c.tint, comp: c.comp, tagline: d.tagline, motif: d.motif, doodles: d.doodles);
@@ -487,12 +487,12 @@ _Look _look(BuildContext context, WidgetRef ref) {
 
 /// O conteúdo da página do evento num estilo.
 class _PageBody extends ConsumerWidget {
-  final Wedding wedding;
+  final Event event;
   final MenuLayout layout;
   final bool scrollable;
   final ScrollController? controller;
   final Map<String, GlobalKey>? sectionKeys;
-  const _PageBody({required this.wedding, required this.layout, this.scrollable = true, this.controller, this.sectionKeys});
+  const _PageBody({required this.event, required this.layout, this.scrollable = true, this.controller, this.sectionKeys});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -502,21 +502,21 @@ class _PageBody extends ConsumerWidget {
     final classic = layout == MenuLayout.classic;
     final children = <Widget>[
       if (classic)
-        _MinimalTop(wedding: wedding)
+        _MinimalTop(event: event)
       else
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           child: switch (layout) {
-            MenuLayout.stickers => _StickersTop(wedding: wedding),
-            MenuLayout.mural => _MuralTop(wedding: wedding),
-            _ => _ClotheslineTop(wedding: wedding),
+            MenuLayout.stickers => _StickersTop(event: event),
+            MenuLayout.mural => _MuralTop(event: event),
+            _ => _ClotheslineTop(event: event),
           },
         ),
       // Painel novo (mockups «Painel do organizador», 2026-11-21): resumo,
       // para fazer, sugestões, programa, números, reservas, convite e gerir.
       // As tarefas pré-feitas («Próximos passos») e o carrossel de
       // sugestões de parceiros saíram.
-      _OrgBody(wedding: wedding, sectionKeys: sectionKeys),
+      _OrgBody(event: event, sectionKeys: sectionKeys),
     ];
     final padding = EdgeInsets.fromLTRB(0, classic ? 0 : 40 + MediaQuery.paddingOf(context).top, 0, 140);
     if (!scrollable) {
@@ -538,9 +538,9 @@ class _PageBody extends ConsumerWidget {
 /// mostrar a imagem antiga em cache (pedido explícito do utilizador:
 /// "a imagem no o nosso casamento não quer atualizar").
 class _HeroCard extends ConsumerStatefulWidget {
-  final Wedding wedding;
+  final Event event;
 
-  const _HeroCard({required this.wedding});
+  const _HeroCard({required this.event});
 
   @override
   ConsumerState<_HeroCard> createState() => _HeroCardState();
@@ -550,9 +550,9 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
   bool _uploading = false;
 
   String get _dateLabel {
-    final date = widget.wedding.weddingDate;
+    final date = widget.event.eventDate;
     if (date == null) return 'DATA POR DEFINIR';
-    return formatWeddingDateCaps(date);
+    return formatEventDateCaps(date);
   }
 
   Future<void> _pickBanner() async {
@@ -565,7 +565,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
     if (adjusted == null || !mounted) return;
     setState(() => _uploading = true);
     try {
-      await ref.read(weddingControllerProvider.notifier).uploadBannerBytes(adjusted);
+      await ref.read(eventControllerProvider.notifier).uploadBannerBytes(adjusted);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -579,7 +579,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
 
   @override
   Widget build(BuildContext context) {
-    final wedding = widget.wedding;
+    final event = widget.event;
     final look = _look(context, ref);
     // Cor com transparência em vez de Opacity (evita camadas extra ao
     // desenhar — a app estava a ficar lenta).
@@ -627,9 +627,9 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            if (wedding.coverPhotoUrlCacheBusted != null)
+                            if (event.coverPhotoUrlCacheBusted != null)
                               SizedNetworkImage(
-                                wedding.coverPhotoUrlCacheBusted!,
+                                event.coverPhotoUrlCacheBusted!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Container(color: look.tint),
@@ -648,7 +648,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      'Adicionar ${EventDecor.of(wedding.eventType).coverHint}',
+                                      'Adicionar ${EventDecor.of(event.eventType).coverHint}',
                                       style: TextStyle(
                                         color: look.accent,
                                         fontSize: AppFontSize.sm,
@@ -750,7 +750,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            EventDecor.of(wedding.eventType).kicker,
+                            EventDecor.of(event.eventType).kicker,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: look.on.withValues(alpha: 0.85),
@@ -761,7 +761,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            wedding.displayNames,
+                            event.displayNames,
                             textAlign: TextAlign.center,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -807,10 +807,10 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                   letterSpacing: 0.6,
                 ),
               ),
-              if (wedding.location != null) ...[
+              if (event.location != null) ...[
                 const SizedBox(height: 2),
                 Text(
-                  wedding.location!.toUpperCase(),
+                  event.location!.toUpperCase(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: look.on.withValues(alpha: 0.75),
@@ -821,7 +821,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
                 ),
               ],
               const SizedBox(height: 18),
-              RepaintBoundary(child: _CountdownRow(weddingDate: wedding.weddingDate, color: look.accent, on: look.on)),
+              RepaintBoundary(child: _CountdownRow(eventDate: event.eventDate, color: look.accent, on: look.on)),
             ],
           ),
         ],
@@ -831,11 +831,11 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
 }
 
 class _CountdownRow extends StatefulWidget {
-  final DateTime? weddingDate;
+  final DateTime? eventDate;
   final Color color;
   final Color on;
 
-  const _CountdownRow({required this.weddingDate, required this.color, required this.on});
+  const _CountdownRow({required this.eventDate, required this.color, required this.on});
 
   @override
   State<_CountdownRow> createState() => _CountdownRowState();
@@ -864,7 +864,7 @@ class _CountdownRowState extends State<_CountdownRow> {
       RepaintBoundary(child: _build(context));
 
   Widget _build(BuildContext context) {
-    final date = widget.weddingDate;
+    final date = widget.eventDate;
     if (date == null) return const SizedBox.shrink();
 
     final remaining = date.difference(DateTime.now());
@@ -975,17 +975,17 @@ List<_Shortcut> _shortcuts(WidgetRef ref) {
   final budget = ref.watch(budgetControllerProvider).budget;
   final guests = ref.watch(guestsControllerProvider).guests;
   final tables = ref.watch(seatingControllerProvider).tables;
-  final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-  final photos = weddingId == null
+  final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+  final photos = eventId == null
       ? const <GalleryPhoto>[]
-      : ref.watch(weddingGalleryPhotosProvider(weddingId)).asData?.value ?? const <GalleryPhoto>[];
+      : ref.watch(eventGalleryPhotosProvider(eventId)).asData?.value ?? const <GalleryPhoto>[];
   final handled = ref.watch(_servicesHandledProvider).asData?.value;
   final confirmed = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
   final seated = tables.fold<int>(0, (n, t) => n + t.guestIds.length);
   final pending = photos.where((p) => p.status == 'pending').length;
   final approved = photos.where((p) => p.status == 'approved').length;
   String plural(int n, String one, String many) => n == 1 ? one : many;
-  final decor = EventDecor.of(ref.watch(weddingControllerProvider.select((s) => s.wedding?.eventType)) ?? EventType.wedding);
+  final decor = EventDecor.of(ref.watch(eventControllerProvider.select((s) => s.event?.eventType)) ?? EventType.wedding);
   return [
     _Shortcut(Hi.banknotes, 'Orçamento',
         budget == null || budget.total == 0 ? 'Por definir' : '${euros(budget.spent)} de ${euros(budget.total)}', '/budget'),
@@ -1029,7 +1029,7 @@ class _QuickLinksRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
     // Esconde os atalhos das secções sem permissão (o dono vê tudo).
     final items = [for (final s in _shortcuts(ref)) if (_routeAllowed(s.route, perms)) s];
     if (items.isEmpty) return const SizedBox.shrink();
@@ -1064,12 +1064,12 @@ class _QuickLinksRow extends ConsumerWidget {
 /// Categorias marcadas como já tratadas ou sem necessidade
 /// (`wedding_service_preferences`).
 final _servicesHandledProvider = FutureProvider<int>((ref) async {
-  final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-  if (weddingId == null) return 0;
+  final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+  if (eventId == null) return 0;
   final rows = await supabase
       .from('wedding_service_preferences')
       .select('preference')
-      .eq('wedding_id', weddingId)
+      .eq('wedding_id', eventId)
       .neq('preference', 'needed');
   return (rows as List).length;
 });
@@ -1160,17 +1160,17 @@ class _QuickLinkTile extends StatelessWidget {
 /// [InviteShareSheet], já construído em `guests_list_screen.dart`
 /// (link de convite + código do casal) — mesmo conteúdo, só um segundo
 /// ponto de entrada, sem duplicar lógica.
-class _ShareWeddingButton extends StatelessWidget {
-  final Wedding wedding;
+class _ShareEventButton extends StatelessWidget {
+  final Event event;
   final Color color;
   final Color on;
 
-  const _ShareWeddingButton({required this.wedding, required this.color, required this.on});
+  const _ShareEventButton({required this.event, required this.color, required this.on});
 
   @override
   Widget build(BuildContext context) {
     return SnappyTap(
-      onTap: () => shareWeddingInvite(context, wedding),
+      onTap: () => shareEventInvite(context, event),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1413,7 +1413,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
           (
             Expense(
               id: 'booking:${b.id}:deposit',
-              weddingId: b.weddingId,
+              eventId: b.eventId,
               // Restaurantes (e outras categorias sem sinal, 191): paga-se tudo
             // de uma vez — não há sinal.
             title: '${b.depositIsFull ? 'Pagamento' : 'Sinal'} · ${b.partnerName}',
@@ -1426,7 +1426,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
           (
             Expense(
               id: 'booking:${b.id}:final',
-              weddingId: b.weddingId,
+              eventId: b.eventId,
               title: 'Restante · ${b.partnerName}',
               amount: amountWithCommission(b.finalPaymentAmount ?? 0, orgFee.effectivePct(b.amount)),
               dueDate: b.finalPaymentDueAt ?? b.serviceDate,
@@ -1606,8 +1606,8 @@ class _BookingsSection extends ConsumerWidget {
 
 /// Estado "a carregar" do separador Casamento (canvas): a forma do cartão
 /// do casal e dos quadrados, a pulsar, com a navbar já no sítio.
-class _WeddingSkeleton extends StatelessWidget {
-  const _WeddingSkeleton();
+class _EventSkeleton extends StatelessWidget {
+  const _EventSkeleton();
 
   @override
   Widget build(BuildContext context) {
@@ -1647,7 +1647,7 @@ class _WeddingSkeleton extends StatelessWidget {
           left: 0,
           right: 0,
           bottom: 0,
-          child: FloatingBottomNav(current: AppTab.wedding),
+          child: FloatingBottomNav(current: AppTab.event),
         ),
       ],
     );
@@ -1669,7 +1669,7 @@ Future<void> _pickBannerFrom(BuildContext context, WidgetRef ref) async {
   final adjusted = await showPhotoAdjustScreen(context, imageBytes: raw);
   if (adjusted == null || !context.mounted) return;
   try {
-    await ref.read(weddingControllerProvider.notifier).uploadBannerBytes(adjusted);
+    await ref.read(eventControllerProvider.notifier).uploadBannerBytes(adjusted);
   } catch (_) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível carregar a foto.')));
@@ -1677,26 +1677,26 @@ Future<void> _pickBannerFrom(BuildContext context, WidgetRef ref) async {
   }
 }
 
-int? _daysLeft(Wedding w) {
-  final d = w.weddingDate;
+int? _daysLeft(Event w) {
+  final d = w.eventDate;
   if (d == null) return null;
   final n = d.difference(DateTime.now()).inDays;
   return n < 0 ? 0 : n;
 }
 
-String _eventNoun(Wedding w) => w.eventType == EventType.wedding ? 'o casamento' : 'o ${w.eventType.noun}';
+String _eventNoun(Event w) => w.eventType == EventType.wedding ? 'o casamento' : 'o ${w.eventType.noun}';
 
 /// Foto de capa (ou espaço para a pôr), usada dentro das polaroids.
 class _CoverPhoto extends ConsumerWidget {
-  final Wedding wedding;
+  final Event event;
   final double height;
   final double radius;
-  const _CoverPhoto({required this.wedding, required this.height, this.radius = 3});
+  const _CoverPhoto({required this.event, required this.height, this.radius = 3});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final look = _look(context, ref);
-    final url = wedding.coverPhotoUrlCacheBusted;
+    final url = event.coverPhotoUrlCacheBusted;
     return SnappyTap(
       onTap: () => _pickBannerFrom(context, ref),
       child: ClipRRect(
@@ -1714,7 +1714,7 @@ class _CoverPhoto extends ConsumerWidget {
                     children: [
                       Icon(Hi.photo, size: 28, color: look.accent),
                       const SizedBox(height: 4),
-                      Text('Adicionar ${EventDecor.of(wedding.eventType).coverHint}', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
+                      Text('Adicionar ${EventDecor.of(event.eventType).coverHint}', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
                     ],
                   ),
                 ),
@@ -1750,7 +1750,7 @@ class _Polaroid extends StatelessWidget {
   }
 }
 
-Widget _namesAndDate(Wedding w, _Look look, {double size = 20}) => Column(
+Widget _namesAndDate(Event w, _Look look, {double size = 20}) => Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
@@ -1761,7 +1761,7 @@ Widget _namesAndDate(Wedding w, _Look look, {double size = 20}) => Column(
         ),
         const SizedBox(height: 4),
         Text(
-          [if (w.weddingDate != null) formatWeddingDateCaps(w.weddingDate!), if (w.location?.isNotEmpty == true) w.location!].join(' · '),
+          [if (w.eventDate != null) formatEventDateCaps(w.eventDate!), if (w.location?.isNotEmpty == true) w.location!].join(' · '),
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
         ),
@@ -1785,15 +1785,15 @@ Widget _roundSticker(IconData icon, Color bg, Color fg, double angle) => Transfo
 
 // ---------- Autocolantes ----------
 class _StickersTop extends ConsumerWidget {
-  final Wedding wedding;
-  const _StickersTop({required this.wedding});
+  final Event event;
+  const _StickersTop({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final look = _look(context, ref);
     final items = _shortcuts(ref);
-    final days = _daysLeft(wedding);
-    final first = wedding.partnerName1.trim().split(' ').first;
+    final days = _daysLeft(event);
+    final first = event.partnerName1.trim().split(' ').first;
     const tilts = [-8.0, 6.0, -4.0, 8.0, -6.0, 4.0];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1813,7 +1813,7 @@ class _StickersTop extends ConsumerWidget {
                   child: Text('$days ${days == 1 ? 'dia' : 'dias'}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: look.on)),
                 ),
               ),
-              Text(' para ${_eventNoun(wedding)}', style: const TextStyle(fontSize: 16, color: AppTheme.inkMuted)),
+              Text(' para ${_eventNoun(event)}', style: const TextStyle(fontSize: 16, color: AppTheme.inkMuted)),
             ],
           ),
         const SizedBox(height: 10),
@@ -1833,9 +1833,9 @@ class _StickersTop extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _CoverPhoto(wedding: wedding, height: 190),
+                        _CoverPhoto(event: event, height: 190),
                         const SizedBox(height: 10),
-                        _namesAndDate(wedding, look),
+                        _namesAndDate(event, look),
                       ],
                     ),
                   ),
@@ -1891,15 +1891,15 @@ class _StickersTop extends ConsumerWidget {
 
 // ---------- Polaroid Mural ----------
 class _MuralTop extends ConsumerWidget {
-  final Wedding wedding;
-  const _MuralTop({required this.wedding});
+  final Event event;
+  const _MuralTop({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final look = _look(context, ref);
     final items = _shortcuts(ref);
-    final days = _daysLeft(wedding);
-    final first = wedding.partnerName1.trim().split(' ').first;
+    final days = _daysLeft(event);
+    final first = event.partnerName1.trim().split(' ').first;
     const tilts = [-3.0, 2.5, 2.0, -2.5, -2.0, 3.0];
     Widget tape(Color c, double angle) => Transform.rotate(
           angle: angle,
@@ -1933,7 +1933,7 @@ class _MuralTop extends ConsumerWidget {
                 children: [
                   Icon(look.motif, size: 14, color: look.accent),
                   const SizedBox(width: 6),
-                  Text(wedding.eventType.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
+                  Text(event.eventType.label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: look.accent)),
                 ],
               ),
             ),
@@ -1956,9 +1956,9 @@ class _MuralTop extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _CoverPhoto(wedding: wedding, height: 210, radius: 2),
+                      _CoverPhoto(event: event, height: 210, radius: 2),
                       const SizedBox(height: 10),
-                      _namesAndDate(wedding, look, size: 22),
+                      _namesAndDate(event, look, size: 22),
                     ],
                   ),
                 ),
@@ -2057,8 +2057,8 @@ class _MuralTop extends ConsumerWidget {
 
 // ---------- Polaroid Estendal ----------
 class _ClotheslineTop extends ConsumerWidget {
-  final Wedding wedding;
-  const _ClotheslineTop({required this.wedding});
+  final Event event;
+  const _ClotheslineTop({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -2090,11 +2090,11 @@ class _ClotheslineTop extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    EventDecor.of(wedding.eventType).kicker.toUpperCase(),
+                    EventDecor.of(event.eventType).kicker.toUpperCase(),
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: look.accent),
                   ),
                   Text(
-                    wedding.displayNames,
+                    event.displayNames,
                     maxLines: 2,
                     style: const TextStyle(fontSize: 26, height: 1.2, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: AppTheme.ink),
                   ),
@@ -2132,12 +2132,12 @@ class _ClotheslineTop extends ConsumerWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _CoverPhoto(wedding: wedding, height: 200, radius: 2),
+                            _CoverPhoto(event: event, height: 200, radius: 2),
                             const SizedBox(height: 8),
                             Text(look.tagline, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: look.accent)),
                             const SizedBox(height: 2),
                             Text(
-                              wedding.weddingDate == null ? 'Data por definir' : formatWeddingDateCaps(wedding.weddingDate!),
+                              event.eventDate == null ? 'Data por definir' : formatEventDateCaps(event.eventDate!),
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
                             ),
@@ -2151,7 +2151,7 @@ class _ClotheslineTop extends ConsumerWidget {
             ],
           ),
         ),
-        RepaintBoundary(child: _FilmStrip(date: wedding.weddingDate)),
+        RepaintBoundary(child: _FilmStrip(date: event.eventDate)),
         const SizedBox(height: 30),
         _Grid(
           columns: 2,
@@ -2375,7 +2375,7 @@ List<(Expense, String?)> _duePayments(WidgetRef ref) {
         (
           Expense(
             id: 'booking:${b.id}:deposit',
-            weddingId: b.weddingId,
+            eventId: b.eventId,
             title: 'Sinal · ${b.partnerName}',
             amount: amountWithCommission(b.depositAmount ?? 0, orgFee.effectivePct(b.amount)),
             dueDate: b.pendingDepositDueAt ?? DateTime.now(),
@@ -2386,7 +2386,7 @@ List<(Expense, String?)> _duePayments(WidgetRef ref) {
         (
           Expense(
             id: 'booking:${b.id}:final',
-            weddingId: b.weddingId,
+            eventId: b.eventId,
             title: 'Restante · ${b.partnerName}',
             amount: amountWithCommission(b.finalPaymentAmount ?? 0, orgFee.effectivePct(b.amount)),
             dueDate: b.finalPaymentDueAt ?? b.serviceDate,
@@ -2413,11 +2413,11 @@ class _TodoItem {
 }
 
 List<_TodoItem> _todoItems(WidgetRef ref) {
-  final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+  final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
   final due = _duePayments(ref);
   final guests = ref.watch(guestsControllerProvider).guests;
   final noAnswer = guests.where((g) => g.rsvpStatus == RsvpStatus.pending).length;
-  final requests = weddingId == null ? 0 : (ref.watch(joinRequestsProvider(weddingId)).value?.length ?? 0);
+  final requests = eventId == null ? 0 : (ref.watch(joinRequestsProvider(eventId)).value?.length ?? 0);
   final task = ref.watch(taskEngineControllerProvider).systemActive.firstOrNull;
   final items = <_TodoItem>[];
   if (due.isNotEmpty) {
@@ -2561,13 +2561,13 @@ class _PlanningBar extends ConsumerWidget {
 
 /// "Para fazer agora" (ou "Esta semana" nos últimos 7 dias).
 class _TodoNow extends ConsumerWidget {
-  final Wedding wedding;
-  const _TodoNow({required this.wedding});
+  final Event event;
+  const _TodoNow({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _todoItems(ref);
-    final days = wedding.weddingDate?.difference(DateTime.now()).inDays;
+    final days = event.eventDate?.difference(DateTime.now()).inDays;
     final week = days != null && days >= 0 && days <= 7;
     if (items.isEmpty) return const SizedBox.shrink();
     return Column(
@@ -2633,12 +2633,12 @@ class _TodoNow extends ConsumerWidget {
 /// Os números do evento: só as caixas com valor acima de 0 (2026-11-11).
 /// A quarta depende do tipo: mesas, presentes ou bilhetes.
 class _StatBlocks extends ConsumerWidget {
-  final Wedding wedding;
-  const _StatBlocks({required this.wedding});
+  final Event event;
+  const _StatBlocks({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final w = wedding;
+    final w = event;
     final guests = ref.watch(guestsControllerProvider).guests;
     final confirmed = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
     final budget = ref.watch(budgetControllerProvider).budget;
@@ -2651,7 +2651,7 @@ class _StatBlocks extends ConsumerWidget {
         .toSet()
         .length;
     final partners = bookings.map((b) => b.partnerName).toSet().length;
-    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
 
     final boxes = <Widget>[];
     void add(String label, String value, String? of, String sub, String route, {Color? subColor}) {
@@ -2770,12 +2770,12 @@ class _Section extends StatelessWidget {
 /// "Gerir": sempre presente; as linhas seguem o tipo de evento e as
 /// escolhas em Definições → Painel do evento.
 class _ManageList extends ConsumerWidget {
-  final Wedding wedding;
-  const _ManageList({required this.wedding});
+  final Event event;
+  const _ManageList({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final w = wedding;
+    final w = event;
     // Deixou de ser uma lista comprida aqui no painel: agora é uma única
     // entrada que abre a página "Definições do evento", organizada por temas
     // (pedido do Rafael — mockup «Definições do evento», 2026-11-17).
@@ -2786,7 +2786,7 @@ class _ManageList extends ConsumerWidget {
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(wedding: w))),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(event: w))),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 60),
               child: Padding(
@@ -2821,8 +2821,8 @@ class _ManageList extends ConsumerWidget {
 /// evento», 2026-11-17. Linhas sem ícones (DESIGN.md §4). A seta de voltar
 /// é a do §6 (fixa, roda ←→↑, sobe ao topo).
 class _EventSettingsPage extends ConsumerStatefulWidget {
-  final Wedding wedding;
-  const _EventSettingsPage({required this.wedding});
+  final Event event;
+  const _EventSettingsPage({required this.event});
 
   @override
   ConsumerState<_EventSettingsPage> createState() => _EventSettingsPageState();
@@ -2841,14 +2841,14 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final w = widget.wedding;
+    final w = widget.event;
     final topInset = MediaQuery.paddingOf(context).top;
     final fourth = _fourthOf(w.eventType);
     void push(String r) => context.push(r);
 
     // Um co-organizador só vê o que pode fazer; o dono vê tudo. As linhas de
     // dono (Organizadores, Arquivo) ficam só para o dono.
-    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
     final canEvento = perms.can(OrganizerPerm.evento);
     final canBilhetes = perms.can(OrganizerPerm.bilhetes);
     final isOwner = perms.isOwner;
@@ -2857,7 +2857,7 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
       ('O evento', [
         if (canEvento)
           ('Detalhes do evento', 'Nome, data, local',
-              () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditEventPage(wedding: w)))),
+              () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditEventPage(event: w)))),
         if (canEvento)
           ('Painel do evento', 'O que aparece',
               () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PanelPage()))),
@@ -2896,7 +2896,7 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
               // Organizadores: quem organiza e «Convidar quem ajuda».
               if (isOwner)
                 SectionFrame(title: 'Organizadores', children: [
-                  ...switch (ref.watch(weddingOrganizersProvider(w.id)).value) {
+                  ...switch (ref.watch(eventOrganizersProvider(w.id)).value) {
                     final list? when list.isNotEmpty => [
                         for (final (i, o) in list.where((o) => o.status != 'revoked').indexed) ...[
                           if (i > 0) const Divider(height: 1, color: AppTheme.line),
@@ -2923,7 +2923,7 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
                     _ => const <Widget>[],
                   },
                   FrameButton44('Convidar quem ajuda',
-                      outlined: (ref.watch(weddingOrganizersProvider(w.id)).value?.length ?? 0) > 1,
+                      outlined: (ref.watch(eventOrganizersProvider(w.id)).value?.length ?? 0) > 1,
                       onTap: () => push('/organizadores')),
                 ]),
               // O convite: o código e o link.
@@ -3015,12 +3015,12 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
 
 /// O convite (verde): código, enviar e ver como convidado.
 class _InviteCodeCard extends StatelessWidget {
-  final Wedding wedding;
-  const _InviteCodeCard({required this.wedding});
+  final Event event;
+  const _InviteCodeCard({required this.event});
 
   @override
   Widget build(BuildContext context) {
-    final code = wedding.guestCode;
+    final code = event.guestCode;
     return _Section(
       child: Container(
         padding: const EdgeInsets.all(18),
@@ -3041,7 +3041,7 @@ class _InviteCodeCard extends StatelessWidget {
                 label: 'Copiar o link do convite',
                 child: SnappyTap(
                   onTap: () {
-                    copyText(wedding.inviteUrl ?? code);
+                    copyText(event.inviteUrl ?? code);
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link do convite copiado.')));
                   },
                   child: FittedBox(
@@ -3057,7 +3057,7 @@ class _InviteCodeCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: FilledButton(
-                    onPressed: () => shareWeddingInvite(context, wedding),
+                    onPressed: () => shareEventInvite(context, event),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: AppTheme.ink,
@@ -3099,18 +3099,18 @@ class _InviteCodeCard extends StatelessWidget {
 /// tem conta na app recebe notificação e push; quem não tem recebe o
 /// convite por mensagem.
 Future<void> _openRemind(BuildContext context, WidgetRef ref) async {
-  final wedding = ref.read(weddingControllerProvider).wedding;
-  if (wedding == null) return;
+  final event = ref.read(eventControllerProvider).event;
+  if (event == null) return;
   await showIslandSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (sheet) => _RemindSheet(wedding: wedding),
+    builder: (sheet) => _RemindSheet(event: event),
   );
 }
 
 class _RemindSheet extends StatefulWidget {
-  final Wedding wedding;
-  const _RemindSheet({required this.wedding});
+  final Event event;
+  const _RemindSheet({required this.event});
   @override
   State<_RemindSheet> createState() => _RemindSheetState();
 }
@@ -3128,7 +3128,7 @@ class _RemindSheetState extends State<_RemindSheet> {
 
   Future<void> _load() async {
     try {
-      final r = await supabase.rpc('rsvp_reminder_summary', params: {'p_wedding': widget.wedding.id});
+      final r = await supabase.rpc('rsvp_reminder_summary', params: {'p_wedding': widget.event.id});
       if (mounted) setState(() => _summary = Map<String, dynamic>.from(r as Map));
     } catch (_) {
       if (mounted) setState(() => _failed = true);
@@ -3141,7 +3141,7 @@ class _RemindSheetState extends State<_RemindSheet> {
     setState(() => _sending = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final sent = await supabase.rpc('remind_pending_guests', params: {'p_wedding': widget.wedding.id}) as int? ?? 0;
+      final sent = await supabase.rpc('remind_pending_guests', params: {'p_wedding': widget.event.id}) as int? ?? 0;
       messenger.showSnackBar(SnackBar(
         content: Text(sent == 0
             ? 'Já foram lembrados nas últimas 24 h.'
@@ -3216,7 +3216,7 @@ class _RemindSheetState extends State<_RemindSheet> {
             title: _failed ? 'Enviar o convite outra vez' : '$withoutApp sem a app',
             sub: 'Envia-lhes o convite por WhatsApp ou mensagem. Respondem pelo link, sem conta.',
             action: OutlinedButton.icon(
-              onPressed: () => shareWeddingInvite(context, widget.wedding),
+              onPressed: () => shareEventInvite(context, widget.event),
               icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const Text('Enviar convite por mensagem'),
               style: OutlinedButton.styleFrom(
@@ -3252,8 +3252,8 @@ const _red = Color(0xFFC8553D);
 /// Topo minimalista: foto de capa a toda a largura, voltar e definições,
 /// tipo do evento, nome, data e local, e a contagem decrescente.
 class _MinimalTop extends ConsumerStatefulWidget {
-  final Wedding wedding;
-  const _MinimalTop({required this.wedding});
+  final Event event;
+  const _MinimalTop({required this.event});
 
   @override
   ConsumerState<_MinimalTop> createState() => _MinimalTopState();
@@ -3272,7 +3272,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
     if (adjusted == null || !mounted) return;
     setState(() => _uploading = true);
     try {
-      await ref.read(weddingControllerProvider.notifier).uploadBannerBytes(adjusted);
+      await ref.read(eventControllerProvider.notifier).uploadBannerBytes(adjusted);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível carregar a foto.')));
@@ -3301,11 +3301,11 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
 
   @override
   Widget build(BuildContext context) {
-    final w = widget.wedding;
+    final w = widget.event;
     final look = _look(context, ref);
     final photo = w.coverPhotoUrlCacheBusted;
     final place = [
-      if (w.weddingDate != null) '${w.weddingDate!.day} ${monthNamesPt[w.weddingDate!.month - 1].toLowerCase()} ${w.weddingDate!.year}',
+      if (w.eventDate != null) '${w.eventDate!.day} ${monthNamesPt[w.eventDate!.month - 1].toLowerCase()} ${w.eventDate!.year}',
       if (w.venue?.isNotEmpty == true) w.venue! else if (w.location?.isNotEmpty == true) w.location!,
     ].join(' · ');
     // Altura das horas e da bateria: a capa começa por trás delas.
@@ -3366,11 +3366,11 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
             top: 12 + inset,
             child: Row(children: [
               const Spacer(),
-              _round(Hi.arrowUpOnSquare, 'Partilhar o convite', () => shareWeddingInvite(context, w)),
+              _round(Hi.arrowUpOnSquare, 'Partilhar o convite', () => shareEventInvite(context, w)),
               const SizedBox(width: 8),
               // Arquivar ou apagar o evento (185).
               _round(Hi.ellipsisHorizontal, 'Mais opções', () => showEventActionsSheet(context, ref,
-                  weddingId: w.id,
+                  eventId: w.id,
                   name: capFirst(w.displayNames),
                   isOwner: w.ownerId == ref.read(authControllerProvider).profile?.id)),
             ]),
@@ -3470,20 +3470,20 @@ class _MinimalCountdownState extends State<_MinimalCountdown> {
 /// "Próximos passos" (ou "Primeiros passos" num evento novo): progresso
 /// do planeamento e as três coisas mais importantes agora.
 class _NextSteps extends ConsumerWidget {
-  final Wedding wedding;
-  const _NextSteps({required this.wedding});
+  final Event event;
+  const _NextSteps({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Painel de tarefas: um co-organizador sem a permissão de tarefas não o vê.
-    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
     if (!perms.can(OrganizerPerm.tarefas)) return const SizedBox.shrink();
     final s = ref.watch(taskEngineControllerProvider);
     final done = s.systemDone.length;
     final total = done + s.systemActive.length;
     final items = _todoItems(ref).take(3).toList();
     if (items.isEmpty && total == 0) return const SizedBox.shrink();
-    final days = wedding.weddingDate?.difference(DateTime.now()).inDays;
+    final days = event.eventDate?.difference(DateTime.now()).inDays;
     final title = days != null && days >= 0 && days <= 7
         ? 'Esta semana'
         : done == 0
@@ -3575,8 +3575,8 @@ class _NextSteps extends ConsumerWidget {
 /// "Sugestões para ti": um parceiro de cada vez, cartões da largura do
 /// ecrã que prendem ao deslizar, com pontos por baixo.
 class _Suggestions extends ConsumerStatefulWidget {
-  final Wedding wedding;
-  const _Suggestions({required this.wedding});
+  final Event event;
+  const _Suggestions({required this.event});
 
   @override
   ConsumerState<_Suggestions> createState() => _SuggestionsState();
@@ -3593,7 +3593,7 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
 
   @override
   Widget build(BuildContext context) {
-    final location = widget.wedding.location;
+    final location = widget.event.location;
     final picks = ref.watch(featuredForMeProvider((location: location, category: null, limit: 6))).value;
     // Sem quem já está reservado ou com proposta.
     final booked = {
@@ -3673,7 +3673,7 @@ Future<void> _pickCoverPhoto(BuildContext context, WidgetRef ref) async {
   final adjusted = await showPhotoAdjustScreen(context, imageBytes: rawBytes);
   if (adjusted == null) return;
   try {
-    await ref.read(weddingControllerProvider.notifier).uploadBannerBytes(adjusted);
+    await ref.read(eventControllerProvider.notifier).uploadBannerBytes(adjusted);
   } catch (_) {
     messenger.showSnackBar(const SnackBar(content: Text('Não foi possível carregar a foto.')));
   }
@@ -3728,22 +3728,22 @@ Widget _roundIcon(IconData icon) => Container(
     );
 
 class _OrgBody extends ConsumerWidget {
-  final Wedding wedding;
+  final Event event;
 
   /// Chaves das secções, para os atalhos do topo reduzido.
   final Map<String, GlobalKey>? sectionKeys;
-  const _OrgBody({required this.wedding, this.sectionKeys});
+  const _OrgBody({required this.event, this.sectionKeys});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final w = wedding;
+    final w = event;
     final info = ref.watch(orgGuestFacingProvider(w.id)).value;
     final program = info?.program ?? const <ProgramItem>[];
-    final (label, big, unit) = dashWhenAt(w.weddingDate, info?.ceremonyTime);
+    final (label, big, unit) = dashWhenAt(w.eventDate, info?.ceremonyTime);
     final now = DateTime.now();
-    final days = w.weddingDate == null
+    final days = w.eventDate == null
         ? null
-        : DateTime(w.weddingDate!.year, w.weddingDate!.month, w.weddingDate!.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+        : DateTime(w.eventDate!.year, w.eventDate!.month, w.eventDate!.day).difference(DateTime(now.year, now.month, now.day)).inDays;
     final isToday = days == 0;
     final isPast = days != null && days < 0;
 
@@ -3751,8 +3751,8 @@ class _OrgBody extends ConsumerWidget {
     final going = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).toList();
     final notGoing = guests.where((g) => g.rsvpStatus == RsvpStatus.declined).length;
     final pending = guests.where((g) => g.rsvpStatus == RsvpStatus.pending).length;
-    final photos = ref.watch(weddingGalleryPhotosProvider(w.id)).value ?? const <GalleryPhoto>[];
-    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final photos = ref.watch(eventGalleryPhotosProvider(w.id)).value ?? const <GalleryPhoto>[];
+    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
 
     // Resumo: como estão os convidados.
     String? who;
@@ -3788,7 +3788,7 @@ class _OrgBody extends ConsumerWidget {
       // seu, o de quem vem com ele e o de quem paga.
       final tables = ref.watch(myEventTablesProvider(w.id)).value ?? const <EventTable>[];
       final withPayRow = <String>{};
-      for (final (e, payId) in _duePayments(ref).where((p) => p.$1.weddingId == w.id).take(3)) {
+      for (final (e, payId) in _duePayments(ref).where((p) => p.$1.eventId == w.id).take(3)) {
         final left = e.dueDate!.difference(now).inDays;
         final when = left < 0 ? 'o prazo já passou' : left == 0 ? 'até hoje' : left <= 3 ? 'faltam $left ${left == 1 ? 'dia' : 'dias'}' : 'até ${_shortDay(e.dueDate!)}';
         // Com menus (restaurante/catering, o organizador escolhe): escolhem-se
@@ -3843,7 +3843,7 @@ class _OrgBody extends ConsumerWidget {
         ));
       }
       for (final p in ref.watch(pendingProposalsProvider).value ?? const <ReceivedProposal>[]) {
-        if (p.weddingId != w.id) continue;
+        if (p.eventId != w.id) continue;
         tasks.add(_orgTaskRow(
           context,
           title: p.partnerName,
@@ -3883,7 +3883,7 @@ class _OrgBody extends ConsumerWidget {
     }
     final bookings = [
       for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[])
-        if (b.weddingId == w.id && b.status != BookingStatus.recusado) b,
+        if (b.eventId == w.id && b.status != BookingStatus.recusado) b,
     ];
 
     final body = <Widget>[];
@@ -3920,7 +3920,7 @@ class _OrgBody extends ConsumerWidget {
         ),
       ));
     }
-    body.add(OrgSuggestions(wedding: w, past: isPast, onCover: () => _pickCoverPhoto(context, ref)));
+    body.add(OrgSuggestions(event: w, past: isPast, onCover: () => _pickCoverPhoto(context, ref)));
     if ((isToday || isPast) && photos.isNotEmpty) {
       body.add(SectionFrame(title: 'Fotos', children: [
         DashPhotos(onOpen: () => context.push('/gallery'), urls: [for (final p in photos) p.imageUrl], count: photos.length),
@@ -3932,18 +3932,18 @@ class _OrgBody extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: body),
       ),
-      if (!isPast) KeyedSubtree(key: sectionKeys?['program'], child: EventProgramSection(weddingId: w.id)),
+      if (!isPast) KeyedSubtree(key: sectionKeys?['program'], child: EventProgramSection(eventId: w.id)),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (!isPast && !isToday) KeyedSubtree(key: sectionKeys?['numbers'], child: _OrgNumbers(wedding: w)),
+          if (!isPast && !isToday) KeyedSubtree(key: sectionKeys?['numbers'], child: _OrgNumbers(event: w)),
           KeyedSubtree(key: sectionKeys?['bookings'], child: _OrgBookings(bookings: bookings)),
-          if (!isPast) KeyedSubtree(key: sectionKeys?['invite'], child: _OrgInvite(wedding: w)),
-          KeyedSubtree(key: sectionKeys?['manage'], child: _OrgManage(wedding: w)),
+          if (!isPast) KeyedSubtree(key: sectionKeys?['invite'], child: _OrgInvite(event: w)),
+          KeyedSubtree(key: sectionKeys?['manage'], child: _OrgManage(event: w)),
         ]),
       ),
       // Parceiros em destaque no fim (pedido do Rafael, 2026-11-22).
-      if (!isPast) _Suggestions(wedding: w),
+      if (!isPast) _Suggestions(event: w),
     ]);
   }
 }
@@ -3952,20 +3952,20 @@ class _OrgBody extends ConsumerWidget {
 /// painel», B): orçamento, convidados, parceiros e mesas — as mesas só num
 /// espaço com mesas separadas (os restaurantes juntam mesas para o grupo).
 class _OrgNumbers extends ConsumerWidget {
-  final Wedding wedding;
-  const _OrgNumbers({required this.wedding});
+  final Event event;
+  const _OrgNumbers({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final w = wedding;
-    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
+    final w = event;
+    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
     final guests = ref.watch(guestsControllerProvider).guests;
     final going = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
     final pending = guests.where((g) => g.rsvpStatus == RsvpStatus.pending).length;
     final budget = ref.watch(budgetControllerProvider).budget;
     final bookings = [
       for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[])
-        if (b.weddingId == w.id && b.status != BookingStatus.recusado) b,
+        if (b.eventId == w.id && b.status != BookingStatus.recusado) b,
     ];
     final reserved = bookings.where((b) => b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido).length;
     final seating = ref.watch(seatingControllerProvider);
@@ -4121,12 +4121,12 @@ class _OrgBookings extends ConsumerWidget {
 
 /// Convite: o código (toca para copiar), «Partilhar» e «Ver como convidado».
 class _OrgInvite extends StatelessWidget {
-  final Wedding wedding;
-  const _OrgInvite({required this.wedding});
+  final Event event;
+  const _OrgInvite({required this.event});
 
   @override
   Widget build(BuildContext context) {
-    final code = wedding.guestCode;
+    final code = event.guestCode;
     return SectionFrame(title: 'Convite', children: [
       KitGroup([
         // Tocar abre a página «Convidar» (Convidados / Organizadores),
@@ -4148,14 +4148,14 @@ class _OrgInvite extends StatelessWidget {
 /// do evento ficam à parte, por baixo de uma linha grossa e com o botão
 /// redondo preto (§2), mais à vista.
 class _OrgManage extends ConsumerWidget {
-  final Wedding wedding;
-  const _OrgManage({required this.wedding});
+  final Event event;
+  const _OrgManage({required this.event});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final perms = ref.watch(myWeddingPermsProvider).value ?? OrganizerPerms.all;
-    final sections = ref.watch(guestSectionsProvider(wedding.id)).value ?? const GuestSections();
-    void settings() => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(wedding: wedding)));
+    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
+    final sections = ref.watch(guestSectionsProvider(event.id)).value ?? const GuestSections();
+    void settings() => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(event: event)));
     final rows = [
       if (sections.shows(GuestSection.presentes) && _routeAllowed('/gift-list', perms))
         KitRow(title: 'Presentes', sub: 'Lista e envelope', chevron: true, onTap: () => context.push('/gift-list')),

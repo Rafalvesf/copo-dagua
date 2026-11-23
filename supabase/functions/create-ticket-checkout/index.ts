@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
   }
 
   // `*`: funciona antes e depois das migrações 152/153 (cancelled_at, guest_code).
-  const { data: w } = await admin.from("weddings").select("*").eq("id", weddingId).maybeSingle();
+  const { data: w } = await admin.from("events").select("*").eq("id", weddingId).maybeSingle();
   if (!w || w.pending_deletion_at || w.cancelled_at) return json({ error: "not_found" }, 404);
   // Privado: precisa do código do evento ou de um link individual dele.
   let inviteGuestId: string | null = null;

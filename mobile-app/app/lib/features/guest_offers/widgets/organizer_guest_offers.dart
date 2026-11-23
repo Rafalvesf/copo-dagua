@@ -15,8 +15,8 @@ import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 /// transporte combinados com parceiros, que os convidados reservam e
 /// pagam na app.
 class OrganizerGuestOffers extends ConsumerWidget {
-  final String weddingId;
-  const OrganizerGuestOffers({super.key, required this.weddingId});
+  final String eventId;
+  const OrganizerGuestOffers({super.key, required this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,16 +31,16 @@ class OrganizerGuestOffers extends ConsumerWidget {
         ],
       );
     }
-    final offersAsync = ref.watch(guestOffersProvider(weddingId));
-    final resAsync = ref.watch(weddingGuestReservationsProvider(weddingId));
+    final offersAsync = ref.watch(guestOffersProvider(eventId));
+    final resAsync = ref.watch(eventGuestReservationsProvider(eventId));
     final offers = offersAsync.asData?.value ?? const <GuestOffer>[];
     final reservations = resAsync.asData?.value ?? const <GuestReservation>[];
     final paid = reservations.where((r) => r.status == GuestReservationStatus.paid).toList();
     final guests = paid.map((r) => r.guestName ?? r.id).toSet().length;
 
     Future<void> refresh() async {
-      ref.invalidate(guestOffersProvider(weddingId));
-      ref.invalidate(weddingGuestReservationsProvider(weddingId));
+      ref.invalidate(guestOffersProvider(eventId));
+      ref.invalidate(eventGuestReservationsProvider(eventId));
     }
 
     return RefreshIndicator(
@@ -87,7 +87,7 @@ class OrganizerGuestOffers extends ConsumerWidget {
                 isScrollControlled: true,
                 backgroundColor: Colors.white,
                 shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-                builder: (_) => _NewOfferSheet(weddingId: weddingId),
+                builder: (_) => _NewOfferSheet(eventId: eventId),
               );
               if (created == true) await refresh();
             }),
@@ -356,8 +356,8 @@ class _AddButton extends StatelessWidget {
 }
 
 class _NewOfferSheet extends ConsumerStatefulWidget {
-  final String weddingId;
-  const _NewOfferSheet({required this.weddingId});
+  final String eventId;
+  const _NewOfferSheet({required this.eventId});
 
   @override
   ConsumerState<_NewOfferSheet> createState() => _NewOfferSheetState();
@@ -417,7 +417,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
     });
     try {
       await createGuestOffer(
-        weddingId: widget.weddingId,
+        eventId: widget.eventId,
         partnerId: _partnerId!,
         kind: _kind,
         title: _title.text,
@@ -442,7 +442,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
   @override
   Widget build(BuildContext context) {
     final c = AppTheme.accentOliveDark;
-    final partners = ref.watch(bookedPartnersProvider(widget.weddingId));
+    final partners = ref.watch(bookedPartnersProvider(widget.eventId));
     final fee = ref.watch(platformCommissionPercentageProvider).asData?.value ?? 0.0;
     final price = double.tryParse(_price.text.trim().replaceAll(',', '.'));
     InputDecoration deco(String label, {String? hint, String? suffix}) => InputDecoration(

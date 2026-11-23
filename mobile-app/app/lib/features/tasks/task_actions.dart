@@ -9,7 +9,7 @@ import '../../core/partners/partner_providers.dart' show PartnerPickerArgs;
 import '../../core/supabase/supabase_config.dart';
 import '../../core/tasks/task_engine_controller.dart';
 import '../../core/tasks/task_models.dart';
-import '../../core/wedding/wedding_controller.dart';
+import '../../core/event/event_controller.dart';
 import '../../shared/widgets/island_sheet.dart';
 import '../payments/open_payment.dart';
 
@@ -63,7 +63,7 @@ String? _categoryRoute(String? category) => switch (category) {
     };
 
 /// Destino da tarefa: o do modelo, senão o da categoria.
-String? taskRoute(WeddingTask task, TaskTemplate? tpl) => tpl?.actionRoute ?? _categoryRoute(task.category);
+String? taskRoute(EventTask task, TaskTemplate? tpl) => tpl?.actionRoute ?? _categoryRoute(task.category);
 
 void _go(BuildContext context, String route, TaskTemplate? tpl) {
   final uri = Uri.parse(route);
@@ -75,16 +75,16 @@ void _go(BuildContext context, String route, TaskTemplate? tpl) {
   context.push(route);
 }
 
-Future<void> openTask(BuildContext context, WidgetRef ref, WeddingTask task) async {
+Future<void> openTask(BuildContext context, WidgetRef ref, EventTask task) async {
   final notifier = ref.read(taskEngineControllerProvider.notifier);
   if (!task.seen) notifier.markTaskSeen(task.id);
 
   // "Rever proposta — {parceiro}": abre a conversa com esse parceiro.
   if (task.category == 'parceiros' && task.title.startsWith('Rever proposta') && task.sourceEntityId != null) {
-    final weddingId = ref.read(weddingControllerProvider).wedding?.id;
-    if (weddingId != null) {
+    final eventId = ref.read(eventControllerProvider).event?.id;
+    if (eventId != null) {
       try {
-        final conversation = await resolveProposalConversation(weddingId: weddingId, proposalId: task.sourceEntityId!);
+        final conversation = await resolveProposalConversation(eventId: eventId, proposalId: task.sourceEntityId!);
         if (context.mounted) context.push('/chat/${conversation.id}', extra: conversation);
         return;
       } catch (_) {/* segue para o destino normal */}

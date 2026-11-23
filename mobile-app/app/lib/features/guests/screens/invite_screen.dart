@@ -9,7 +9,7 @@ import '../../../core/guests/guest_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/public_link.dart';
 import '../../../shared/utils_clipboard.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -19,7 +19,7 @@ import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/search_pill.dart';
 import '../../../shared/widgets/v2_kit.dart';
-import 'guests_list_screen.dart' show shareWeddingInvite;
+import 'guests_list_screen.dart' show shareEventInvite;
 
 /// «Convidar» (mockup «Páginas do evento» → Convidar, 2026-11-15): quem
 /// ainda não recebeu o convite, quem já recebeu, e o link do evento para
@@ -53,7 +53,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
       if (mounted) setState(() {});
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final w = ref.read(weddingControllerProvider).wedding;
+      final w = ref.read(eventControllerProvider).event;
       if (w != null && ref.read(guestsControllerProvider).guests.isEmpty) {
         ref.read(guestsControllerProvider.notifier).load(w.id);
       }
@@ -61,9 +61,9 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     });
   }
 
-  Future<void> _loadFollowed(String weddingId) async {
+  Future<void> _loadFollowed(String eventId) async {
     try {
-      final rows = await supabase.rpc('event_followed_people', params: {'p_wedding_id': weddingId});
+      final rows = await supabase.rpc('event_followed_people', params: {'p_wedding_id': eventId});
       if (!mounted) return;
       setState(() => _followed = [for (final r in (rows as List).cast<Map<String, dynamic>>()) _Followed.fromRow(r)]);
     } catch (_) {
@@ -71,12 +71,12 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     }
   }
 
-  Future<void> _inviteFollowed(String weddingId, _Followed p) async {
+  Future<void> _inviteFollowed(String eventId, _Followed p) async {
     setState(() => _inviting.add(p.id));
     try {
-      await supabase.rpc('invite_followed', params: {'p_wedding_id': weddingId, 'p_profile_id': p.id});
-      await _loadFollowed(weddingId);
-      await ref.read(guestsControllerProvider.notifier).load(weddingId);
+      await supabase.rpc('invite_followed', params: {'p_wedding_id': eventId, 'p_profile_id': p.id});
+      await _loadFollowed(eventId);
+      await ref.read(guestsControllerProvider.notifier).load(eventId);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível convidar. Tenta outra vez.')));
@@ -86,7 +86,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     }
   }
 
-  List<Widget> _followedTab(Wedding? wedding) {
+  List<Widget> _followedTab(Event? event) {
     final all = _followed ?? const <_Followed>[];
     if (all.isEmpty) {
       return const [
@@ -121,7 +121,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
                 }
               : RowPillButton(
                   label: 'Convidar',
-                  onTap: wedding == null || _inviting.contains(p.id) ? null : () => _inviteFollowed(wedding.id, p),
+                  onTap: event == null || _inviting.contains(p.id) ? null : () => _inviteFollowed(event.id, p),
                 ),
         );
 
@@ -158,7 +158,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final wedding = ref.watch(weddingControllerProvider).wedding;
+    final event = ref.watch(eventControllerProvider).event;
     final guests = ref.watch(guestsControllerProvider).guests;
     bool sent(Guest g) => g.inviteSentAt != null || g.rsvpStatus != RsvpStatus.pending;
     final toSend = guests.where((g) => !sent(g)).toList();
@@ -191,42 +191,42 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
         onBack: () => context.canPop() ? context.pop() : context.go('/guests'),
         children: [
           const KitHeader(),
-          KitTitle('Convidar', subtitle: wedding == null ? null : _eventMeta(wedding)),
+          KitTitle('Convidar', subtitle: event == null ? null : _eventMeta(event)),
           // Convidados | Organizadores (mockup «Páginas do evento», 2026-11-22):
           // os organizadores convidam-se na página deles.
-          if (wedding != null && wedding.ownerId == ref.watch(authControllerProvider).profile?.id)
+          if (event != null && event.ownerId == ref.watch(authControllerProvider).profile?.id)
             KitPills([
               const KitPill(label: 'Convidados', selected: true),
               KitPill(label: 'Organizadores', selected: false, onTap: () => context.push('/organizadores')),
             ]),
 
           // Por link — o link do evento, com o RSVP
-          if (wedding != null)
+          if (event != null)
             SectionFrame(title: 'Por link', children: [
               const FrameNote('Para quem ainda não está na app. Quem entra por aqui aparece em «Pedidos para entrar».'),
-              if (wedding.guestCode != null) ...[
+              if (event.guestCode != null) ...[
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
                   child: Row(children: [
                     Expanded(
-                      child: Text(wedding.guestCode!,
+                      child: Text(event.guestCode!,
                           style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     FrameButton36('Copiar', outlined: true, onTap: () async {
-                      await copyText(wedding.guestCode!);
+                      await copyText(event.guestCode!);
                       if (mounted) ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(content: Text('Código copiado')));
                     }),
                   ]),
                 ),
               ],
-              FrameButton44('Enviar link', onTap: () => shareWeddingInvite(context, wedding)),
-              if (wedding.inviteUrl != null) FrameButton44('Copiar link', outlined: true, onTap: () => _copyEventLink(wedding)),
+              FrameButton44('Enviar link', onTap: () => shareEventInvite(context, event)),
+              if (event.inviteUrl != null) FrameButton44('Copiar link', outlined: true, onTap: () => _copyEventLink(event)),
             ]),
 
           // Amigos que segues (migração 189) — convidar na app
-          if (_followed != null) ..._followedTab(wedding),
+          if (_followed != null) ..._followedTab(event),
 
           // Já convidados — só o RSVP
           if (toSend.isNotEmpty)
@@ -237,7 +237,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
                     lead: V2Avatar(g.name, size: 44),
                     title: g.name,
                     sub: meta(g),
-                    trailing: FrameButton36('Enviar', onTap: () => _openSendSheet(context, wedding, g)),
+                    trailing: FrameButton36('Enviar', onTap: () => _openSendSheet(context, event, g)),
                   ),
               ]),
             ]),
@@ -264,9 +264,9 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     );
   }
 
-  String _eventMeta(Wedding w) {
+  String _eventMeta(Event w) {
     final parts = <String>[];
-    final d = w.weddingDate;
+    final d = w.eventDate;
     if (d != null) {
       const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
       parts.add('${d.day} ${meses[d.month - 1]} ${d.year}');
@@ -276,21 +276,21 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     return parts.isEmpty ? 'Sem data definida' : parts.join(' · ');
   }
 
-  Future<void> _copyEventLink(Wedding w) async {
+  Future<void> _copyEventLink(Event w) async {
     final url = w.inviteUrl;
     if (url == null) return;
     await copyText(url);
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado')));
   }
 
-  Future<void> _openSendSheet(BuildContext context, Wedding? wedding, Guest g) async {
-    if (wedding == null || g.rsvpToken == null) return;
+  Future<void> _openSendSheet(BuildContext context, Event? event, Guest g) async {
+    if (event == null || g.rsvpToken == null) return;
     final link = publicLink('/rsvp/${g.rsvpToken}');
-    final text = 'Estás convidado/a para o evento de ${wedding.displayNames}! Confirma a tua presença aqui: $link';
+    final text = 'Estás convidado/a para o evento de ${event.displayNames}! Confirma a tua presença aqui: $link';
     final sentNow = await showIslandSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (sheet) => _SendSheet(guest: g, text: text, link: link, eventName: wedding.displayNames),
+      builder: (sheet) => _SendSheet(guest: g, text: text, link: link, eventName: event.displayNames),
     );
     if (sentNow != true || !mounted) return;
     try {

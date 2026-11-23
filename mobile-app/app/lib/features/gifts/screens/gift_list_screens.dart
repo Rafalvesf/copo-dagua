@@ -9,7 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/gifts/gift_shop.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -58,14 +58,14 @@ class OrganizerGiftListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    if (weddingId == null) return const SizedBox.shrink();
-    final listAsync = ref.watch(giftListProvider(weddingId));
-    final givers = ref.watch(giftGiversProvider(weddingId)).value ?? const <GiftGiver>[];
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+    if (eventId == null) return const SizedBox.shrink();
+    final listAsync = ref.watch(giftListProvider(eventId));
+    final givers = ref.watch(giftGiversProvider(eventId)).value ?? const <GiftGiver>[];
     // Mockup «Páginas do evento · com molduras» → Presentes (2026-11-22):
     // resumo do que já foi oferecido, «Receber» (envelope com o IBAN,
     // envelopes recebidos, morada) e a lista, cada um numa moldura.
-    final iban = ref.watch(_giftIbanProvider(weddingId)).value;
+    final iban = ref.watch(_giftIbanProvider(eventId)).value;
     return GradientScaffold(
       background: AppBackground.feed,
       body: listAsync.when(
@@ -76,15 +76,15 @@ class OrganizerGiftListScreen extends ConsumerWidget {
           final given = items.where((i) => i.taken >= i.wanted && i.wanted > 0).length;
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(giftListProvider(weddingId));
-              ref.invalidate(giftGiversProvider(weddingId));
-              ref.invalidate(_giftIbanProvider(weddingId));
+              ref.invalidate(giftListProvider(eventId));
+              ref.invalidate(giftGiversProvider(eventId));
+              ref.invalidate(_giftIbanProvider(eventId));
             },
             child: KitPage(
               pinnedBack: true,
               rotateBack: false,
               children: [
-                KitHeader(actions: [KitAddButton(tooltip: 'Novo desejo', onTap: () => showWishSheet(context, ref, weddingId: weddingId))]),
+                KitHeader(actions: [KitAddButton(tooltip: 'Novo desejo', onTap: () => showWishSheet(context, ref, eventId: eventId))]),
                 const KitTitle('Presentes', subtitle: 'A vossa lista de presentes'),
                 KitSummary(
                   kicker: 'Já oferecidos',
@@ -106,13 +106,13 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                         const SizedBox(width: 4),
                         const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
                       ]),
-                      onTap: () => _editIban(context, ref, weddingId, iban),
+                      onTap: () => _editIban(context, ref, eventId, iban),
                     ),
                     KitRow(title: 'Envelopes recebidos', chevron: true, onTap: () => context.push('/envelopes')),
                   ]),
                   if (items.any((i) => i.isProduct)) ...[
                     const SizedBox(height: 8),
-                    _DeliveryAddressCard(weddingId: weddingId),
+                    _DeliveryAddressCard(eventId: eventId),
                   ],
                 ]),
                 SectionFrame(title: items.isEmpty ? 'A lista' : 'A lista · ${items.length}', children: [
@@ -121,7 +121,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                       title: 'Ainda sem presentes',
                       text: 'Junta o que precisam ou escolhe da loja.',
                       actions: [
-                        FrameButton44('+ Novo desejo', onTap: () => showWishSheet(context, ref, weddingId: weddingId)),
+                        FrameButton44('+ Novo desejo', onTap: () => showWishSheet(context, ref, eventId: eventId)),
                         FrameButton44('Ver a loja', outlined: true, onTap: () => context.push('/gift-shop')),
                       ],
                     )
@@ -129,11 +129,11 @@ class OrganizerGiftListScreen extends ConsumerWidget {
                     const FrameNote('Desejos: os convidados reservam e compram onde quiserem. Loja: produtos dos parceiros, pagos na app e enviados para a vossa morada.'),
                     const SizedBox(height: 10),
                     for (final i in items) ...[
-                      _OrganizerItemTile(item: i, weddingId: weddingId),
+                      _OrganizerItemTile(item: i, eventId: eventId),
                       const SizedBox(height: 10),
                     ],
                     Row(children: [
-                      Expanded(child: FrameButton44('+ Novo desejo', outlined: true, onTap: () => showWishSheet(context, ref, weddingId: weddingId))),
+                      Expanded(child: FrameButton44('+ Novo desejo', outlined: true, onTap: () => showWishSheet(context, ref, eventId: eventId))),
                       const SizedBox(width: 8),
                       Expanded(child: FrameButton44('Ver a loja', outlined: true, onTap: () => context.push('/gift-shop'))),
                     ]),
@@ -163,7 +163,7 @@ class OrganizerGiftListScreen extends ConsumerWidget {
   }
 
   /// IBAN do envelope (em dinheiro ou por transferência), em `events.gift_iban`.
-  Future<void> _editIban(BuildContext context, WidgetRef ref, String weddingId, String? current) async {
+  Future<void> _editIban(BuildContext context, WidgetRef ref, String eventId, String? current) async {
     final controller = TextEditingController(text: current ?? '');
     final v = await showIslandDialog<String>(
       context: context,
@@ -183,8 +183,8 @@ class OrganizerGiftListScreen extends ConsumerWidget {
     );
     if (v == null) return;
     try {
-      await supabase.from('events').update({'gift_iban': v.isEmpty ? null : v}).eq('id', weddingId);
-      ref.invalidate(_giftIbanProvider(weddingId));
+      await supabase.from('events').update({'gift_iban': v.isEmpty ? null : v}).eq('id', eventId);
+      ref.invalidate(_giftIbanProvider(eventId));
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar o IBAN.')));
@@ -193,9 +193,9 @@ class OrganizerGiftListScreen extends ConsumerWidget {
   }
 }
 
-final _giftIbanProvider = FutureProvider.autoDispose.family<String?, String>((ref, weddingId) async {
+final _giftIbanProvider = FutureProvider.autoDispose.family<String?, String>((ref, eventId) async {
   try {
-    final r = await supabase.from('events').select('gift_iban').eq('id', weddingId).maybeSingle();
+    final r = await supabase.from('events').select('gift_iban').eq('id', eventId).maybeSingle();
     return r?['gift_iban'] as String?;
   } catch (_) {
     return null;
@@ -214,8 +214,8 @@ class _Info extends StatelessWidget {
 
 class _OrganizerItemTile extends ConsumerWidget {
   final GiftItem item;
-  final String weddingId;
-  const _OrganizerItemTile({required this.item, required this.weddingId});
+  final String eventId;
+  const _OrganizerItemTile({required this.item, required this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -252,7 +252,7 @@ class _OrganizerItemTile extends ConsumerWidget {
           tooltip: 'Opções',
           onSelected: (v) async {
             if (v == 'edit') {
-              await showWishSheet(context, ref, weddingId: weddingId, existing: i);
+              await showWishSheet(context, ref, eventId: eventId, existing: i);
             } else if (v == 'remove') {
               try {
                 await removeGiftItem(i.id);
@@ -261,7 +261,7 @@ class _OrganizerItemTile extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível tirar da lista.')));
                 }
               }
-              ref.invalidate(giftListProvider(weddingId));
+              ref.invalidate(giftListProvider(eventId));
             }
           },
           itemBuilder: (_) => [
@@ -275,8 +275,8 @@ class _OrganizerItemTile extends ConsumerWidget {
 }
 
 class _DeliveryAddressCard extends ConsumerStatefulWidget {
-  final String weddingId;
-  const _DeliveryAddressCard({required this.weddingId});
+  final String eventId;
+  const _DeliveryAddressCard({required this.eventId});
   @override
   ConsumerState<_DeliveryAddressCard> createState() => _DeliveryAddressCardState();
 }
@@ -294,7 +294,7 @@ class _DeliveryAddressCardState extends ConsumerState<_DeliveryAddressCard> {
 
   @override
   Widget build(BuildContext context) {
-    final addr = ref.watch(giftDeliveryAddressProvider(widget.weddingId));
+    final addr = ref.watch(giftDeliveryAddressProvider(widget.eventId));
     if (!_loaded && addr.hasValue) {
       _c.text = addr.value ?? '';
       _loaded = true;
@@ -324,7 +324,7 @@ class _DeliveryAddressCardState extends ConsumerState<_DeliveryAddressCard> {
                 : () async {
                     setState(() => _saving = true);
                     try {
-                      await saveGiftDeliveryAddress(widget.weddingId, _c.text);
+                      await saveGiftDeliveryAddress(widget.eventId, _c.text);
                       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Morada guardada.')));
                     } catch (_) {
                       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível guardar.')));
@@ -341,18 +341,18 @@ class _DeliveryAddressCardState extends ConsumerState<_DeliveryAddressCard> {
 }
 
 /// Desejo: o bloco de notas do que o organizador precisa.
-Future<void> showWishSheet(BuildContext context, WidgetRef ref, {required String weddingId, GiftItem? existing}) {
+Future<void> showWishSheet(BuildContext context, WidgetRef ref, {required String eventId, GiftItem? existing}) {
   return showIslandSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => _WishSheet(weddingId: weddingId, existing: existing),
+    builder: (_) => _WishSheet(eventId: eventId, existing: existing),
   );
 }
 
 class _WishSheet extends ConsumerStatefulWidget {
-  final String weddingId;
+  final String eventId;
   final GiftItem? existing;
-  const _WishSheet({required this.weddingId, this.existing});
+  const _WishSheet({required this.eventId, this.existing});
   @override
   ConsumerState<_WishSheet> createState() => _WishSheetState();
 }
@@ -387,11 +387,11 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
     try {
       final price = parseEuros(_price.text);
       if (widget.existing == null) {
-        await addWish(weddingId: widget.weddingId, title: _title.text, note: _note.text, linkUrl: _link.text, price: price, quantity: _qty);
+        await addWish(eventId: widget.eventId, title: _title.text, note: _note.text, linkUrl: _link.text, price: price, quantity: _qty);
       } else {
         await updateWish(widget.existing!.id, title: _title.text, note: _note.text, linkUrl: _link.text, price: price, quantity: _qty);
       }
-      ref.invalidate(giftListProvider(widget.weddingId));
+      ref.invalidate(giftListProvider(widget.eventId));
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) setState(() => _error = 'Não foi possível guardar. Tenta outra vez.');
@@ -482,11 +482,11 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
   String _query = '';
   final Set<String> _added = {};
 
-  Future<void> _add(ShopProduct p, String weddingId) async {
+  Future<void> _add(ShopProduct p, String eventId) async {
     try {
-      await addProductToList(weddingId: weddingId, productId: p.id);
+      await addProductToList(eventId: eventId, productId: p.id);
       if (mounted) setState(() => _added.add(p.id));
-      ref.invalidate(giftListProvider(weddingId));
+      ref.invalidate(giftListProvider(eventId));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.title} está na lista.')));
       }
@@ -497,7 +497,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
     }
   }
 
-  void _showProduct(ShopProduct p, String? weddingId, bool added) {
+  void _showProduct(ShopProduct p, String? eventId, bool added) {
     showIslandSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -528,11 +528,11 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
           ],
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: weddingId == null || added || !p.inStock
+            onPressed: eventId == null || added || !p.inStock
                 ? null
                 : () async {
                     Navigator.of(sheetContext).pop();
-                    await _add(p, weddingId);
+                    await _add(p, eventId);
                   },
             icon: Icon(added ? Hi.check : Hi.plus),
             label: Text(added ? 'Já está na vossa lista' : (p.inStock ? 'Pôr na lista de presentes' : 'Esgotado')),
@@ -551,9 +551,9 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
 
   @override
   Widget build(BuildContext context) {
-    final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
     final products = ref.watch(shopProductsProvider(_query));
-    final list = weddingId == null ? null : ref.watch(giftListProvider(weddingId)).value;
+    final list = eventId == null ? null : ref.watch(giftListProvider(eventId)).value;
     final inList = {
       ..._added,
       for (final i in list ?? const <GiftItem>[]) if (i.productId != null) i.productId!,
@@ -588,7 +588,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
               ),
             ),
           ),
-          if (widget.showListLink && weddingId != null) ...[
+          if (widget.showListLink && eventId != null) ...[
             const SizedBox(width: 10),
             Tooltip(
               message: 'A vossa lista de presentes',
@@ -634,7 +634,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                           return _FeaturedProductCard(
                             product: p,
                             added: inList.contains(p.id),
-                            onTap: () => _showProduct(p, weddingId, inList.contains(p.id)),
+                            onTap: () => _showProduct(p, eventId, inList.contains(p.id)),
                           );
                         },
                       ),
@@ -651,9 +651,9 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                         child: _ProductRow(
                           product: p,
                           added: inList.contains(p.id),
-                          canAdd: weddingId != null && p.inStock,
-                          onTap: () => _showProduct(p, weddingId, inList.contains(p.id)),
-                          onAdd: () => _add(p, weddingId!),
+                          canAdd: eventId != null && p.inStock,
+                          onTap: () => _showProduct(p, eventId, inList.contains(p.id)),
+                          onAdd: () => _add(p, eventId!),
                         ),
                       ),
                   ],
@@ -779,18 +779,18 @@ class _FeaturedProductCard extends StatelessWidget {
 
 /// A lista no ecrã Presentes do convidado.
 class GuestGiftListSection extends ConsumerWidget {
-  final String weddingId;
-  const GuestGiftListSection({super.key, required this.weddingId});
+  final String eventId;
+  const GuestGiftListSection({super.key, required this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(giftListProvider(weddingId)).value;
+    final items = ref.watch(giftListProvider(eventId)).value;
     if (items == null || items.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       const Text('Lista de presentes', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.ink)),
       const SizedBox(height: 8),
       for (final i in items) ...[
-        _GuestItemCard(item: i, weddingId: weddingId),
+        _GuestItemCard(item: i, eventId: eventId),
         const SizedBox(height: 10),
       ],
       const SizedBox(height: 4),
@@ -800,8 +800,8 @@ class GuestGiftListSection extends ConsumerWidget {
 
 class _GuestItemCard extends ConsumerWidget {
   final GiftItem item;
-  final String weddingId;
-  const _GuestItemCard({required this.item, required this.weddingId});
+  final String eventId;
+  const _GuestItemCard({required this.item, required this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -858,7 +858,7 @@ class _GuestItemCard extends ConsumerWidget {
                 try {
                   await unclaimGift(i.myClaimId!);
                 } catch (_) {}
-                ref.invalidate(giftListProvider(weddingId));
+                ref.invalidate(giftListProvider(eventId));
               },
               child: const Text('Já não vou oferecer'),
             ),
@@ -867,7 +867,7 @@ class _GuestItemCard extends ConsumerWidget {
               onPressed: () => showIslandSheet<void>(
                 context: context,
                 isScrollControlled: true,
-                builder: (_) => _OfferSheet(item: i, weddingId: weddingId),
+                builder: (_) => _OfferSheet(item: i, eventId: eventId),
               ),
               style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
               child: Text(i.isProduct ? 'Oferecer · ${giftEuros(i.price ?? 0)}' : 'Vou oferecer'),
@@ -880,8 +880,8 @@ class _GuestItemCard extends ConsumerWidget {
 
 class _OfferSheet extends ConsumerStatefulWidget {
   final GiftItem item;
-  final String weddingId;
-  const _OfferSheet({required this.item, required this.weddingId});
+  final String eventId;
+  const _OfferSheet({required this.item, required this.eventId});
   @override
   ConsumerState<_OfferSheet> createState() => _OfferSheetState();
 }
@@ -935,7 +935,7 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
         router.push('/pay', extra: args);
       } else {
         await claimGift(i.id, quantity: _qty, message: _message.text);
-        ref.invalidate(giftListProvider(widget.weddingId));
+        ref.invalidate(giftListProvider(widget.eventId));
         if (!mounted) return;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1006,7 +1006,7 @@ class GiftReturnScreen extends ConsumerStatefulWidget {
 
 class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
   String _status = 'checking';
-  String? _weddingId;
+  String? _eventId;
 
   @override
   void initState() {
@@ -1018,9 +1018,9 @@ class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
     for (var n = 0; n < 6; n++) {
       try {
         final r = await syncGiftOrder(widget.orderId);
-        _weddingId = r.weddingId;
+        _eventId = r.eventId;
         if (r.status == 'paid') {
-          if (r.weddingId != null) ref.invalidate(giftListProvider(r.weddingId!));
+          if (r.eventId != null) ref.invalidate(giftListProvider(r.eventId!));
           if (mounted) setState(() => _status = 'paid');
           return;
         }
@@ -1061,7 +1061,7 @@ class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
               const SizedBox(height: 24),
               if (_status != 'checking')
                 FilledButton(
-                  onPressed: () => context.go(_weddingId != null ? '/guest-gifts/$_weddingId' : '/guest-gifts'),
+                  onPressed: () => context.go(_eventId != null ? '/guest-gifts/$_eventId' : '/guest-gifts'),
                   style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                   child: const Text('Voltar aos presentes'),
                 ),

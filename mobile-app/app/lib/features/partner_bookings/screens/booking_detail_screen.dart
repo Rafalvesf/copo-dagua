@@ -8,7 +8,7 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/guest_home/event_tables.dart' show bookingChoicesProvider, BookingChoice;
 import '../../../core/models/models.dart';
-import '../../../core/wedding/menu_style.dart' show EventDecor;
+import '../../../core/event/menu_style.dart' show EventDecor;
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/payments/refunds.dart';
 import '../../../core/supabase/supabase_config.dart';
@@ -317,7 +317,7 @@ Expanded(child: ScrollingHeader(
                                     authControllerProvider.select((s) => s.profile!.id),
                                   );
                                   final conversationId = await getOrCreateConversation(
-                                    weddingId: booking.weddingId,
+                                    eventId: booking.eventId,
                                     partnerId: partnerId,
                                   );
                                   if (context.mounted) {
@@ -325,7 +325,7 @@ Expanded(child: ScrollingHeader(
                                       '/partner-messages/$conversationId',
                                       extra: ChatConversation(
                                         id: conversationId,
-                                        weddingId: booking.weddingId,
+                                        eventId: booking.eventId,
                                         partnerId: partnerId,
                                         name: booking.clientName,
                                         avatarSeed: booking.avatarSeed,

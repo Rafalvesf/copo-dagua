@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
-import '../wedding/wedding_controller.dart';
+import '../event/event_controller.dart';
 
 class BudgetState {
   final bool loading;
@@ -40,29 +40,29 @@ BudgetCategory _categoryFromRow(Map<String, dynamic> row) => BudgetCategory(
 /// `events.estimated_budget` (ou 0€, se também não existir) em vez de
 /// ficar por resolver.
 class BudgetController extends Notifier<BudgetState> {
-  String? currentWeddingId;
+  String? currentEventId;
 
   @override
   BudgetState build() {
-    final wedding = ref.watch(weddingControllerProvider.select((s) => s.wedding));
-    currentWeddingId = wedding?.id;
-    if (wedding != null) {
-      Future.microtask(() => load(wedding));
+    final event = ref.watch(eventControllerProvider.select((s) => s.event));
+    currentEventId = event?.id;
+    if (event != null) {
+      Future.microtask(() => load(event));
     }
     return const BudgetState();
   }
 
-  Future<void> load(Wedding wedding) async {
+  Future<void> load(Event event) async {
     state = state.copyWith(loading: true);
     // Tudo ao mesmo tempo (2026-11-09: início do organizador lento).
-    final rowF = supabase.from('budgets').select().eq('wedding_id', wedding.id).maybeSingle().then((r) => r);
+    final rowF = supabase.from('budgets').select().eq('wedding_id', event.id).maybeSingle().then((r) => r);
     final categoryF = supabase
         .from('budget_categories')
         .select()
-        .eq('wedding_id', wedding.id)
+        .eq('wedding_id', event.id)
         .order('position', ascending: true)
         .then((r) => r);
-    final paymentsF = _appPaymentsByCategory(wedding.id)
+    final paymentsF = _appPaymentsByCategory(event.id)
         .then<Map<(String, String), double>?>((m) => m, onError: (_) => null);
     final row = await rowF;
     final categoryRows = await categoryF;
@@ -79,9 +79,9 @@ class BudgetController extends Notifier<BudgetState> {
       // no orçamento dentro da app" — as duas telas mostravam o mesmo
       // conceito ("orçamento total") a partir de duas tabelas nunca
       // ligadas uma à outra.
-      total = wedding.estimatedBudget ?? 0;
+      total = event.estimatedBudget ?? 0;
       if (total > 0) {
-        await supabase.from('budgets').upsert({'wedding_id': wedding.id, 'total': total});
+        await supabase.from('budgets').upsert({'wedding_id': event.id, 'total': total});
       }
     }
 
@@ -96,7 +96,7 @@ class BudgetController extends Notifier<BudgetState> {
     state = BudgetState(
       loading: false,
       budget: Budget(
-        weddingId: wedding.id,
+        eventId: event.id,
         total: total,
         categories: categories,
       ),
@@ -105,8 +105,8 @@ class BudgetController extends Notifier<BudgetState> {
 
   /// Volta a ler (ex.: ao abrir o Orçamento depois de pagar um sinal).
   Future<void> reload() async {
-    final wedding = ref.read(weddingControllerProvider).wedding;
-    if (wedding != null) await load(wedding);
+    final event = ref.read(eventControllerProvider).event;
+    if (event != null) await load(event);
   }
 
   static PartnerCategory? _enumForSlug(String slug) => switch (slug) {
@@ -122,11 +122,11 @@ class BudgetController extends Notifier<BudgetState> {
   /// Reserva ativa (proposta aceite, paga ou concluída) conta pelo valor
   /// contratado; cancelada conta só pelo que chegou a ser pago
   /// (2026-11-01: "o orçamento não atualiza quando foi contratada na app").
-  Future<Map<(String, String), double>> _appPaymentsByCategory(String weddingId) async {
+  Future<Map<(String, String), double>> _appPaymentsByCategory(String eventId) async {
     final bookingRows = await supabase
         .from('bookings')
         .select('id, status, total_amount, partner_profiles(partner_profile_categories(partner_categories(slug, label_pt)))')
-        .eq('wedding_id', weddingId);
+        .eq('wedding_id', eventId);
     const active = {'awaiting_deposit', 'confirmed', 'payment_overdue', 'disputed', 'completed'};
     final categoryOf = <String, (String, String)>{};
     final totals = <(String, String), double>{};
@@ -183,20 +183,20 @@ class BudgetController extends Notifier<BudgetState> {
   /// Verba de uma categoria (`budget_categories.allocated`), pela
   /// folha de detalhe da categoria em Orçamento.
   Future<void> updateAllocated(String categoryName, double allocated) async {
-    final weddingId = currentWeddingId;
+    final eventId = currentEventId;
     final current = state.budget;
-    if (weddingId == null || current == null) return;
+    if (eventId == null || current == null) return;
     final updated = await supabase
         .from('budget_categories')
         .update({'allocated': allocated})
-        .eq('wedding_id', weddingId)
+        .eq('wedding_id', eventId)
         .eq('name', categoryName)
         .select('id');
     if ((updated as List).isEmpty) {
       // Categoria que só existia pelos pagamentos feitos na app.
       final c = current.categories.where((c) => c.name == categoryName).firstOrNull;
       await supabase.from('budget_categories').insert({
-        'wedding_id': weddingId,
+        'wedding_id': eventId,
         'name': categoryName,
         'partner_category': c?.partnerCategory?.name,
         'amount': 0,
@@ -206,7 +206,7 @@ class BudgetController extends Notifier<BudgetState> {
     }
     state = state.copyWith(
       budget: Budget(
-        weddingId: weddingId,
+        eventId: eventId,
         total: current.total,
         categories: [
           for (final c in current.categories)
@@ -224,17 +224,17 @@ class BudgetController extends Notifier<BudgetState> {
   }
 
   Future<void> updateTotal(double total) async {
-    final weddingId = currentWeddingId;
-    if (weddingId == null) return;
+    final eventId = currentEventId;
+    if (eventId == null) return;
     await supabase.from('budgets').upsert({
-      'wedding_id': weddingId,
+      'wedding_id': eventId,
       'total': total,
       'updated_at': DateTime.now().toIso8601String(),
     });
     final current = state.budget;
     if (current == null) return;
     state = state.copyWith(
-      budget: Budget(weddingId: weddingId, total: total, categories: current.categories),
+      budget: Budget(eventId: eventId, total: total, categories: current.categories),
     );
   }
 }

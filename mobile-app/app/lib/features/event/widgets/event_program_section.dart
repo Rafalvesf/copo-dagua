@@ -7,7 +7,7 @@ import '../../../core/models/models.dart';
 import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/estrela.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/guest_facing.dart';
+import '../../../core/event/guest_facing.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 
@@ -20,8 +20,8 @@ import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 ///
 /// Nota: o programa vive aqui, no painel — saiu da "Página dos convidados".
 class EventProgramSection extends ConsumerStatefulWidget {
-  final String weddingId;
-  const EventProgramSection({super.key, required this.weddingId});
+  final String eventId;
+  const EventProgramSection({super.key, required this.eventId});
 
   @override
   ConsumerState<EventProgramSection> createState() => _EventProgramSectionState();
@@ -45,7 +45,7 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
 
   Future<void> _load() async {
     try {
-      final info = await loadGuestFacingInfo(widget.weddingId);
+      final info = await loadGuestFacingInfo(widget.eventId);
       if (!mounted) return;
       setState(() {
         _info = info;
@@ -78,7 +78,7 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
       coordsAvailable: info.coordsAvailable,
     );
     try {
-      await saveGuestFacingInfo(widget.weddingId, next);
+      await saveGuestFacingInfo(widget.eventId, next);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -132,7 +132,7 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
       isScrollControlled: true,
       builder: (_) => _EditSheet(
         item: item,
-        weddingId: widget.weddingId,
+        eventId: widget.eventId,
         autoPickPartner: autoPickPartner,
         allowDelete: allowDelete,
       ),
@@ -147,7 +147,7 @@ class _EventProgramSectionState extends ConsumerState<EventProgramSection> {
 
     // Parceiros já com reserva ativa (aceites). Uma etapa com um parceiro que
     // ainda não está aqui fica "à espera que aceite".
-    final confirmed = ref.watch(confirmedPartnerIdsProvider(widget.weddingId)).value ?? const <String>{};
+    final confirmed = ref.watch(confirmedPartnerIdsProvider(widget.eventId)).value ?? const <String>{};
 
     // Mockup «Painel do organizador · secções com moldura» (2026-11-22):
     // o programa todo numa moldura cinzenta e «+ Adicionar momento» em
@@ -388,11 +388,11 @@ class _ChooserCard extends StatelessWidget {
 /// tem reserva ativa), a etapa fica "à espera que aceite" (2026-11-18).
 class _EditSheet extends ConsumerStatefulWidget {
   final ProgramItem item;
-  final String weddingId;
+  final String eventId;
   final bool autoPickPartner;
   final bool allowDelete;
   const _EditSheet(
-      {required this.item, required this.weddingId, required this.autoPickPartner, required this.allowDelete});
+      {required this.item, required this.eventId, required this.autoPickPartner, required this.allowDelete});
   @override
   ConsumerState<_EditSheet> createState() => _EditSheetState();
 }
@@ -454,7 +454,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
   }
 
   Future<void> _pickPartner() async {
-    final picks = await ref.read(eventPartnerPicksProvider(widget.weddingId).future);
+    final picks = await ref.read(eventPartnerPicksProvider(widget.eventId).future);
     if (!mounted) return;
     if (picks.isEmpty) {
       final go = await showIslandSheet<bool>(
@@ -489,7 +489,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
   @override
   Widget build(BuildContext context) {
     final hasPartner = _partner.trim().isNotEmpty;
-    final confirmed = ref.watch(confirmedPartnerIdsProvider(widget.weddingId)).value ?? const <String>{};
+    final confirmed = ref.watch(confirmedPartnerIdsProvider(widget.eventId)).value ?? const <String>{};
     final pending = _partnerId.trim().isNotEmpty && !confirmed.contains(_partnerId.trim());
     return _Sheet(
       child: Column(

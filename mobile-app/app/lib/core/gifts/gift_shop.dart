@@ -80,9 +80,9 @@ class GiftItem {
 }
 
 /// A lista do evento. `null` = migração 160 ainda por correr.
-final giftListProvider = FutureProvider.family<List<GiftItem>?, String>((ref, weddingId) async {
+final giftListProvider = FutureProvider.family<List<GiftItem>?, String>((ref, eventId) async {
   try {
-    final rows = await supabase.rpc('gift_list', params: {'p_wedding': weddingId}) as List;
+    final rows = await supabase.rpc('gift_list', params: {'p_wedding': eventId}) as List;
     return rows.cast<Map<String, dynamic>>().map(GiftItem.fromRow).toList();
   } on PostgrestException {
     return null;
@@ -102,9 +102,9 @@ class GiftGiver {
   const GiftGiver({this.itemId, required this.title, required this.kind, required this.name, required this.quantity, this.message, this.amount, this.shippedAt, this.at});
 }
 
-final giftGiversProvider = FutureProvider.family<List<GiftGiver>, String>((ref, weddingId) async {
+final giftGiversProvider = FutureProvider.family<List<GiftGiver>, String>((ref, eventId) async {
   try {
-    final rows = await supabase.rpc('gift_givers', params: {'p_wedding': weddingId}) as List;
+    final rows = await supabase.rpc('gift_givers', params: {'p_wedding': eventId}) as List;
     return [
       for (final r in rows.cast<Map<String, dynamic>>())
         GiftGiver(
@@ -127,7 +127,7 @@ final giftGiversProvider = FutureProvider.family<List<GiftGiver>, String>((ref, 
 // ---------- Organizador: gerir a lista ----------
 
 Future<void> addWish({
-  required String weddingId,
+  required String eventId,
   required String title,
   String? note,
   String? linkUrl,
@@ -135,7 +135,7 @@ Future<void> addWish({
   int quantity = 1,
 }) async {
   await supabase.from('gift_list_items').insert({
-    'wedding_id': weddingId,
+    'wedding_id': eventId,
     'kind': 'wish',
     'title': title.trim(),
     'note': note?.trim().isEmpty == true ? null : note?.trim(),
@@ -156,9 +156,9 @@ Future<void> updateWish(String id, {required String title, String? note, String?
   }).eq('id', id);
 }
 
-Future<void> addProductToList({required String weddingId, required String productId, int quantity = 1}) async {
+Future<void> addProductToList({required String eventId, required String productId, int quantity = 1}) async {
   await supabase.from('gift_list_items').insert({
-    'wedding_id': weddingId,
+    'wedding_id': eventId,
     'kind': 'product',
     'product_id': productId,
     'quantity_wanted': quantity,
@@ -177,17 +177,17 @@ String? _cleanUrl(String? url) {
 }
 
 /// Morada para os parceiros enviarem os presentes da loja.
-final giftDeliveryAddressProvider = FutureProvider.family<String?, String>((ref, weddingId) async {
+final giftDeliveryAddressProvider = FutureProvider.family<String?, String>((ref, eventId) async {
   try {
-    final row = await supabase.from('events').select('gift_delivery_address').eq('id', weddingId).maybeSingle();
+    final row = await supabase.from('events').select('gift_delivery_address').eq('id', eventId).maybeSingle();
     return row?['gift_delivery_address'] as String?;
   } on PostgrestException {
     return null;
   }
 });
 
-Future<void> saveGiftDeliveryAddress(String weddingId, String address) async {
-  await supabase.from('events').update({'gift_delivery_address': address.trim().isEmpty ? null : address.trim()}).eq('id', weddingId);
+Future<void> saveGiftDeliveryAddress(String eventId, String address) async {
+  await supabase.from('events').update({'gift_delivery_address': address.trim().isEmpty ? null : address.trim()}).eq('id', eventId);
 }
 
 // ---------- Loja ----------
@@ -395,9 +395,9 @@ class GiftError implements Exception {
       };
 }
 
-Future<String> createGiftCheckoutUrl({required String itemId, required int quantity, String? message, required String weddingId}) async {
+Future<String> createGiftCheckoutUrl({required String itemId, required int quantity, String? message, required String eventId}) async {
   final success = kIsWeb ? publicLink('/presente/{ORDER_ID}') : 'anossa://presente/{ORDER_ID}';
-  final cancel = kIsWeb ? publicLink('/guest-gifts/$weddingId') : 'anossa://payment-cancel';
+  final cancel = kIsWeb ? publicLink('/guest-gifts/$eventId') : 'anossa://payment-cancel';
   try {
     final res = await supabase.functions.invoke('create-gift-checkout', body: {
       'action': 'checkout',
@@ -448,8 +448,8 @@ Future<(String, MultibancoRef?)> giftPayState(String orderId) async {
   }
 }
 
-Future<({String status, String? weddingId})> syncGiftOrder(String orderId) async {
+Future<({String status, String? eventId})> syncGiftOrder(String orderId) async {
   final res = await supabase.functions.invoke('create-gift-checkout', body: {'action': 'sync', 'order_id': orderId});
   final m = (res.data as Map).cast<String, dynamic>();
-  return (status: m['status'] as String? ?? 'open', weddingId: m['wedding_id'] as String?);
+  return (status: m['status'] as String? ?? 'open', eventId: m['wedding_id'] as String?);
 }

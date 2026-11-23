@@ -67,9 +67,9 @@ int taskPriorityWeight(TaskPriority priority) => switch (priority) {
 /// [TaskTemplate] (`taskTemplateId != null`) ou criada manualmente
 /// pelo casal (`taskTemplateId == null`, `source == user`). Ver
 /// `database/migrations/039_task_engine.sql`.
-class WeddingTask {
+class EventTask {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String? taskTemplateId;
   final TaskSource source;
   final String title;
@@ -88,9 +88,9 @@ class WeddingTask {
   final TaskCompletionBehavior? completionBehavior;
   final TaskDisplayType? displayType;
 
-  const WeddingTask({
+  const EventTask({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     this.taskTemplateId,
     required this.source,
     required this.title,
@@ -110,9 +110,9 @@ class WeddingTask {
     this.displayType,
   });
 
-  factory WeddingTask.fromRow(Map<String, dynamic> row) => WeddingTask(
+  factory EventTask.fromRow(Map<String, dynamic> row) => EventTask(
     id: row['id'] as String,
-    weddingId: row['wedding_id'] as String? ?? '',
+    eventId: row['wedding_id'] as String? ?? '',
     taskTemplateId: row['task_template_id'] as String?,
     source: TaskSource.values.byName(row['source'] as String),
     title: row['title'] as String,
@@ -195,26 +195,26 @@ class TaskTemplate {
   );
 }
 
-/// `notifications` — só o aviso; a tarefa em si vive em [WeddingTask]
+/// `notifications` — só o aviso; a tarefa em si vive em [EventTask]
 /// (nunca duplicada, ver 039_task_engine.sql).
 class AppNotification {
   final String id;
-  final String weddingId;
+  final String eventId;
   final String type;
   final String title;
   final String? body;
-  final String? weddingTaskId;
+  final String? eventTaskId;
   final String? link;
   final bool read;
   final DateTime createdAt;
 
   const AppNotification({
     required this.id,
-    required this.weddingId,
+    required this.eventId,
     required this.type,
     required this.title,
     this.body,
-    this.weddingTaskId,
+    this.eventTaskId,
     this.link,
     required this.read,
     required this.createdAt,
@@ -222,11 +222,11 @@ class AppNotification {
 
   factory AppNotification.fromRow(Map<String, dynamic> row) => AppNotification(
     id: row['id'] as String,
-    weddingId: row['wedding_id'] as String? ?? '',
+    eventId: row['wedding_id'] as String? ?? '',
     type: row['type'] as String,
     title: row['title'] as String,
     body: joinNotificationSubtitle(row['subtitle'] as String?, row['body'] as String?),
-    weddingTaskId: row['wedding_task_id'] as String?,
+    eventTaskId: row['wedding_task_id'] as String?,
     link: row['link'] as String?,
     read: row['read'] as bool? ?? false,
     createdAt: DateTime.parse(row['created_at'] as String),

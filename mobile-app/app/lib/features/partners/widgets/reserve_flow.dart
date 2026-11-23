@@ -32,7 +32,7 @@ ReserveKind reserveKindFor(String? slug) => switch (slug) {
 
 /// «Quem paga?» só nestas categorias e em eventos de grupo (nos de família
 /// paga quem organiza — pedido de 2026-11-15).
-bool reserveAsksWhoPays(ReserveKind kind, Wedding event) =>
+bool reserveAsksWhoPays(ReserveKind kind, Event event) =>
     const {ReserveKind.mesa, ReserveKind.atividade, ReserveKind.transporte}.contains(kind) &&
     !const {
       EventType.wedding, EventType.baptism, EventType.communion,
@@ -40,7 +40,7 @@ bool reserveAsksWhoPays(ReserveKind kind, Wedding event) =>
     }.contains(event.eventType);
 
 class ReserveFlowResult {
-  final Wedding event;
+  final Event event;
   final int adults;
   final int children;
   final bool eachPays;
@@ -86,7 +86,7 @@ class ReserveFlowResult {
 
 /// Pessoas de um evento: adultos e crianças da lista de convidados (sem os
 /// que disseram que não vão) e o número do evento.
-Future<(int, int, int)> eventPeople(Wedding event) async {
+Future<(int, int, int)> eventPeople(Event event) async {
   var adults = 0, children = 0;
   try {
     final rows = await supabase
@@ -120,10 +120,10 @@ String _day(DateTime d) {
 /// «Sáb, 12 jun» — para os textos dos popups de reserva.
 String reserveShortDay(DateTime d) => _day(d);
 
-String _place(Wedding w) => (w.venue?.trim().isNotEmpty == true) ? w.venue!.trim() : (w.location ?? '').trim();
+String _place(Event w) => (w.venue?.trim().isNotEmpty == true) ? w.venue!.trim() : (w.location ?? '').trim();
 
-String _eventLine(Wedding w) => [
-      if (w.weddingDate != null) '${_day(w.weddingDate!)} ${w.weddingDate!.year}',
+String _eventLine(Event w) => [
+      if (w.eventDate != null) '${_day(w.eventDate!)} ${w.eventDate!.year}',
       if (_place(w).isNotEmpty) _place(w),
     ].join(' · ');
 
@@ -137,7 +137,7 @@ class ReserveFlowSheet extends StatefulWidget {
 
   /// `null` = reservar mesa (cada convidado escolhe o seu menu depois).
   final ServicePackage? package;
-  final List<Wedding> events;
+  final List<Event> events;
 
   /// Extras do parceiro que se aplicam ao pacote (ou à mesa).
   final List<ServiceExtra> extras;
@@ -171,7 +171,7 @@ class ReserveFlowSheet extends StatefulWidget {
 }
 
 class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
-  late Wedding _event = widget.events.first;
+  late Event _event = widget.events.first;
   int _step = 0;
 
   // Pessoas (vêm do evento).
@@ -711,7 +711,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     final p = widget.package;
     final rows = <(String, String)>[
       if (p != null) ('Pacote', p.name),
-      if (_event.weddingDate != null) ('Quando', _day(_event.weddingDate!)),
+      if (_event.eventDate != null) ('Quando', _day(_event.eventDate!)),
       ('Pessoas', '$_adults ${_adults == 1 ? 'adulto' : 'adultos'}${_children > 0 ? ' + $_children ${_children == 1 ? 'criança' : 'crianças'}' : ''}'),
       ..._details,
       if (_asksWhoPays) ('Quem paga', _eachPays ? 'Cada convite paga o seu' : 'Pagamos nós'),
@@ -835,7 +835,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
       if (p != null) (p.name, base == null ? 'desde ${euros(p.price)}${priceUnitSuffix(p.priceUnit)}' : euros(base)) else ('Mesa', 'Grátis'),
       for (final e in chosen) (e.name, euros(_amount(e.priceUnit, e.price))),
     ];
-    final due = _event.weddingDate?.subtract(const Duration(days: 3));
+    final due = _event.eventDate?.subtract(const Duration(days: 3));
     if (_paysDeposit) {
       return [
         _group([

@@ -11,27 +11,27 @@ import '../auth/auth_controller.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 
-class WeddingState {
+class EventState {
   final bool loading;
 
   /// Evento ativo — o que os separadores do organizador mostram.
-  final Wedding? wedding;
+  final Event? event;
 
   /// Todos os eventos que a conta organiza (dono ou co-organizador),
   /// do mais recente para o mais antigo (vários por conta, 2026-11).
-  final List<Wedding> events;
+  final List<Event> events;
 
-  const WeddingState({this.loading = false, this.wedding, this.events = const []});
+  const EventState({this.loading = false, this.event, this.events = const []});
 
-  WeddingState copyWith({bool? loading, Wedding? wedding, List<Wedding>? events}) {
-    return WeddingState(
+  EventState copyWith({bool? loading, Event? event, List<Event>? events}) {
+    return EventState(
       loading: loading ?? this.loading,
-      wedding: wedding ?? this.wedding,
-      events: events ?? (wedding == null ? this.events : _replace(this.events, wedding)),
+      event: event ?? this.event,
+      events: events ?? (event == null ? this.events : _replace(this.events, event)),
     );
   }
 
-  static List<Wedding> _replace(List<Wedding> list, Wedding w) =>
+  static List<Event> _replace(List<Event> list, Event w) =>
       [for (final e in list) e.id == w.id ? w : e];
 }
 
@@ -39,17 +39,17 @@ const _activeEventKey = 'active_event_id';
 
 /// Liga-se à tabela `events` real (`database/migrations/002_onboarding.sql`,
 /// `003_wedding.sql`, `012_wedding_quote.sql`) — substitui
-/// `MockBackend.getWeddingForOwner/createWedding/updateWedding`. Ver
+/// `MockBackend.getEventForOwner/createEvent/updateEvent`. Ver
 /// `ROADMAP.md`, 2026-08-30, Fase 2.
-class WeddingController extends Notifier<WeddingState> {
+class EventController extends Notifier<EventState> {
   @override
-  WeddingState build() {
+  EventState build() {
     final ownerId = ref.watch(authControllerProvider.select((s) => s.profile?.id));
     // Id vazio = registo ainda por criar (onboarding sem conta).
     if (ownerId != null && ownerId.isNotEmpty) {
       Future.microtask(() => load(ownerId));
     }
-    return const WeddingState();
+    return const EventState();
   }
 
   Future<String?> _savedActiveId() async {
@@ -76,7 +76,7 @@ class WeddingController extends Notifier<WeddingState> {
         .eq('user_id', ownerId)
         .eq('status', 'active')
         .then((r) => r);
-    final savedF = activeId != null || state.wedding != null ? Future<String?>.value(null) : _savedActiveId();
+    final savedF = activeId != null || state.event != null ? Future<String?>.value(null) : _savedActiveId();
     final owned = (await ownedF).cast<Map<String, dynamic>>();
     // O par que entrou pelo link de convite (079) não é dono — é
     // colaborador ativo do casamento do outro.
@@ -92,24 +92,24 @@ class WeddingController extends Notifier<WeddingState> {
     // Arquivados e apagados (185) só aparecem nas Definições.
     bool visible(Map<String, dynamic> r) => r['archived_at'] == null && r['deleted_at'] == null;
     final events = [for (final r in [...owned, ...collab]) if (visible(r)) _fromRow(r)];
-    final wanted = activeId ?? state.wedding?.id ?? await savedF;
+    final wanted = activeId ?? state.event?.id ?? await savedF;
     final active = events.where((e) => e.id == wanted).firstOrNull ?? events.firstOrNull;
-    state = WeddingState(loading: false, wedding: active, events: events);
+    state = EventState(loading: false, event: active, events: events);
   }
 
   /// Muda o evento ativo (separador Eventos → "Os meus eventos").
-  Future<void> select(String weddingId) async {
-    final w = state.events.where((e) => e.id == weddingId).firstOrNull;
+  Future<void> select(String eventId) async {
+    final w = state.events.where((e) => e.id == eventId).firstOrNull;
     if (w == null) return;
-    await _saveActiveId(weddingId);
-    state = WeddingState(loading: false, wedding: w, events: state.events);
+    await _saveActiveId(eventId);
+    state = EventState(loading: false, event: w, events: state.events);
   }
 
   /// Dados do onboarding v2 (081): tipos de evento escolhidos (até 2),
   /// "Qual?" quando é "Outro" e telemóveis de quem organiza. Ignora em
   /// silêncio se a migração ainda não correu.
   Future<void> saveOnboardingExtras({
-    required String weddingId,
+    required String eventId,
     required List<EventType> eventTypes,
     String? otherLabel,
     String? phone1,
@@ -121,7 +121,7 @@ class WeddingController extends Notifier<WeddingState> {
         'event_type_other': otherLabel,
         'partner1_phone': phone1,
         'partner2_phone': phone2,
-      }).eq('id', weddingId);
+      }).eq('id', eventId);
     } catch (_) {}
     if (phone1 != null && phone1.isNotEmpty) {
       try {
@@ -130,12 +130,12 @@ class WeddingController extends Notifier<WeddingState> {
     }
   }
 
-  Future<Wedding> create({
+  Future<Event> create({
     required String partnerName1,
     String? partnerName2,
     int? partner1Age,
     int? partner2Age,
-    DateTime? weddingDate,
+    DateTime? eventDate,
     String? location,
     int? estimatedGuests,
     double? estimatedBudget,
@@ -161,7 +161,7 @@ class WeddingController extends Notifier<WeddingState> {
       'partner_name_2': partnerName2,
       'partner_1_age': partner1Age,
       'partner_2_age': partner2Age,
-      'wedding_date': weddingDate?.toIso8601String().split('T').first,
+      'wedding_date': eventDate?.toIso8601String().split('T').first,
       'location': location,
       'estimated_guests': estimatedGuests,
       'estimated_budget': estimatedBudget,
@@ -195,41 +195,41 @@ class WeddingController extends Notifier<WeddingState> {
         .order('created_at', ascending: false)
         .limit(1)
         .single();
-    final wedding = _fromRow(row);
-    await _saveActiveId(wedding.id);
-    state = WeddingState(
+    final event = _fromRow(row);
+    await _saveActiveId(event.id);
+    state = EventState(
       loading: false,
-      wedding: wedding,
-      events: [wedding, ...state.events.where((e) => e.id != wedding.id)],
+      event: event,
+      events: [event, ...state.events.where((e) => e.id != event.id)],
     );
-    return wedding;
+    return event;
   }
 
-  Future<void> update(Wedding wedding) async {
+  Future<void> update(Event event) async {
     state = state.copyWith(loading: true);
     final row = await supabase
         .from('events')
         .update({
-          'partner_name_1': wedding.partnerName1,
-          'partner_name_2': wedding.partnerName2,
-          'partner_1_age': wedding.partner1Age,
-          'partner_2_age': wedding.partner2Age,
-          'wedding_date': wedding.weddingDate?.toIso8601String().split('T').first,
-          'location': wedding.location,
-          'venue': wedding.venue,
-          'ceremony_type': wedding.ceremonyType.name,
-          'estimated_guests': wedding.estimatedGuests,
-          'estimated_budget': wedding.estimatedBudget,
-          'status': wedding.status.name,
-          'quote': wedding.quote,
-          'cover_photo_url': wedding.coverPhotoUrl,
-          'profile_photo_url': wedding.profilePhotoUrl,
+          'partner_name_1': event.partnerName1,
+          'partner_name_2': event.partnerName2,
+          'partner_1_age': event.partner1Age,
+          'partner_2_age': event.partner2Age,
+          'wedding_date': event.eventDate?.toIso8601String().split('T').first,
+          'location': event.location,
+          'venue': event.venue,
+          'ceremony_type': event.ceremonyType.name,
+          'estimated_guests': event.estimatedGuests,
+          'estimated_budget': event.estimatedBudget,
+          'status': event.status.name,
+          'quote': event.quote,
+          'cover_photo_url': event.coverPhotoUrl,
+          'profile_photo_url': event.profilePhotoUrl,
           'updated_at': DateTime.now().toIso8601String(),
         })
-        .eq('id', wedding.id)
+        .eq('id', event.id)
         .select()
         .single();
-    state = state.copyWith(loading: false, wedding: _fromRow(row));
+    state = state.copyWith(loading: false, event: _fromRow(row));
   }
 
   /// Upload da foto de capa escolhida pelo casal para o cartão
@@ -250,10 +250,10 @@ class WeddingController extends Notifier<WeddingState> {
   /// explícito do utilizador: "faz com que eu consiga ajustar a
   /// fotografia do casal".
   Future<void> uploadBannerBytes(Uint8List bytes, {String ext = 'png'}) async {
-    final wedding = state.wedding;
-    if (wedding == null) return;
+    final event = state.event;
+    if (event == null) return;
     state = state.copyWith(loading: true);
-    final path = '${wedding.id}/banner.$ext';
+    final path = '${event.id}/banner.$ext';
 
     await supabase.storage.from('wedding-banners').uploadBinary(
       path,
@@ -268,10 +268,10 @@ class WeddingController extends Notifier<WeddingState> {
           'cover_photo_url': bannerUrl,
           'updated_at': DateTime.now().toIso8601String(),
         })
-        .eq('id', wedding.id)
+        .eq('id', event.id)
         .select()
         .single();
-    state = state.copyWith(loading: false, wedding: _fromRow(row));
+    state = state.copyWith(loading: false, event: _fromRow(row));
   }
 
   /// Upload da foto de perfil do ecrã "Os noivos" — mesmo bucket
@@ -280,12 +280,12 @@ class WeddingController extends Notifier<WeddingState> {
   /// de [uploadBanner] de propósito: pedido explícito do utilizador
   /// "o pfp em noivos pode e deve ser diferente ao da imagem em home".
   Future<void> uploadProfilePhoto(XFile file) async {
-    final wedding = state.wedding;
-    if (wedding == null) return;
+    final event = state.event;
+    if (event == null) return;
     state = state.copyWith(loading: true);
     final bytes = await file.readAsBytes();
     final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
-    final path = '${wedding.id}/profile.$ext';
+    final path = '${event.id}/profile.$ext';
 
     await supabase.storage.from('wedding-banners').uploadBinary(
       path,
@@ -300,44 +300,44 @@ class WeddingController extends Notifier<WeddingState> {
           'profile_photo_url': photoUrl,
           'updated_at': DateTime.now().toIso8601String(),
         })
-        .eq('id', wedding.id)
+        .eq('id', event.id)
         .select()
         .single();
-    state = state.copyWith(loading: false, wedding: _fromRow(row));
+    state = state.copyWith(loading: false, event: _fromRow(row));
   }
 
   /// Link para o par se juntar a este casamento (`create_partner_invite`,
   /// 079) — partilhado pelo menu de partilha do telemóvel.
-  Future<String> createPartnerInviteToken(String weddingId) async {
-    final token = await supabase.rpc('create_partner_invite', params: {'p_wedding_id': weddingId});
+  Future<String> createPartnerInviteToken(String eventId) async {
+    final token = await supabase.rpc('create_partner_invite', params: {'p_wedding_id': eventId});
     return token as String;
   }
 
   /// RN: nunca bloqueia o avanço do Onboarding — falhas aqui (ex: email já
   /// convidado) não devem impedir `create()` de já ter criado o casamento.
-  Future<void> inviteCollaborator({required String weddingId, required String email}) async {
+  Future<void> inviteCollaborator({required String eventId, required String email}) async {
     await supabase.from('wedding_collaborators').insert({
-      'wedding_id': weddingId,
+      'wedding_id': eventId,
       'invited_email': email,
     });
   }
 
-  Wedding _fromRow(Map<String, dynamic> row) {
-    return Wedding(
+  Event _fromRow(Map<String, dynamic> row) {
+    return Event(
       id: row['id'] as String,
       ownerId: row['owner_id'] as String,
       partnerName1: row['partner_name_1'] as String,
       partnerName2: row['partner_name_2'] as String?,
       partner1Age: row['partner_1_age'] as int?,
       partner2Age: row['partner_2_age'] as int?,
-      weddingDate: row['wedding_date'] == null ? null : DateTime.parse(row['wedding_date'] as String),
+      eventDate: row['wedding_date'] == null ? null : DateTime.parse(row['wedding_date'] as String),
       location: row['location'] as String?,
       venue: row['venue'] as String?,
       ceremonyType: CeremonyType.values.byName((row['ceremony_type'] as String?) ?? 'civil'),
       eventType: EventType.fromDb(row['event_type'] as String?),
       estimatedGuests: row['estimated_guests'] as int?,
       estimatedBudget: (row['estimated_budget'] as num?)?.toDouble(),
-      status: WeddingStatus.values.byName((row['status'] as String?) ?? 'planning'),
+      status: EventStatus.values.byName((row['status'] as String?) ?? 'planning'),
       quote: row['quote'] as String?,
       coverPhotoUrl: row['cover_photo_url'] as String?,
       profilePhotoUrl: row['profile_photo_url'] as String?,
@@ -350,7 +350,7 @@ class WeddingController extends Notifier<WeddingState> {
 
   /// Tipo de evento (Definições → Detalhes do evento, 2026-11-12).
   Future<void> setEventType(EventType type, {String? otherLabel}) async {
-    final w = state.wedding;
+    final w = state.event;
     if (w == null) return;
     final other = type == EventType.other ? ((otherLabel ?? '').trim().isEmpty ? null : otherLabel!.trim()) : null;
     await supabase.from('events').update({
@@ -363,13 +363,13 @@ class WeddingController extends Notifier<WeddingState> {
 
   /// Nome do tipo quando é "Outro" (Definições → Detalhes do evento).
   Future<void> setEventTypeOther(String? label) async {
-    final w = state.wedding;
+    final w = state.event;
     if (w == null) return;
     final v = (label == null || label.trim().isEmpty) ? null : label.trim();
     await supabase.from('events').update({'event_type_other': v}).eq('id', w.id);
-    final updated = Wedding(
+    final updated = Event(
       id: w.id, ownerId: w.ownerId, partnerName1: w.partnerName1, partnerName2: w.partnerName2,
-      partner1Age: w.partner1Age, partner2Age: w.partner2Age, weddingDate: w.weddingDate,
+      partner1Age: w.partner1Age, partner2Age: w.partner2Age, eventDate: w.eventDate,
       location: w.location, venue: w.venue, ceremonyType: w.ceremonyType, eventType: w.eventType,
       estimatedGuests: w.estimatedGuests, estimatedBudget: w.estimatedBudget, status: w.status,
       quote: w.quote, coverPhotoUrl: w.coverPhotoUrl, profilePhotoUrl: w.profilePhotoUrl,
@@ -381,7 +381,7 @@ class WeddingController extends Notifier<WeddingState> {
   /// Mostrar/esconder um bloco do painel (migração 177). Se a migração
   /// ainda não correu, a escolha fica só nesta sessão.
   Future<void> setPanelShown(String key, bool shown) async {
-    final w = state.wedding;
+    final w = state.event;
     if (w == null) return;
     final hidden = {...w.panelHidden};
     shown ? hidden.remove(key) : hidden.add(key);
@@ -391,13 +391,13 @@ class WeddingController extends Notifier<WeddingState> {
     } catch (_) {}
   }
 
-  void _replace(Wedding w) {
-    state = WeddingState(
+  void _replace(Event w) {
+    state = EventState(
       loading: false,
-      wedding: w,
+      event: w,
       events: [for (final e in state.events) e.id == w.id ? w : e],
     );
   }
 }
 
-final weddingControllerProvider = NotifierProvider<WeddingController, WeddingState>(WeddingController.new);
+final eventControllerProvider = NotifierProvider<EventController, EventState>(EventController.new);

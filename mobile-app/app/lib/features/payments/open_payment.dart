@@ -66,7 +66,7 @@ Future<Object?> openPaymentFlow(BuildContext context, WidgetRef ref, String paym
       onPaid: onPaid,
       step: step,
       onChat: _chatOpener(
-        weddingId: (row['bookings'] as Map?)?['wedding_id'] as String?,
+        eventId: (row['bookings'] as Map?)?['wedding_id'] as String?,
         partnerId: row['partner_id'] as String?,
         partnerName: partner,
       ),
@@ -82,13 +82,13 @@ bool isPaymentTask(String? category, String? sourceEntityId) =>
     category == 'pagamentos' && sourceEntityId != null;
 
 /// Abre a conversa com o parceiro a partir da folha de pagamento.
-void Function(BuildContext)? _chatOpener({String? weddingId, String? partnerId, required String partnerName}) {
-  if (weddingId == null || partnerId == null) return null;
+void Function(BuildContext)? _chatOpener({String? eventId, String? partnerId, required String partnerName}) {
+  if (eventId == null || partnerId == null) return null;
   return (context) async {
     final router = GoRouter.of(context);
     try {
-      final id = await getOrCreateConversation(weddingId: weddingId, partnerId: partnerId);
-      final c = ChatConversation(id: id, weddingId: weddingId, partnerId: partnerId, name: partnerName, avatarSeed: partnerId);
+      final id = await getOrCreateConversation(eventId: eventId, partnerId: partnerId);
+      final c = ChatConversation(id: id, eventId: eventId, partnerId: partnerId, name: partnerName, avatarSeed: partnerId);
       if (router.canPop()) router.pop();
       router.push('/chat/$id', extra: c);
     } catch (_) {

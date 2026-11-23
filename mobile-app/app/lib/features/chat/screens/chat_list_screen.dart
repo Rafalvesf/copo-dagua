@@ -20,7 +20,7 @@ import '../../../core/guest_home/guest_home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -56,8 +56,8 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
   Future<void> _startNewConversation() async {
     if (_startingConversation) return;
-    final wedding = ref.read(weddingControllerProvider).wedding;
-    if (wedding == null) return;
+    final event = ref.read(eventControllerProvider).event;
+    if (event == null) return;
     setState(() => _startingConversation = true);
     try {
       final partner = await context.push<Partner>(
@@ -66,7 +66,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       );
       if (partner == null || !mounted) return;
       final conversationId = await getOrCreateConversation(
-        weddingId: wedding.id,
+        eventId: event.id,
         partnerId: partner.id,
       );
       if (!mounted) return;
@@ -74,7 +74,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         '/chat/$conversationId',
         extra: ChatConversation(
           id: conversationId,
-          weddingId: wedding.id,
+          eventId: event.id,
           partnerId: partner.id,
           name: partner.name,
           avatarSeed: partner.id,
@@ -82,7 +82,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         ),
       );
       if (mounted) {
-        ref.read(chatListControllerProvider.notifier).load(wedding.id);
+        ref.read(chatListControllerProvider.notifier).load(event.id);
       }
     } on PartnerUnavailableException {
       if (mounted) {
@@ -104,7 +104,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   /// "+": falar com um parceiro ou criar um grupo num dos eventos.
   Future<void> _newMenu(List<(String, String)> events) async {
     if (events.isEmpty) return _startNewConversation();
-    final mine = ref.read(weddingControllerProvider).events.map((w) => w.id).toSet();
+    final mine = ref.read(eventControllerProvider).events.map((w) => w.id).toSet();
     final choice = await showIslandSheet<String>(
       context: context,
       builder: (sheet) => Padding(
@@ -227,16 +227,16 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     final online = ref.watch(onlineNowProvider);
 
     // Nome de cada evento (as conversas e os grupos de todos os eventos).
-    final mine = ref.watch(weddingControllerProvider).events;
-    final invited = ref.watch(guestWeddingsProvider).value ?? const [];
+    final mine = ref.watch(eventControllerProvider).events;
+    final invited = ref.watch(guestEventsProvider).value ?? const [];
     final eventNames = <String, String>{
-      for (final g in invited) g.weddingId: g.displayNames,
+      for (final g in invited) g.eventId: g.displayNames,
       for (final w in mine) w.id: w.displayNames,
     };
     final groupEvents = <(String, String)>[
       for (final w in mine) (w.id, w.displayNames),
       for (final g in invited)
-        if (!mine.any((w) => w.id == g.weddingId)) (g.weddingId, g.displayNames),
+        if (!mine.any((w) => w.id == g.eventId)) (g.eventId, g.displayNames),
     ];
 
     final allConvs = [for (final c in state.conversations) if (!_removed.contains(c.id)) c];
@@ -290,7 +290,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       if (it is ChatGroup) {
         final people = ref.watch(groupPeopleProvider(it.id)).value?.values.where((p) => p.id != me).toList() ??
             const <EventPerson>[];
-        final ev = eventNames[it.weddingId];
+        final ev = eventNames[it.eventId];
         return _deletable(
           it.id,
           it,
@@ -318,7 +318,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       }
       final c = it as ChatConversation;
       final m = meta[c.id];
-      final ev = c.weddingId == null ? null : eventNames[c.weddingId];
+      final ev = c.eventId == null ? null : eventNames[c.eventId];
       return _deletable(
         c.id,
         c,
@@ -486,7 +486,7 @@ final _convMetaProvider = FutureProvider.autoDispose<Map<String, _ConvMeta>>((re
   final convs = ref.watch(chatListControllerProvider).conversations;
   if (convs.isEmpty) return const {};
   final ids = [for (final c in convs) c.id];
-  final events = {for (final c in convs) if (c.weddingId != null) c.weddingId!}.toList();
+  final events = {for (final c in convs) if (c.eventId != null) c.eventId!}.toList();
   final out = <String, _ConvMeta>{};
   final status = <String, _Status>{};
   String key(String? w, String? p) => '$w|$p';
@@ -539,7 +539,7 @@ final _convMetaProvider = FutureProvider.autoDispose<Map<String, _ConvMeta>>((re
     final mineAt = lastMine[c.id];
     final read = seenAt[c.id];
     out[c.id] = _ConvMeta(
-      status: status[key(c.weddingId, c.partnerId)] ?? _Status.none,
+      status: status[key(c.eventId, c.partnerId)] ?? _Status.none,
       lastMine: mineAt != null,
       seen: mineAt != null && read != null && !read.isBefore(mineAt),
     );

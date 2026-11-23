@@ -15,26 +15,26 @@ import '../../../core/guests/guest_controller.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
 import '../../../core/seating/seating_controller.dart';
-import '../../../core/wedding/guest_facing.dart';
-import '../../../core/wedding/organizers.dart';
+import '../../../core/event/guest_facing.dart';
+import '../../../core/event/organizers.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/section_frame.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../guest_home/widgets/guest_dashboard.dart' show DashButton36;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../../core/partners/partner_providers.dart' show PartnerPickerArgs;
-import '../../guests/screens/guests_list_screen.dart' show shareWeddingInvite;
+import '../../guests/screens/guests_list_screen.dart' show shareEventInvite;
 
 /// O que os convidados veem (programa, dress code, cores, presentes) — para
 /// o painel do organizador saber o que ainda falta.
 final orgGuestFacingProvider = FutureProvider.autoDispose.family<GuestFacingInfo, String>(
-  (ref, weddingId) => loadGuestFacingInfo(weddingId),
+  (ref, eventId) => loadGuestFacingInfo(eventId),
 );
 
 /// Quantas pessoas que sigo ainda não estão no evento (189).
-final orgFollowedCountProvider = FutureProvider.autoDispose.family<int, String>((ref, weddingId) async {
+final orgFollowedCountProvider = FutureProvider.autoDispose.family<int, String>((ref, eventId) async {
   try {
-    final rows = await supabase.rpc('event_followed_people', params: {'p_wedding_id': weddingId});
+    final rows = await supabase.rpc('event_followed_people', params: {'p_wedding_id': eventId});
     return (rows as List).length;
   } catch (_) {
     return 0;
@@ -45,7 +45,7 @@ final orgFollowedCountProvider = FutureProvider.autoDispose.family<int, String>(
 /// Rafael, 2026-11-21). Cada grupo fica tratado com qualquer uma das
 /// categorias (p. ex. espaço **ou** restaurante). Sem lista: só «Ver
 /// parceiros» genérico.
-const _wedding = [
+const _event = [
   [('venue', 'Espaço')],
   [('catering', 'Catering')],
   [('photography', 'Fotografia')],
@@ -56,7 +56,7 @@ const _wedding = [
 const _placeOrRestaurant = [('venue', 'Espaço'), ('restaurants', 'Restaurante')];
 
 List<List<(String, String)>> orgCategoryGroups(EventType t) => switch (t) {
-      EventType.wedding || EventType.vowRenewal => _wedding,
+      EventType.wedding || EventType.vowRenewal => _event,
       EventType.baptism || EventType.communion => const [
           _placeOrRestaurant,
           [('cake', 'Bolo')],
@@ -102,7 +102,7 @@ const _labels = {
 
 /// «Revelar as mesas» (pedido do Rafael, 2026-11-21): pergunta e, se sim,
 /// os convidados passam a ver a mesa deles já (em vez de perto do dia).
-Future<void> _revealTables(BuildContext context, WidgetRef ref, String weddingId, GuestSections sections) async {
+Future<void> _revealTables(BuildContext context, WidgetRef ref, String eventId, GuestSections sections) async {
   final ok = await showIslandDialog<bool>(
     context: context,
     builder: (ctx) => IslandAlert(
@@ -117,8 +117,8 @@ Future<void> _revealTables(BuildContext context, WidgetRef ref, String weddingId
   if (ok != true || !context.mounted) return;
   final messenger = ScaffoldMessenger.of(context);
   try {
-    await saveGuestSections(weddingId, sections.withOption('opt_table_reveal', 'now'));
-    ref.invalidate(guestSectionsProvider(weddingId));
+    await saveGuestSections(eventId, sections.withOption('opt_table_reveal', 'now'));
+    ref.invalidate(guestSectionsProvider(eventId));
     messenger.showSnackBar(const SnackBar(content: Text('As mesas já estão à vista dos convidados.')));
   } catch (_) {
     messenger.showSnackBar(const SnackBar(content: Text('Não deu para revelar as mesas. Tenta outra vez.')));
@@ -131,18 +131,18 @@ String _join(List<String> xs) => xs.length <= 1 ? xs.join() : '${xs.sublist(0, x
 /// nunca repetem o «Para fazer» — só o que ainda não começou. Cada uma só
 /// aparece quando se aplica; sem nenhuma, a secção não aparece.
 class OrgSuggestions extends ConsumerWidget {
-  final Wedding wedding;
+  final Event event;
 
   /// Depois do evento (só «Agradecer aos convidados»).
   final bool past;
 
   /// Escolher a foto de capa (o mesmo que tocar na capa).
   final VoidCallback? onCover;
-  const OrgSuggestions({super.key, required this.wedding, this.past = false, this.onCover});
+  const OrgSuggestions({super.key, required this.event, this.past = false, this.onCover});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final w = wedding;
+    final w = event;
     final rows = <_Sug>[];
     final sales = <_Sug>[];
     if (past) {
@@ -165,7 +165,7 @@ class OrgSuggestions extends ConsumerWidget {
       // Avaliar os parceiros: as reservas feitas que ainda não avaliei.
       final done = [
         for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[])
-          if (b.weddingId == w.id && (b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido)) b,
+          if (b.eventId == w.id && (b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido)) b,
       ];
       final toReview = [
         for (final b in done)
@@ -183,11 +183,11 @@ class OrgSuggestions extends ConsumerWidget {
       final info = ref.watch(orgGuestFacingProvider(w.id)).value;
       final bookings = [
         for (final b in ref.watch(coupleBookingsProvider).value ?? const <CoupleBooking>[])
-          if (b.weddingId == w.id && b.status != BookingStatus.recusado) b,
+          if (b.eventId == w.id && b.status != BookingStatus.recusado) b,
       ];
       final proposals = [
         for (final p in ref.watch(pendingProposalsProvider).value ?? const <ReceivedProposal>[])
-          if (p.weddingId == w.id) p,
+          if (p.eventId == w.id) p,
       ];
       final started = {
         for (final b in bookings) ?b.category,
@@ -230,7 +230,7 @@ class OrgSuggestions extends ConsumerWidget {
         icon: Hi.paperAirplane,
           title: 'Partilhar o convite',
           sub: 'Ainda ninguém respondeu',
-          onTap: () => shareWeddingInvite(context, w),
+          onTap: () => shareEventInvite(context, w),
         ));
       }
       // Convidar quem segues: pessoas que sigo e ainda não estão no evento.
@@ -342,7 +342,7 @@ class OrgSuggestions extends ConsumerWidget {
           tables.isNotEmpty &&
           going.isNotEmpty &&
           going.every(seated.contains) &&
-          !sections.tableVisible(w.weddingDate)) {
+          !sections.tableVisible(w.eventDate)) {
         rows.add(_Sug(
         icon: Hi.eye,
           title: 'Revelar as mesas',
@@ -373,7 +373,7 @@ class OrgSuggestions extends ConsumerWidget {
         ));
       }
       // 9 · Convidar quem organiza contigo: só um organizador.
-      final organizers = ref.watch(weddingOrganizersProvider(w.id)).value;
+      final organizers = ref.watch(eventOrganizersProvider(w.id)).value;
       if (organizers != null && organizers.length <= 1) {
         rows.add(_Sug(
         icon: Hi.userGroup,

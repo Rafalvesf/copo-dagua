@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -193,7 +193,7 @@ class _ContractCard extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              [c.title, if (c.date != null) formatWeddingDateCaps(c.date!)].join(' · '),
+              [c.title, if (c.date != null) formatEventDateCaps(c.date!)].join(' · '),
               style: const TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted),
             ),
             const SizedBox(height: 12),
@@ -238,7 +238,7 @@ class _ContractCard extends StatelessWidget {
                 const SizedBox(height: 14),
                 row('Cliente', c.couple),
                 row('Serviço', c.title),
-                if (c.date != null) row('Data', formatWeddingDateCaps(c.date!)),
+                if (c.date != null) row('Data', formatEventDateCaps(c.date!)),
                 if (c.place?.isNotEmpty == true) row('Local', c.place!),
                 row('Valor', euros(c.total, cents: true)),
                 row('Sinal', euros(c.deposit, cents: true)),

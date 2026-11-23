@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/wedding/date_format_pt.dart';
+import '../../../core/event/date_format_pt.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../partner_bookings/widgets/request_row.dart';

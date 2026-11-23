@@ -54,11 +54,11 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
 
     setState(() => _joining = true);
     try {
-      final result = await joinWeddingByInviteToken(widget.token);
-      ref.invalidate(guestWeddingsProvider);
-      ref.invalidate(myGuestRowProvider(result.weddingId));
+      final result = await joinEventByInviteToken(widget.token);
+      ref.invalidate(guestEventsProvider);
+      ref.invalidate(myGuestRowProvider(result.eventId));
       if (!mounted) return;
-      context.go('/guest-home/${result.weddingId}');
+      context.go('/guest-home/${result.eventId}');
     } catch (e) {
       if (!mounted) return;
       // Evento pago (153): com o link individual compra-se o bilhete e entra-se logo.
