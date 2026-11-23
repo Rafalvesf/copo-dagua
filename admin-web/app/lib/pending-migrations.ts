@@ -546,6 +546,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Crédito do autor da foto nos eventos reais e os parceiros perto do evento (destaque pago primeiro) na página do evento.",
     check: { kind: "marker", id: "223" },
   },
+  {
+    file: "224_external_events_photos.sql",
+    date: "2026-11-23",
+    title: "Eventos reais: fotos",
+    what: "Põe uma foto livre do local (Wikimedia Commons, com o autor e a licença) em cada um dos 14 eventos reais. Corre depois da 222 e da 223.",
+    check: { kind: "marker", id: "224" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
