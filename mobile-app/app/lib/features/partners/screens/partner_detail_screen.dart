@@ -1772,8 +1772,8 @@ class _PartnerHero extends StatelessWidget {
           final mini = unit((y - range + 50) / 50);
           final radius = _bottomRadius * unit((y - range + 60) / 60);
           final collapsed = h <= minH + 0.5;
-          // Reduzida (mockup «Topo reduzido», D, 2026-11-22): a foto dá lugar
-          // a uma barra branca com o logótipo, o nome e o visto.
+          // Reduzida (mockup «Topo reduzido», D, 2026-11-22): a barra com o
+          // logótipo, o nome e o visto — sobre a foto escurecida (2026-11-23).
           final white = mini;
           final corners = BorderRadius.vertical(bottom: Radius.circular(radius));
           final fallback = AppTheme.ink;
@@ -1811,7 +1811,9 @@ class _PartnerHero extends StatelessWidget {
                                   errorBuilder: (context, error, stackTrace) => Container(color: fallback),
                                 ),
                         ),
-                        if (white > 0) Positioned.fill(child: ColoredBox(color: Colors.white.withValues(alpha: white))),
+                        // Reduzida: a foto fica por trás, escurecida, com o
+                        // texto a branco (pedido 2026-11-23).
+                        if (white > 0) Positioned.fill(child: ColoredBox(color: const Color(0xFF171713).withValues(alpha: 0.6 * white))),
                       ]),
                     ),
                   ),
@@ -1845,7 +1847,10 @@ class _PartnerHero extends StatelessWidget {
                         child: Transform.translate(
                           offset: Offset(0, (1 - mini) * 6),
                           child: Row(children: [
-                            V2Avatar(partner.name, size: 32, imageUrl: partner.imageUrl),
+                            Container(
+                              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
+                              child: V2Avatar(partner.name, size: 32, imageUrl: partner.imageUrl),
+                            ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
@@ -1854,15 +1859,20 @@ class _PartnerHero extends StatelessWidget {
                                     child: Text(capFirst(partner.name),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
                                   ),
-                                  const SizedBox(width: 3),
-                                  VerifiedBadge(partner),
+                                  const SizedBox(width: 4),
+                                  // Sobre a foto escura, o visto vai numa pílula branca (§6).
+                                  Container(
+                                    padding: const EdgeInsets.fromLTRB(1, 1, 3, 1),
+                                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                    child: VerifiedBadge(partner),
+                                  ),
                                 ]),
                                 Text(metaLine,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                                    style: const TextStyle(fontSize: 13, color: Color(0xE6FFFFFF))),
                               ]),
                             ),
                           ]),

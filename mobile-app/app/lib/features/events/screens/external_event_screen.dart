@@ -15,6 +15,7 @@ import '../../../shared/widgets/page_kit.dart' show KitCaps;
 import '../../../shared/widgets/sized_network_image.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/venue_map.dart';
+import '../../../shared/widgets/reduced_top_bar.dart';
 import '../../partners/widgets/partner_cards.dart' show InfoTag;
 import '../../profile/profile_widgets.dart' show ProfileButton;
 import '../../partners/widgets/partner_cards.dart' show PartnerCarousel;
@@ -144,8 +145,9 @@ class ExternalEventScreen extends ConsumerWidget {
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: Stack(children: [
+      body: _ScrollHost(builder: (context, scroll) => Stack(children: [
         ListView(
+          controller: scroll,
           padding: EdgeInsets.only(bottom: 120 + bottom),
           children: [
             SizedBox(height: 200 + top, child: ExternalEventPhoto(e, iconSize: 64)),
@@ -238,6 +240,24 @@ class ExternalEventScreen extends ConsumerWidget {
               ),
           ],
         ),
+        // Topo reduzido (pedido 2026-11-23): depois da foto, a barra com a
+        // foto escurecida por trás, o nome e a data; a seta e o partilhar
+        // ficam por cima, no mesmo sítio.
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          child: ReducedTopBar(
+            scroll: scroll,
+            showAfter: 140,
+            leftReserve: AppTheme.screenMargin + 44 + 10,
+            background: ExternalEventPhoto(e, iconSize: 24),
+            thumb: ExternalEventPhoto(e, iconSize: 16),
+            title: e.title,
+            meta: [externalEventWhen(e), e.city].join(' · '),
+            actions: const [SizedBox(width: 44)],
+          ),
+        ),
         // Botões redondos pretos com aro branco (fundo escuro), fixos.
         Positioned(
           left: AppTheme.screenMargin,
@@ -271,9 +291,31 @@ class ExternalEventScreen extends ConsumerWidget {
             ]),
           ),
         ),
-      ]),
+      ])),
     );
   }
+}
+
+/// Dá um [ScrollController] à página (para o topo reduzido).
+class _ScrollHost extends StatefulWidget {
+  final Widget Function(BuildContext context, ScrollController scroll) builder;
+  const _ScrollHost({required this.builder});
+
+  @override
+  State<_ScrollHost> createState() => _ScrollHostState();
+}
+
+class _ScrollHostState extends State<_ScrollHost> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _scroll);
 }
 
 class _Round extends StatelessWidget {

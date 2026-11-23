@@ -478,9 +478,11 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 - **Topo do perfil do parceiro** (pedido do Rafael; foto 200 desde
   2026-11-22): a foto tem **200**, sem texto por cima, e **encolhe com o
   scroll** até à faixa dos botões, que fica **sempre visível**. **Reduzida**
-  (mockup «Topo reduzido», **D**, 2026-11-22): a foto dá lugar a uma **barra
-  branca** (cantos 35 em baixo, sombra da navbar) com o logótipo 32, o nome
-  16 com o visto e a meta 13 `#57534E` («Fotografia · Porto») e **os mesmos
+  (mockup «Topo reduzido», **D**, 2026-11-22; **foto escurecida** desde
+  2026-11-23): a foto fica por trás da barra (cantos 35 em baixo, sombra
+  da navbar) com um véu escuro `#171713` a 60 %, e por cima o logótipo 32
+  com aro branco, o nome 16 **branco** com o visto (numa pílula branca) e a
+  meta 13 branca («Fotografia · Porto») e **os mesmos
   botões do topo** (partilhar e favorito); **sem atalhos para as secções**
   por baixo (pedido 2026-11-23). Voltar, partilhar e favorito ficam sempre no
   mesmo sítio e são os pretos 44 do §2. **Exceção ao «voltar ao topo» do
@@ -701,8 +703,11 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
     (`/guests/convidar`).
 - **Topo reduzido** (pedido 2026-11-22): o mesmo dos parceiros (§6.2) nos
   eventos (organizador e convidado) e nos perfis — `ReducedTopBar`
-  (`shared/widgets/reduced_top_bar.dart`): depois da capa, a barra branca
-  com a foto 32, o nome 16 e a meta 13 («Casamento · Sáb, 12 jun») e **os
+  (`shared/widgets/reduced_top_bar.dart`): depois da capa, a barra com a
+  **capa escurecida por trás** (`background`, véu `#171713` a 60 %; sem
+  capa, `#3A3733`; pedido 2026-11-23 — também na página dos eventos reais)
+  com a foto 32 (aro branco), o nome 16 e a meta 13 a branco, os botões 44
+  com aro branco 2 («Casamento · Sáb, 12 jun») e **os
   mesmos botões do topo aberto** (pedido 2026-11-23) — organizador:
   partilhar e ⋯; convidado: o grupo do evento (com o contador) e «Como
   chegar»; perfil: partilhar e ⋯. Sem atalhos para as secções.

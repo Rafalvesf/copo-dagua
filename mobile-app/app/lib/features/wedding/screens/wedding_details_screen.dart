@@ -243,6 +243,11 @@ class _WeddingDetailsScreenState extends ConsumerState<WeddingDetailsScreen> {
                 ? Image.network(wedding.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
                     errorBuilder: (context, error, stack) => V2Avatar(capFirst(wedding.displayNames), size: 32))
                 : V2Avatar(capFirst(wedding.displayNames), size: 32),
+            // A capa escurecida por trás da barra (pedido 2026-11-23).
+            background: hasCover
+                ? Image.network(wedding.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
+                    errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFF3A3733)))
+                : const ColoredBox(color: Color(0xFF3A3733)),
             title: capFirst(wedding.displayNames),
             meta: [
               wedding.eventType.label,
