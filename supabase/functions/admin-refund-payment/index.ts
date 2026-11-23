@@ -72,6 +72,15 @@ Deno.serve(async (req) => {
   if (!pi) return json({ error: "not_stripe" }, 409);
 
   const intent = await stripe.paymentIntents.retrieve(pi, { expand: ["latest_charge"] });
+  // Ainda cativo (não cobrado): não há nada para reembolsar — liberta-se
+  // tudo no cartão (pedido do Rafael, 2026-11-23: cativo devolve tudo).
+  if (intent.status === "requires_capture") {
+    await stripe.paymentIntents.cancel(pi, { cancellation_reason: "requested_by_customer" }, { idempotencyKey: `admin-release-${paymentId}` });
+    await admin.from("payments")
+      .update({ status: "refunded", refunded_amount: intent.amount / 100, is_held: false, updated_at: new Date().toISOString() })
+      .eq("id", paymentId);
+    return json({ refunded_cents: intent.amount, remaining_cents: 0, status: "refunded", released: true });
+  }
   const charge = typeof intent.latest_charge === "object" ? intent.latest_charge : null;
   const alreadyRefunded = charge?.amount_refunded ?? 0;
   const remaining = intent.amount - alreadyRefunded;

@@ -16,9 +16,9 @@ const fmtEur = (v: number) => {
 // - organizador cancela com 30+ dias de antecedência → o restante já
 //   pago é devolvido;
 // - parceiro cancela → reembolso sempre;
-// - nunca na totalidade (2026-11-09): a taxa de serviço fica sempre. Cativo
-//   → cobra-se só a taxa e o resto é libertado; já cobrado → devolve-se o
-//   resto e a parte do parceiro é recuperada da conta dele.
+// - cativo (ainda não cobrado) → é libertado todo, sem cobrar nada (pedido do
+//   Rafael, 2026-11-23); já cobrado → devolve-se tudo menos a taxa de
+//   serviço (2026-11-09) e a parte do parceiro é recuperada da conta dele.
 //
 // A decisão "há direito a reembolso" NÃO é feita aqui: vem de
 // `booking_events.metadata.refund_required`, gravado pelas RPCs
@@ -132,13 +132,9 @@ Deno.serve(async (req) => {
       // sempre connosco, cancele quem cancelar.
       const keepCents = Math.min(commissionCents, intent.amount);
       if (intent.status === "requires_capture") {
-        // Cativo: cobra-se só a taxa de serviço; o resto é libertado.
-        if (keepCents > 0) {
-          await stripe.paymentIntents.capture(pi, { amount_to_capture: keepCents }, { idempotencyKey: `capture-fee-${p.id}` });
-        } else {
-          await stripe.paymentIntents.cancel(pi, { cancellation_reason: "requested_by_customer" }, { idempotencyKey: `release-hold-${p.id}` });
-        }
-        const freed = intent.amount - keepCents;
+        // Cativo: liberta-se tudo, sem cobrar nada (nem a taxa de serviço).
+        await stripe.paymentIntents.cancel(pi, { cancellation_reason: "requested_by_customer" }, { idempotencyKey: `release-hold-${p.id}` });
+        const freed = intent.amount;
         await admin
           .from("payments")
           .update({ status: "refunded", refunded_amount: freed / 100, is_held: false, updated_at: new Date().toISOString() })
@@ -146,7 +142,6 @@ Deno.serve(async (req) => {
           .eq("status", "paid");
         refunded.push(p.id as string);
         refundedCents += freed;
-        keptCents += keepCents;
         released = true;
         continue;
       }

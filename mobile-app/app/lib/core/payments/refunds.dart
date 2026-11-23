@@ -6,8 +6,8 @@ import '../supabase/supabase_config.dart';
 /// `cancel_booking_by_partner()`); a Edge Function
 /// `refund-cancelled-booking` só executa, e é idempotente.
 /// - casal cancela com `cancellation_penalty_days` (30) ou mais dias de
-///   antecedência → devolve o valor do parceiro (a taxa de serviço só
-///   volta se o pagamento ainda estiver cativo; 2026-11-09);
+///   antecedência → devolve o valor do parceiro (cativo: libertado todo,
+///   2026-11-23; já cobrado: tudo menos a taxa de serviço);
 /// - parceiro cancela → devolve sempre.
 
 /// Reservas já vistas como sem direito a reembolso nesta sessão — não
@@ -140,7 +140,7 @@ String coupleCancelRefundNote({required DateTime eventDate, required RefundInfo 
         : 'Faltam menos de ${info.penaltyDays} dias para o evento: o restante já pago não é devolvido.');
   }
   if (lines.isEmpty) return '';
-  return '\n\n${lines.join('\n')}${lines.any((l) => l.contains('devolvido') || l.contains('devolvemos')) ? '\nDevolvemos tudo menos a taxa de serviço: se o valor ainda estiver cativo no cartão, o resto é libertado; se já tiver sido cobrado, o reembolso chega em 5 a 10 dias úteis.' : ''}';
+  return '\n\n${lines.join('\n')}${lines.any((l) => l.contains('devolvido') || l.contains('devolvemos')) ? '\nSe o valor ainda estiver cativo no cartão, é libertado todo; se já tiver sido cobrado, devolvemos tudo menos a taxa de serviço e o reembolso chega em 5 a 10 dias úteis.' : ''}';
 }
 
 /// Aviso ao cancelar a partir da decisão do servidor (migração 174: regra
@@ -164,7 +164,7 @@ Future<String?> cancelPreviewNote(String bookingId) async {
     }
     if (lines.isEmpty) return '';
     final any = refundDeposit || refundFinal;
-    return '\n\n${lines.join('\n')}${any ? '\nDevolvemos tudo menos a taxa de serviço: se o valor ainda estiver cativo no cartão, o resto é libertado; se já tiver sido cobrado, o reembolso chega em 5 a 10 dias úteis.' : ''}';
+    return '\n\n${lines.join('\n')}${any ? '\nSe o valor ainda estiver cativo no cartão, é libertado todo; se já tiver sido cobrado, devolvemos tudo menos a taxa de serviço e o reembolso chega em 5 a 10 dias úteis.' : ''}';
   } catch (_) {
     return null;
   }

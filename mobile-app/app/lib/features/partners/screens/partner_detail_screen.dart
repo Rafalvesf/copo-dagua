@@ -1715,7 +1715,12 @@ class _GlassButton extends StatelessWidget {
             width: 44,
             height: 44,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+            // Aro branco 2: vê-se sobre fotos escuras e sobre o topo preto.
+            decoration: BoxDecoration(
+              color: AppTheme.ink,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
             child: icon,
           ),
         ),
@@ -1771,7 +1776,7 @@ class _PartnerHero extends StatelessWidget {
           // a uma barra branca com o logótipo, o nome e o visto.
           final white = mini;
           final corners = BorderRadius.vertical(bottom: Radius.circular(radius));
-          final fallback = colorForCategorySlug(partner.primaryCategorySlug);
+          final fallback = AppTheme.ink;
 
           return SizedBox(
             height: h,
@@ -1794,10 +1799,11 @@ class _PartnerHero extends StatelessWidget {
                           height: _kHeroHeight,
                           child: photo == null
                               ? Container(
-                                  color: fallback,
+                                  // Sem foto: preto com as iniciais a branco (2026-11-23).
+                                  color: AppTheme.ink,
                                   alignment: Alignment.center,
-                                  child: Icon(iconForCategorySlug(partner.primaryCategorySlug),
-                                      size: 64, color: AppTheme.ink.withValues(alpha: 0.28)),
+                                  child: Text(V2Avatar.initials(partner.name),
+                                      style: const TextStyle(fontSize: 44, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
                                 )
                               : SizedNetworkImage(
                                   photo!,
