@@ -41,7 +41,7 @@ class KitPage extends StatefulWidget {
     this.bleed = const {},
     this.bottom = 40,
     this.controller,
-    this.pinnedBack = false,
+    this.pinnedBack = true, // sempre a seta fixa (2026-11-23: na página Presentes descia com a lista)
     this.onBack,
     this.rotateBack = false,
   });

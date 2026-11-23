@@ -333,7 +333,10 @@ ecrãs. O resto da app mantém a tabela acima.
   o lado — já não há botões translúcidos (pedido do Rafael, 2026-11-21;
   substitui a regra da transparência de 2026-11-16).
   **A seta de voltar já não roda** (pedido do Rafael, 2026-11-23, em toda a
-  app): fica sempre fixa no canto superior esquerdo e é sempre «voltar».
+  app): fica sempre fixa no canto superior esquerdo e é sempre «voltar» —
+  em **todas** as páginas: `KitPage` tem a seta fixa por omissão e o
+  `GradientScaffold` fixa a seta de qualquer `PageHeader` (`PinnedBackFrame`,
+  `scrolling_header.dart`; 2026-11-23).
   **Barra do topo bloqueada** (pedido 2026-11-23): em todas as páginas com
   a seta fixa (`KitPage(pinnedBack)`, `ScrollBackView`), depois de passar o
   título aparece uma **barra branca fixa** no topo (cantos 35 em baixo,
@@ -831,8 +834,8 @@ tratado» —, título 16, frase 13 e a ação), `FrameNote`, `FrameButton36`,
   foto 76, nome 20, @ e cidade, eventos, em comum e quem traz, as fotos em
   comum, as respostas, «Quem é para vocês?», «Ver perfil», «Recusar» +
   «Aceitar»; os outros por baixo com «Ver».
-- **Reservas:** cada parceiro diz **para que evento é**; pílulas por
-  evento quando há mais do que um; **«Para fazer»** com os pagamentos
+- **Reservas:** **só as reservas do evento aberto** (pedido 2026-11-23;
+  saíram as pílulas por evento), «Os parceiros de <evento>»; **«Para fazer»** com os pagamentos
   («Pagar», abre os popups) e as **propostas recebidas** (linha amarela).
 - **Mesas:** **sem Mesa de Honra nem pista de dança**; mesas em caixas
   brancas com os lugares à volta, «n/8» ao centro e o estado por baixo

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../theme_color/theme_color.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'scrolling_header.dart' show PinnedBackFrame;
 
 /// Qual tratamento de fundo em gradiente um ecrã deve usar — ver
 /// AppGradients para os valores concretos de cada um.
@@ -103,7 +104,8 @@ class GradientScaffold extends StatelessWidget {
         // em vez de ser cortado a direito.
         // Sem o nevoeiro branco no topo (pedido 2026-11-23): as páginas
         // têm a barra do topo bloqueada.
-        body: body,
+        // A seta de voltar do PageHeader fica fixa no topo (2026-11-23).
+        body: appBar == null ? PinnedBackFrame(child: body) : body,
         floatingActionButton: floatingActionButton,
         bottomNavigationBar: bottomNavigationBar,
         resizeToAvoidBottomInset: resizeToAvoidBottomInset,

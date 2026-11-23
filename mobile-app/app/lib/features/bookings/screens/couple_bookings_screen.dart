@@ -54,12 +54,11 @@ class CoupleBookingsScreen extends ConsumerStatefulWidget {
 class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
   late bool _guests = widget.guestsTab;
 
-  /// Filtro por evento (null = todos).
-  String? _event;
 
   @override
   Widget build(BuildContext context) {
     final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    final eventName = ref.watch(weddingControllerProvider.select((s) => s.wedding == null ? null : capFirst(s.wedding!.displayNames)));
     final bookingsAsync = ref.watch(coupleBookingsProvider);
     final proposalsAsync = ref.watch(pendingProposalsProvider);
 
@@ -77,7 +76,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
               padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const KitHeader(),
-                const KitTitle('Reservas', subtitle: 'Os parceiros de todos os teus eventos'),
+                KitTitle('Reservas', subtitle: eventName == null ? 'Os parceiros deste evento' : 'Os parceiros de $eventName'),
                 KitPills([
                   KitPill(label: 'Parceiros', selected: !_guests, onTap: () => setState(() => _guests = false)),
                   KitPill(label: 'Convidados', selected: _guests, onTap: () => setState(() => _guests = true)),
@@ -112,8 +111,10 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                   final names = {
                     for (final w in ref.watch(weddingControllerProvider).events) w.id: capFirst(w.displayNames),
                   };
-                  final eventIds = <String>{for (final b in bookings) b.weddingId, for (final p in proposals) p.weddingId}.toList();
-                  final ev = _event != null && eventIds.contains(_event) ? _event : null;
+                  // Só as reservas do evento aberto (pedido 2026-11-23: antes
+                  // apareciam as de todos os eventos na mesma página).
+                  final ev = weddingId;
+                  final eventIds = <String>[?ev];
                   final shownBookings = [for (final b in bookings) if (ev == null || b.weddingId == ev) b];
                   final shownProposals = [for (final p in proposals) if (ev == null || p.weddingId == ev) p];
                   final toPay = [
@@ -125,7 +126,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                         ])
                           (b, id, what, due),
                   ];
-                  if (bookings.isEmpty && proposals.isEmpty) {
+                  if (shownBookings.isEmpty && shownProposals.isEmpty) {
                     return ListView(controller: scroll, padding: const EdgeInsets.only(bottom: 140), children: [
                       ...top,
                       Padding(
@@ -148,12 +149,6 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                       Padding(
                       padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      if (eventIds.length > 1)
-                        KitPills(top: 0, [
-                          KitPill(label: 'Todos', selected: ev == null, onTap: () => setState(() => _event = null)),
-                          for (final id in eventIds)
-                            KitPill(label: names[id] ?? 'Evento', selected: ev == id, onTap: () => setState(() => _event = id)),
-                        ]),
                       Builder(builder: (context) {
                         final active = shownBookings.where((b) => b.status != BookingStatus.recusado).toList();
                         final handled = active.where((b) => b.paidAmount > 0 || b.status == BookingStatus.concluido).length;

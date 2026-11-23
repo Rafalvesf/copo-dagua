@@ -4,6 +4,7 @@ import 'line_icon.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'buttons.dart';
+import 'scrolling_header.dart' show PinnedBackScope;
 
 /// Cabeçalho partilhado pela maioria dos ecrãs. Três formas:
 ///
@@ -40,6 +41,21 @@ class PageHeader extends StatelessWidget {
           style: const TextStyle(color: AppTheme.inkMuted, fontSize: 13, height: 1.4),
         ),
       );
+
+  /// Dentro de um [ScrollingHeader] a seta fica fixa por cima da lista:
+  /// aqui só se guarda o lugar (2026-11-23: antes descia com a página).
+  Widget _back(BuildContext context) {
+    final scope = PinnedBackScope.of(context);
+    if (scope == null) return const CircleBackButton();
+    if (!scope.hasBack.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          scope.hasBack.value = true;
+        } catch (_) {}
+      });
+    }
+    return const SizedBox(width: 44, height: 44);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +103,7 @@ class PageHeader extends StatelessWidget {
           SizedBox(
             height: 44,
             child: Row(children: [
-              if (showBack) const CircleBackButton(),
+              if (showBack) _back(context),
               const Spacer(),
               ?trailing,
             ]),
