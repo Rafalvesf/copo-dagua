@@ -348,9 +348,7 @@ Future<void> saveGuestCompanions({
   required List<GuestCompanion> companions,
 }) async {
   try {
-    await supabase.from('guest_companions').delete().eq('guest_id', guestId);
-    if (companions.isEmpty) return;
-    await supabase.from('guest_companions').insert([
+    final rows = [
       for (final c in companions)
         {
           'guest_id': guestId,
@@ -367,7 +365,18 @@ Future<void> saveGuestCompanions({
           'allergies': c.allergies,
           'high_chair': (c.isChild || c.ageGroup == 'child') && c.highChair,
         },
-    ]);
+    ];
+    await supabase.from('guest_companions').delete().eq('guest_id', guestId);
+    if (rows.isEmpty) return;
+    try {
+      await supabase.from('guest_companions').insert(rows);
+    } on PostgrestException {
+      // Sem a migração 227 (coluna da cadeirinha): guarda o resto na mesma,
+      // para os acompanhantes nunca se perderem.
+      await supabase.from('guest_companions').insert([
+        for (final r in rows) {for (final e in r.entries) if (e.key != 'high_chair') e.key: e.value},
+      ]);
+    }
   } catch (_) {}
 }
 
