@@ -38,7 +38,12 @@ class _SnapCarouselState extends State<SnapCarousel> {
   PageController _controllerFor(double width) {
     // Página da largura do ecrã: os cartões do lado só aparecem ao deslizar
     // (2026-11-11: "não mostres os cartões da esquerda e da direita").
-    final fraction = widget.peek && widget.itemCount > 1 ? 0.86 : 1.0;
+    // Com a ponta do seguinte, a área do carrossel acaba 20 antes da borda
+    // (o último cartão fica com a margem da direita, 2026-11-23) e os
+    // cartões continuam com 86 % do ecrã.
+    final peeking = widget.peek && widget.itemCount > 1;
+    final inner = width - AppTheme.screenMargin;
+    final fraction = peeking && inner > 0 ? (0.86 * width / inner).clamp(0.1, 1.0).toDouble() : 1.0;
     if (_controller == null || (fraction - _fraction).abs() > 0.001) {
       _controller?.dispose();
       _fraction = fraction;
@@ -62,8 +67,11 @@ class _SnapCarouselState extends State<SnapCarousel> {
             height: widget.height != null
                 ? widget.height! + _shadowPad
                 : (_heights[page] ?? (_heights.isEmpty ? 300 + _shadowPad : _heights.values.first)),
+            padding: EdgeInsets.only(right: widget.peek && widget.itemCount > 1 ? AppTheme.screenMargin : 0),
             child: PageView.builder(
               controller: _controllerFor(c.maxWidth),
+              // A ponta do cartão seguinte desenha-se para lá da área.
+              clipBehavior: widget.peek && widget.itemCount > 1 ? Clip.none : Clip.hardEdge,
               padEnds: !(widget.peek && widget.itemCount > 1),
               itemCount: widget.itemCount,
               onPageChanged: (i) => setState(() => _page = i),
