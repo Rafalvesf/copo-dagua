@@ -23,6 +23,8 @@
 --     seguintes: registar a entrada, registar a chegada à marcação ou uma
 --     cobrança (migração 229). Quem lê não pode ler o mesmo código de 30 s
 --     duas vezes (uma leitura por janela).
+--   • my_entries(): a página «Entrada» (todos os eventos onde o QR dá
+--     entrada) e o Realtime nas tabelas das entradas ("updates to all").
 --   • check_in_ticket(código) (158): os códigos fixos antigos deixam de dar
 --     entrada (decisão por omissão, 2026-11-23: o utilizador não escolheu e
 --     seguiu-se a recomendada); apps antigas do organizador que leiam o QR
@@ -362,5 +364,74 @@ end;
 $$;
 revoke execute on function public.check_in_ticket(text) from public, anon;
 grant execute on function public.check_in_ticket(text) to authenticated;
+
+-- ---------- Página «Entrada»: onde o meu QR dá entrada ----------
+-- Pedido do utilizador (2026-11-23): "faz a pagina entrada do codigo qr para
+-- todos os eventos, updates to all". Um QR, todos os eventos: os que
+-- organizo e aqueles a que vou, com data, local, mesa (quando já revelada)
+-- e o estado (entrada registada, chegadas às marcações dos parceiros).
+create or replace function public.my_entries()
+returns jsonb
+language sql stable security definer set search_path = public, pg_temp as $$
+  select coalesce(jsonb_agg(x.item order by x.d nulls last, x.n), '[]'::jsonb)
+  from (
+    select e.wedding_date as d, public.event_label(e.id) as n, jsonb_build_object(
+      'event_id', e.id,
+      'event', public.event_label(e.id),
+      'date', e.wedding_date,
+      'location', nullif(trim(e.location), ''),
+      'role', case when e.owner_id = (select auth.uid()) then 'organizer' else 'guest' end,
+      'is_paid', coalesce(e.is_paid, false),
+      'ticket', (select jsonb_build_object('status', t.status, 'quantity', t.quantity)
+                 from public.event_tickets t where t.wedding_id = e.id and t.buyer_id = (select auth.uid())
+                 order by (t.status = 'paid') desc, t.paid_at desc nulls last limit 1),
+      'table', case when coalesce(e.guest_sections ->> 'mesa', 'true') <> 'false'
+                     and case coalesce(e.guest_sections ->> 'opt_table_reveal', 'now')
+                           when 'week' then e.wedding_date is null or current_date >= e.wedding_date - 7
+                           when 'day' then e.wedding_date is null or current_date >= e.wedding_date
+                           else true end
+                    then (select st.position + 1 from public.seating_tables st
+                          join public.guests g on g.wedding_id = st.wedding_id and g.id = any(st.guest_ids)
+                          where st.wedding_id = e.id and g.linked_profile_id = (select auth.uid()) limit 1)
+                  end,
+      'checked_in_at', coalesce(
+        (select c.checked_in_at from public.event_checkins c where c.wedding_id = e.id and c.user_id = (select auth.uid())),
+        (select t.checked_in_at from public.event_tickets t
+         where t.wedding_id = e.id and t.buyer_id = (select auth.uid()) and t.status = 'paid'
+         order by t.paid_at desc nulls last limit 1)),
+      'arrivals', coalesce((
+        select jsonb_agg(jsonb_build_object('partner', coalesce(nullif(trim(pp.business_name), ''), 'Parceiro'), 'at', a.arrived_at)
+                         order by a.arrived_at)
+        from public.booking_arrivals a
+        join public.bookings b on b.id = a.booking_id
+        join public.partner_profiles pp on pp.id = b.partner_id
+        where b.wedding_id = e.id and a.user_id = (select auth.uid())), '[]'::jsonb)
+    ) as item
+    from public.events e
+    where public.attends_event((select auth.uid()), e.id)
+      and e.cancelled_at is null
+      and e.archived_at is null
+      and (e.wedding_date is null or e.wedding_date >= current_date - 1)
+  ) x;
+$$;
+revoke execute on function public.my_entries() from public, anon;
+grant execute on function public.my_entries() to authenticated;
+
+-- «Updates to all»: a página «Entrada» de quem tem o QR muda logo que um
+-- organizador ou parceiro regista a entrada ou a chegada (Supabase Realtime;
+-- cada um só recebe as linhas que a RLS lhe deixa ler).
+do $$
+declare
+  t text;
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    foreach t in array array['event_checkins', 'booking_arrivals', 'event_tickets'] loop
+      if not exists (select 1 from pg_publication_tables
+                     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t) then
+        execute format('alter publication supabase_realtime add table public.%I', t);
+      end if;
+    end loop;
+  end if;
+end $$;
 
 commit;

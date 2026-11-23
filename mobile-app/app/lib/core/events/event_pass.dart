@@ -84,10 +84,10 @@ class GuestSections {
 
 class MyTicket {
   final String id;
-  final String weddingId;
+  final String eventId;
   final int quantity;
   final DateTime? checkedInAt;
-  const MyTicket({required this.id, required this.weddingId, required this.quantity, this.checkedInAt});
+  const MyTicket({required this.id, required this.eventId, required this.quantity, this.checkedInAt});
 }
 
 class EventPass {
@@ -110,7 +110,7 @@ final myEventPassProvider = FutureProvider.family<EventPass, String>((ref, event
       ticket: t is Map && t['id'] is String
           ? MyTicket(
               id: t['id'] as String,
-              weddingId: weddingId,
+              eventId: eventId,
               quantity: (t['quantity'] as num?)?.toInt() ?? 1,
               checkedInAt: DateTime.tryParse('${t['checked_in_at'] ?? ''}')?.toLocal(),
             )

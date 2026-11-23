@@ -4,6 +4,7 @@ import 'invite/public_invite.dart' show PendingInvite;
 import '../features/events/screens/external_event_screen.dart' deferred as lext;
 import '../features/events/screens/tickets_screens.dart' deferred as l1;
 import '../features/events/screens/event_pay_screens.dart' deferred as lpay;
+import '../features/events/screens/entry_screen.dart' deferred as lentry;
 import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
 import '../features/gifts/screens/gift_list_screens.dart' show OrganizerGiftListScreen, GiftShopScreen, GiftReturnScreen;
 import '../features/gifts/screens/partner_shop_screen.dart' show PartnerShopScreen;
@@ -418,12 +419,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/partner-pro', builder: (context, state) => PartnerProScreen(returned: state.uri.queryParameters['ok'] == '1')),
       // QR da conta (migração 228): quem lê abre «Quem é». `/entrada/` fica
       // para os QR lidos por apps antigas (códigos fixos dão «QR inválido»).
+      // «Entrada»: o QR da conta e todos os eventos onde dá entrada (2026-11-23).
+      GoRoute(path: '/entrada', builder: (context, state) => lazyPage([lentry.loadLibrary], () => lentry.EntryScreen())),
       GoRoute(path: '/q/:token', builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.ScanScreen(token: state.pathParameters['token']!))),
       GoRoute(path: '/entrada/:code', builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.ScanScreen(token: state.pathParameters['code']!))),
       // Pagamentos no evento (migração 229): o gasto, o cartão e os movimentos.
       GoRoute(
-        path: '/pagar-no-evento/:weddingId',
-        builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.EventPayScreen(weddingId: state.pathParameters['weddingId']!)),
+        path: '/pagar-no-evento/:eventId',
+        builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.EventPayScreen(eventId: state.pathParameters['eventId']!)),
       ),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) =>lazyPage([l7.loadLibrary], () =>  l7.PartnerPayoutSetupScreen(organizer: true))),
       // Evento público aberto por link partilhado (2026-11).

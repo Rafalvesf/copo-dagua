@@ -4,6 +4,8 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show PostgresChangeEvent, PostgresChangeFilter, PostgresChangeFilterType, RealtimeChannel;
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/events/event_pay.dart';
@@ -11,7 +13,9 @@ import '../../../core/payments/payments.dart' show stripePublishableKey;
 import '../../../core/payments/stripe_element.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../core/events/my_qr.dart';
 import 'ticket_pass_screens.dart' show MyQrCard;
@@ -22,8 +26,8 @@ import 'ticket_pass_screens.dart' show MyQrCard;
 /// servidor cobra na hora o cartão guardado. Em vez de saldo: «Gasto neste
 /// evento», os movimentos e «Cartão: •••• 4242 · mudar».
 class EventPayScreen extends ConsumerStatefulWidget {
-  final String weddingId;
-  const EventPayScreen({super.key, required this.weddingId});
+  final String eventId;
+  const EventPayScreen({super.key, required this.eventId});
 
   @override
   ConsumerState<EventPayScreen> createState() => _EventPayScreenState();
@@ -33,20 +37,37 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
   EventPayState? _state;
   bool _busy = false;
   Timer? _poll;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _load();
-    // Enquanto o ecrã está aberto: novos movimentos e pedidos para confirmar.
-    _poll = Timer.periodic(const Duration(seconds: 5), (_) => _load());
+    // Novos movimentos e pedidos para confirmar chegam por Realtime
+    // («updates to all», migração 229); a leitura de 30 em 30 s fica de reserva.
+    _poll = Timer.periodic(const Duration(seconds: 30), (_) => _load());
+    final me = supabase.auth.currentUser?.id;
+    if (me != null) {
+      _channel = supabase
+          .channel('event-pay-$me-${widget.eventId}')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'event_payments',
+            filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'payer_id', value: me),
+            callback: (_) => _load(),
+          )
+          .subscribe();
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _poll?.cancel();
+    final c = _channel;
+    if (c != null) supabase.removeChannel(c);
     super.dispose();
   }
 
@@ -56,7 +77,7 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
   }
 
   Future<void> _load() async {
-    final s = await fetchEventPay(widget.weddingId);
+    final s = await fetchEventPay(widget.eventId);
     if (mounted) setState(() => _state = s);
   }
 
@@ -124,7 +145,7 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
             const MyQrCard(),
             const SizedBox(height: 16),
             if (s == null)
-              const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
+              const SkeletonList(count: 4, padding: EdgeInsets.zero)
             else if (!s.enabled)
               const Text('Ainda não há pagamentos com QR neste evento.',
                   textAlign: TextAlign.center, style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted))
@@ -415,9 +436,9 @@ class _SaveCardSheetState extends ConsumerState<_SaveCardSheet> {
 /// Uma leitura = uma cobrança (migração 229).
 class ChargeScreen extends StatefulWidget {
   final String scanId;
-  final String weddingId;
+  final String eventId;
   final String? payerName;
-  const ChargeScreen({super.key, required this.scanId, required this.weddingId, this.payerName});
+  const ChargeScreen({super.key, required this.scanId, required this.eventId, this.payerName});
 
   @override
   State<ChargeScreen> createState() => _ChargeScreenState();
@@ -461,7 +482,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
     final r = await eventPay({
       'action': 'charge',
       'scan_id': widget.scanId,
-      'wedding_id': widget.weddingId,
+      'wedding_id': widget.eventId,
       'amount_cents': cents,
       'description': _description.text.trim(),
     });
@@ -604,7 +625,7 @@ class _ScanScreenState extends State<ScanScreen> {
   final Map<String, ({String result, DateTime? at})> _done = {};
   String? _busy;
 
-  String _key(ScanItem i) => i.bookingId ?? 'e${i.weddingId}';
+  String _key(ScanItem i) => i.bookingId ?? 'e${i.eventId}';
 
   Future<void> _confirm(ScanResult r, ScanItem i) async {
     setState(() => _busy = _key(i));
@@ -624,7 +645,7 @@ class _ScanScreenState extends State<ScanScreen> {
         child: FutureBuilder<ScanResult>(
           future: _future,
           builder: (context, snap) {
-            if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+            if (!snap.hasData) return const SkeletonPage(carousel: false, rows: 3);
             final r = snap.data!;
             return ListView(
               padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 40),
@@ -750,7 +771,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 height: 44,
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ChargeScreen(scanId: r.scanId!, weddingId: i.weddingId, payerName: r.name),
+                    builder: (_) => ChargeScreen(scanId: r.scanId!, eventId: i.eventId, payerName: r.name),
                   )),
                   child: const Text('Cobrar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
                 ),

@@ -220,4 +220,14 @@ $$;
 revoke all on function public.charge_from_scan(uuid, uuid, uuid, int, text) from public, anon, authenticated;
 grant execute on function public.charge_from_scan(uuid, uuid, uuid, int, text) to service_role;
 
+-- Os movimentos mudam logo no ecrã de quem paga (Realtime; RLS por pessoa).
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables
+                     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'event_payments') then
+    alter publication supabase_realtime add table public.event_payments;
+  end if;
+end $$;
+
 commit;

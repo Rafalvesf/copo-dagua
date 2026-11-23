@@ -1,4 +1,5 @@
-import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show PostgrestException, PostgresChangeEvent, PostgresChangeFilter, PostgresChangeFilterType, RealtimeChannel;
 
 import '../../shared/public_link.dart';
 import '../supabase/supabase_config.dart';
@@ -38,7 +39,7 @@ Future<MyQr?> fetchMyQr() async {
 class ScanItem {
   /// 'booking' (marcação do parceiro) ou 'entry' (evento que organizo).
   final String kind;
-  final String weddingId;
+  final String eventId;
   final String? bookingId;
   final String event;
   final DateTime? date;
@@ -51,7 +52,7 @@ class ScanItem {
   final bool canCharge;
   const ScanItem({
     required this.kind,
-    required this.weddingId,
+    required this.eventId,
     this.bookingId,
     required this.event,
     this.date,
@@ -68,7 +69,7 @@ class ScanItem {
     final t = j['ticket'];
     return ScanItem(
       kind: '${j['kind']}',
-      weddingId: '${j['wedding_id']}',
+      eventId: '${j['wedding_id']}',
       bookingId: j['booking_id'] as String?,
       event: '${j['event'] ?? 'Evento'}',
       date: DateTime.tryParse('${j['date'] ?? ''}'),
@@ -117,7 +118,7 @@ Future<({String result, DateTime? at})> scanConfirm(String scanId, ScanItem item
   try {
     final r = item.kind == 'booking'
         ? await supabase.rpc('scan_booking_arrival', params: {'p_scan': scanId, 'p_booking': item.bookingId})
-        : await supabase.rpc('scan_check_in', params: {'p_scan': scanId, 'p_wedding': item.weddingId});
+        : await supabase.rpc('scan_check_in', params: {'p_scan': scanId, 'p_wedding': item.eventId});
     if (r is! Map) return (result: 'error', at: null);
     return (
       result: '${r['result']}',
@@ -126,4 +127,88 @@ Future<({String result, DateTime? at})> scanConfirm(String scanId, ScanItem item
   } catch (_) {
     return (result: 'error', at: null);
   }
+}
+
+/// Um evento onde o QR da conta dá entrada (página «Entrada», `my_entries`,
+/// migração 228). Pedido 2026-11-23: "faz a pagina entrada do codigo qr
+/// para todos os eventos, updates to all".
+class MyEntry {
+  final String eventId;
+  final String event;
+  final DateTime? date;
+  final String? location;
+  final bool organizer;
+  final bool isPaid;
+  final String? ticketStatus;
+  final int quantity;
+  final int? table;
+  final DateTime? checkedInAt;
+  final List<({String partner, DateTime at})> arrivals;
+  const MyEntry({
+    required this.eventId,
+    required this.event,
+    this.date,
+    this.location,
+    this.organizer = false,
+    this.isPaid = false,
+    this.ticketStatus,
+    this.quantity = 1,
+    this.table,
+    this.checkedInAt,
+    this.arrivals = const [],
+  });
+
+  /// Evento pago sem bilhete pago: o QR não dá entrada.
+  bool get blocked => !organizer && isPaid && ticketStatus != 'paid';
+
+  factory MyEntry.fromJson(Map j) {
+    final t = j['ticket'];
+    return MyEntry(
+      eventId: '${j['event_id']}',
+      event: '${j['event'] ?? 'Evento'}',
+      date: DateTime.tryParse('${j['date'] ?? ''}'),
+      location: j['location'] as String?,
+      organizer: j['role'] == 'organizer',
+      isPaid: j['is_paid'] == true,
+      ticketStatus: t is Map ? t['status'] as String? : null,
+      quantity: t is Map ? (t['quantity'] as num?)?.toInt() ?? 1 : 1,
+      table: (j['table'] as num?)?.toInt(),
+      checkedInAt: DateTime.tryParse('${j['checked_in_at'] ?? ''}')?.toLocal(),
+      arrivals: [
+        for (final a in (j['arrivals'] as List? ?? const []))
+          if (a is Map && DateTime.tryParse('${a['at']}') != null)
+            (partner: '${a['partner'] ?? 'Parceiro'}', at: DateTime.parse('${a['at']}').toLocal()),
+      ],
+    );
+  }
+}
+
+/// `null` sem rede (ou antes da migração 228).
+Future<List<MyEntry>?> fetchMyEntries() async {
+  try {
+    final r = await supabase.rpc('my_entries');
+    if (r is! List) return null;
+    return [for (final e in r) if (e is Map) MyEntry.fromJson(e)];
+  } catch (_) {
+    return null;
+  }
+}
+
+/// «Updates to all»: avisa quando um organizador ou parceiro regista a
+/// minha entrada ou chegada (Supabase Realtime; a RLS só deixa passar as
+/// minhas linhas). Devolve o canal, para o fechar com [closeEntriesChannel].
+RealtimeChannel? listenMyEntries(void Function() onChange) {
+  final me = supabase.auth.currentUser?.id;
+  if (me == null) return null;
+  PostgresChangeFilter mine(String column) => PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: column, value: me);
+  return supabase
+      .channel('entries-$me')
+      .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'event_checkins', filter: mine('user_id'), callback: (_) => onChange())
+      .onPostgresChanges(event: PostgresChangeEvent.all, schema: 'public', table: 'booking_arrivals', filter: mine('user_id'), callback: (_) => onChange())
+      .onPostgresChanges(event: PostgresChangeEvent.update, schema: 'public', table: 'event_tickets', filter: mine('buyer_id'), callback: (_) => onChange())
+      .subscribe();
+}
+
+void closeEntriesChannel(RealtimeChannel? c) {
+  if (c != null) supabase.removeChannel(c);
 }

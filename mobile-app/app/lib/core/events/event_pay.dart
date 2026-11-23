@@ -46,9 +46,9 @@ class EventPayState {
 String euros(int cents) => '${(cents / 100).toStringAsFixed(2).replaceAll('.', ',')} €';
 
 /// O que quem paga vê neste evento.
-Future<EventPayState> fetchEventPay(String weddingId) async {
+Future<EventPayState> fetchEventPay(String eventId) async {
   try {
-    final r = await supabase.rpc('my_event_pay', params: {'p_wedding': weddingId});
+    final r = await supabase.rpc('my_event_pay', params: {'p_wedding': eventId});
     if (r is! Map) return const EventPayState();
     return EventPayState(
       enabled: r['enabled'] == true,
@@ -74,8 +74,8 @@ Future<EventPayState> fetchEventPay(String weddingId) async {
 }
 
 /// Mostra o atalho no início do convidado só quando há quem cobre.
-final eventPayEnabledProvider = FutureProvider.autoDispose.family<bool, String>((ref, weddingId) async {
-  return (await fetchEventPay(weddingId)).enabled;
+final eventPayEnabledProvider = FutureProvider.autoDispose.family<bool, String>((ref, eventId) async {
+  return (await fetchEventPay(eventId)).enabled;
 });
 
 /// Chama a Edge Function `event-pay`. Erros vêm como `{error}`.

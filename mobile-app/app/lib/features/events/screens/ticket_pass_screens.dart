@@ -8,6 +8,7 @@ import '../../../core/events/event_pass.dart';
 import '../../../core/events/my_qr.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
 /// Bilhete e QR da conta.
@@ -220,7 +221,7 @@ class _MyQrPanelState extends State<MyQrPanel> with WidgetsBindingObserver {
           ? brandQr(q.qrData, size)
           : Center(
               child: _loading
-                  ? const CircularProgressIndicator()
+                  ? SkeletonBox(width: size, height: size, radius: AppRadius.md)
                   : compact
                       ? const Icon(Hi.signalSlash, size: 28, color: AppTheme.inkMuted)
                       : Column(mainAxisSize: MainAxisSize.min, children: [

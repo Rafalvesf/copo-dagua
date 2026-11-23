@@ -578,7 +578,7 @@ export const MIGRATIONS: PendingMigration[] = [
     file: "228_qr_da_conta.sql",
     date: "2026-11-23",
     title: "Um QR por conta, rotativo",
-    what: "Cada conta tem um QR que muda a cada 30 segundos (assinado no servidor; um screenshot não serve). Fica na página principal. Quem o lê (sobretudo o parceiro, para verificar a marcação, ou o organizador à entrada) vê o nome e só o que os liga, e regista a chegada ou a entrada. Os códigos fixos antigos dos bilhetes deixam de valer. Corre depois da 227.",
+    what: "Cada conta tem um QR que muda a cada 30 segundos (assinado no servidor; um screenshot não serve). Fica na página principal. Quem o lê (sobretudo o parceiro, para verificar a marcação, ou o organizador à entrada) vê o nome e só o que os liga, e regista a chegada ou a entrada. A página «Entrada» mostra todos os eventos onde o QR dá entrada e atualiza em tempo real (Realtime nas tabelas das entradas). Os códigos fixos antigos dos bilhetes deixam de valer. Corre depois da 227.",
     check: { kind: "table", table: "user_qr" },
   },
   {

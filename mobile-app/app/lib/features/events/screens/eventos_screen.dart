@@ -1,4 +1,3 @@
-import 'ticket_pass_screens.dart' show MyQrScreen;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
@@ -295,13 +294,14 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                     titleFontSize: 28,
                     // QR da conta ao lado do sino (pedido 2026-11-23: "adiciona
                     // um icon do qr code ao lado do das notificações na página
-                    // dos eventos"; migração 228). Abre «O teu QR».
+                    // dos eventos"; migração 228). Abre «Entrada»: o QR e todos
+                    // os eventos onde dá entrada.
                     trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                       if (role != null) ...[
                         V2RoundButton(
                           icon: Hi.qrCode,
                           tooltip: 'O teu QR',
-                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyQrScreen())),
+                          onTap: () => context.push('/entrada'),
                         ),
                         const SizedBox(width: 10),
                       ],

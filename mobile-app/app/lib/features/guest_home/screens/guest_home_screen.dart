@@ -375,10 +375,10 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
         ]);
       }
       // QR de pagamento no evento (migração 229): só quando há quem cobre.
-      if (ref.watch(eventPayEnabledProvider(wedding.weddingId)).value == true) {
+      if (ref.watch(eventPayEnabledProvider(event.eventId)).value == true) {
         body.addAll([
           const SizedBox(height: 12),
-          _EventPayShortcut(onTap: () => context.push('/pagar-no-evento/${wedding.weddingId}')),
+          _EventPayShortcut(onTap: () => context.push('/pagar-no-evento/${event.eventId}')),
         ]);
       }
       // «Para fazer» sempre (regra 2026-11-21): as tarefas, «Está tudo
