@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/partner_app/partner_app_providers.dart';
 import '../../core/theme/app_theme.dart';
 import 'floating_bottom_nav.dart' show NavBubble, kNavRadius;
+import 'count_badge.dart';
 import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
 
@@ -173,9 +174,10 @@ class _NavIcon extends StatelessWidget {
                   ),
                   if (badgeCount > 0)
                     Positioned(
-                      top: 0,
-                      right: 2,
-                      child: _UnreadBadge(count: badgeCount),
+                      top: -4,
+                      right: -2,
+                      // O mesmo contador do §2 (pílula branca, aro preto).
+                      child: CountBadge(badgeCount),
                     ),
                 ],
               ),
@@ -192,35 +194,3 @@ class _NavIcon extends StatelessWidget {
   }
 }
 
-/// Mesmo selo de `floating_bottom_nav.dart` (verde-oliva da marca,
-/// `99+` acima do limite) — duplicado em vez de partilhado porque os
-/// dois `_NavIcon` já eram classes privadas por ficheiro antes desta
-/// alteração.
-class _UnreadBadge extends StatelessWidget {
-  final int count;
-
-  const _UnreadBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppTheme.accentOliveDark,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-      child: Text(
-        count > 99 ? '99+' : '$count',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: AppFontSize.xxxs,
-          fontWeight: FontWeight.w700,
-          height: 1,
-        ),
-      ),
-    );
-  }
-}

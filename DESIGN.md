@@ -53,8 +53,9 @@ de progresso, verde clarinho, §6). **Nunca** para botões.
   Contador por cima (p. ex. mensagens por ler, notificações): pílula branca
   20 com o número 12 negrito preto e aro preto 2 (`CountBadge` / `WithCount`,
   `shared/widgets/count_badge.dart`) — o **sino** de notificações é sempre
-  este botão preto, com o número por ler (nunca um ponto); os contadores
-  voltam a ler-se sozinhos (pedido 2026-11-23).
+  este botão preto, com o número por ler (nunca um ponto); o mesmo contador
+  vai na navbar («Mensagens»); os contadores voltam a ler-se sozinhos
+  (pedido 2026-11-23).
 - "+" de criar: círculo preto 44, "+" branco.
 
 ## 3. Letra
