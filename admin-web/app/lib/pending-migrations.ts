@@ -589,10 +589,10 @@ export const MIGRATIONS: PendingMigration[] = [
     check: { kind: "table", table: "event_payments" },
   },
   {
-    file: "230_booking_prefix_pt.sql",
+    file: "230_tipos_evento_e_prefixos.sql",
     date: "2026-11-23",
-    title: "Referência das reservas em português",
-    what: "O número da reserva passa a ter o prefixo do tipo de evento em português, sem repetidos: CAS (casamento), BAT, ANI, COM, NOI, REN, CUR, EMP (empresa), CHA, FES (festa), NOT (noite), CON (concerto), FTV (festival), EVT (outro). As reservas existentes mudam só o prefixo (WED-3 → CAS-3); a numeração continua por parceiro.",
+    title: "Sete tipos de evento e referência das reservas em português",
+    what: "Ao criar um evento só aparecem 7 tipos: Aniversário (ANI), Casamento (CAS), Festa (FES), Evento de empresa (EMP), Batizado (BAT), Passagem de Ano (PAN, novo) e Outros (EVT). Eventos existentes: comunhão → batizado, noite → festa, os restantes → Outros com o nome antigo guardado. As reservas mudam o prefixo (WED-3 → CAS-3); quando dois tipos se juntam e o número colide, a mais recente recebe o seguinte livre.",
     check: { kind: "marker", id: "230" },
   },
 ];
