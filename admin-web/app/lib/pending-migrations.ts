@@ -560,6 +560,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Eventos sem nome passam a ter o código a começar por EVENTO (antes CASAL). Os códigos que já existem não mudam.",
     check: { kind: "marker", id: "225" },
   },
+  {
+    file: "226_partner_event_brief_por_categoria.sql",
+    date: "2026-11-23",
+    title: "Informação do evento por categoria de parceiro",
+    what: "Cada parceiro vê só o que precisa: todos a hora, o local e o programa; a comida as pessoas, os menus (das escolhas por pessoa), as alergias e as mesas; foto e música o dress code; flores e decoração as cores. As alergias deixam de ir para quem não serve comida. Sem contactos.",
+    check: { kind: "marker", id: "226" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
