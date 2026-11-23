@@ -124,13 +124,15 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
         );
     Widget group(String key, String title, List<Guest> list) {
       final open = _expanded.contains(key);
-      final shown = open ? list : list.take(_groupLimit).toList();
+      final shown = open ? list : list.take(kListPreview).toList();
+      void toggle() => setState(() => open ? _expanded.remove(key) : _expanded.add(key));
       return SectionFrame(title: '$title · ${list.length}', children: [
         KitGroup([for (final g in shown) guestRow(g)]),
-        if (list.length > _groupLimit)
-          FrameButton44(open ? 'Ver menos' : 'Ver todos (${list.length})', outlined: true, onTap: () => setState(() {
-            open ? _expanded.remove(key) : _expanded.add(key);
-          })),
+        // Mais de 4: as fotos dos seguintes, «+X pessoas» e «Ver todos».
+        if (list.length > kListPreview && !open)
+          MoreFacesRow(rest: [for (final g in list.skip(kListPreview)) (g.name, null)], onTap: toggle)
+        else if (list.length > kListPreview)
+          FrameButton44('Ver menos', outlined: true, onTap: toggle),
       ]);
     }
 
@@ -206,30 +208,12 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
                           onTap: () => context.push('/guests/pedidos?id=${r.id}'),
                         ),
                       if (requests.length > 4)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Row(children: [
-                            SizedBox(
-                              width: 32 + (requests.skip(4).take(3).length - 1) * 22,
-                              height: 32,
-                              child: Stack(children: [
-                                for (final (i, r) in requests.skip(4).take(3).indexed)
-                                  Positioned(
-                                    left: i * 22.0,
-                                    child: Container(
-                                      decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.background, width: 2)),
-                                      child: V2Avatar(r.name, size: 28),
-                                    ),
-                                  ),
-                              ]),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text('+${requests.length - 4} ${requests.length - 4 == 1 ? 'pedido' : 'pedidos'}',
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                            ),
-                            FrameButton36('Ver', onTap: () => context.push('/guests/pedidos')),
-                          ]),
+                        MoreFacesRow(
+                          rest: [for (final r in requests.skip(4)) (r.name, null)],
+                          noun: 'pedido',
+                          nounPlural: 'pedidos',
+                          action: 'Ver',
+                          onTap: () => context.push('/guests/pedidos'),
                         ),
                     ],
                   ),
@@ -287,7 +271,6 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
   }
 }
 
-const _groupLimit = 5;
 
 String _ago(DateTime d) {
   final days = DateTime.now().difference(d).inDays;

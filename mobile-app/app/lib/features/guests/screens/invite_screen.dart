@@ -107,7 +107,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     // «Ver todos (N)» (mockup «Convidar · quem sigo»): os primeiros 5 de
     // «Só tu segues» até carregar no botão ou pesquisar.
     final showAll = _showAllFollowed || q.isNotEmpty;
-    final onlyMeShown = showAll ? onlyMe : onlyMe.take(5).toList();
+    final onlyMeShown = showAll ? onlyMe : onlyMe.take(kListPreview).toList();
 
     Widget row(_Followed p) => KitRow(
           lead: V2Avatar(p.name, size: 44, imageUrl: p.avatarUrl),
@@ -136,7 +136,10 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
         SectionFrame(title: 'Só tu segues · ${onlyMe.length}', children: [
           KitGroup([for (final p in onlyMeShown) row(p)]),
           if (onlyMeShown.length < onlyMe.length)
-            FrameButton44('Ver todos (${onlyMe.length})', outlined: true, onTap: () => setState(() => _showAllFollowed = true)),
+            MoreFacesRow(
+              rest: [for (final p in onlyMe.skip(onlyMeShown.length)) (p.name, p.avatarUrl)],
+              onTap: () => setState(() => _showAllFollowed = true),
+            ),
         ]),
       if (list.isEmpty) ...[
         const SizedBox(height: 24),

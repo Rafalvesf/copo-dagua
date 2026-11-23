@@ -189,6 +189,11 @@ ecrãs. O resto da app mantém a tabela acima.
   linha por pessoa (avatar 44, nome 16, meta 13 com alergias/idade/
   cadeirinha, «Editar» com contorno 36) · «+ Juntar alguém» com contorno 44 ·
   a nota 13 do prazo.
+- **Listas com mais de 4 pessoas ou parceiros** (regra geral, pedido do
+  Rafael, 2026-11-23): mostram 4 linhas e, no fim, as **fotos dos
+  seguintes sobrepostas** (até 3, 28 com aro), «+X pessoas» (ou «+X
+  pedidos», «+X parceiros») 14 negrito e «Ver todos» preto 36
+  (`MoreFacesRow` + `kListPreview`, `shared/widgets/section_frame.dart`).
 - Tudo o que se toca tem de parecer tocável: seta à direita ou botão (36,
   preto ou com contorno). Nunca texto verde como botão.
 - Linha de definições: altura mínima 56, nome 16 negrito à esquerda, valor 14

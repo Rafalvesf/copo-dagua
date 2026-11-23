@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/profile/username.dart';
 import '../../core/social/social.dart';
 import '../../core/theme/app_theme.dart';
+import '../../shared/widgets/section_frame.dart' show MoreFacesRow, kListPreview;
 import '../../shared/widgets/snappy_tap.dart';
 import '../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
@@ -359,10 +360,10 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
     final kind = _partners ? 'partners' : 'people';
     final rows = ref.watch(followListProvider((widget.profileId, kind))).value ?? const <FollowRow>[];
     final total = widget.people + widget.partners;
-    final shown = _all ? rows : rows.take(5).toList();
+    final shown = _all ? rows : rows.take(kListPreview).toList();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       ProfileSectionTitle('A seguir',
-          action: total > 5 && !_all ? 'Ver todos ($total)' : null, onAction: () => setState(() => _all = true)),
+          action: total > kListPreview && !_all ? 'Ver todos ($total)' : null, onAction: () => setState(() => _all = true)),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
         child: Row(children: [
@@ -424,6 +425,18 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
                       ),
                     ],
                   ]),
+                ),
+              // Mais de 4: as fotos dos seguintes e «Ver todos» (regra geral).
+              if (!_all && rows.length > kListPreview)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: MoreFacesRow(
+                    rest: [for (final r in rows.skip(kListPreview)) (r.name, r.avatarUrl)],
+                    noun: _partners ? 'parceiro' : 'pessoa',
+                    nounPlural: _partners ? 'parceiros' : 'pessoas',
+                    ring: Colors.white,
+                    onTap: () => setState(() => _all = true),
+                  ),
                 ),
             ]),
           ),

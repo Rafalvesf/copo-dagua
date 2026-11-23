@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import 'alert_outline.dart';
 import 'estrela.dart';
 import 'snappy_tap.dart';
+import 'v2_kit.dart' show V2Avatar;
 
 /// Secção numa moldura cinzenta (pedido do Rafael, 2026-11-22, mockup
 /// «Painel do organizador · secções com moldura»): a mesma linha 1,5 do
@@ -268,4 +269,65 @@ class FrameNote extends StatelessWidget {
         padding: EdgeInsets.only(top: top),
         child: Text(text, style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
       );
+}
+
+/// Quantas linhas mostra uma lista de pessoas ou parceiros antes do «+X»
+/// (regra geral, pedido do Rafael 2026-11-23).
+const kListPreview = 4;
+
+/// Fim de uma lista com mais de [kListPreview] pessoas ou parceiros: as
+/// fotos dos seguintes sobrepostas (até 3, 28 com aro), «+X pessoas» 14
+/// negrito e «Ver todos» (36). Em toda a app.
+class MoreFacesRow extends StatelessWidget {
+  /// (nome, foto) dos que ficaram de fora.
+  final List<(String, String?)> rest;
+  final String noun;
+  final String nounPlural;
+  final String action;
+  final VoidCallback onTap;
+  final Color ring;
+  const MoreFacesRow({
+    super.key,
+    required this.rest,
+    required this.onTap,
+    this.noun = 'pessoa',
+    this.nounPlural = 'pessoas',
+    this.action = 'Ver todos',
+    this.ring = AppTheme.background,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final faces = rest.take(3).toList();
+    final n = rest.length;
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: SnappyTap(
+        onTap: onTap,
+        semanticLabel: '$action: mais $n',
+        child: Row(children: [
+          SizedBox(
+            width: 32 + (faces.length - 1) * 22,
+            height: 32,
+            child: Stack(children: [
+              for (var i = 0; i < faces.length; i++)
+                Positioned(
+                  left: i * 22.0,
+                  child: Container(
+                    decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: ring, width: 2)),
+                    child: V2Avatar(faces[i].$1, size: 28, imageUrl: faces[i].$2),
+                  ),
+                ),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text('+$n ${n == 1 ? noun : nounPlural}',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ),
+          FrameButton36(action, onTap: onTap),
+        ]),
+      ),
+    );
+  }
 }
