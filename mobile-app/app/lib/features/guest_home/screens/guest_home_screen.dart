@@ -559,7 +559,7 @@ class _EventPayShortcut extends StatelessWidget {
               const Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text('Pagar no evento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text('Mostra o QR no bar; paga com o teu cartão.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  Text('Mostra o teu QR no bar; paga com o teu cartão.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ]),
               ),
               const Icon(Hi.chevronRight, color: AppTheme.ink),

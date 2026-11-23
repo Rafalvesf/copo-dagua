@@ -16,10 +16,12 @@
 --     anunciado; a comissão sai do que quem cobra recebe (application fee,
 --     a % dos bilhetes, sem o valor fixo por transação).
 --
+--   • O QR é o da conta (migração 228, "apenas um qr code para todos os
+--     eventos"): quem cobra lê-o (scan_qr) e cada leitura permite UMA
+--     cobrança (qr_scans.charged_at), durante 10 minutos.
+--
 --   payer_cards     o cartão guardado (customer + payment method). Cada um
 --                   lê só o seu; escrita só pela Edge Function event-pay.
---   pay_tokens      QR de uso único: só o hash SHA-256 do código, expira em
---                   10 min, um novo invalida os anteriores. Sem acesso direto.
 --   event_payments  os movimentos. Quem paga e quem cobra veem os seus.
 --
 -- Corre DEPOIS da 228.
@@ -43,29 +45,6 @@ grant select on table public.payer_cards to authenticated;
 drop policy if exists "Own card" on public.payer_cards;
 create policy "Own card" on public.payer_cards for select to authenticated
   using (user_id = (select auth.uid()));
-
--- ---------- Tokens de uso único ----------
-create table if not exists public.pay_tokens (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  wedding_id uuid not null references public.events(id) on delete cascade,
-  token_hash text not null unique,
-  created_at timestamptz not null default now(),
-  expires_at timestamptz not null default now() + interval '10 minutes',
-  used_at timestamptz
-);
-create index if not exists pay_tokens_user_idx on public.pay_tokens (user_id, wedding_id) where used_at is null;
-alter table public.pay_tokens enable row level security;
-revoke all on table public.pay_tokens from public, anon, authenticated;
-
--- Leituras falhadas por quem cobra (limite contra adivinhar códigos).
-create table if not exists public.pay_token_misses (
-  user_id uuid not null,
-  at timestamptz not null default now()
-);
-create index if not exists pay_token_misses_idx on public.pay_token_misses (user_id, at);
-alter table public.pay_token_misses enable row level security;
-revoke all on table public.pay_token_misses from public, anon, authenticated;
 
 -- ---------- Movimentos ----------
 create table if not exists public.event_payments (
@@ -103,14 +82,6 @@ create policy "Payer or merchant reads" on public.event_payments for select to a
   );
 
 -- ---------- Quem paga: estado do evento ----------
--- Pode pagar: é convidado do evento ou tem bilhete pago.
-create or replace function public.can_pay_at_event(p_user uuid, p_wedding uuid)
-returns boolean language sql stable security definer set search_path = public, pg_temp as $$
-  select exists (select 1 from public.wedding_guest_members m where m.wedding_id = p_wedding and m.guest_id = p_user)
-      or exists (select 1 from public.event_tickets t where t.wedding_id = p_wedding and t.buyer_id = p_user and t.status = 'paid');
-$$;
-revoke all on function public.can_pay_at_event(uuid, uuid) from public, anon, authenticated;
-
 -- Há alguém que possa cobrar neste evento (parceiro com reserva e Stripe,
 -- ou o dono com Stripe)? Sem isso a app não mostra o QR de pagamento.
 create or replace function public.event_pay_enabled(p_wedding uuid)
@@ -126,16 +97,16 @@ returns boolean language sql stable security definer set search_path = public, p
 $$;
 revoke all on function public.event_pay_enabled(uuid) from public, anon, authenticated;
 
-create or replace function public.my_event_pay(p_wedding uuid, p_code text default null)
+create or replace function public.my_event_pay(p_wedding uuid)
 returns jsonb
-language plpgsql stable security definer set search_path = public, extensions, pg_temp as $$
+language plpgsql stable security definer set search_path = public, pg_temp as $$
 declare
   v_uid uuid := auth.uid();
 begin
   if v_uid is null then
     raise exception 'forbidden' using errcode = '42501';
   end if;
-  if not public.can_pay_at_event(v_uid, p_wedding) then
+  if not public.attends_event(v_uid, p_wedding) then
     return jsonb_build_object('enabled', false);
   end if;
   return jsonb_build_object(
@@ -144,11 +115,6 @@ begin
              from public.payer_cards c where c.user_id = v_uid and c.payment_method_id is not null),
     'spent_cents', (select coalesce(sum(amount_cents), 0) from public.event_payments
                     where payer_id = v_uid and wedding_id = p_wedding and status = 'succeeded'),
-    -- O código que a app mostra ainda serve? Se não, pede outro.
-    'code_valid', p_code is not null and exists (
-      select 1 from public.pay_tokens
-      where token_hash = encode(digest(upper(trim(p_code)), 'sha256'), 'hex')
-        and user_id = v_uid and used_at is null and expires_at > now()),
     'payments', coalesce((
       select jsonb_agg(jsonb_build_object(
         'id', p.id, 'merchant', p.merchant_name, 'description', p.description,
@@ -159,58 +125,18 @@ begin
   );
 end;
 $$;
-revoke execute on function public.my_event_pay(uuid, text) from public, anon;
-grant execute on function public.my_event_pay(uuid, text) to authenticated;
-
--- Novo QR de pagamento: invalida os anteriores e devolve o código UMA vez
--- (no servidor só fica o hash).
-create or replace function public.issue_pay_token(p_wedding uuid)
-returns jsonb
-language plpgsql volatile security definer set search_path = public, extensions, pg_temp as $$
-declare
-  v_uid uuid := auth.uid();
-  alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  v_code text;
-  v_exp timestamptz := now() + interval '10 minutes';
-begin
-  if v_uid is null then
-    raise exception 'forbidden' using errcode = '42501';
-  end if;
-  if not public.can_pay_at_event(v_uid, p_wedding) then
-    return jsonb_build_object('result', 'not_guest');
-  end if;
-  if not exists (select 1 from public.payer_cards where user_id = v_uid and payment_method_id is not null) then
-    return jsonb_build_object('result', 'no_card');
-  end if;
-  update public.pay_tokens set used_at = now() where user_id = v_uid and used_at is null;
-  loop
-    v_code := '';
-    for i in 1..10 loop
-      v_code := v_code || substr(alphabet, 1 + (get_byte(gen_random_bytes(1), 0) % length(alphabet)), 1);
-    end loop;
-    begin
-      insert into public.pay_tokens (user_id, wedding_id, token_hash, expires_at)
-      values (v_uid, p_wedding, encode(digest(v_code, 'sha256'), 'hex'), v_exp);
-      exit;
-    exception when unique_violation then
-      -- Colisão (rara): outro código.
-    end;
-  end loop;
-  return jsonb_build_object('result', 'ok', 'code', v_code, 'expires_at', v_exp);
-end;
-$$;
-revoke execute on function public.issue_pay_token(uuid) from public, anon;
-grant execute on function public.issue_pay_token(uuid) to authenticated;
+revoke execute on function public.my_event_pay(uuid) from public, anon;
+grant execute on function public.my_event_pay(uuid) to authenticated;
 
 -- ---------- Quem cobra (só a Edge Function event-pay, com service_role) ----------
--- Consome o token e cria o movimento, tudo numa transação. A cobrança na
--- Stripe vem a seguir, na Edge Function, com idempotency_key do movimento.
-create or replace function public.consume_pay_token(p_code text, p_merchant_user uuid, p_amount_cents int, p_description text)
+-- A partir de uma leitura do QR da conta (228): gasta a leitura e cria o
+-- movimento, tudo numa transação. A cobrança na Stripe vem a seguir, na
+-- Edge Function, com a idempotency_key do movimento.
+create or replace function public.charge_from_scan(p_scan uuid, p_merchant_user uuid, p_wedding uuid, p_amount_cents int, p_description text)
 returns jsonb
-language plpgsql volatile security definer set search_path = public, extensions, pg_temp as $$
+language plpgsql volatile security definer set search_path = public, pg_temp as $$
 declare
-  v_tok public.pay_tokens%rowtype;
-  v_found boolean;
+  v_scan public.qr_scans%rowtype;
   v_kind text;
   v_merchant uuid;
   v_name text;
@@ -227,78 +153,71 @@ begin
   if p_amount_cents > 5000 then
     return jsonb_build_object('result', 'over_charge_limit');
   end if;
-  if (select count(*) from public.pay_token_misses where user_id = p_merchant_user and at > now() - interval '10 minutes') >= 20 then
-    return jsonb_build_object('result', 'rate_limited');
-  end if;
-
-  select * into v_tok from public.pay_tokens
-  where token_hash = encode(digest(upper(trim(coalesce(p_code, ''))), 'sha256'), 'hex')
+  select * into v_scan from public.qr_scans
+  where id = p_scan and scanner_id = p_merchant_user and expires_at > now()
   for update;
-  v_found := found;
-  if not v_found or v_tok.used_at is not null or v_tok.expires_at <= now() then
-    insert into public.pay_token_misses (user_id) values (p_merchant_user);
-    delete from public.pay_token_misses where at < now() - interval '1 day';
-    return jsonb_build_object('result', case when v_found then 'used_or_expired' else 'not_found' end);
+  if not found then
+    return jsonb_build_object('result', 'expired');
   end if;
-  if v_tok.user_id = p_merchant_user then
-    return jsonb_build_object('result', 'own_code');
+  if v_scan.charged_at is not null then
+    return jsonb_build_object('result', 'already_charged');
+  end if;
+  if not public.attends_event(v_scan.user_id, p_wedding) then
+    return jsonb_build_object('result', 'not_found');
   end if;
 
   -- Quem cobra: parceiro com reserva confirmada (primeiro) ou organizador.
   select 'partner', pp.id, coalesce(nullif(trim(pp.business_name), ''), 'Parceiro'), pp.stripe_account_id
     into v_kind, v_merchant, v_name, v_account
   from public.bookings b join public.partner_profiles pp on pp.id = b.partner_id
-  where b.wedding_id = v_tok.wedding_id and b.partner_id = p_merchant_user
+  where b.wedding_id = p_wedding and b.partner_id = p_merchant_user
     and b.status in ('confirmed', 'completed') and pp.stripe_charges_enabled
   limit 1;
   if v_kind is null then
-    select 'organizer', e.owner_id,
-           coalesce(nullif(concat_ws(' & ', nullif(e.partner_name_1, ''), nullif(e.partner_name_2, '')), ''), 'Organização'),
-           p.stripe_account_id
+    select 'organizer', e.owner_id, public.event_label(e.id), p.stripe_account_id
       into v_kind, v_merchant, v_name, v_account
     from public.events e join public.profiles p on p.id = e.owner_id
-    where e.id = v_tok.wedding_id and p.stripe_charges_enabled
+    where e.id = p_wedding and p.stripe_charges_enabled
       and (e.owner_id = p_merchant_user or exists (
         select 1 from public.wedding_collaborators wc
         where wc.wedding_id = e.id and wc.user_id = p_merchant_user and wc.status = 'active'
           and coalesce(wc.permissions ->> 'bilhetes', 'true') <> 'false'));
   end if;
   if v_kind is null or v_account is null then
-    -- Não gasta o código de quem paga.
     return jsonb_build_object('result', 'not_merchant');
   end if;
 
   select coalesce(sum(amount_cents), 0) into v_spent from public.event_payments
-  where payer_id = v_tok.user_id and wedding_id = v_tok.wedding_id
+  where payer_id = v_scan.user_id and wedding_id = p_wedding
     and status in ('awaiting_payer', 'requires_action', 'processing', 'succeeded');
   if v_spent + p_amount_cents > 30000 then
     return jsonb_build_object('result', 'over_event_limit');
   end if;
 
-  select * into v_card from public.payer_cards where user_id = v_tok.user_id;
+  select * into v_card from public.payer_cards where user_id = v_scan.user_id;
   if v_card.payment_method_id is null then
     return jsonb_build_object('result', 'no_card');
   end if;
 
   select ticket_fee_percentage into v_pct from public.platform_settings where id = 1;
   v_status := case when p_amount_cents > 2500 then 'awaiting_payer' else 'processing' end;
-  update public.pay_tokens set used_at = now() where id = v_tok.id;
+  update public.qr_scans set charged_at = now() where id = v_scan.id;
   v_id := gen_random_uuid();
   insert into public.event_payments (id, wedding_id, payer_id, merchant_kind, merchant_id, merchant_name, charged_by,
                                      amount_cents, fee_pct, description, status, destination_account, idempotency_key)
-  values (v_id, v_tok.wedding_id, v_tok.user_id, v_kind, v_merchant, v_name, p_merchant_user,
+  values (v_id, p_wedding, v_scan.user_id, v_kind, v_merchant, v_name, p_merchant_user,
           p_amount_cents, coalesce(v_pct, 4), nullif(left(trim(coalesce(p_description, '')), 80), ''), v_status, v_account,
           'event-pay-' || v_id);
 
   return jsonb_build_object(
     'result', 'ok', 'payment_id', v_id, 'status', v_status,
-    'payer_id', v_tok.user_id, 'customer', v_card.stripe_customer_id, 'payment_method', v_card.payment_method_id,
+    'payer_id', v_scan.user_id, 'customer', v_card.stripe_customer_id, 'payment_method', v_card.payment_method_id,
     'destination', v_account, 'fee_pct', coalesce(v_pct, 4), 'merchant_name', v_name,
-    'payer_name', (select coalesce(nullif(trim(full_name), ''), 'Convidado') from public.profiles where id = v_tok.user_id)
+    'payer_name', (select coalesce(nullif(trim(full_name), ''), 'Convidado') from public.profiles where id = v_scan.user_id)
   );
 end;
 $$;
-revoke all on function public.consume_pay_token(text, uuid, int, text) from public, anon, authenticated;
-grant execute on function public.consume_pay_token(text, uuid, int, text) to service_role;
+revoke all on function public.charge_from_scan(uuid, uuid, uuid, int, text) from public, anon, authenticated;
+grant execute on function public.charge_from_scan(uuid, uuid, uuid, int, text) to service_role;
 
 commit;

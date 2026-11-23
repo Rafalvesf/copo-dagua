@@ -13,28 +13,24 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
-import 'ticket_pass_screens.dart' show EntryQrPanel, brandQr;
+import '../../../core/events/my_qr.dart';
+import 'ticket_pass_screens.dart' show MyQrCard;
 
-/// «No evento» (mockup aprovado, 2026-11-23): o QR de entrada (roda a cada
-/// 30 s, com nome e mesa) e o QR de pagamento de uso único, com o código por
-/// baixo. Sem saldo (decisão do utilizador: nada de moeda eletrónica): o QR
-/// só identifica quem paga; quem cobra escreve o valor e o servidor cobra
-/// na hora o cartão guardado. Em vez de saldo: «Gasto neste evento» e os
-/// movimentos.
+/// «Pagamentos no evento» (2026-11-23). Sem saldo (decisão do utilizador:
+/// nada de moeda eletrónica): para pagar mostra-se o QR da conta (migração
+/// 228, o mesmo da página principal); quem cobra lê-o, escreve o valor e o
+/// servidor cobra na hora o cartão guardado. Em vez de saldo: «Gasto neste
+/// evento», os movimentos e «Cartão: •••• 4242 · mudar».
 class EventPayScreen extends ConsumerStatefulWidget {
   final String weddingId;
-  final bool startOnEntry;
-  const EventPayScreen({super.key, required this.weddingId, this.startOnEntry = false});
+  const EventPayScreen({super.key, required this.weddingId});
 
   @override
   ConsumerState<EventPayScreen> createState() => _EventPayScreenState();
 }
 
 class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBindingObserver {
-  late bool _entry = widget.startOnEntry;
   EventPayState? _state;
-  String? _code;
-  String? _codeError;
   bool _busy = false;
   Timer? _poll;
 
@@ -42,9 +38,9 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _load(newCode: true);
-    // Enquanto o ecrã está aberto: novos movimentos e QR já usado.
-    _poll = Timer.periodic(const Duration(seconds: 4), (_) => _load());
+    _load();
+    // Enquanto o ecrã está aberto: novos movimentos e pedidos para confirmar.
+    _poll = Timer.periodic(const Duration(seconds: 5), (_) => _load());
   }
 
   @override
@@ -59,19 +55,9 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
     if (state == AppLifecycleState.resumed) _load();
   }
 
-  Future<void> _load({bool newCode = false}) async {
-    final s = await fetchEventPay(widget.weddingId, code: _code);
-    if (!mounted) return;
-    setState(() => _state = s);
-    // O QR muda depois de cada utilização (ou quando expira).
-    if (s.enabled && s.card != null && (newCode || _code == null || !s.codeValid)) {
-      final r = await issuePayCode(widget.weddingId);
-      if (!mounted) return;
-      setState(() {
-        _code = r.error == null ? r.code : null;
-        _codeError = r.error;
-      });
-    }
+  Future<void> _load() async {
+    final s = await fetchEventPay(widget.weddingId);
+    if (mounted) setState(() => _state = s);
   }
 
   Future<void> _saveCard() async {
@@ -81,7 +67,7 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
       confirmExit: true,
       builder: (_) => const _SaveCardSheet(),
     );
-    if (saved == true) await _load(newCode: true);
+    if (saved == true) await _load();
   }
 
   Future<void> _approve(EventPayment p, {required bool accept}) async {
@@ -130,27 +116,22 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
             Row(children: [
               V2RoundButton(icon: Hi.arrowLeft, tooltip: 'Voltar', onTap: () => Navigator.of(context).maybePop()),
               const SizedBox(width: 12),
-              const Text('No evento', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Expanded(
+                child: Text('Pagamentos', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ),
             ]),
             const SizedBox(height: 16),
-            Row(children: [
-              _Pill(label: 'Entrada', selected: _entry, onTap: () => setState(() => _entry = true)),
-              const SizedBox(width: 8),
-              _Pill(label: 'Pagar', selected: !_entry, onTap: () => setState(() => _entry = false)),
-            ]),
-            const SizedBox(height: 20),
-            if (_entry)
-              EntryQrPanel(weddingId: widget.weddingId)
-            else if (s == null)
+            const MyQrCard(),
+            const SizedBox(height: 16),
+            if (s == null)
               const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
             else if (!s.enabled)
               const Text('Ainda não há pagamentos com QR neste evento.',
                   textAlign: TextAlign.center, style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted))
             else ...[
-              ..._payQr(s),
-              const SizedBox(height: 20),
+              if (s.card == null) ...[_noCard(), const SizedBox(height: 16)],
+              for (final p in s.payments.where((p) => p.needsMe)) ...[_pending(p), const SizedBox(height: 12)],
               _summary(s),
-              for (final p in s.payments.where((p) => p.needsMe)) ...[const SizedBox(height: 12), _pending(p)],
               const SizedBox(height: 20),
               ..._history(s),
             ],
@@ -160,58 +141,22 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
     );
   }
 
-  List<Widget> _payQr(EventPayState s) {
-    if (s.card == null) {
-      return [
-        _WhiteCard(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Paga com o QR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 4),
-            const Text(
-              'Guarda um cartão uma vez. No bar mostras o QR, o parceiro escreve o valor e o cartão é cobrado na hora. Não há saldo para carregar.',
-              style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink),
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              height: 44,
-              width: double.infinity,
-              child: FilledButton(onPressed: _saveCard, child: const Text('Guardar cartão', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
-            ),
-          ]),
-        ),
-      ];
-    }
-    final w = MediaQuery.sizeOf(context).width;
-    final size = (w - 2 * AppTheme.screenMargin - 48).clamp(180.0, 260.0);
-    final code = _code;
-    return [
-      Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg), boxShadow: AppTheme.searchBarShadow),
-          child: Column(children: [
-            SizedBox(
-              width: size,
-              height: size,
-              child: code != null
-                  ? brandQr(payQrData(code), size, label: 'Código QR para pagar')
-                  : Center(
-                      child: _codeError == null
-                          ? const CircularProgressIndicator()
-                          : TextButton(onPressed: () => _load(newCode: true), child: const Text('Tentar outra vez')),
-                    ),
-            ),
-            const SizedBox(height: 14),
-            if (code != null)
-              SelectableText(code,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 3, color: AppTheme.ink)),
-            const SizedBox(height: 4),
-            const Text('Uso único: muda depois de cada pagamento.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-          ]),
-        ),
-      ),
-    ];
-  }
+  Widget _noCard() => _WhiteCard(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Paga com o teu QR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const SizedBox(height: 4),
+          const Text(
+            'Guarda um cartão uma vez. No bar mostras o teu QR, o parceiro escreve o valor e o cartão é cobrado na hora. Não há saldo para carregar.',
+            style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 44,
+            width: double.infinity,
+            child: FilledButton(onPressed: _saveCard, child: const Text('Guardar cartão', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+          ),
+        ]),
+      );
 
   Widget _summary(EventPayState s) => _WhiteCard(
         child: Column(children: [
@@ -315,35 +260,6 @@ class _EventPayScreenState extends ConsumerState<EventPayScreen> with WidgetsBin
 }
 
 String _hhmm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-
-class _Pill extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _Pill({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-        button: true,
-        selected: selected,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: selected ? AppTheme.ink : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppTheme.ink, width: 1.5),
-            ),
-            child: Text(label,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink)),
-          ),
-        ),
-      );
-}
 
 class _WhiteCard extends StatelessWidget {
   final Widget child;
@@ -494,11 +410,14 @@ class _SaveCardSheetState extends ConsumerState<_SaveCardSheet> {
   }
 }
 
-/// Quem cobra (bar, parceiro, organizador) leu o QR de pagamento com a
-/// câmara: escreve o valor e confirma. O servidor cobra o cartão guardado.
+/// Cobrar a partir de uma leitura do QR da conta (`ScanScreen`): quem
+/// cobra escreve o valor e confirma; o servidor cobra o cartão guardado.
+/// Uma leitura = uma cobrança (migração 229).
 class ChargeScreen extends StatefulWidget {
-  final String code;
-  const ChargeScreen({super.key, required this.code});
+  final String scanId;
+  final String weddingId;
+  final String? payerName;
+  const ChargeScreen({super.key, required this.scanId, required this.weddingId, this.payerName});
 
   @override
   State<ChargeScreen> createState() => _ChargeScreenState();
@@ -541,7 +460,8 @@ class _ChargeScreenState extends State<ChargeScreen> {
     });
     final r = await eventPay({
       'action': 'charge',
-      'code': widget.code,
+      'scan_id': widget.scanId,
+      'wedding_id': widget.weddingId,
       'amount_cents': cents,
       'description': _description.text.trim(),
     });
@@ -554,7 +474,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
       }
       _cents = cents;
       _paymentId = r['payment_id'] as String?;
-      _payer = r['payer_name'] as String?;
+      _payer = (r['payer_name'] as String?) ?? widget.payerName;
       _status = r['status'] as String?;
     });
     if (_status == 'awaiting_payer' || _status == 'requires_action' || _status == 'processing') _startPolling();
@@ -662,5 +582,182 @@ class _ChargeScreenState extends State<ChargeScreen> {
         ),
       ),
     ];
+  }
+}
+
+
+/// «Quem é» (migração 228): quem lê o QR da conta de alguém (sobretudo o
+/// parceiro, para verificar a marcação; o organizador à entrada) vê o nome
+/// da pessoa e só o que os liga: as suas marcações em eventos onde ela vai,
+/// ou a entrada nos eventos que organiza. Daqui regista a chegada/entrada
+/// ou cobra (uma cobrança por leitura).
+class ScanScreen extends StatefulWidget {
+  final String token;
+  const ScanScreen({super.key, required this.token});
+
+  @override
+  State<ScanScreen> createState() => _ScanScreenState();
+}
+
+class _ScanScreenState extends State<ScanScreen> {
+  late Future<ScanResult> _future = scanQr(widget.token);
+  final Map<String, ({String result, DateTime? at})> _done = {};
+  String? _busy;
+
+  String _key(ScanItem i) => i.bookingId ?? 'e${i.weddingId}';
+
+  Future<void> _confirm(ScanResult r, ScanItem i) async {
+    setState(() => _busy = _key(i));
+    final res = await scanConfirm(r.scanId!, i);
+    if (!mounted) return;
+    setState(() {
+      _busy = null;
+      _done[_key(i)] = res;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GradientScaffold(
+      background: AppBackground.subtle,
+      body: SafeArea(
+        child: FutureBuilder<ScanResult>(
+          future: _future,
+          builder: (context, snap) {
+            if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+            final r = snap.data!;
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 40),
+              children: [
+                Row(children: [
+                  V2RoundButton(icon: Hi.arrowLeft, tooltip: 'Voltar', onTap: () => Navigator.of(context).maybePop()),
+                ]),
+                const SizedBox(height: 16),
+                if (r.result != 'ok') ..._problem(r) else ..._person(r),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _problem(ScanResult r) {
+    final (IconData icon, String title, String text) = switch (r.result) {
+      'expired' => (Hi.clock, 'QR expirado', 'Este QR já mudou. Pede para mostrar o QR outra vez e lê de novo.'),
+      'own_code' => (Hi.informationCircle, 'É o teu QR', 'Este é o teu próprio QR.'),
+      'not_found' => (Hi.xCircle, 'QR inválido', 'Este código não é um QR da À Nossa! válido.'),
+      _ => (Hi.signalSlash, 'Não foi possível ler', 'Verifica a ligação e tenta outra vez.'),
+    };
+    return [
+      const SizedBox(height: 40),
+      Icon(icon, size: 96, color: r.result == 'error' ? AppTheme.inkMuted : const Color(0xFFB3261E)),
+      const SizedBox(height: 16),
+      Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      const SizedBox(height: 8),
+      Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, height: 1.4, color: AppTheme.ink)),
+      if (r.result == 'error') ...[
+        const SizedBox(height: 24),
+        FilledButton(onPressed: () => setState(() => _future = scanQr(widget.token)), child: const Text('Tentar outra vez')),
+      ],
+    ];
+  }
+
+  List<Widget> _person(ScanResult r) {
+    final name = r.name ?? 'Convidado';
+    return [
+      Center(
+        child: CircleAvatar(
+          radius: 44,
+          backgroundColor: AppTheme.ink,
+          foregroundImage: r.avatarUrl != null && r.avatarUrl!.isNotEmpty ? NetworkImage(r.avatarUrl!) : null,
+          child: Text(name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white)),
+        ),
+      ),
+      const SizedBox(height: 12),
+      Text(name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+      const SizedBox(height: 4),
+      const Text('QR verificado agora', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+      const SizedBox(height: 24),
+      if (r.items.isEmpty)
+        const Text(
+          'Esta pessoa não tem marcações contigo nem entradas em eventos que organizas.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16, height: 1.4, color: AppTheme.ink),
+        )
+      else
+        for (final i in r.items) ...[_item(r, i), const SizedBox(height: 12)],
+    ];
+  }
+
+  Widget _item(ScanResult r, ScanItem i) {
+    final key = _key(i);
+    final done = _done[key];
+    final at = done?.at ?? i.doneAt;
+    final booking = i.kind == 'booking';
+    final already = done == null && i.doneAt != null;
+    final blocked = !booking && i.isPaid && i.ticketStatus != 'paid';
+    final meta = [
+      if (i.date != null) '${i.date!.day.toString().padLeft(2, '0')}/${i.date!.month.toString().padLeft(2, '0')}/${i.date!.year}',
+      if (booking && i.bookingNumber != null) 'Marcação ${i.bookingNumber}',
+      if (booking && i.people != null) '${i.people} pessoas',
+      if (!booking && i.isPaid) i.ticketStatus == 'paid' ? (i.quantity == 1 ? 'Bilhete pago · 1 pessoa' : 'Bilhete pago · ${i.quantity} pessoas') : 'Sem bilhete pago',
+    ].join(' · ');
+    final (String? statusText, Color statusColor) = switch (done?.result) {
+      'ok' => ('${booking ? 'Chegada' : 'Entrada'} registada às ${_hhmm(done!.at ?? DateTime.now())}', AppTheme.accentOliveDark),
+      'already' => ('Já ${booking ? 'chegou' : 'entrou'} às ${at == null ? '—' : _hhmm(at)}', const Color(0xFF9A5B00)),
+      'expired' => ('A leitura expirou. Lê o QR outra vez.', const Color(0xFFB3261E)),
+      'not_paid' => ('Bilhete por pagar.', const Color(0xFFB3261E)),
+      'refunded' => ('Bilhete reembolsado.', const Color(0xFFB3261E)),
+      null => already
+          ? ('Já ${booking ? 'chegou' : 'entrou'} às ${_hhmm(i.doneAt!)}', const Color(0xFF9A5B00))
+          : blocked
+              ? ('Sem bilhete pago: não dá entrada.', const Color(0xFFB3261E))
+              : (null, AppTheme.ink),
+      _ => ('Não foi possível registar. Tenta outra vez.', const Color(0xFFB3261E)),
+    };
+    final showConfirm = !already && !blocked && (done == null || done.result == 'error');
+    return _WhiteCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(booking ? 'A TUA MARCAÇÃO' : 'ENTRADA NO TEU EVENTO',
+            style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+        const SizedBox(height: 4),
+        Text(i.event, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        if (statusText != null) ...[
+          const SizedBox(height: 8),
+          Text(statusText, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: statusColor)),
+        ],
+        const SizedBox(height: 12),
+        Row(children: [
+          if (showConfirm)
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: FilledButton(
+                  onPressed: _busy == null ? () => _confirm(r, i) : null,
+                  child: _busy == key
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : Text(booking ? 'Registar chegada' : 'Registar entrada', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ),
+          if (showConfirm && i.canCharge) const SizedBox(width: 10),
+          if (i.canCharge)
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => ChargeScreen(scanId: r.scanId!, weddingId: i.weddingId, payerName: r.name),
+                  )),
+                  child: const Text('Cobrar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ),
+        ]),
+      ]),
+    );
   }
 }

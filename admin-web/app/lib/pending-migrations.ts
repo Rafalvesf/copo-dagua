@@ -575,17 +575,17 @@ export const MIGRATIONS: PendingMigration[] = [
     check: { kind: "marker", id: "227" },
   },
   {
-    file: "228_qr_entrada_rotativo.sql",
+    file: "228_qr_da_conta.sql",
     date: "2026-11-23",
-    title: "QR de entrada rotativo",
-    what: "O QR de entrada passa a ser de cada evento + pessoa e muda a cada 30 segundos (assinado no servidor): um screenshot deixa de dar entrada. Os códigos fixos antigos dos bilhetes deixam de valer. Corre depois da 227.",
-    check: { kind: "table", table: "event_passes" },
+    title: "Um QR por conta, rotativo",
+    what: "Cada conta tem um QR que muda a cada 30 segundos (assinado no servidor; um screenshot não serve). Fica na página principal. Quem o lê (sobretudo o parceiro, para verificar a marcação, ou o organizador à entrada) vê o nome e só o que os liga, e regista a chegada ou a entrada. Os códigos fixos antigos dos bilhetes deixam de valer. Corre depois da 227.",
+    check: { kind: "table", table: "user_qr" },
   },
   {
     file: "229_qr_pagamento_cartao.sql",
     date: "2026-11-23",
     title: "QR de pagamento no evento (cartão, sem saldo)",
-    what: "Quem paga guarda um cartão (na Stripe) e mostra um QR de uso único; o parceiro ou organizador escreve o valor e o servidor cobra o cartão na hora, por Stripe Connect. Sem saldo guardado. Limites: 50 € por cobrança, 300 € por pessoa e evento, confirmação na app acima de 25 €. Depois: publicar a Edge Function event-pay e ligar no webhook da Stripe payment_intent.payment_failed e payment_intent.canceled. Corre depois da 228.",
+    what: "Quem paga guarda um cartão (na Stripe) e mostra o QR da conta; o parceiro ou organizador lê-o, escreve o valor e o servidor cobra o cartão na hora, por Stripe Connect. Sem saldo guardado. Limites: 50 € por cobrança, 300 € por pessoa e evento, confirmação na app acima de 25 €. Depois: publicar a Edge Function event-pay e ligar no webhook da Stripe payment_intent.payment_failed e payment_intent.canceled. Corre depois da 228.",
     check: { kind: "table", table: "event_payments" },
   },
 ];

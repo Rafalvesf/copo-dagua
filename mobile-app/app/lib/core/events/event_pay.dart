@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, PostgrestException;
 
-import '../../shared/public_link.dart';
 import '../supabase/supabase_config.dart';
 
 /// QR de pagamento no evento (migração 229, 2026-11-23). Sem saldo: o QR só
 /// identifica quem paga e o servidor cobra na hora o cartão guardado na
-/// Stripe. Limites: 50 € por cobrança, 300 € por pessoa e evento; acima de
+/// Stripe. O QR é o da conta (migração 228). Limites: 50 € por cobrança, 300 € por pessoa e evento; acima de
 /// 25 € quem paga confirma na app.
 
 class SavedCard {
@@ -40,24 +39,21 @@ class EventPayState {
   final bool enabled;
   final SavedCard? card;
   final int spentCents;
-  final bool codeValid;
   final List<EventPayment> payments;
-  const EventPayState({this.enabled = false, this.card, this.spentCents = 0, this.codeValid = false, this.payments = const []});
+  const EventPayState({this.enabled = false, this.card, this.spentCents = 0, this.payments = const []});
 }
 
 String euros(int cents) => '${(cents / 100).toStringAsFixed(2).replaceAll('.', ',')} €';
 
-/// O que quem paga vê. [code] = o código que o ecrã mostra agora (para
-/// saber se já foi usado).
-Future<EventPayState> fetchEventPay(String weddingId, {String? code}) async {
+/// O que quem paga vê neste evento.
+Future<EventPayState> fetchEventPay(String weddingId) async {
   try {
-    final r = await supabase.rpc('my_event_pay', params: {'p_wedding': weddingId, 'p_code': code});
+    final r = await supabase.rpc('my_event_pay', params: {'p_wedding': weddingId});
     if (r is! Map) return const EventPayState();
     return EventPayState(
       enabled: r['enabled'] == true,
       card: r['card'] is Map ? SavedCard.fromJson(r['card'] as Map) : null,
       spentCents: (r['spent_cents'] as num?)?.toInt() ?? 0,
-      codeValid: r['code_valid'] == true,
       payments: [
         for (final p in (r['payments'] as List? ?? const []))
           if (p is Map)
@@ -82,20 +78,6 @@ final eventPayEnabledProvider = FutureProvider.autoDispose.family<bool, String>(
   return (await fetchEventPay(weddingId)).enabled;
 });
 
-/// Um QR de pagamento novo (os anteriores deixam de valer).
-Future<({String code, String? error})> issuePayCode(String weddingId) async {
-  try {
-    final r = await supabase.rpc('issue_pay_token', params: {'p_wedding': weddingId});
-    if (r is Map && r['result'] == 'ok' && r['code'] is String) return (code: r['code'] as String, error: null);
-    return (code: '', error: r is Map ? '${r['result']}' : 'error');
-  } on PostgrestException {
-    return (code: '', error: 'error');
-  }
-}
-
-/// O que vai no QR de pagamento: abre «Cobrar» na app de quem cobra.
-String payQrData(String code) => publicLink('/pagar/$code');
-
 /// Chama a Edge Function `event-pay`. Erros vêm como `{error}`.
 Future<Map<String, dynamic>> eventPay(Map<String, dynamic> body) async {
   try {
@@ -112,14 +94,13 @@ Future<Map<String, dynamic>> eventPay(Map<String, dynamic> body) async {
 
 /// Texto para quem cobra, a partir do `result` de `charge`.
 String chargeErrorText(String result) => switch (result) {
-      'not_found' => 'Este QR não é válido.',
-      'used_or_expired' => 'Este QR já foi usado ou expirou. Pede para mostrar o novo.',
-      'own_code' => 'Não podes cobrar a ti próprio.',
+      'not_found' => 'Esta pessoa não vai a este evento.',
+      'expired' => 'A leitura expirou (10 minutos). Lê o QR outra vez.',
+      'already_charged' => 'Já cobraste nesta leitura. Lê o QR outra vez para outra cobrança.',
       'not_merchant' => 'Só os parceiros com reserva neste evento e os organizadores podem cobrar.',
       'over_charge_limit' => 'O máximo por cobrança é 50 €.',
       'over_event_limit' => 'Esta pessoa chegou ao limite de 300 € neste evento.',
       'invalid_amount' => 'O valor mínimo é 0,50 €.',
       'no_card' => 'Esta pessoa não tem cartão guardado.',
-      'rate_limited' => 'Demasiados códigos errados. Espera uns minutos.',
       _ => 'Não foi possível cobrar. Tenta outra vez.',
     };

@@ -17,8 +17,8 @@ import { notifyPayer, payIntentParams, type PayRow, statusOf, syncPayment } from
 //       banco pediu 3DS: cobra com a pessoa presente; pode devolver
 //       { status: "requires_action", client_secret, payment_method }.
 //   { action: "decline", payment_id }
-// Quem cobra:
-//   { action: "charge", code, amount_cents, description? }
+// Quem cobra (depois de ler o QR da conta com scan_qr, migração 228):
+//   { action: "charge", scan_id, wedding_id, amount_cents, description? }
 // Os dois:
 //   { action: "sync", payment_id }             → estado atual (Stripe).
 // deno-lint-ignore no-explicit-any
@@ -85,20 +85,19 @@ Deno.serve(async (req) => {
             .update({ payment_method_id: null, brand: null, last4: null, exp_month: null, exp_year: null, updated_at: now() })
             .eq("user_id", user.id);
         }
-        // Os QR que estavam abertos deixam de servir.
-        await admin.from("pay_tokens").update({ used_at: now() }).eq("user_id", user.id).is("used_at", null);
         return json({ status: "removed" });
       }
 
       case "charge": {
-        const code = str("code");
+        const scan = str("scan_id");
+        const wedding = str("wedding_id");
         const amount = body.amount_cents;
-        if (!code || typeof amount !== "number" || !Number.isInteger(amount)) return json({ error: "validation_error" }, 400);
-        const { data: r, error } = await admin.rpc("consume_pay_token", {
-          p_code: code, p_merchant_user: user.id, p_amount_cents: amount, p_description: str("description"),
+        if (!scan || !wedding || typeof amount !== "number" || !Number.isInteger(amount)) return json({ error: "validation_error" }, 400);
+        const { data: r, error } = await admin.rpc("charge_from_scan", {
+          p_scan: scan, p_merchant_user: user.id, p_wedding: wedding, p_amount_cents: amount, p_description: str("description"),
         });
         if (error) {
-          console.error("consume_pay_token", error.message);
+          console.error("charge_from_scan", error.message);
           return json({ error: "unknown_error" }, 500);
         }
         if (r?.result !== "ok") return json({ result: r?.result ?? "unknown_error" });

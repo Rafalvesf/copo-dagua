@@ -1,146 +1,182 @@
 -- ============================================================
--- 228 — QR de entrada rotativo (evento + utilizador)
+-- 228 — Um QR por conta, rotativo (entrada, marcações e pagamento)
 -- ============================================================
--- Pedido do utilizador (2026-11-23): o QR de cada evento é gerado para o
--- par evento + utilizador e não pode ser copiado nem reutilizado por
--- outra pessoa. Até aqui o QR levava um código fixo (migração 158):
--- quem tivesse um screenshot entrava no lugar de outro.
+-- Pedidos do utilizador (2026-11-23):
+--   • "o QR não pode ser copiado nem reutilizado por outra pessoa": token
+--     assinado no servidor que muda a cada 30 s (estilo TOTP, mas o segredo
+--     nunca sai do servidor).
+--   • "apenas um qr code para todos os eventos é suficiente, visto que
+--     atualiza de 30 em 30 sec e assim posso colocar na página principal".
+--   • "quem o lê normalmente são os parceiros para verificar marcações
+--     (restaurantes por exemplo)".
 --
--- Como funciona agora (estilo TOTP, mas o segredo nunca sai do servidor):
---   • event_passes: uma linha por evento + utilizador, com um código curto
---     e um segredo aleatório de 32 bytes. Sem políticas RLS e sem grants:
---     ninguém lê a tabela diretamente, só estas funções.
---   • my_entry_qr(evento): a app pede o token da janela atual de 30 s:
---         CÓDIGO.JANELA.HMAC   (HMAC-SHA256(segredo, id:janela), 16 hex)
---     e pede outro quando a janela acaba. Um screenshot deixa de servir
---     passado ~1 minuto.
---   • check_in_entry(token): o organizador (permissão «bilhetes») lê o QR.
---     O servidor confirma o HMAC, aceita a janela atual ±1 (relógio e
---     leitura lenta) e regista a entrada UMA vez. Nos eventos pagos exige
---     bilhete pago e marca também o bilhete.
---   • check_in_ticket(código) (158) passa a usar check_in_entry: os
---     códigos fixos antigos deixam de dar entrada (decisão por omissão,
---     2026-11-23 — o utilizador não escolheu e seguiu-se a recomendada);
---     apps antigas do organizador continuam a ler os QR novos.
+-- Como funciona:
+--   • user_qr: um código curto e um segredo de 32 bytes por conta. Sem
+--     políticas RLS e sem grants: só estas funções lhe tocam.
+--   • my_qr(): o token da janela atual de 30 s, CÓDIGO.JANELA.HMAC
+--     (HMAC-SHA256(segredo, id:janela), 16 hex). A app pede outro quando a
+--     janela acaba. Um screenshot deixa de servir passado ~1 minuto.
+--   • scan_qr(token): quem lê (parceiro ou organizador) recebe o nome da
+--     pessoa e SÓ o que os liga: as marcações desse parceiro em eventos
+--     onde a pessoa vai, ou a entrada nos eventos que esse organizador
+--     gere. Cria uma leitura (qr_scans, 10 min) que autoriza as ações
+--     seguintes: registar a entrada, registar a chegada à marcação ou uma
+--     cobrança (migração 229). Quem lê não pode ler o mesmo código de 30 s
+--     duas vezes (uma leitura por janela).
+--   • check_in_ticket(código) (158): os códigos fixos antigos deixam de dar
+--     entrada (decisão por omissão, 2026-11-23: o utilizador não escolheu e
+--     seguiu-se a recomendada); apps antigas do organizador que leiam o QR
+--     novo registam a entrada no evento dele.
 --
 -- Corre DEPOIS da 227.
 
 begin;
 
-create table if not exists public.event_passes (
-  id uuid primary key default gen_random_uuid(),
-  wedding_id uuid not null references public.events(id) on delete cascade,
-  user_id uuid not null references public.profiles(id) on delete cascade,
+-- ---------- O QR de cada conta ----------
+create table if not exists public.user_qr (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
   code text not null unique,
   secret bytea not null default extensions.gen_random_bytes(32),
-  checked_in_at timestamptz,
-  checked_in_by uuid references public.profiles(id) on delete set null,
-  created_at timestamptz not null default now(),
-  unique (wedding_id, user_id)
+  created_at timestamptz not null default now()
 );
-alter table public.event_passes enable row level security;
--- Sem políticas de propósito: o segredo só é usado dentro das funções.
-revoke all on table public.event_passes from public, anon, authenticated;
+alter table public.user_qr enable row level security;
+revoke all on table public.user_qr from public, anon, authenticated;
 
-create or replace function public.gen_pass_code()
-returns text language plpgsql volatile set search_path = public, pg_temp as $$
-declare
-  alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  v text;
-begin
-  loop
-    v := '';
-    for i in 1..10 loop
-      v := v || substr(alphabet, 1 + (get_byte(extensions.gen_random_bytes(1), 0) % length(alphabet)), 1);
-    end loop;
-    exit when not exists (select 1 from public.event_passes where code = v);
-  end loop;
-  return v;
-end;
-$$;
-revoke all on function public.gen_pass_code() from public, anon, authenticated;
+-- Leituras: autorizam as ações seguintes durante 10 minutos.
+create table if not exists public.qr_scans (
+  id uuid primary key default gen_random_uuid(),
+  scanner_id uuid not null references public.profiles(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  qr_window bigint not null,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '10 minutes',
+  charged_at timestamptz,
+  unique (scanner_id, user_id, qr_window)
+);
+alter table public.qr_scans enable row level security;
+revoke all on table public.qr_scans from public, anon, authenticated;
 
--- HMAC de uma janela (16 hex = 64 bits). Só para uso interno.
-create or replace function public.entry_pass_mac(p_id uuid, p_secret bytea, p_window bigint)
+-- Entrada nos eventos (também nos gratuitos, sem bilhete).
+create table if not exists public.event_checkins (
+  wedding_id uuid not null references public.events(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  checked_in_at timestamptz not null default now(),
+  checked_in_by uuid references public.profiles(id) on delete set null,
+  primary key (wedding_id, user_id)
+);
+alter table public.event_checkins enable row level security;
+revoke all on table public.event_checkins from public, anon, authenticated;
+grant select on table public.event_checkins to authenticated;
+drop policy if exists "Own or organizer reads" on public.event_checkins;
+create policy "Own or organizer reads" on public.event_checkins for select to authenticated
+  using (user_id = (select auth.uid()) or public.wedding_can(wedding_id, 'bilhetes'));
+
+-- Chegada a uma marcação de parceiro (restaurante, etc.).
+create table if not exists public.booking_arrivals (
+  booking_id uuid not null references public.bookings(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  arrived_at timestamptz not null default now(),
+  marked_by uuid references public.profiles(id) on delete set null,
+  primary key (booking_id, user_id)
+);
+alter table public.booking_arrivals enable row level security;
+revoke all on table public.booking_arrivals from public, anon, authenticated;
+grant select on table public.booking_arrivals to authenticated;
+drop policy if exists "Own, partner or organizer reads" on public.booking_arrivals;
+create policy "Own, partner or organizer reads" on public.booking_arrivals for select to authenticated
+  using (
+    user_id = (select auth.uid())
+    or exists (select 1 from public.bookings b where b.id = booking_id
+               and (b.partner_id = (select auth.uid()) or public.wedding_can(b.wedding_id, 'convidados')))
+  );
+
+-- ---------- Ajudas (só internas) ----------
+create or replace function public.qr_mac(p_user uuid, p_secret bytea, p_window bigint)
 returns text language sql immutable set search_path = public, pg_temp as $$
-  select left(encode(extensions.hmac(convert_to(p_id::text || ':' || p_window::text, 'UTF8'), p_secret, 'sha256'), 'hex'), 16);
+  select left(encode(extensions.hmac(convert_to(p_user::text || ':' || p_window::text, 'UTF8'), p_secret, 'sha256'), 'hex'), 16);
 $$;
-revoke all on function public.entry_pass_mac(uuid, bytea, bigint) from public, anon, authenticated;
+revoke all on function public.qr_mac(uuid, bytea, bigint) from public, anon, authenticated;
 
--- ---------- O convidado: token da janela atual ----------
-create or replace function public.my_entry_qr(p_wedding uuid)
+-- A pessoa vai a este evento (convidada, com bilhete pago ou dona)?
+create or replace function public.attends_event(p_user uuid, p_wedding uuid)
+returns boolean language sql stable security definer set search_path = public, pg_temp as $$
+  select exists (select 1 from public.wedding_guest_members m where m.wedding_id = p_wedding and m.guest_id = p_user)
+      or exists (select 1 from public.event_tickets t where t.wedding_id = p_wedding and t.buyer_id = p_user and t.status = 'paid')
+      or exists (select 1 from public.events e where e.id = p_wedding and e.owner_id = p_user);
+$$;
+revoke all on function public.attends_event(uuid, uuid) from public, anon, authenticated;
+
+create or replace function public.event_label(p_wedding uuid)
+returns text language sql stable security definer set search_path = public, pg_temp as $$
+  select coalesce(nullif(concat_ws(' & ', nullif(partner_name_1, ''), nullif(partner_name_2, '')), ''), 'Evento')
+  from public.events where id = p_wedding;
+$$;
+revoke all on function public.event_label(uuid) from public, anon, authenticated;
+
+-- Leitura válida, desta pessoa que lê e ainda dentro dos 10 minutos.
+create or replace function public.valid_scan(p_scan uuid, p_scanner uuid)
+returns public.qr_scans language sql stable security definer set search_path = public, pg_temp as $$
+  select * from public.qr_scans where id = p_scan and scanner_id = p_scanner and expires_at > now();
+$$;
+revoke all on function public.valid_scan(uuid, uuid) from public, anon, authenticated;
+
+-- ---------- O meu QR ----------
+create or replace function public.my_qr()
 returns jsonb
 language plpgsql volatile security definer set search_path = public, pg_temp as $$
 declare
   v_uid uuid := auth.uid();
-  v_is_paid boolean;
-  v_ticket public.event_tickets%rowtype;
-  v_pass public.event_passes%rowtype;
+  v_row public.user_qr%rowtype;
   v_epoch numeric := extract(epoch from clock_timestamp());
   v_window bigint := floor(v_epoch / 30);
+  alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  v_code text;
 begin
   if v_uid is null then
     raise exception 'forbidden' using errcode = '42501';
   end if;
-  select coalesce(is_paid, false) into v_is_paid from public.events where id = p_wedding;
+  select * into v_row from public.user_qr where user_id = v_uid;
   if not found then
-    return jsonb_build_object('result', 'not_found');
+    loop
+      v_code := '';
+      for i in 1..10 loop
+        v_code := v_code || substr(alphabet, 1 + (get_byte(extensions.gen_random_bytes(1), 0) % length(alphabet)), 1);
+      end loop;
+      begin
+        insert into public.user_qr (user_id, code) values (v_uid, v_code)
+        on conflict (user_id) do nothing;
+        exit;
+      exception when unique_violation then
+        -- Colisão do código (rara): outro.
+      end;
+    end loop;
+    select * into v_row from public.user_qr where user_id = v_uid;
   end if;
-
-  select * into v_ticket
-  from public.event_tickets t
-  where t.wedding_id = p_wedding and t.buyer_id = v_uid and t.status = 'paid'
-  order by t.paid_at desc nulls last limit 1;
-
-  if v_is_paid then
-    if v_ticket.id is null then
-      return jsonb_build_object('result', 'no_ticket');
-    end if;
-  elsif not exists (select 1 from public.wedding_guest_members m where m.wedding_id = p_wedding and m.guest_id = v_uid) then
-    return jsonb_build_object('result', 'not_guest');
-  end if;
-
-  insert into public.event_passes (wedding_id, user_id, code)
-  values (p_wedding, v_uid, public.gen_pass_code())
-  on conflict (wedding_id, user_id) do nothing;
-  select * into v_pass from public.event_passes where wedding_id = p_wedding and user_id = v_uid;
-
   return jsonb_build_object(
-    'result', 'ok',
-    'token', v_pass.code || '.' || v_window || '.' || public.entry_pass_mac(v_pass.id, v_pass.secret, v_window),
-    -- Segundos até esta janela acabar: a app pede o próximo nessa altura.
+    'token', v_row.code || '.' || v_window || '.' || public.qr_mac(v_uid, v_row.secret, v_window),
     'refresh_in', greatest(1, ceil((v_window + 1) * 30 - v_epoch))::int,
-    'quantity', coalesce(v_ticket.quantity, 1),
-    'checked_in_at', coalesce(v_pass.checked_in_at, v_ticket.checked_in_at),
-    -- Nome e mesa por baixo do QR (mockup aprovado, 2026-11-23). A app só
-    -- mostra a mesa quando o organizador já a revelou (opt_table_reveal).
-    'name', (select nullif(trim(full_name), '') from public.profiles where id = v_uid),
-    'table', (select t.position + 1 from public.seating_tables t
-              join public.guests g on g.wedding_id = t.wedding_id and g.id = any(t.guest_ids)
-              where t.wedding_id = p_wedding and g.linked_profile_id = v_uid
-              limit 1)
+    'name', (select nullif(trim(full_name), '') from public.profiles where id = v_uid)
   );
 end;
 $$;
-revoke execute on function public.my_entry_qr(uuid) from public, anon;
-grant execute on function public.my_entry_qr(uuid) to authenticated;
+revoke execute on function public.my_qr() from public, anon;
+grant execute on function public.my_qr() to authenticated;
 
--- ---------- O organizador lê o QR ----------
-create or replace function public.check_in_entry(p_token text)
+-- ---------- Quem lê ----------
+create or replace function public.scan_qr(p_token text)
 returns jsonb
-language plpgsql security definer set search_path = public, pg_temp as $$
+language plpgsql volatile security definer set search_path = public, pg_temp as $$
 declare
+  v_me uuid := auth.uid();
   v_parts text[];
   v_window bigint;
   v_now_window bigint := floor(extract(epoch from clock_timestamp()) / 30);
-  v_pass public.event_passes%rowtype;
-  v_ticket public.event_tickets%rowtype;
-  v_is_paid boolean;
-  v_name text;
-  v_event text;
-  v_already timestamptz;
+  v_qr public.user_qr%rowtype;
+  v_scan uuid;
+  v_has_card boolean;
+  v_items jsonb;
 begin
-  if auth.uid() is null then
+  if v_me is null then
     raise exception 'forbidden' using errcode = '42501';
   end if;
   v_parts := string_to_array(trim(coalesce(p_token, '')), '.');
@@ -150,63 +186,179 @@ begin
     return jsonb_build_object('result', 'not_found');
   end if;
   v_window := v_parts[2]::bigint;
-
-  select * into v_pass from public.event_passes where code = upper(v_parts[1]) for update;
-  if not found then
+  select * into v_qr from public.user_qr where code = upper(v_parts[1]);
+  -- HMAC antes da janela: um token falso nunca ouve «expirado».
+  if not found or public.qr_mac(v_qr.user_id, v_qr.secret, v_window) <> lower(v_parts[3]) then
     return jsonb_build_object('result', 'not_found');
   end if;
-  if not public.wedding_can(v_pass.wedding_id, 'bilhetes') then
+  if abs(v_now_window - v_window) > 1 then
+    return jsonb_build_object('result', 'expired');
+  end if;
+  if v_qr.user_id = v_me then
+    return jsonb_build_object('result', 'own_code');
+  end if;
+
+  -- Uma leitura por janela e por quem lê (reler devolve a mesma).
+  insert into public.qr_scans (scanner_id, user_id, qr_window) values (v_me, v_qr.user_id, v_window)
+  on conflict (scanner_id, user_id, qr_window) do nothing
+  returning id into v_scan;
+  if v_scan is null then
+    select id into v_scan from public.qr_scans where scanner_id = v_me and user_id = v_qr.user_id and qr_window = v_window;
+  end if;
+
+  -- Antes da 229 a tabela de cartões ainda não existe.
+  if to_regclass('public.payer_cards') is not null then
+    execute 'select exists (select 1 from public.payer_cards where user_id = $1 and payment_method_id is not null)'
+      into v_has_card using v_qr.user_id;
+  end if;
+  v_has_card := coalesce(v_has_card, false);
+
+  select coalesce(jsonb_agg(x.item order by abs(x.item_date - current_date), x.item_date), '[]'::jsonb) into v_items
+  from (
+    -- Marcações deste parceiro em eventos onde a pessoa vai.
+    select b.event_date as item_date, jsonb_build_object(
+      'kind', 'booking', 'booking_id', b.id, 'wedding_id', b.wedding_id, 'event', public.event_label(b.wedding_id),
+      'date', b.event_date, 'booking_number', b.booking_number, 'people', b.people,
+      'arrived_at', (select a.arrived_at from public.booking_arrivals a where a.booking_id = b.id and a.user_id = v_qr.user_id),
+      'can_charge', v_has_card and pp.stripe_charges_enabled) as item
+    from public.bookings b
+    join public.partner_profiles pp on pp.id = b.partner_id
+    where b.partner_id = v_me and b.status in ('confirmed', 'completed')
+      and public.attends_event(v_qr.user_id, b.wedding_id)
+    union all
+    -- Entrada nos eventos que eu organizo (permissão «bilhetes»).
+    select coalesce(e.wedding_date, current_date), jsonb_build_object(
+      'kind', 'entry', 'wedding_id', e.id, 'event', public.event_label(e.id), 'date', e.wedding_date,
+      'is_paid', coalesce(e.is_paid, false),
+      'ticket', (select jsonb_build_object('status', t.status, 'quantity', t.quantity)
+                 from public.event_tickets t where t.wedding_id = e.id and t.buyer_id = v_qr.user_id
+                 order by (t.status = 'paid') desc, t.paid_at desc nulls last limit 1),
+      'checked_in_at', coalesce(
+        (select c.checked_in_at from public.event_checkins c where c.wedding_id = e.id and c.user_id = v_qr.user_id),
+        (select t.checked_in_at from public.event_tickets t where t.wedding_id = e.id and t.buyer_id = v_qr.user_id and t.status = 'paid'
+         order by t.paid_at desc nulls last limit 1)),
+      'can_charge', v_has_card and coalesce((select p.stripe_charges_enabled from public.profiles p where p.id = e.owner_id), false))
+    from public.events e
+    where public.wedding_can(e.id, 'bilhetes')
+      and e.cancelled_at is null
+      and e.owner_id <> v_qr.user_id
+      and public.attends_event(v_qr.user_id, e.id)
+  ) x;
+
+  return jsonb_build_object(
+    'result', 'ok',
+    'scan_id', v_scan,
+    'name', (select coalesce(nullif(trim(full_name), ''), 'Convidado') from public.profiles where id = v_qr.user_id),
+    'avatar_url', (select avatar_url from public.profiles where id = v_qr.user_id),
+    'items', v_items
+  );
+end;
+$$;
+revoke execute on function public.scan_qr(text) from public, anon;
+grant execute on function public.scan_qr(text) to authenticated;
+
+-- Registar a entrada num evento que eu organizo.
+create or replace function public.scan_check_in(p_scan uuid, p_wedding uuid)
+returns jsonb
+language plpgsql volatile security definer set search_path = public, pg_temp as $$
+declare
+  v_scan public.qr_scans%rowtype;
+  v_is_paid boolean;
+  v_ticket public.event_tickets%rowtype;
+  v_already timestamptz;
+begin
+  select * into v_scan from public.valid_scan(p_scan, auth.uid());
+  if v_scan.id is null then
+    return jsonb_build_object('result', 'expired');
+  end if;
+  if not public.wedding_can(p_wedding, 'bilhetes') then
     return jsonb_build_object('result', 'not_organizer');
   end if;
-  -- HMAC antes da janela: um token falso nunca ouve «expirado».
-  if public.entry_pass_mac(v_pass.id, v_pass.secret, v_window) <> lower(v_parts[3]) then
+  if not public.attends_event(v_scan.user_id, p_wedding) then
     return jsonb_build_object('result', 'not_found');
   end if;
-
-  select coalesce(nullif(trim(full_name), ''), 'Convidado') into v_name from public.profiles where id = v_pass.user_id;
-  select coalesce(nullif(concat_ws(' & ', nullif(partner_name_1, ''), nullif(partner_name_2, '')), ''), 'Evento'),
-         coalesce(is_paid, false)
-    into v_event, v_is_paid
-    from public.events where id = v_pass.wedding_id;
-
-  if abs(v_now_window - v_window) > 1 then
-    return jsonb_build_object('result', 'expired', 'name', v_name, 'event', v_event);
-  end if;
-
+  select coalesce(is_paid, false) into v_is_paid from public.events where id = p_wedding;
   if v_is_paid then
     select * into v_ticket from public.event_tickets t
-    where t.wedding_id = v_pass.wedding_id and t.buyer_id = v_pass.user_id
+    where t.wedding_id = p_wedding and t.buyer_id = v_scan.user_id
     order by (t.status = 'paid') desc, t.paid_at desc nulls last limit 1
     for update;
     if v_ticket.id is null or v_ticket.status <> 'paid' then
-      return jsonb_build_object('result', case when v_ticket.status = 'refunded' then 'refunded' else 'not_paid' end,
-                                'name', v_name, 'quantity', coalesce(v_ticket.quantity, 1), 'event', v_event);
+      return jsonb_build_object('result', case when v_ticket.status = 'refunded' then 'refunded' else 'not_paid' end);
     end if;
   end if;
-
-  v_already := coalesce(v_pass.checked_in_at, v_ticket.checked_in_at);
+  select checked_in_at into v_already from public.event_checkins where wedding_id = p_wedding and user_id = v_scan.user_id;
+  v_already := coalesce(v_already, v_ticket.checked_in_at);
   if v_already is null then
-    update public.event_passes set checked_in_at = now(), checked_in_by = auth.uid() where id = v_pass.id;
+    insert into public.event_checkins (wedding_id, user_id, checked_in_by) values (p_wedding, v_scan.user_id, auth.uid())
+    on conflict do nothing;
     if v_ticket.id is not null then
       update public.event_tickets set checked_in_at = now(), checked_in_by = auth.uid() where id = v_ticket.id;
     end if;
   end if;
   return jsonb_build_object(
     'result', case when v_already is null then 'ok' else 'already' end,
-    'name', v_name, 'quantity', coalesce(v_ticket.quantity, 1), 'event', v_event,
+    'quantity', coalesce(v_ticket.quantity, 1),
     'checked_in_at', coalesce(v_already, now())
   );
 end;
 $$;
-revoke execute on function public.check_in_entry(text) from public, anon;
-grant execute on function public.check_in_entry(text) to authenticated;
+revoke execute on function public.scan_check_in(uuid, uuid) from public, anon;
+grant execute on function public.scan_check_in(uuid, uuid) to authenticated;
 
--- Apps antigas do organizador chamam check_in_ticket com o que leram no QR.
--- Passa a aceitar só o token rotativo; os códigos fixos dão «not_found».
+-- Registar a chegada a uma marcação minha (parceiro).
+create or replace function public.scan_booking_arrival(p_scan uuid, p_booking uuid)
+returns jsonb
+language plpgsql volatile security definer set search_path = public, pg_temp as $$
+declare
+  v_scan public.qr_scans%rowtype;
+  v_wedding uuid;
+  v_already timestamptz;
+begin
+  select * into v_scan from public.valid_scan(p_scan, auth.uid());
+  if v_scan.id is null then
+    return jsonb_build_object('result', 'expired');
+  end if;
+  select wedding_id into v_wedding from public.bookings
+  where id = p_booking and partner_id = auth.uid() and status in ('confirmed', 'completed');
+  if v_wedding is null then
+    return jsonb_build_object('result', 'not_partner');
+  end if;
+  if not public.attends_event(v_scan.user_id, v_wedding) then
+    return jsonb_build_object('result', 'not_found');
+  end if;
+  select arrived_at into v_already from public.booking_arrivals where booking_id = p_booking and user_id = v_scan.user_id;
+  if v_already is null then
+    insert into public.booking_arrivals (booking_id, user_id, marked_by) values (p_booking, v_scan.user_id, auth.uid())
+    on conflict do nothing;
+  end if;
+  return jsonb_build_object('result', case when v_already is null then 'ok' else 'already' end,
+                            'arrived_at', coalesce(v_already, now()));
+end;
+$$;
+revoke execute on function public.scan_booking_arrival(uuid, uuid) from public, anon;
+grant execute on function public.scan_booking_arrival(uuid, uuid) to authenticated;
+
+-- Apps antigas do organizador: lêem o QR novo e chamam check_in_ticket.
+-- Regista a entrada no evento mais próximo que essa pessoa organiza.
 create or replace function public.check_in_ticket(p_code text)
 returns jsonb
-language sql security definer set search_path = public, pg_temp as $$
-  select public.check_in_entry(p_code);
+language plpgsql volatile security definer set search_path = public, pg_temp as $$
+declare
+  v_scan jsonb := public.scan_qr(p_code);
+  v_item jsonb;
+  v_res jsonb;
+begin
+  if v_scan ->> 'result' <> 'ok' then
+    return jsonb_build_object('result', 'not_found');
+  end if;
+  select value into v_item from jsonb_array_elements(v_scan -> 'items') where value ->> 'kind' = 'entry' limit 1;
+  if v_item is null then
+    return jsonb_build_object('result', 'not_organizer');
+  end if;
+  v_res := public.scan_check_in((v_scan ->> 'scan_id')::uuid, (v_item ->> 'wedding_id')::uuid);
+  return v_res || jsonb_build_object('name', v_scan ->> 'name', 'event', v_item ->> 'event');
+end;
 $$;
 revoke execute on function public.check_in_ticket(text) from public, anon;
 grant execute on function public.check_in_ticket(text) to authenticated;

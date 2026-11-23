@@ -1,3 +1,4 @@
+import 'ticket_pass_screens.dart' show MyQrCard;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
@@ -291,6 +292,14 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                   const PageHeader(title: 'Eventos', showBack: false, titleFontSize: 28, trailing: PartnerNotificationBell()),
                   const SizedBox(height: 14),
                   const TeamBannerCard(),
+                  // Um QR por conta, na página principal (pedido 2026-11-23:
+                  // "apenas um qr code para todos os eventos … assim posso
+                  // colocar na página principal"; migração 228).
+                  if (role != null)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 14),
+                      child: MyQrCard(),
+                    ),
                   // Quem não tem Chat vê aqui a conversa com a equipa.
                   ...content,
                 ],
