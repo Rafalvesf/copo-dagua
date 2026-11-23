@@ -33,7 +33,9 @@ class AttendeesLine extends StatelessWidget {
       ]);
     }
     final friends = people.where((p) => p.isFriend).take(2).toList();
-    final shown = friends.isNotEmpty ? friends : people.take(3).toList();
+    // Sempre 3 fotos (pedido 2026-11-23): amigos primeiro, depois quem se
+    // pode ver; o que faltar fica nos círculos cinzentos.
+    final shown = [...friends, ...people.where((p) => !friends.contains(p))].take(3).toList();
     final rest = total - friends.length;
     final tail = suffix == null ? '' : ' · $suffix';
     final InlineSpan text = friends.isNotEmpty
@@ -50,23 +52,23 @@ class AttendeesLine extends StatelessWidget {
           ])
         : TextSpan(text: '$total ${total == 1 ? 'confirmado' : 'confirmados'}$tail');
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      if (shown.isNotEmpty) ...[
-        SizedBox(
-          width: 24 + (shown.length - 1) * 16,
-          height: 24,
-          child: Stack(children: [
-            for (var i = 0; i < shown.length; i++)
-              Positioned(
-                left: i * 16,
-                child: Container(
-                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: ring, width: 2)),
-                  child: V2Avatar(shown[i].name, size: 20, imageUrl: shown[i].avatarUrl, flat: true),
-                ),
+      SizedBox(
+        width: 24 + 2 * 16,
+        height: 24,
+        child: Stack(children: [
+          for (var i = 0; i < 3; i++)
+            Positioned(
+              left: i * 16.0,
+              child: Container(
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: ring, width: 2)),
+                child: i < shown.length
+                    ? V2Avatar(shown[i].name, size: 20, imageUrl: shown[i].avatarUrl, flat: true)
+                    : Container(width: 20, height: 20, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFE0E0E0))),
               ),
-          ]),
-        ),
-        const SizedBox(width: 8),
-      ],
+            ),
+        ]),
+      ),
+      const SizedBox(width: 8),
       Flexible(child: Text.rich(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: _muted)),
     ]);
   }
