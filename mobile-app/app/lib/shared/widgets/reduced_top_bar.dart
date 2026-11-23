@@ -31,6 +31,11 @@ class ReducedTopBar extends StatelessWidget {
   final double leftReserve;
   final List<(String, GlobalKey)> sections;
 
+  /// Foto da página (capa do evento, foto do evento real) por trás da
+  /// barra, escurecida, com o texto a branco (pedido 2026-11-23). Sem ela
+  /// a barra é branca.
+  final Widget? background;
+
   const ReducedTopBar({
     super.key,
     required this.scroll,
@@ -42,7 +47,11 @@ class ReducedTopBar extends StatelessWidget {
     this.leading,
     this.leftReserve = 16 + 44 + 10,
     this.sections = const [],
+    this.background,
   });
+
+  /// Véu por cima da foto (o texto branco lê-se sempre).
+  static const veil = Color(0x99171713);
 
   static const _barBody = 68.0;
 
@@ -87,28 +96,42 @@ class ReducedTopBar extends StatelessWidget {
           child: Opacity(
             opacity: show,
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Container(
-                height: barBottom,
-                padding: EdgeInsets.fromLTRB(leading != null ? 16 : leftReserve, topPad + 12, 16, 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(35)),
-                  boxShadow: [BoxShadow(color: Color(0x1F171713), blurRadius: 24, offset: Offset(0, 8))],
-                ),
-                child: Row(children: [
-                  if (leading != null) ...[leading!, const SizedBox(width: 10)],
-                  SizedBox(width: 32, height: 32, child: ClipOval(child: thumb)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      if (meta.isNotEmpty)
-                        Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                    ]),
+              _BarShape(
+                dark: background != null,
+                child: Stack(children: [
+                  if (background != null) ...[
+                    Positioned.fill(child: background!),
+                    const Positioned.fill(child: ColoredBox(color: veil)),
+                  ],
+                  Container(
+                    height: barBottom,
+                    padding: EdgeInsets.fromLTRB(leading != null ? 16 : leftReserve, topPad + 12, 16, 12),
+                    child: _DarkScope(
+                      dark: background != null,
+                      child: Row(children: [
+                        if (leading != null) ...[leading!, const SizedBox(width: 10)],
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: background == null
+                              ? null
+                              : BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
+                          child: ClipOval(child: thumb),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: background == null ? AppTheme.ink : Colors.white)),
+                            if (meta.isNotEmpty)
+                              Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 13, color: background == null ? AppTheme.inkMuted : const Color(0xE6FFFFFF))),
+                          ]),
+                        ),
+                        for (final a in actions) ...[const SizedBox(width: 8), a],
+                      ]),
+                    ),
                   ),
-                  for (final a in actions) ...[const SizedBox(width: 8), a],
                 ]),
               ),
               if (present.isNotEmpty)
@@ -146,8 +169,36 @@ class ReducedTopBar extends StatelessWidget {
   }
 }
 
+/// Forma da barra: cantos 35 em baixo, sombra da navbar; branca ou (com
+/// foto) recortada à foto.
+class _BarShape extends StatelessWidget {
+  final bool dark;
+  final Widget child;
+  const _BarShape({required this.dark, required this.child});
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: dark ? AppTheme.ink : Colors.white,
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(35)),
+          boxShadow: const [BoxShadow(color: Color(0x1F171713), blurRadius: 24, offset: Offset(0, 8))],
+        ),
+        child: ClipRRect(borderRadius: const BorderRadius.vertical(bottom: Radius.circular(35)), child: child),
+      );
+}
+
+/// Diz aos [ReducedTopAction] que a barra tem a foto por trás (levam o aro
+/// branco 2, DESIGN.md §6.2 «Sem foto»).
+class _DarkScope extends InheritedWidget {
+  final bool dark;
+  const _DarkScope({required this.dark, required super.child});
+  static bool of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<_DarkScope>()?.dark ?? false;
+  @override
+  bool updateShouldNotify(_DarkScope old) => old.dark != dark;
+}
+
 /// Botão redondo preto 44 com o ícone branco 20 (§2), para as ações da
-/// barra reduzida.
+/// barra reduzida (com aro branco 2 sobre a foto).
 class ReducedTopAction extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -166,7 +217,11 @@ class ReducedTopAction extends StatelessWidget {
           child: Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: AppTheme.ink,
+              shape: BoxShape.circle,
+              border: _DarkScope.of(context) ? Border.all(color: Colors.white, width: 2) : null,
+            ),
             child: Icon(icon, size: 20, color: Colors.white),
           ),
         ),

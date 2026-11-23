@@ -456,6 +456,11 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
               ? Image.network(cover, fit: BoxFit.cover,
                   errorBuilder: (context, error, stack) => V2Avatar(wedding.displayNames, size: 32))
               : V2Avatar(wedding.displayNames, size: 32),
+          // A capa escurecida por trás da barra (pedido 2026-11-23).
+          background: cover != null && cover.isNotEmpty
+              ? Image.network(cover, fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFF3A3733)))
+              : const ColoredBox(color: Color(0xFF3A3733)),
           title: wedding.displayNames,
           meta: date == null ? '' : formatShortDatePt(date),
           actions: [
