@@ -423,11 +423,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/entrada', builder: (context, state) => lazyPage([lentry.loadLibrary], () => lentry.EntryScreen())),
       GoRoute(path: '/q/:token', builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.ScanScreen(token: state.pathParameters['token']!))),
       GoRoute(path: '/entrada/:code', builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.ScanScreen(token: state.pathParameters['code']!))),
-      // Pagamentos no evento (migração 229): o gasto, o cartão e os movimentos.
-      GoRoute(
-        path: '/pagar-no-evento/:eventId',
-        builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.EventPayScreen(eventId: state.pathParameters['eventId']!)),
-      ),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) =>lazyPage([l7.loadLibrary], () =>  l7.PartnerPayoutSetupScreen(organizer: true))),
       // Evento público aberto por link partilhado (2026-11).
       // Envelopes recebidos (migração 156).

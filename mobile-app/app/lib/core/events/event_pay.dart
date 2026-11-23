@@ -1,84 +1,102 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, PostgrestException;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show FunctionException, PostgresChangeEvent, PostgresChangeFilter, PostgresChangeFilterType, RealtimeChannel;
 
+import '../../shared/public_link.dart';
 import '../supabase/supabase_config.dart';
 
-/// QR de pagamento no evento (migração 229, 2026-11-23). Sem saldo: o QR só
-/// identifica quem paga e o servidor cobra na hora o cartão guardado na
-/// Stripe. O QR é o da conta (migração 228). Limites: 50 € por cobrança, 300 € por pessoa e evento; acima de
-/// 25 € quem paga confirma na app.
-
-class SavedCard {
-  final String brand;
-  final String last4;
-  const SavedCard({required this.brand, required this.last4});
-
-  factory SavedCard.fromJson(Map j) => SavedCard(brand: '${j['brand'] ?? 'cartão'}', last4: '${j['last4'] ?? '••••'}');
-
-  String get label => '${switch (brand) {
-        'visa' => 'Visa',
-        'mastercard' => 'Mastercard',
-        'amex' => 'American Express',
-        _ => 'Cartão',
-      }} •••• $last4';
-}
-
-class EventPayment {
-  final String id;
-  final String merchant;
-  final String? description;
-  final int amountCents;
-  final String status;
-  final DateTime? createdAt;
-  const EventPayment({required this.id, required this.merchant, this.description, required this.amountCents, required this.status, this.createdAt});
-
-  bool get needsMe => status == 'awaiting_payer' || status == 'requires_action';
-}
-
-class EventPayState {
-  final bool enabled;
-  final SavedCard? card;
-  final int spentCents;
-  final List<EventPayment> payments;
-  const EventPayState({this.enabled = false, this.card, this.spentCents = 0, this.payments = const []});
-}
+/// Pagar com QR no balcão (migração 229, 2026-11-23): o parceiro escreve o
+/// valor e mostra um QR de uso único; quem paga lê-o e escolhe como pagar
+/// (cartão, Apple Pay ou Google Pay). Sem saldo; sem taxa para quem paga.
 
 String euros(int cents) => '${(cents / 100).toStringAsFixed(2).replaceAll('.', ',')} €';
 
-/// O que quem paga vê neste evento.
-Future<EventPayState> fetchEventPay(String eventId) async {
+/// O que vai no QR do pedido: abre «Pagar» na app de quem lê.
+String payQrData(String code) => publicLink('/pagar/$code');
+
+/// O que se leu com a câmara: o QR da conta de alguém (`/q/…`, migração
+/// 228), um pedido de pagamento (`/pagar/…`) ou nada que a app conheça.
+({String kind, String value})? parseScanned(String raw) {
+  final m = RegExp(r'/(q|entrada|pagar)/([A-Za-z0-9.]+)').firstMatch(raw.trim());
+  if (m == null) return null;
+  return (kind: m.group(1) == 'pagar' ? 'pay' : 'person', value: m.group(2)!);
+}
+
+class PayRequest {
+  final String id;
+  final String code;
+  final DateTime expiresAt;
+  const PayRequest(this.id, this.code, this.expiresAt);
+}
+
+/// Novo pedido (o parceiro escreveu o valor). Erro: `not_onboarded`,
+/// `not_partner`, `invalid_amount`, `error`.
+Future<({PayRequest? request, String? error})> createPayRequest(int cents, {String? description}) async {
   try {
-    final r = await supabase.rpc('my_event_pay', params: {'p_wedding': eventId});
-    if (r is! Map) return const EventPayState();
-    return EventPayState(
-      enabled: r['enabled'] == true,
-      card: r['card'] is Map ? SavedCard.fromJson(r['card'] as Map) : null,
-      spentCents: (r['spent_cents'] as num?)?.toInt() ?? 0,
-      payments: [
-        for (final p in (r['payments'] as List? ?? const []))
-          if (p is Map)
-            EventPayment(
-              id: '${p['id']}',
-              merchant: '${p['merchant'] ?? ''}',
-              description: p['description'] as String?,
-              amountCents: (p['amount_cents'] as num?)?.toInt() ?? 0,
-              status: '${p['status']}',
-              createdAt: DateTime.tryParse('${p['created_at'] ?? ''}')?.toLocal(),
-            ),
-      ],
-    );
-  } on PostgrestException {
-    // Antes da migração 229.
-    return const EventPayState();
+    final r = await supabase.rpc('create_pay_request', params: {'p_amount_cents': cents, 'p_description': description});
+    if (r is Map && r['result'] == 'ok') {
+      return (
+        request: PayRequest('${r['id']}', '${r['code']}',
+            DateTime.tryParse('${r['expires_at']}')?.toLocal() ?? DateTime.now().add(const Duration(minutes: 10))),
+        error: null,
+      );
+    }
+    return (request: null, error: r is Map ? '${r['result']}' : 'error');
+  } catch (_) {
+    return (request: null, error: 'error');
   }
 }
 
-/// Mostra o atalho no início do convidado só quando há quem cobre.
-final eventPayEnabledProvider = FutureProvider.autoDispose.family<bool, String>((ref, eventId) async {
-  return (await fetchEventPay(eventId)).enabled;
-});
+Future<void> cancelPayRequest(String id) async {
+  try {
+    await supabase.rpc('cancel_pay_request', params: {'p_id': id});
+  } catch (_) {}
+}
 
-/// Chama a Edge Function `event-pay`. Erros vêm como `{error}`.
+/// O estado do pedido muda (pago) — para o ecrã do parceiro.
+RealtimeChannel listenPayRequest(String id, void Function(String status) onStatus) {
+  return supabase
+      .channel('pay-request-$id')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.update,
+        schema: 'public',
+        table: 'pay_requests',
+        filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'id', value: id),
+        callback: (p) => onStatus('${p.newRecord['status']}'),
+      )
+      .subscribe();
+}
+
+void closeChannel(RealtimeChannel? c) {
+  if (c != null) supabase.removeChannel(c);
+}
+
+class PayRequestInfo {
+  /// ok, paid, used, expired, own_request, not_found, error.
+  final String result;
+  final String? id;
+  final String merchant;
+  final int amountCents;
+  final String? description;
+  const PayRequestInfo(this.result, {this.id, this.merchant = '', this.amountCents = 0, this.description});
+}
+
+Future<PayRequestInfo> payRequestInfo(String code) async {
+  try {
+    final r = await supabase.rpc('pay_request_info', params: {'p_code': code});
+    if (r is! Map) return const PayRequestInfo('error');
+    return PayRequestInfo(
+      '${r['result']}',
+      id: r['id'] as String?,
+      merchant: '${r['merchant'] ?? ''}',
+      amountCents: (r['amount_cents'] as num?)?.toInt() ?? 0,
+      description: r['description'] as String?,
+    );
+  } catch (_) {
+    return const PayRequestInfo('error');
+  }
+}
+
+/// Edge Function `event-pay` (intent / sync). Erros vêm como `{error}`.
 Future<Map<String, dynamic>> eventPay(Map<String, dynamic> body) async {
   try {
     final res = await supabase.functions.invoke('event-pay', body: body);
@@ -92,15 +110,33 @@ Future<Map<String, dynamic>> eventPay(Map<String, dynamic> body) async {
   }
 }
 
-/// Texto para quem cobra, a partir do `result` de `charge`.
-String chargeErrorText(String result) => switch (result) {
-      'not_found' => 'Esta pessoa não vai a este evento.',
-      'expired' => 'A leitura expirou (10 minutos). Lê o QR outra vez.',
-      'already_charged' => 'Já cobraste nesta leitura. Lê o QR outra vez para outra cobrança.',
-      'not_merchant' => 'Só os parceiros com reserva neste evento e os organizadores podem cobrar.',
-      'over_charge_limit' => 'O máximo por cobrança é 50 €.',
-      'over_event_limit' => 'Esta pessoa chegou ao limite de 300 € neste evento.',
-      'invalid_amount' => 'O valor mínimo é 0,50 €.',
-      'no_card' => 'Esta pessoa não tem cartão guardado.',
-      _ => 'Não foi possível cobrar. Tenta outra vez.',
-    };
+/// «Entrada» do parceiro: marcações de hoje e o cobrado hoje.
+class PartnerToday {
+  final List<({String event, String? number, int? people, int arrived})> bookings;
+  final int chargedCents;
+  final int chargedCount;
+  const PartnerToday({this.bookings = const [], this.chargedCents = 0, this.chargedCount = 0});
+}
+
+Future<PartnerToday?> fetchPartnerToday() async {
+  try {
+    final r = await supabase.rpc('partner_today');
+    if (r is! Map) return null;
+    return PartnerToday(
+      bookings: [
+        for (final b in (r['bookings'] as List? ?? const []))
+          if (b is Map)
+            (
+              event: '${b['event'] ?? 'Evento'}',
+              number: b['booking_number'] as String?,
+              people: (b['people'] as num?)?.toInt(),
+              arrived: (b['arrived'] as num?)?.toInt() ?? 0,
+            ),
+      ],
+      chargedCents: (r['charged_cents'] as num?)?.toInt() ?? 0,
+      chargedCount: (r['charged_count'] as num?)?.toInt() ?? 0,
+    );
+  } catch (_) {
+    return null;
+  }
+}

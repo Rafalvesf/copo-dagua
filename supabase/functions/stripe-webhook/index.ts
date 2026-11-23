@@ -108,8 +108,8 @@ Deno.serve(async (req) => {
           await confirmGiftOrder(stripe, supabase, intent.id);
           break;
         }
-        // QR de pagamento no evento (migração 229).
-        if (intent.metadata?.kind === "event_pay") {
+        // Pagar com QR no balcão (migração 229).
+        if (intent.metadata?.kind === "pay_request") {
           await syncPayment(stripe, supabase, intent.id);
           break;
         }
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       case "payment_intent.payment_failed":
       case "payment_intent.canceled": {
         const intent = event.data.object as { id: string; metadata?: Record<string, string> | null };
-        if (intent.metadata?.kind === "event_pay") await syncPayment(stripe, supabase, intent.id);
+        if (intent.metadata?.kind === "pay_request") await syncPayment(stripe, supabase, intent.id);
         break;
       }
       // Renovações, cancelamentos e falhas de pagamento do Pro (migração 161).

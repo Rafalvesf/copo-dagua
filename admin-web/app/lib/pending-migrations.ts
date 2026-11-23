@@ -584,9 +584,9 @@ export const MIGRATIONS: PendingMigration[] = [
   {
     file: "229_qr_pagamento_cartao.sql",
     date: "2026-11-23",
-    title: "QR de pagamento no evento (cartão, sem saldo)",
-    what: "Quem paga guarda um cartão (na Stripe) e mostra o QR da conta; o parceiro ou organizador lê-o, escreve o valor e o servidor cobra o cartão na hora, por Stripe Connect. Sem saldo guardado. Limites: 50 € por cobrança, 300 € por pessoa e evento, confirmação na app acima de 25 €. Depois: publicar a Edge Function event-pay e ligar no webhook da Stripe payment_intent.payment_failed e payment_intent.canceled. Corre depois da 228.",
-    check: { kind: "table", table: "event_payments" },
+    title: "Pagar com QR no balcão",
+    what: "O parceiro escreve o valor e mostra um QR de uso único (10 min); quem paga lê-o e paga na hora com cartão, Apple Pay ou Google Pay, por Stripe Connect. Sem saldo e sem taxa para quem paga (a comissão sai do parceiro). Depois: publicar a Edge Function event-pay e voltar a publicar o stripe-webhook. Corre depois da 228.",
+    check: { kind: "table", table: "pay_requests" },
   },
   {
     file: "230_tipos_evento_e_prefixos.sql",

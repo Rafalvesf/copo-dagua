@@ -55,6 +55,8 @@ dependencies:
   flutter_stripe: ^11.1.0
   # Código QR do bilhete (migração 158).
   qr_flutter: ^4.1.0
+  # Ler QR com a câmara («Entrada» → Scannear; parceiro → Scannear), 2026-11-23.
+  mobile_scanner: ^6.0.2
   # Mascote (estrela) em SVG com animação por partes (2026-11-14).
   flutter_svg: ^2.0.10
   # Registo de erros (só ativo com SENTRY_DSN, ver core/monitoring).
