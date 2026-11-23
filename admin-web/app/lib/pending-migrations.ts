@@ -525,6 +525,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Os cartões de «Os meus eventos» onde és convidado passam a mostrar quantos confirmaram («Ana + 30 confirmados»). Só a contagem, nos eventos que podes ver.",
     check: { kind: "marker", id: "220" },
   },
+  {
+    file: "221_admin_task_google_maps.sql",
+    date: "2026-11-23",
+    title: "Tarefa: ligar o Google Maps",
+    what: "Acrescenta aos Pendentes a tarefa de pôr a chave GOOGLE_MAPS_API_KEY (moradas com sugestões do Google e mapas no «Onde fica»).",
+    check: { kind: "marker", id: "221" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

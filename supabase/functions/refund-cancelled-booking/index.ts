@@ -183,10 +183,27 @@ Deno.serve(async (req) => {
       const msg = String((e as Error).message ?? e);
       // Já reembolsado na Stripe (ex: à mão no painel) — alinha a base de dados.
       if (msg.includes("already been refunded") || (e as { code?: string }).code === "charge_already_refunded") {
-        await admin.from("payments").update({ status: "refunded", updated_at: new Date().toISOString() })
+        // Grava quanto foi mesmo devolvido (antes ficava refunded_amount = 0)
+        // e recupera a parte do parceiro, se já lhe tinha sido transferida.
+        let doneCents = Math.round(Number(p.amount) * 100);
+        let chargeCents = doneCents;
+        try {
+          const id = sid.startsWith("cs_")
+            ? String((await stripe.checkout.sessions.retrieve(sid)).payment_intent ?? "")
+            : sid;
+          const it = await stripe.paymentIntents.retrieve(id, { expand: ["latest_charge"] });
+          const ch = typeof it.latest_charge === "object" ? it.latest_charge : null;
+          if (ch) {
+            doneCents = ch.amount_refunded;
+            chargeCents = ch.amount;
+          }
+        } catch (_) { /* fica o valor do pagamento */ }
+        await reverseReleasedShare(stripe, admin, p.id as string, doneCents, chargeCents);
+        await admin.from("payments")
+          .update({ status: "refunded", refunded_amount: doneCents / 100, updated_at: new Date().toISOString() })
           .eq("id", p.id).eq("status", "paid");
         refunded.push(p.id as string);
-        refundedCents += Math.round(Number(p.amount) * 100);
+        refundedCents += doneCents;
         continue;
       }
       console.error("refund failed", p.id, msg);
@@ -249,7 +266,10 @@ async function reverseReleasedShare(
   try {
     const tr = await stripe.transfers.retrieve(transferId);
     const left = tr.amount - tr.amount_reversed;
-    const share = Math.min(left, Math.round((refundedCents * tr.amount) / chargeCents));
+    // O que o parceiro devia ter devolvido no total, menos o que já devolveu
+    // (p. ex. num reembolso feito antes pelo admin): nunca a dobrar.
+    const target = Math.round((refundedCents * tr.amount) / chargeCents);
+    const share = Math.max(0, Math.min(left, target - tr.amount_reversed));
     if (share <= 0) return;
     await stripe.transfers.createReversal(transferId, { amount: share }, { idempotencyKey: `reverse-${paymentId}-${refundedCents}` });
   } catch (e) {

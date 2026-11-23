@@ -147,6 +147,30 @@ async function captureHeldDeposits(admin: any): Promise<string[]> {
     for (const r of (held ?? []) as { id: string; provider_payment_id: string }[]) {
       try {
         const pi = await stripe.paymentIntents.retrieve(r.provider_payment_id, { expand: ["latest_charge"] });
+        if (pi.status === "canceled") {
+          // A reserva no cartão caducou sem ser cobrada (a função não correu
+          // a tempo): o pagamento NÃO está feito. Volta a «por pagar» e
+          // avisa quem pagou, em vez de ficar «pago» para sempre.
+          const { data: row } = await admin
+            .from("payments")
+            .update({ is_held: false, status: "pending", paid_at: null, updated_at: new Date().toISOString() })
+            .eq("id", r.id)
+            .eq("status", "paid")
+            .select("payer_id, bookings(wedding_id)")
+            .maybeSingle();
+          if (row) {
+            // deno-lint-ignore no-explicit-any
+            const b = (row as any).bookings;
+            await admin.from("notifications").insert({
+              ...(row.payer_id ? { profile_id: row.payer_id } : {}),
+              ...(b?.wedding_id ? { wedding_id: b.wedding_id } : {}),
+              type: "payment_hold_expired",
+              title: "Pagamento por fazer",
+              body: "A reserva do valor no teu cartão caducou e nada foi cobrado. Paga outra vez para manter a reserva.",
+            }).then(({ error }: { error: unknown }) => error && console.error("notification failed", error));
+          }
+          continue;
+        }
         if (pi.status !== "requires_capture") {
           await admin.from("payments").update({ is_held: false }).eq("id", r.id);
           continue;
