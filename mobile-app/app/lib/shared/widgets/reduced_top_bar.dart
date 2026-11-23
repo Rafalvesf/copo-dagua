@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
+import 'scroll_aware_back_button.dart' show SafeScrollOffset;
 
 /// Topo reduzido (mockup «Topo reduzido», D, dos parceiros — aplicado aos
 /// eventos e aos perfis, pedido do Rafael 2026-11-22): depois de passar a
@@ -57,7 +58,7 @@ class ReducedTopBar extends StatelessWidget {
   void _go(GlobalKey k, double line) {
     final top = _top(k);
     if (top == null || !scroll.hasClients) return;
-    final target = (scroll.offset + top - line).clamp(0.0, scroll.position.maxScrollExtent);
+    final target = (scroll.safeOffset + top - line).clamp(0.0, scroll.positions.last.maxScrollExtent);
     scroll.animateTo(target, duration: const Duration(milliseconds: 450), curve: Curves.easeOutCubic);
   }
 
@@ -67,7 +68,7 @@ class ReducedTopBar extends StatelessWidget {
     return AnimatedBuilder(
       animation: scroll,
       builder: (context, _) {
-        final y = scroll.hasClients ? math.max(0.0, scroll.offset) : 0.0;
+        final y = math.max(0.0, scroll.safeOffset);
         final show = ((y - showAfter) / 40).clamp(0.0, 1.0).toDouble();
         if (show <= 0) return const SizedBox.shrink();
         final barBottom = topPad + _barBody;

@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../hero_icons.dart';
 
+/// Posição do scroll sem rebentar quando, por um instante, a lista antiga e a
+/// nova estão as duas ligadas ao mesmo controlador (p. ex. ao trocar o
+/// «a carregar» pela lista) — `offset` aí falha («attached to multiple scroll
+/// views»). Usa a mais recente.
+extension SafeScrollOffset on ScrollController {
+  double get safeOffset => positions.isEmpty ? 0.0 : positions.last.pixels;
+}
+
 /// Botão de voltar que reage ao scroll (DESIGN.md §6).
 ///
 /// Fica **sempre** no ecrã (é um overlay fixo, não desce com a lista). Ao
@@ -77,7 +85,7 @@ class _ScrollAwareBackButtonState extends State<ScrollAwareBackButton> {
 
   void _onScroll() {
     if (!widget.controller.hasClients) return;
-    final o = widget.controller.offset;
+    final o = widget.controller.safeOffset;
     if (o != _offset && mounted) setState(() => _offset = o);
   }
 
