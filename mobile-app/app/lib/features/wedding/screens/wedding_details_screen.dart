@@ -8,7 +8,7 @@ import '../../settings/screens/settings_screen.dart' show EditEventPage, PanelPa
 import '../widgets/event_program_section.dart';
 import '../widgets/organizer_suggestions.dart';
 import '../../guest_home/widgets/guest_dashboard.dart' show DashSummary, DashNow, DashAllDone, DashTasksEmpty, DashPhotos, DashButton36, dashWhenAt;
-import '../../../shared/widgets/page_kit.dart' show KitCaps, KitGroup, KitRow, KitTag, KitTagKind;
+import '../../../shared/widgets/page_kit.dart' show KitCaps, KitGroup, KitRow, KitTag, KitTagKind, LockedTopBar;
 import '../../../core/events/event_pass.dart' show GuestSection, GuestSections, guestSectionsProvider;
 import '../../../shared/text_case.dart';
 import '../../../core/auth/auth_controller.dart';
