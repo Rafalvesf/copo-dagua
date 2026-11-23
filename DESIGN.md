@@ -165,7 +165,9 @@ ecrãs. O resto da app mantém a tabela acima.
     («**Ana** + 30 confirmados», migração 220) ou os círculos com «Ninguém
     confirmou ainda» — o que falta fazer vai na tarefa por baixo do rodapé
     (§7); Descobrir — quem confirmou (acima). Nos cartões brancos o aro das
-    fotos é branco.
+    fotos é branco. **São sempre 3 círculos** (pedido 2026-11-23): as
+    fotos de quem confirmou (amigos primeiro) e, se forem menos de 3, os
+    que faltam ficam cinzentos `#E0E0E0`.
 - **Outros cartões** (perfil, resumos): brancos, cantos 22,
   interior 18, com a sombra suave do §5 e **sem linha à volta**. A **linha
   preta 1,5 só no destaque dos painéis do evento** — convidado (o resumo
