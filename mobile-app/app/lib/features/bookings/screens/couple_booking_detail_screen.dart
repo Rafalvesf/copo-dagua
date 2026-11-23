@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/v2_kit.dart';
+import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
-import '../../../shared/widgets/page_header.dart';
-import '../../partner_bookings/booking_style.dart' show bookingStatusColor;
+import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/section_frame.dart';
+import '../../../shared/widgets/alert_outline.dart';
+import '../../../shared/text_case.dart';
 import 'couple_bookings_screen.dart' show ReviewAction;
 import '../../../core/home/home_providers.dart';
+import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/money.dart';
-import '../../payments/open_payment.dart';
+import '../../payments/booking_extras_sheet.dart';
 import '../../../core/payments/payments.dart' show payDay;
 import '../../../shared/widgets/dispute_card.dart';
 import '../../../core/bookings/hire_privacy.dart';
-import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 
-/// Detalhes de uma reserva já confirmada/concluída — antes disto, tocar
-/// numa reserva em `couple_bookings_screen.dart` só mostrava "em
-/// breve". Pedido explícito do utilizador: "faz com que os casais
-/// possam editar as suas reviews no local das reservas apos clicar em
-/// detalhes da reserva" — este ecrã é esse "local", com
-/// [ReviewAction] (já existia na lista, agora reutilizada aqui,
-/// pública) a permitir ver, criar e editar a avaliação.
+/// Detalhes de uma reserva (o organizador) — no desenho das páginas do
+/// evento (DESIGN.md §6.7, pedido 2026-11-23): seta preta fixa, título 28
+/// com o parceiro, o resumo branco do que está pago, os pagamentos por
+/// fazer em aviso (abrem os popups de pagar) e cada bloco numa moldura.
+/// A avaliação (pedido antigo: «editar as reviews no local das reservas»)
+/// continua aqui, com [ReviewAction].
 class CoupleBookingDetailScreen extends ConsumerWidget {
   final CoupleBooking booking;
 
@@ -34,179 +34,148 @@ class CoupleBookingDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final fee = (ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig()).effectivePct(booking.amount);
+    String money(double v) => euros(amountWithCommission(v, fee), cents: true);
     final date = booking.serviceDate;
-    final dateLabel =
-        '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-    final needsFinalPayment = booking.pendingFinalPaymentId != null;
+    final dateLabel = '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    final events = ref.watch(weddingControllerProvider).events;
+    final eventName = [
+      for (final w in events)
+        if (w.id == booking.weddingId) capFirst(w.displayNames),
+    ].firstOrNull;
+    final needsFinal = booking.pendingFinalPaymentId != null;
+    final paid = booking.amount <= 0 ? 0.0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0).toDouble();
+
+    // Pagamentos por fazer (o sinal / pagamento único e o restante).
+    final toPay = <(String, String, double, DateTime?, bool, DateTime?)>[
+      if (booking.pendingDepositPaymentId != null)
+        (
+          booking.pendingDepositPaymentId!,
+          booking.depositIsFull ? 'Pagamento' : 'Sinal',
+          booking.depositAmount ?? 0,
+          booking.pendingDepositDueAt,
+          booking.depositOpen,
+          booking.depositOpensAt,
+        ),
+      if (booking.pendingFinalPaymentId != null)
+        (
+          booking.pendingFinalPaymentId!,
+          'Restante',
+          booking.finalPaymentAmount ?? 0,
+          booking.finalPaymentDueAt,
+          booking.finalPaymentOpen,
+          booking.finalPaymentOpensAt,
+        ),
+    ];
+
+    final statusText = needsFinal ? 'Falta pagar o restante' : booking.status.label;
+    final statusKind = switch (booking.status) {
+      BookingStatus.confirmado || BookingStatus.concluido => needsFinal ? KitTagKind.pending : KitTagKind.green,
+      BookingStatus.recusado => KitTagKind.urgent,
+      _ => KitTagKind.pending,
+    };
 
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(top: false, 
-        child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-            PageHeader(title: 'Detalhes da reserva', centered: true)
- ],
- body: ListView(
-                padding: const EdgeInsets.all(AppTheme.screenMargin),
+      body: ScrollBackView(
+        builder: (context, scroll) => ListView(
+          controller: scroll,
+          padding: EdgeInsets.fromLTRB(
+              AppTheme.screenMargin, MediaQuery.paddingOf(context).top + 12, AppTheme.screenMargin, 60),
+          children: [
+            const KitHeader(),
+            KitTitle(
+              capFirst(booking.partnerName),
+              subtitle: [
+                if (booking.category != null) booking.category!,
+                if (eventName != null) eventName,
+              ].join(' · '),
+            ),
+            KitSummary(
+              kicker: 'Pago',
+              value: money(booking.paidAmount),
+              unit: 'de ${money(booking.amount)}',
+              progress: paid,
+              footer: booking.remainingAmount > 0 ? 'Falta pagar ${money(booking.remainingAmount)}' : 'Tudo pago',
+            ),
+            if (toPay.isNotEmpty)
+              SectionFrame(
+                title: 'Para fazer · ${toPay.length}',
                 children: [
-                  // Redesign 2026-10-20: foto do parceiro, estado e
-                  // progresso do pagamento; documentos para descarregar.
-                  Center(child: V2Avatar(booking.partnerName, size: 92, imageUrl: booking.partnerLogoUrl)),
-                  const SizedBox(height: 14),
-                  Center(
-                    child: Text(
-                      booking.partnerName,
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.xxl),
-                    ),
-                  ),
-                  if (booking.category != null)
-                    Center(
-                      child: Text(
-                        booking.category!,
-                        style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
-                      ),
-                    ),
-                  const SizedBox(height: 10),
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: (needsFinalPayment ? AppStatusColors.pending : bookingStatusColor(booking.status)).withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: Text(
-                        needsFinalPayment ? 'Falta pagar o restante' : booking.status.label,
-                        style: TextStyle(
-                          fontSize: AppFontSize.sm,
-                          fontWeight: FontWeight.w700,
-                          color: needsFinalPayment ? AppStatusColors.pending : bookingStatusColor(booking.status),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: softCard(radius: 24),
-                    child: Column(
-                      children: [
-                        // Progresso do que já está pago.
-                        Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                          Expanded(
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              const Text('Pago', style: TextStyle(fontSize: AppFontSize.sm, color: v2Muted)),
-                              Text(euros(amountWithCommission(booking.paidAmount, fee), cents: true),
-                                  style: const TextStyle(fontSize: AppFontSize.xxl, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                            ]),
-                          ),
-                          Text('de ${euros(amountWithCommission(booking.amount, fee), cents: true)}',
-                              style: const TextStyle(fontSize: AppFontSize.md, color: v2Muted)),
-                        ]),
-                        const SizedBox(height: 10),
-                        AppProgressBar(value: booking.amount <= 0 ? 0 : (booking.paidAmount / booking.amount).clamp(0.0, 1.0), height: 9, track: const Color(0xFFF2F2F2)),
-                        const SizedBox(height: 16),
-                        _InfoRow(label: 'Data', value: dateLabel),
-                        const SizedBox(height: 10),
-                        _InfoRow(
-                          label: 'Valor total (com taxa de serviço)',
-                          value: euros(amountWithCommission(booking.amount, fee), cents: true),
-                        ),
-
-                        const SizedBox(height: 10),
-                        _InfoRow(
-                          label: 'Falta pagar',
-                          value: euros(amountWithCommission(booking.remainingAmount, fee), cents: true),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Pagar daqui mesmo (2026-10-19), sem voltar à lista.
-                  for (final (id, label, amount) in [
-                    if (booking.pendingDepositPaymentId != null)
-                      (booking.pendingDepositPaymentId!, booking.depositIsFull ? 'Pagar' : 'Pagar sinal', booking.depositAmount ?? 0),
-                    if (booking.pendingFinalPaymentId != null)
-                      (booking.pendingFinalPaymentId!, 'Pagar o resto', booking.finalPaymentAmount ?? 0),
-                  ]) ...[
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 54,
-                      child: FilledButton(
-                        // O resto só se paga nos 6 dias antes do prazo (migração 204).
-                        onPressed: (id == booking.pendingFinalPaymentId && !booking.finalPaymentOpen) ||
-                                (id == booking.pendingDepositPaymentId && !booking.depositOpen)
-                            ? null
-                            : () => openPaymentFlow(context, ref, id),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.ink,
-                          foregroundColor: Colors.white,
-                          shape: const StadiumBorder(),
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
-                        ),
-                        child: Text(id == booking.pendingFinalPaymentId && !booking.finalPaymentOpen
-                            ? 'Pagar o resto a partir de ${payDay(booking.finalPaymentOpensAt!)}'
-                            : id == booking.pendingDepositPaymentId && !booking.depositOpen
-                                ? 'Pagar a partir de ${payDay(booking.depositOpensAt!)}'
-                                : '$label — ${euros(amountWithCommission(amount, fee), cents: true)}'),
-                      ),
-                    ),
-                  ],
-                  // Faturas/comprovativos e resumo da reserva (2026-10-20).
-                  const SizedBox(height: 22),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4, bottom: 8),
-                    child: Text('Documentos', style: TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  ),
-                  ExportCard(
-                    reportLabel: 'Resumo da reserva',
-                    partnerSide: false,
-                    load: () => loadSingleBookingReport(booking.id),
-                  ),
-                  const SizedBox(height: 14),
-                  HirePrivacyCard(bookingId: booking.id, weddingId: booking.weddingId, isPrivate: booking.isPrivate),
-                  const SizedBox(height: 14),
-                  DisputeCard(bookingId: booking.id, partnerSide: false),
-                  if (booking.status == BookingStatus.concluido) ...[
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: softCard().boxShadow,
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                      ),
-                      child: ReviewAction(booking: booking),
+                  for (final (i, (id, what, amount, due, open, opensAt)) in toPay.indexed) ...[
+                    if (i > 0) const SizedBox(height: 10),
+                    FrameTaskRow(
+                      lead: V2Avatar(booking.partnerName, size: 44, imageUrl: booking.partnerLogoUrl),
+                      title: '$what · ${money(amount)}',
+                      sub: open
+                          ? (due != null ? 'até ${due.day}/${due.month}' : 'Por pagar')
+                          : 'Paga-se a partir de ${payDay(opensAt!)}',
+                      action: 'Pagar',
+                      urgent: open && toneForDue(due) == AlertTone.urgent,
+                      onTap: open
+                          ? () async {
+                              await payBookingFlow(context, ref,
+                                  paymentId: id, bookingId: booking.id, partnerName: booking.partnerName);
+                              ref.invalidate(coupleBookingsProvider);
+                            }
+                          : () {},
                     ),
                   ],
                 ],
               ),
-),
+            SectionFrame(
+              title: 'A reserva',
+              trailing: KitTag(statusText, kind: statusKind),
+              children: [
+                _Row('Data', dateLabel),
+                _Row('Valor total', money(booking.amount)),
+                _Row('Pago', money(booking.paidAmount)),
+                _Row('Falta pagar', money(booking.remainingAmount), last: true),
+                const FrameNote('Os valores já incluem a taxa de serviço.', top: 10),
+              ],
+            ),
+            SectionFrame(
+              title: 'Documentos',
+              children: [
+                ExportCard(
+                  reportLabel: 'Resumo da reserva',
+                  partnerSide: false,
+                  load: () => loadSingleBookingReport(booking.id),
+                ),
+              ],
+            ),
+            SectionFrame(
+              title: 'Privacidade e ajuda',
+              children: [
+                HirePrivacyCard(bookingId: booking.id, weddingId: booking.weddingId, isPrivate: booking.isPrivate),
+                const SizedBox(height: 12),
+                DisputeCard(bookingId: booking.id, partnerSide: false),
+              ],
+            ),
+            if (booking.status == BookingStatus.concluido)
+              SectionFrame(title: 'A tua avaliação', children: [ReviewAction(booking: booking)]),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _InfoRow extends StatelessWidget {
+/// Linha de 48: rótulo 13 `#57534E` à esquerda, valor 14 negrito à direita.
+class _Row extends StatelessWidget {
   final String label;
   final String value;
-  final Color? valueColor;
-
-  const _InfoRow({required this.label, required this.value, this.valueColor});
+  final bool last;
+  const _Row(this.label, this.value, {this.last = false});
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md)),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: AppFontSize.md,
-            color: valueColor ?? AppTheme.ink,
-          ),
+  Widget build(BuildContext context) => Container(
+        constraints: const BoxConstraints(minHeight: 48),
+        decoration: BoxDecoration(
+          border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFE3E3E3))),
         ),
-      ],
-    );
-  }
+        child: Row(children: [
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        ]),
+      );
 }
