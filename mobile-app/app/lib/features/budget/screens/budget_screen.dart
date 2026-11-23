@@ -34,6 +34,9 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
 import '../../../core/wedding/wedding_controller.dart';
+import '../../../core/budget/all_budgets.dart';
+import '../../../shared/widgets/event_pills.dart';
+import '../../../shared/text_case.dart';
 
 enum _BudgetFilter { all, paid, pending }
 
@@ -49,6 +52,20 @@ class BudgetScreen extends ConsumerStatefulWidget {
 class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   _BudgetFilter _filter = _BudgetFilter.all;
   bool _categoriesExpanded = false;
+
+  /// «Todos» na barra de eventos (pedido 2026-11-23). Escolher outro evento
+  /// abre esse evento (o Orçamento é sempre o do evento aberto).
+  bool _all = false;
+
+  Future<void> _pickEvent(String? id) async {
+    if (id == null) {
+      setState(() => _all = true);
+      return;
+    }
+    setState(() => _all = false);
+    final current = ref.read(weddingControllerProvider).wedding?.id;
+    if (id != current) await ref.read(weddingControllerProvider.notifier).select(id);
+  }
 
   @override
   void initState() {
@@ -95,7 +112,24 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     // pago, sinal ou restante por pagar), não só as despesas manuais —
     // antes ficavam vazios para quem só tinha reservas (2026-10-18).
     final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
-    final active = bookings.where((b) => b.status != BookingStatus.recusado);
+    final currentId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
+    if (_all) {
+      return GradientScaffold(
+        background: AppBackground.feed,
+        body: KitPage(
+          pinnedBack: true,
+          rotateBack: false,
+          children: [
+            const KitHeader(),
+            const KitTitle('Orçamento', subtitle: 'Todos os teus eventos'),
+            EventPills(selected: null, onSelect: _pickEvent),
+            _AllEventsBudget(bookings: bookings, onOpen: _pickEvent),
+          ],
+        ),
+      );
+    }
+    // Só as reservas do evento aberto (antes entravam as de todos).
+    final active = bookings.where((b) => b.status != BookingStatus.recusado && b.weddingId == currentId);
     // Valores com a comissão: é o que o casal paga de facto (igual às
     // Reservas e ao ecrã de pagamento) — 2026-10-19.
     final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
@@ -151,6 +185,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               children: [
                 KitHeader(actions: [KitAddButton(tooltip: 'Nova despesa', onTap: _addExpense)]),
                 const KitTitle('Orçamento'),
+                EventPills(selected: currentId, onSelect: _pickEvent),
                 _SummaryCard(budget: budget, onEdit: () => _editTotal(budget.total)),
                 if (budget.total > 0 || paid.isNotEmpty || pending.isNotEmpty)
                   SectionFrame(title: 'Números', children: [
@@ -754,6 +789,97 @@ class _SheetStat extends StatelessWidget {
           Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.lg)),
         ],
       ),
+    );
+  }
+}
+
+
+/// «Todos» do Orçamento (pedido 2026-11-23): o total de todos os eventos e
+/// uma linha por evento (gasto de teto), que abre o desse evento.
+class _AllEventsBudget extends ConsumerWidget {
+  final List<CoupleBooking> bookings;
+  final ValueChanged<String> onOpen;
+  const _AllEventsBudget({required this.bookings, required this.onOpen});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final events = ref.watch(weddingControllerProvider.select((s) => s.events));
+    final lines = ref.watch(allEventBudgetsProvider);
+    final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
+    double fee(double v, double total) => amountWithCommission(v, orgFee.effectivePct(total));
+    return lines.when(
+      loading: () => const Padding(padding: EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator())),
+      error: (_, _) => FrameEmpty(
+        title: 'Não foi possível carregar',
+        text: 'Verifica a ligação e tenta outra vez.',
+        actions: [FrameButton44('Tentar outra vez', onTap: () => ref.invalidate(allEventBudgetsProvider))],
+      ),
+      data: (lines) {
+        // Reservas: o contratado conta como gasto; o por pagar, com a taxa
+        // de serviço (igual ao Orçamento de cada evento).
+        double bookedOf(String id) => bookings
+            .where((b) => b.weddingId == id && b.status != BookingStatus.recusado)
+            .fold(0.0, (t, b) => t + b.amount);
+        double toPayOf(String id) => bookings
+            .where((b) => b.weddingId == id && b.status != BookingStatus.recusado)
+            .fold(0.0, (t, b) => t + (b.pendingDepositPaymentId != null ? fee(b.depositAmount ?? 0, b.amount) : 0) + (b.pendingFinalPaymentId != null ? fee(b.finalPaymentAmount ?? 0, b.amount) : 0));
+        final total = lines.fold(0.0, (t, l) => t + l.total);
+        final spent = lines.fold(0.0, (t, l) => t + l.spentByHand + bookedOf(l.weddingId));
+        final toPay = lines.fold(0.0, (t, l) => t + l.unpaidByHand + toPayOf(l.weddingId));
+        final names = {for (final e in events) e.id: capFirst(e.displayNames)};
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          KitSummary(
+            kicker: 'Todos os eventos',
+            value: euros(spent),
+            unit: total > 0 ? 'de ${euros(total)}' : 'gastos',
+            progress: total > 0 ? (spent / total).clamp(0.0, 1.0).toDouble() : 0,
+            footer: '${lines.length} ${lines.length == 1 ? 'evento' : 'eventos'}${total > 0 ? ' · ${(spent / total * 100).round()}% dos tetos' : ''}',
+          ),
+          SectionFrame(title: 'Números', children: [
+            FrameNumbers([
+              FrameNumber('Gasto', euros(spent), 'em todos os eventos'),
+              FrameNumber('Por pagar', euros(toPay), 'em todos os eventos'),
+            ]),
+          ]),
+          SectionFrame(title: 'Por evento · ${lines.length}', children: [
+            for (final (i, l) in lines.indexed) ...[
+              if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
+              SnappyTap(
+                onTap: () => onOpen(l.weddingId),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 56),
+                  color: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(children: [
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(names[l.weddingId] ?? 'Evento',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        const SizedBox(height: 2),
+                        Text(
+                          [
+                            l.total > 0 ? 'Teto ${euros(l.total)}' : 'Sem teto',
+                            if (l.unpaidByHand + toPayOf(l.weddingId) > 0) 'por pagar ${euros(l.unpaidByHand + toPayOf(l.weddingId))}',
+                          ].join(' · '),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                        ),
+                      ]),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(euros(l.spentByHand + bookedOf(l.weddingId)),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    const SizedBox(width: 6),
+                    const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
+                  ]),
+                ),
+              ),
+            ],
+          ]),
+          const FrameNote('Toca num evento para ver os pagamentos e as categorias dele.', top: 12),
+        ]);
+      },
     );
   }
 }

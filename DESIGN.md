@@ -853,7 +853,9 @@ amarela/vermelha e o botão 36), `FrameNumbers` (números em caixas),
 tratado» —, título 16, frase 13 e a ação), `FrameNote`, `FrameButton36`,
 `FrameButton44`.
 
-- **Orçamento:** tocar no resumo muda o **teto** («Mudar o teto ›»; sem
+- **Orçamento:** em «Todos», o resumo de todos os eventos (gasto de
+  todos os tetos), «Gasto» e «Por pagar» e «Por evento · N» (uma linha por
+  evento, que abre o desse evento); num evento, tocar no resumo muda o **teto** («Mudar o teto ›»; sem
   teto, «Definir o teto»); números «Gasto» e «Por pagar»; pagamentos — os
   das reservas em aviso com «Pagar», os que fazes por fora com «Marcar
   pago» (contorno) ou «Pago»; categorias **aparecem sozinhas** (com gastos
@@ -867,8 +869,14 @@ tratado» —, título 16, frase 13 e a ação), `FrameNote`, `FrameButton36`,
   foto 76, nome 20, @ e cidade, eventos, em comum e quem traz, as fotos em
   comum, as respostas, «Quem é para vocês?», «Ver perfil», «Recusar» +
   «Aceitar»; os outros por baixo com «Ver».
-- **Reservas:** **só as reservas do evento aberto** (pedido 2026-11-23;
-  saíram as pílulas por evento), «Os parceiros de <evento>»; **«Para fazer»** com os pagamentos
+- **Barra de eventos** (pedido 2026-11-23, só em Reservas e Orçamento;
+  `EventPills`, `shared/widgets/event_pills.dart`): por baixo do título,
+  «Todos» + uma pílula por evento que organizas; abre no **evento
+  aberto**. Com um só evento não aparece. Só se carrega o que está
+  escolhido.
+- **Reservas:** as do evento escolhido na barra («Os parceiros de
+  <evento>»; em «Todos», as de todos os eventos com o nome do evento em
+  cada linha, sem «Já têm tratado?»); **«Para fazer»** com os pagamentos
   («Pagar», abre os popups) e as **propostas recebidas** (linha amarela).
   Por baixo dos serviços, a moldura **«Já têm tratado? · N de M»**
   (pedido 2026-11-23: a página «Serviços tratados» juntou-se às Reservas):

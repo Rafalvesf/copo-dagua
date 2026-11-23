@@ -37,6 +37,7 @@ import '../../../core/partners/partner_providers.dart';
 import '../../partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import '../widgets/service_preferences_frame.dart';
+import '../../../shared/widgets/event_pills.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -55,11 +56,21 @@ class CoupleBookingsScreen extends ConsumerStatefulWidget {
 class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
   late bool _guests = widget.guestsTab;
 
+  /// Barra de eventos (pedido 2026-11-23): começa no evento aberto;
+  /// [_all] = «Todos»; [_picked] = outro evento escolhido na barra.
+  bool _all = false;
+  String? _picked;
+
 
   @override
   Widget build(BuildContext context) {
     final weddingId = ref.watch(weddingControllerProvider.select((s) => s.wedding?.id));
-    final eventName = ref.watch(weddingControllerProvider.select((s) => s.wedding == null ? null : capFirst(s.wedding!.displayNames)));
+    final events = ref.watch(weddingControllerProvider.select((s) => s.events));
+    final selected = _all ? null : (events.any((e) => e.id == _picked) ? _picked : weddingId);
+    final eventName = [
+      for (final e in events)
+        if (e.id == selected) capFirst(e.displayNames),
+    ].firstOrNull;
     final bookingsAsync = ref.watch(coupleBookingsProvider);
     final proposalsAsync = ref.watch(pendingProposalsProvider);
 
@@ -77,7 +88,20 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
               padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 const KitHeader(),
-                KitTitle('Reservas', subtitle: eventName == null ? 'Os parceiros deste evento' : 'Os parceiros de $eventName'),
+                KitTitle('Reservas',
+                    subtitle: selected == null
+                        ? 'Os parceiros de todos os teus eventos'
+                        : eventName == null
+                            ? 'Os parceiros deste evento'
+                            : 'Os parceiros de $eventName'),
+                if (!_guests)
+                  EventPills(
+                    selected: selected,
+                    onSelect: (id) => setState(() {
+                      _all = id == null;
+                      _picked = id;
+                    }),
+                  ),
                 KitPills([
                   KitPill(label: 'Parceiros', selected: !_guests, onTap: () => setState(() => _guests = false)),
                   KitPill(label: 'Convidados', selected: _guests, onTap: () => setState(() => _guests = true)),
@@ -114,8 +138,9 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                   };
                   // Só as reservas do evento aberto (pedido 2026-11-23: antes
                   // apareciam as de todos os eventos na mesma página).
-                  final ev = weddingId;
-                  final eventIds = <String>[?ev];
+                  // Barra de eventos: «Todos» ou um evento (pedido 2026-11-23).
+                  final ev = selected;
+                  final eventIds = ev == null ? [for (final e in events) e.id] : <String>[ev];
                   final shownBookings = [for (final b in bookings) if (ev == null || b.weddingId == ev) b];
                   final shownProposals = [for (final p in proposals) if (ev == null || p.weddingId == ev) p];
                   final toPay = [
