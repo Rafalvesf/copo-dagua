@@ -427,6 +427,8 @@ const onbTypeIcons = <EventType, (String, List<(double, double, double)>)>{
   EventType.nightlife: ('M20 14A8 8 0 1 1 10 4a6.5 6.5 0 0 0 10 10z', []),
   EventType.concert: ('M9 18V5l11-2v13', [(6, 18, 3), (17, 16, 3)]),
   EventType.festival: ('M3 20L12 4l9 16zM12 4v16M8 20l4-6 4 6', []),
+  // Passagem de Ano: fogo de artifício.
+  EventType.newYear: ('M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8', []),
   EventType.other: ('M12 5v14M5 12h14', []),
 };
 
@@ -441,7 +443,9 @@ class OnbTypeGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final types = onbTypeIcons.keys.toList();
+    // Só os sete que se escolhem (migração 230); os outros ícones ficam
+    // para mostrar eventos antigos.
+    final types = EventType.selectable;
     return GridView(
       shrinkWrap: true,
       padding: EdgeInsets.zero,
