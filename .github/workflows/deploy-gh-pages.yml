@@ -77,7 +77,11 @@ jobs:
       - name: Cache busting
         run: |
           V=$(git rev-parse --short HEAD)
-          sed -i "s#\"mainJsPath\":\"main.dart.js\"#\"mainJsPath\":\"main.dart.js?v=$V\"#" build/web/flutter_bootstrap.js
+          # main.dart.js numa pasta da versão (2026-11-23): o ?v= não chega,
+          # porque o GitHub Pages ignora-o e devolve sempre o main.dart.js
+          # mais recente. Os ecrãs vêm da mesma pasta, por isso o código e os
+          # ecrãs são sempre da mesma versão («Não foi possível abrir»).
+          sed -i "s#\"mainJsPath\":\"main.dart.js\"#\"mainJsPath\":\"v/$V/main.dart.js\"#" build/web/flutter_bootstrap.js
           # Versão WebAssembly (2026-11-20, mais rápida a desenhar): o
           # mesmo ?v= para o .wasm e o .mjs.
           sed -i "s#\"mainWasmPath\":\"main.dart.wasm\"#\"mainWasmPath\":\"main.dart.wasm?v=$V\"#" build/web/flutter_bootstrap.js
@@ -86,9 +90,10 @@ jobs:
           # Ecrãs deferred desta versão também em v/<versão>/ (ver index.html).
           sed -i "s#__TCHIN_BUILD__#$V#" build/web/index.html build/web/404.html
           mkdir -p build/web/v/$V
+          cp build/web/main.dart.js build/web/v/$V/
           cp build/web/main.dart.js_*.part.js build/web/v/$V/ 2>/dev/null || true
           echo "$V" > build/web/v/current.txt
-          grep -o 'main.dart.js?v=[a-z0-9]*' build/web/flutter_bootstrap.js
+          grep -o "v/$V/main.dart.js" build/web/flutter_bootstrap.js
           grep -o 'flutter_bootstrap.js?v=[a-z0-9]*' build/web/index.html
 
       - name: Keep previous version as backup
@@ -112,6 +117,9 @@ jobs:
             for f in "$DEST/index.html" "$DEST/404.html"; do
               [ -f "$f" ] && sed -i 's#<base href="/copo-dagua/">#<base href="/copo-dagua/backup/">#' "$f"
             done
+            # A cópia de segurança não leva a pasta v/: usa o main.dart.js
+            # e os ecrãs que tem na raiz.
+            [ -f "$DEST/flutter_bootstrap.js" ] && sed -i 's#"mainJsPath":"v/\([a-z0-9]*\)/main.dart.js"#"mainJsPath":"main.dart.js?v=\1"#' "$DEST/flutter_bootstrap.js"
           fi
           # Só os previews de PRs ainda abertos continuam publicados (os
           # dos fechados ocupavam 4 GB, acima do limite de 1 GB do Pages).

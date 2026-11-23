@@ -81,7 +81,14 @@
         s.onerror = err;
         document.head.appendChild(s);
       }
+      // 2026-11-23 («Não foi possível abrir» ao mudar de página): o
+      // main.dart.js vem agora de v/<versão>/ e os ecrãs vêm da mesma pasta
+      // (o dart2js pede-os ao lado do main.dart.js). Assim o código e os
+      // ecrãs são sempre da mesma versão, mesmo com este index.html em
+      // cache (o GitHub Pages guarda-o 10 minutos e ignora o ?v=, por isso
+      // um index.html antigo juntava o código novo com os ecrãs antigos).
       window.dartDeferredLibraryLoader = function (uri, ok, err) {
+        if (/\/v\/[^/]+\/main\.dart\.js_\d+\.part\.js/.test(uri)) return add(uri, ok, err);
         var v = versioned ? uri.replace(/(main\.dart\.js_\d+\.part\.js)/, 'v/' + window.tchinBuild + '/$1') : uri;
         add(v, ok, function (e) { if (v !== uri) add(uri, ok, err); else err(e); });
       };
@@ -156,7 +163,8 @@
       var l = document.createElement('link');
       l.rel = 'preload';
       l.as = 'script';
-      l.href = 'main.dart.js' + (b && b.indexOf('__') !== 0 ? '?v=' + b : '');
+      // O mesmo caminho que o flutter_bootstrap pede (v/<versão>/main.dart.js).
+      l.href = (b && b.indexOf('__') !== 0 ? 'v/' + b + '/' : '') + 'main.dart.js';
       document.head.appendChild(l);
     })();
   </script>
