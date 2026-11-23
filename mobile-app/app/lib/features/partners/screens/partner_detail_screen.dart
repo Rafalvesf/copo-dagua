@@ -51,6 +51,7 @@ import '../../../shared/widgets/partner_achievements.dart';
 import '../../../shared/text_case.dart';
 import '../../../core/partners/partner_achievements.dart' show partnerAchievementsProvider;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 
 /// Eventos onde ainda dá para reservar este parceiro: elegíveis (sou dono, ou
@@ -1412,7 +1413,7 @@ class PublicPartnerScreen extends ConsumerWidget {
     final signedIn = ref.watch(authControllerProvider.select((s) => s.status == AuthStatus.active));
     final async = ref.watch(partnerByIdProvider(id));
     return async.when(
-      loading: () => const Scaffold(backgroundColor: AppTheme.background, body: Center(child: CircularProgressIndicator())),
+      loading: () => const SkeletonProfilePage(),
       error: (e, st) => const _PartnerUnavailable(),
       data: (p) => p == null ? const _PartnerUnavailable() : PartnerDetailScreen(partner: p, publicView: !signedIn),
     );

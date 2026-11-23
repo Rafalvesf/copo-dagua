@@ -18,6 +18,7 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/onb_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 const _maxPackages = 3;
 
@@ -149,7 +150,7 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: pricingAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const SkeletonList(),
                 error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerPricingProvider)),
                 data: (pricing) {
                   final packages = pricing.packages;

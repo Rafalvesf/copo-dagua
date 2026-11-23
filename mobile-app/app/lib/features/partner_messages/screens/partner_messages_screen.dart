@@ -16,6 +16,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/search_pill.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Mensagens do parceiro — igual ao canvas "Parceiro — mensagens" e à
 /// lista do casal: título, pesquisa e conversas. (Saiu o botão "Ver todas
@@ -71,7 +72,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                 const TeamThreadEntry()
  ],
  body: conversationsAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => const SkeletonList(),
                     error: (err, st) => AsyncErrorView(
                       onRetry: () => ref.invalidate(partnerConversationsProvider),
                     ),

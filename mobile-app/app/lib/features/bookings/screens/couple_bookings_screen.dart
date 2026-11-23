@@ -38,6 +38,7 @@ import '../../partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import '../widgets/service_preferences_frame.dart';
 import '../../../shared/widgets/event_pills.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -125,7 +126,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                 Padding(padding: const EdgeInsets.only(top: 80), child: body),
               ]);
           return bookingsAsync.when(
-                loading: () => whole(const Center(child: CircularProgressIndicator())),
+                loading: () => whole(const SkeletonList()),
                 error: (err, st) => whole(AsyncErrorView(onRetry: () => ref.invalidate(coupleBookingsProvider))),
                 data: (bookings) {
                   final proposals = proposalsAsync.maybeWhen(

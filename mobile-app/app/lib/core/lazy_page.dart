@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import '../shared/widgets/skeleton.dart';
 import 'lazy_reload_stub.dart' if (dart.library.js_interop) 'lazy_reload_web.dart';
 
 /// Carrega o código de um ecrã só quando se abre (imports `deferred` no
@@ -76,7 +77,9 @@ class _LazyPageState extends State<LazyPage> {
         ),
       );
     }
-    return const Material(color: Colors.white, child: SizedBox.expand());
+    // Enquanto o código do ecrã chega: esqueleto a pulsar em vez de um
+    // ecrã branco (2026-11-23).
+    return const SkeletonPage();
   }
 }
 

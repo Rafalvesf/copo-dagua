@@ -9,6 +9,7 @@ import 'count_badge.dart';
 import 'feedback.dart';
 import 'island_sheet.dart';
 import 'push_opt_in.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Sino de notificações do parceiro e do convidado — versão simples do sino do casal
 /// (`home_feed_screen.dart`, `_NotificationsSheet`), sem os separadores
@@ -92,7 +93,7 @@ class _PartnerNotificationsSheet extends ConsumerWidget {
               const PushOptInCard(),
               Expanded(
                 child: notificationsAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () => const SkeletonList(),
                   error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerNotificationsProvider)),
                   data: (notifications) {
                     if (notifications.isEmpty) {

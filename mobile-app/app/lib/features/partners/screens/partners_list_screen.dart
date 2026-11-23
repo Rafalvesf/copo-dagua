@@ -30,6 +30,7 @@ import '../../../core/partner_profile/partner_location.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/photo_card.dart' show CardsDivider;
 import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
   final String? categorySlug;
@@ -464,7 +465,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                   ? const GiftShopView(bottomPadding: 190, showListLink: true)
                   : partnersAsync.when(
                     loading: () =>
-                        const Center(child: CircularProgressIndicator()),
+                        const SkeletonEventCards(),
                     error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar parceiros.', onRetry: () => ref.invalidate(
                       partnersProvider(widget.selectionMode ? widget.categorySlug : _filter),
                     )),
@@ -741,7 +742,7 @@ class _FavoritesSheet extends ConsumerWidget {
                 const SizedBox(height: 14),
                 Expanded(
                   child: partnersAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => const SkeletonList(),
                     error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar os favoritos.', onRetry: () => ref.invalidate(partnersProvider(null))),
                     data: (allPartners) {
                       final favorites = allPartners.where((p) => favoriteIds.contains(p.id)).toList();

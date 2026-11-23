@@ -16,6 +16,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'guest_mode_screen.dart' show showGuestModeSheet;
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// "Os teus eventos" (canvas "Convidado · Os teus eventos") — todos os
 /// eventos para onde a conta foi convidada, com o estado da resposta.
@@ -29,7 +30,7 @@ class GuestEventsScreen extends ConsumerWidget {
       background: AppBackground.subtle,
       body: SafeArea(
         child: eventsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SkeletonEventCards(),
           error: (e, st) => AsyncErrorView(onRetry: () => ref.invalidate(guestEventsProvider)),
           data: (events) => ListView(
             padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),

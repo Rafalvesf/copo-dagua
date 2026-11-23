@@ -15,6 +15,7 @@ import '../../../shared/money.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../widgets/guest_offer_widgets.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Lado do convidado: o alojamento e o transporte que o organizador
 /// preparou. Reserva e paga na app (Stripe), o valor vai para o parceiro.
@@ -52,7 +53,7 @@ class GuestOffersScreen extends ConsumerWidget {
  body: !enabled ? const SizedBox.shrink() : RefreshIndicator(
                 onRefresh: refresh,
                 child: offersAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () => const SkeletonList(),
                   error: (_, __) => ListView(
                     padding: const EdgeInsets.all(AppTheme.screenMargin),
                     children: const [Text('Não foi possível carregar. Puxa para tentar de novo.')],

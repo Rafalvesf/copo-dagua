@@ -16,6 +16,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Portefólio real — liga-se a `partner_portfolio_items`
 /// (`database/migrations/023_portfolio_storage.sql`). Mín. 3 imagens
@@ -109,7 +110,7 @@ class _PartnerPortfolioScreenState extends ConsumerState<PartnerPortfolioScreen>
             const SizedBox(height: 16),
             Expanded(
               child: itemsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const SkeletonGrid(),
                 error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerPortfolioProvider)),
                 data: (items) {
                   final images = items.where((i) => i.mediaType == PortfolioMediaType.image).toList();

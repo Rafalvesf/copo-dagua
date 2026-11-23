@@ -23,6 +23,7 @@ import '../../gallery/widgets/gallery_social_ui.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -51,7 +52,7 @@ class GuestGalleryScreen extends ConsumerWidget {
 
     final eventsAsync = ref.watch(guestEventsProvider);
     return eventsAsync.when(
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const SkeletonPage(carousel: false),
       error: (err, st) => Scaffold(body: AsyncErrorView(onRetry: () => ref.invalidate(guestEventsProvider))),
       data: (events) {
         if (events.isEmpty) {
@@ -151,7 +152,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
             )
           else
             photosAsync.when(
-              loading: () => const Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator())),
+              loading: () => const Padding(padding: EdgeInsets.only(top: 60), child: SkeletonGrid()),
               error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(eventGalleryPhotosProvider(widget.eventId))),
               data: (photos) {
                 final all = photos.where((p) => p.status == 'approved').toList();

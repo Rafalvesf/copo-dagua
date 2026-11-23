@@ -29,6 +29,7 @@ import '../widgets/guest_home_sections.dart';
 import '../widgets/guest_dashboard.dart';
 import '../../../core/guest_home/event_tables.dart';
 import '../../../shared/widgets/page_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Home de quem se regista com `UserRole.guest` («Começar» → convidado) — pedido explícito do utilizador (mockup de
 /// referência): página de aterragem "O nosso casamento" (foto de capa,
@@ -86,7 +87,7 @@ class GuestHomeScreen extends ConsumerWidget {
             top: false,
             bottom: false,
             child: eventsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const SkeletonList(),
               error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar o teu casamento.', onRetry: () => ref.invalidate(guestEventsProvider)),
               data: (events) {
                 if (events.isEmpty) {
@@ -454,12 +455,12 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           leading: ReducedTopAction(Hi.arrowLeft, label: 'Sair do evento', onTap: exit),
           thumb: cover != null && cover.isNotEmpty
               ? Image.network(cover, fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) => V2Avatar(event.displayNames, size: 32))
+                  errorBuilder: (context, error, stack) => V2Avatar(event.displayNames, size: 32), frameBuilder: skeletonImageFrame)
               : V2Avatar(event.displayNames, size: 32),
           // A capa escurecida por trás da barra (pedido 2026-11-23).
           background: cover != null && cover.isNotEmpty
               ? Image.network(cover, fit: BoxFit.cover,
-                  errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFF3A3733)))
+                  errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFF3A3733)), frameBuilder: skeletonImageFrame)
               : const ColoredBox(color: Color(0xFF3A3733)),
           title: event.displayNames,
           meta: date == null ? '' : formatShortDatePt(date),

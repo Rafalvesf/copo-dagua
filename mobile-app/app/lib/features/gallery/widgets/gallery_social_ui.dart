@@ -21,6 +21,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Galeria como uma rede social (pedido 2026-10-17): grelha de
 /// quadrados (como no design) → toque abre as publicações com quem
@@ -663,7 +664,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
               child: comments.when(
                 loading: () => const Padding(
                   padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: SkeletonList(count: 3, padding: EdgeInsets.zero),
                 ),
                 error: (e, s) => const Padding(
                   padding: EdgeInsets.all(24),
@@ -834,7 +835,7 @@ class _MemberSheet extends ConsumerWidget {
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
       child: member.when(
-        loading: () => const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator())),
+        loading: () => const Padding(padding: EdgeInsets.all(20), child: SkeletonProfileHeader()),
         error: (e, s) => const Padding(padding: EdgeInsets.all(40), child: Text('Não foi possível abrir o perfil.')),
         data: (m) => m == null
             ? const Padding(padding: EdgeInsets.all(40), child: Text('Perfil indisponível.'))

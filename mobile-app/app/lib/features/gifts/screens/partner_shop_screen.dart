@@ -12,6 +12,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Loja do parceiro (migração 160): produtos que os organizadores põem na
 /// lista de presentes; os convidados pagam na app e o parceiro envia.
@@ -51,7 +52,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
  ],
  body: _tab == 0
                 ? products.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => const SkeletonList(),
                     error: (e, s) => const _Info('Não foi possível carregar os produtos.'),
                     data: (list) {
                       if (list == null) return const _Info('Falta correr a migração 160 na página Migrações do admin.');
@@ -103,7 +104,7 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                                     borderRadius: BorderRadius.circular(10),
                                     child: p.photoUrl == null
                                         ? Container(width: 52, height: 52, color: AppTheme.accentTint, child: Icon(Hi.gift, color: green))
-                                        : Image.network(p.photoUrl!, width: 52, height: 52, fit: BoxFit.cover, cacheWidth: 156),
+                                        : Image.network(p.photoUrl!, width: 52, height: 52, fit: BoxFit.cover, cacheWidth: 156, frameBuilder: skeletonImageFrame, errorBuilder: skeletonImageError),
                                   ),
                                   title: Text(p.title, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                   subtitle: Text(
@@ -327,7 +328,7 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
                         const Text('Foto', style: TextStyle(color: AppTheme.ink)),
                       ]),
                     )
-                  : Image.network(_photo!, width: 140, height: 140, fit: BoxFit.cover, cacheWidth: 420),
+                  : Image.network(_photo!, width: 140, height: 140, fit: BoxFit.cover, cacheWidth: 420, frameBuilder: skeletonImageFrame, errorBuilder: skeletonImageError),
             ),
           ),
         ),

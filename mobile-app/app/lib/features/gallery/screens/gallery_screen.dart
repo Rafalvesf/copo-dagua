@@ -18,6 +18,7 @@ import '../../../core/gallery/gallery_social.dart';
 import '../widgets/gallery_social_ui.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -196,7 +197,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
         );
 
     return photosAsync.when(
-      loading: () => withNav(const Center(child: CircularProgressIndicator())),
+      loading: () => withNav(const SkeletonGrid()),
       error: (err, st) => withNav(AsyncErrorView(onRetry: () => ref.invalidate(eventGalleryPhotosProvider(widget.eventId)))),
       data: (photos) {
         final pending = widget.isCouple

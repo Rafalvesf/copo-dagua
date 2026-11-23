@@ -23,6 +23,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Grupos do evento — organizadores e convidados (pedido do utilizador,
 /// 2026-10-20).
@@ -62,7 +63,7 @@ class GroupsScreen extends ConsumerWidget {
           )
  ],
  body: async.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const SkeletonList(),
               error: (e, _) => const _Empty(
                 title: 'Grupos ainda indisponíveis',
                 text: 'Os grupos ficam disponíveis assim que a atualização da base de dados for aplicada.',
@@ -214,7 +215,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
           const SizedBox(height: 6),
           Expanded(
             child: people.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const SkeletonList(),
               error: (e, _) => const Center(child: Text('Os grupos ainda não estão ativos — falta aplicar a atualização da base de dados.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.inkMuted))),
               data: (list) {
                 final others = list.where((p) => p.id != me).toList();

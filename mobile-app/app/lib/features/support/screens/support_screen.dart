@@ -13,6 +13,7 @@ import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// "Falar com a equipa" — pedidos de suporte reais
 /// (`support_tickets`, 047_support_tickets.sql). Inclui a categoria
@@ -47,8 +48,8 @@ class SupportScreen extends ConsumerWidget {
                 const KitTitle('Falar com a equipa', subtitle: 'Os vossos pedidos de ajuda.'),
                 ticketsAsync.when(
                   loading: () => const Padding(
-                    padding: EdgeInsets.only(top: 60),
-                    child: Center(child: CircularProgressIndicator()),
+                    padding: EdgeInsets.only(top: 20),
+                    child: SkeletonList(count: 4),
                   ),
                   error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(coupleSupportTicketsProvider)),
                   data: (tickets) {

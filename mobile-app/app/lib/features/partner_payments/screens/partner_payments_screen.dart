@@ -20,6 +20,7 @@ import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
 import '../../payments/screens/pay_done_screen.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Pagamentos do parceiro, tudo dentro da app (2026-10-19): saldo real da
 /// Stripe, botão "Levantar" para o IBAN, histórico de levantamentos e o
@@ -164,7 +165,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
                 child: async.when(
                   loading: () => Padding(
                     padding: EdgeInsets.all(40),
-                    child: Center(child: CircularProgressIndicator(color: AppTheme.accentOliveDark)),
+                    child: const SkeletonList(count: 4, padding: EdgeInsets.zero),
                   ),
                   error: (e, _) => _ErrorCard(
                     text: e is ConnectError ? connectErrorMessage(e.code) : 'Não foi possível carregar os pagamentos.',

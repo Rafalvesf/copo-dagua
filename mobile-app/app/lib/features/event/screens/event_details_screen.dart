@@ -241,12 +241,12 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
             showAfter: layout == MenuLayout.classic ? 170 : 110,
             thumb: hasCover
                 ? Image.network(event.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => V2Avatar(capFirst(event.displayNames), size: 32))
+                    errorBuilder: (context, error, stack) => V2Avatar(capFirst(event.displayNames), size: 32), frameBuilder: skeletonImageFrame)
                 : V2Avatar(capFirst(event.displayNames), size: 32),
             // A capa escurecida por trás da barra (pedido 2026-11-23).
             background: hasCover
                 ? Image.network(event.coverPhotoUrlCacheBusted!, fit: BoxFit.cover,
-                    errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFF3A3733)))
+                    errorBuilder: (context, error, stack) => const ColoredBox(color: Color(0xFF3A3733)), frameBuilder: skeletonImageFrame)
                 : const ColoredBox(color: Color(0xFF3A3733)),
             title: capFirst(event.displayNames),
             meta: [
