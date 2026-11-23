@@ -820,6 +820,12 @@ tratado» —, título 16, frase 13 e a ação), `FrameNote`, `FrameButton36`,
 - **Presentes:** «Já oferecidos» no resumo; «Receber» com o **Envelope —
   em dinheiro ou por transferência** (IBAN, `events.gift_iban`), os
   envelopes recebidos e a morada; a lista numa moldura.
+- **Definições do evento:** «Organizadores» (quem organiza, avatar 44 +
+  nome 16 + papel 13, «Ainda organizas sozinho.» e «Convidar quem ajuda» —
+  preto quando estás sozinho, contorno com mais gente), «O convite» (o
+  código com «Copiar» e «Copiar o link do convite»), «O evento»,
+  «Conteúdo» (Para os convidados, galeria, presentes/bilhetes) e
+  «Arquivo», cada um numa moldura.
 - **Vazio:** a mascote a dormir com o que vai aparecer e a ação; resumos a
   0 com a barra vazia; nada de avisos para o que falta escrever (diz-se no
   valor da linha, p. ex. «Por escrever»).

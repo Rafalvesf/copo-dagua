@@ -2855,12 +2855,10 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
               () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PanelPage()))),
         if (canEvento) ('Aparência do menu', '', () => context.go('/evento?aparencia=1')),
       ]),
-      ('Convidados', [
-        if (canEvento) ('Página dos convidados', 'Programa e presentes', () => push('/guest-page')),
-        if (canEvento) ('Acesso e entrada', 'Para os convidados', () => push('/guest-page')),
-        if (isOwner) ('Organizadores', 'Convidar quem ajuda', () => push('/organizadores')),
-      ]),
+      // Organizadores e O convite vão em molduras próprias (mockup
+      // «Páginas do evento · com molduras» → Definições do evento).
       ('Conteúdo', [
+        if (canEvento) ('Para os convidados', 'Programa, acesso e entrada', () => push('/guest-page')),
         if (canEvento) ('Galeria', '', () => push('/gallery')),
         if (canEvento && fourth == _Fourth.gifts) ('Lista de presentes', '', () => push('/gift-list')),
         if (canBilhetes && fourth == _Fourth.tickets) ('Bilhetes', '', () => push('/bilhetes')),
@@ -2888,6 +2886,68 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
                   style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               // Cada tema numa moldura cinzenta com o título lá dentro
               // (mockup «Páginas do evento · com molduras», 2026-11-22).
+              // Organizadores: quem organiza e «Convidar quem ajuda».
+              if (isOwner)
+                SectionFrame(title: 'Organizadores', children: [
+                  ...switch (ref.watch(weddingOrganizersProvider(w.id)).value) {
+                    final list? when list.isNotEmpty => [
+                        for (final (i, o) in list.where((o) => o.status != 'revoked').indexed) ...[
+                          if (i > 0) const Divider(height: 1, color: AppTheme.line),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(children: [
+                              V2Avatar(o.name, size: 44),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text(o.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  Text(
+                                    o.isOwner ? 'Anfitrião · tudo' : (o.status == 'pending' ? 'Convite por aceitar' : 'Ajuda a organizar'),
+                                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                                  ),
+                                ]),
+                              ),
+                            ]),
+                          ),
+                        ],
+                        if (list.length == 1) const FrameNote('Ainda organizas sozinho.', top: 4),
+                      ],
+                    _ => const <Widget>[],
+                  },
+                  FrameButton44('Convidar quem ajuda',
+                      outlined: (ref.watch(weddingOrganizersProvider(w.id)).value?.length ?? 0) > 1,
+                      onTap: () => push('/organizadores')),
+                ]),
+              // O convite: o código e o link.
+              if (canEvento && (w.guestCode?.isNotEmpty == true || w.inviteUrl != null))
+                SectionFrame(title: 'O convite', children: [
+                  if (w.guestCode?.isNotEmpty == true)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                      child: Row(children: [
+                        Expanded(
+                          child: Text(w.guestCode!,
+                              style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                        ),
+                        FrameButton36('Copiar', outlined: true, onTap: () async {
+                          await copyText(w.guestCode!);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
+                          }
+                        }),
+                      ]),
+                    ),
+                  if (w.inviteUrl != null)
+                    FrameButton44('Copiar o link do convite', outlined: true, onTap: () async {
+                      await copyText(w.inviteUrl!);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+                      }
+                    }),
+                ]),
               for (final (title, rows) in groups) if (rows.isNotEmpty)
                 SectionFrame(
                   title: title,
