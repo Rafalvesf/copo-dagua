@@ -61,7 +61,7 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
   final rows = await supabase
       .from('bookings')
       .select(
-        'id, booking_number, event_date, total_amount, deposit_amount, status, '
+        '*, '
         'proposals(title, description, payment_terms), '
         'events(partner_name_1, partner_name_2, venue, location, profile_photo_url, cover_photo_url), '
         'payments(status, amount), partner_profiles(business_name)',
@@ -80,7 +80,7 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
           id: r['id'] as String,
           number: r['booking_number'] == null
               ? null
-              : bookingRef(r['booking_number'], ((r['partner_profiles'] as Map?)?['business_name'] ?? '').toString()),
+              : bookingRef(r['booking_number'], ((r['partner_profiles'] as Map?)?['business_name'] ?? '').toString(), reference: r['reference']),
           couple: n1.isEmpty ? 'Cliente' : (n2.isEmpty ? n1 : '$n1 & $n2'),
           coupleAvatarUrl: (w?['profile_photo_url'] as String?) ?? (w?['cover_photo_url'] as String?),
           date: r['event_date'] == null ? null : DateTime.parse(r['event_date'] as String),
