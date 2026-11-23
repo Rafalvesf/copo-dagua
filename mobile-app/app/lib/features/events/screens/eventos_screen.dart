@@ -999,15 +999,14 @@ class _InvitedEventCard extends ConsumerWidget {
       // Quem vai (pedido 2026-11-22, mockup «Os meus eventos · cartões
       // brancos»): as 3 fotos, como no organizador; o que falta fazer vai
       // na tarefa por baixo. Antes da 220 (sem contagem), o estado.
-      footerLeft: going != null
-          ? _Attendees(eventId: wedding.weddingId, total: going, onWhite: true, emptyText: 'Ninguém confirmou ainda')
-          : steps.isEmpty
-              ? null
-              : next == null
-                  ? const InfoTag('Está tudo tratado', green: true)
-                  : next.$1 == 'rsvp'
-                      ? const InfoTag('Ainda não respondeste')
-                      : const InfoTag('Vais', green: true),
+      // Sem a migração 220 conta quem se pode ver (amigos e perfis
+      // públicos); os 3 círculos aparecem sempre.
+      footerLeft: _Attendees(
+        eventId: wedding.weddingId,
+        total: going ?? (ref.watch(eventAttendeesProvider(wedding.weddingId)).value?.length ?? 0),
+        onWhite: true,
+        emptyText: 'Ninguém confirmou ainda',
+      ),
       footerRight: _countdownBox(wedding.weddingDate),
       below: todo > 0 && first != null
           ? _TaskPill(tone: tone, task: first.$1, more: todo - 1, action: first.$2, onTap: () => context.go(open))
