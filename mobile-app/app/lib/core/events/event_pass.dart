@@ -85,13 +85,40 @@ class GuestSections {
 
 class MyTicket {
   final String id;
+  final String weddingId;
   final int quantity;
-  final String code;
   final DateTime? checkedInAt;
-  const MyTicket({required this.id, required this.quantity, required this.code, this.checkedInAt});
+  const MyTicket({required this.id, required this.weddingId, required this.quantity, this.checkedInAt});
+}
+
+/// QR de entrada rotativo (migração 228, 2026-11-23): um token por evento +
+/// pessoa, assinado no servidor, que muda a cada 30 s. O segredo nunca
+/// chega ao telemóvel; um screenshot deixa de servir passado ~1 minuto.
+class EntryQr {
+  final String token;
+  final Duration refreshIn;
+  final int quantity;
+  final DateTime? checkedInAt;
+  const EntryQr({required this.token, required this.refreshIn, this.quantity = 1, this.checkedInAt});
 
   /// O que vai no QR: abre a app do organizador e marca a entrada.
-  String get qrData => publicLink('/entrada/$code');
+  String get qrData => publicLink('/entrada/$token');
+}
+
+/// `null` quando não há entrada (sem bilhete, não é convidado) ou sem rede.
+Future<EntryQr?> fetchEntryQr(String weddingId) async {
+  try {
+    final r = await supabase.rpc('my_entry_qr', params: {'p_wedding': weddingId});
+    if (r is! Map || r['result'] != 'ok' || r['token'] is! String) return null;
+    return EntryQr(
+      token: r['token'] as String,
+      refreshIn: Duration(seconds: ((r['refresh_in'] as num?)?.toInt() ?? 30).clamp(1, 30)),
+      quantity: (r['quantity'] as num?)?.toInt() ?? 1,
+      checkedInAt: DateTime.tryParse('${r['checked_in_at'] ?? ''}')?.toLocal(),
+    );
+  } on PostgrestException {
+    return null;
+  }
 }
 
 class EventPass {
@@ -111,11 +138,11 @@ final myEventPassProvider = FutureProvider.family<EventPass, String>((ref, event
     return EventPass(
       sections: GuestSections.fromJson(r['sections']),
       isPaid: r['is_paid'] == true,
-      ticket: t is Map && t['code'] is String
+      ticket: t is Map && t['id'] is String
           ? MyTicket(
               id: t['id'] as String,
+              weddingId: weddingId,
               quantity: (t['quantity'] as num?)?.toInt() ?? 1,
-              code: t['code'] as String,
               checkedInAt: DateTime.tryParse('${t['checked_in_at'] ?? ''}')?.toLocal(),
             )
           : null,
@@ -140,7 +167,7 @@ Future<void> saveGuestSections(String eventId, GuestSections sections) async {
   await supabase.rpc('set_guest_sections', params: {'p_wedding': eventId, 'p_sections': sections.toJson()});
 }
 
-enum CheckInResult { ok, already, notFound, notOrganizer, refunded, notPaid, error }
+enum CheckInResult { ok, already, notFound, expired, notOrganizer, refunded, notPaid, error }
 
 class CheckIn {
   final CheckInResult result;
@@ -151,15 +178,17 @@ class CheckIn {
   const CheckIn(this.result, {this.name, this.quantity = 1, this.event, this.at});
 }
 
-/// O organizador leu o QR de um bilhete (`check_in_ticket`, migração 158).
-Future<CheckIn> checkInTicket(String code) async {
+/// O organizador leu o QR de entrada (`check_in_entry`, migração 228: token
+/// rotativo validado no servidor).
+Future<CheckIn> checkInTicket(String token) async {
   try {
-    final r = await supabase.rpc('check_in_ticket', params: {'p_code': code});
+    final r = await supabase.rpc('check_in_entry', params: {'p_token': token});
     if (r is! Map) return const CheckIn(CheckInResult.error);
     final result = switch (r['result']) {
       'ok' => CheckInResult.ok,
       'already' => CheckInResult.already,
       'not_found' => CheckInResult.notFound,
+      'expired' => CheckInResult.expired,
       'not_organizer' => CheckInResult.notOrganizer,
       'refunded' => CheckInResult.refunded,
       'not_paid' => CheckInResult.notPaid,

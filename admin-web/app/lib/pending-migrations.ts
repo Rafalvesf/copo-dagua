@@ -574,6 +574,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O convidado diz se a criança que leva precisa de cadeirinha; o organizador vê-o na ficha do convidado e a comida, o transporte, o aluguer e a animação infantil veem quantas são (e, nas mesas, de quem). Corre depois da 226.",
     check: { kind: "marker", id: "227" },
   },
+  {
+    file: "228_qr_entrada_rotativo.sql",
+    date: "2026-11-23",
+    title: "QR de entrada rotativo",
+    what: "O QR de entrada passa a ser de cada evento + pessoa e muda a cada 30 segundos (assinado no servidor): um screenshot deixa de dar entrada. Os códigos fixos antigos dos bilhetes deixam de valer. Corre depois da 227.",
+    check: { kind: "table", table: "event_passes" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
