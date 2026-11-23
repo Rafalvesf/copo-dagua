@@ -434,6 +434,7 @@ class _PlanGrid extends StatelessWidget {
           if (shown.isEmpty && shape != null) _noneOfShape(shape!),
           GridView.builder(
             shrinkWrap: true,
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: shown.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -986,6 +987,7 @@ class _SelectedTableCard extends StatelessWidget {
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
@@ -1197,6 +1199,7 @@ class _TableConfigSheetState extends ConsumerState<_TableConfigSheet> {
                   )
                 : ListView.builder(
                     shrinkWrap: true,
+            padding: EdgeInsets.zero,
                     itemCount: widget.guests.length,
                     itemBuilder: (context, index) {
                       // Convidado atualizado (o nome carinhoso pode ter
