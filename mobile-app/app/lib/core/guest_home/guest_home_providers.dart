@@ -62,7 +62,7 @@ final guestWeddingsProvider = FutureProvider<List<GuestWedding>>((ref) async {
     final updatedAt = wedding?['updated_at'] as String?;
     return GuestWedding(
       weddingId: row['wedding_id'] as String,
-      partnerName1: (wedding?['partner_name_1'] as String?) ?? 'Casal',
+      partnerName1: (wedding?['partner_name_1'] as String?) ?? 'Evento',
       partnerName2: wedding?['partner_name_2'] as String?,
       weddingDate: weddingDate == null ? null : DateTime.parse(weddingDate),
       venue: wedding?['venue'] as String?,

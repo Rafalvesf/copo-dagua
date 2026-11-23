@@ -1260,7 +1260,7 @@ class Review {
     this.responseAt,
     this.status = 'published',
     this.coupleId,
-    this.coupleDisplayName = 'Casal',
+    this.coupleDisplayName = 'Organizadores',
     this.coupleAvatarUrl,
     required this.accountCreatedAt,
     this.weddingDate,
@@ -1274,7 +1274,7 @@ class Review {
     final name1 = wedding?['partner_name_1'] as String?;
     final name2 = wedding?['partner_name_2'] as String?;
     final displayName = (name1 == null || name1.isEmpty)
-        ? 'Casal'
+        ? 'Organizadores'
         : (name2 == null || name2.isEmpty)
         ? name1
         : '$name1 & $name2';

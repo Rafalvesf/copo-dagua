@@ -196,7 +196,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _checkingCode = false);
       if (rows.isEmpty) {
         setState(
-          () => _weddingCodeError = 'Código inválido — confirma com o casal.',
+          () => _weddingCodeError = 'Código inválido — confirma com quem organiza.',
         );
         return;
       }
@@ -296,7 +296,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return false;
       setState(() => _checkingCode = false);
       if (rows.isEmpty) {
-        setState(() => _weddingCodeError = 'Código inválido — confirma com o casal.');
+        setState(() => _weddingCodeError = 'Código inválido — confirma com quem organiza.');
         return false;
       }
     }

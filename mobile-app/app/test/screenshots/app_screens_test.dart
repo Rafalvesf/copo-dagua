@@ -212,7 +212,7 @@ final _partners = [
       rating: p.$5,
       reviewCount: p.$6,
       startingPrice: p.$7,
-      description: 'Trabalhamos com casais que querem um dia simples e bonito, '
+      description: 'Trabalhamos com quem quer um dia simples e bonito, '
           'com tudo tratado ao pormenor.',
     ),
 ];

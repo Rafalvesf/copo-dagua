@@ -34,7 +34,7 @@ class GuestGiftsScreen extends ConsumerWidget {
 
   void _notSet(BuildContext context, String what) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Os noivos ainda não indicaram $what.')),
+      SnackBar(content: Text('Os organizadores ainda não indicaram $what.')),
     );
   }
 

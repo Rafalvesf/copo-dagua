@@ -703,7 +703,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
                 child: const Text('Juntar linha'),
               ),
               const SizedBox(height: 18),
-              OnbField(controller: _excludes, label: 'Não inclui', hint: 'Ex.: bolo dos noivos, bar depois do jantar'),
+              OnbField(controller: _excludes, label: 'Não inclui', hint: 'Ex.: bolo, bar depois do jantar'),
               const SizedBox(height: 4),
               const Text('Evita surpresas: o que costumam perguntar e não está no preço.',
                   style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),

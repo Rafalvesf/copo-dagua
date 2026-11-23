@@ -206,7 +206,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
             controller: _name,
             maxLength: 60,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(labelText: 'Nome do grupo', hintText: 'Ex: Padrinhos, Família da noiva'),
+            decoration: const InputDecoration(labelText: 'Nome do grupo', hintText: 'Ex: Padrinhos, Família'),
           ),
           const SizedBox(height: 4),
           Text('Pessoas do evento${_picked.isEmpty ? '' : ' · ${_picked.length} escolhidas'}',

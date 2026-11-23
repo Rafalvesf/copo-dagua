@@ -949,5 +949,8 @@ tratado» —, título 16, frase 13 e a ação), `FrameNote`, `FrameButton36`,
 ## 8. Texto e tom
 
 - Português de Portugal. "Taxa de serviço", nunca "comissão".
+- **Eventos e organizadores, nunca «casal»/«noivos»** (pedido 2026-11-23):
+  «Código do evento», «aguarda aprovação dos organizadores», «Os
+  organizadores ainda não indicaram…».
 - Botões com verbos curtos ("Pedir orçamento", "Ver evento").
 - Sem funcionalidades inventadas: o design não promete o que a app não faz.
