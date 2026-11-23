@@ -2218,8 +2218,13 @@ class _SectionTabs extends StatelessWidget {
 
   double? _top(GlobalKey k) {
     final box = k.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.attached) return null;
-    return box.localToGlobal(Offset.zero).dy;
+    if (box == null || !box.attached || !box.hasSize) return null;
+    try {
+      return box.localToGlobal(Offset.zero).dy;
+    } catch (_) {
+      // Ainda sem layout (p. ex. ao rodar o telemóvel): ignora (Sentry COPO-DAGUA-D).
+      return null;
+    }
   }
 
   void _go(GlobalKey k) {

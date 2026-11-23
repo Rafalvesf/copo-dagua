@@ -35,7 +35,11 @@ class TourAnchor extends StatefulWidget {
     if (ctx == null || !ctx.mounted) return null;
     final box = ctx.findRenderObject();
     if (box is! RenderBox || !box.hasSize || !box.attached) return null;
-    return box.localToGlobal(Offset.zero) & box.size;
+    try {
+      return box.localToGlobal(Offset.zero) & box.size;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

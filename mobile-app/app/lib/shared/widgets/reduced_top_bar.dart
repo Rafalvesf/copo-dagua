@@ -47,7 +47,11 @@ class ReducedTopBar extends StatelessWidget {
   double? _top(GlobalKey k) {
     final box = k.currentContext?.findRenderObject() as RenderBox?;
     if (box == null || !box.attached || !box.hasSize || box.size.height <= 0) return null;
-    return box.localToGlobal(Offset.zero).dy;
+    try {
+      return box.localToGlobal(Offset.zero).dy;
+    } catch (_) {
+      return null;
+    }
   }
 
   void _go(GlobalKey k, double line) {
