@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/count_badge.dart';
 
 import '../../../core/guest_home/guest_home_providers.dart' show TableMate;
 import '../../../core/models/models.dart';
@@ -108,30 +109,10 @@ class DashCover extends StatelessWidget {
               V2RoundButton(icon: Hi.chevronLeft, tooltip: 'Sair', onTap: onExit),
               const Spacer(),
               if (onGroup != null)
-                Stack(clipBehavior: Clip.none, children: [
-                  V2RoundButton(icon: Hi.chatBubbleOvalLeft, tooltip: 'Grupo do evento', onTap: onGroup),
-                  // Contador (§2): pílula branca 20, número preto, aro preto 2.
-                  if (groupUnread > 0)
-                    Positioned(
-                      top: -4,
-                      right: -4,
-                      child: IgnorePointer(
-                        child: Container(
-                          constraints: const BoxConstraints(minWidth: 22),
-                          height: 22,
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(11),
-                            border: Border.all(color: AppTheme.ink, width: 2),
-                          ),
-                          child: Text(groupUnread > 99 ? '99+' : '$groupUnread',
-                              style: const TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                        ),
-                      ),
-                    ),
-                ]),
+                WithCount(
+                  count: groupUnread,
+                  child: V2RoundButton(icon: Hi.chatBubbleOvalLeft, tooltip: 'Grupo do evento', onTap: onGroup),
+                ),
               if (onGroup != null && onMap != null) const SizedBox(width: 8),
               if (onMap != null) V2RoundButton(icon: Hi.mapPin, tooltip: 'Como chegar', onTap: onMap),
             ]),

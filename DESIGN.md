@@ -50,8 +50,11 @@ de progresso, verde clarinho, §6). **Nunca** para botões.
   branco e sólido 20** (Heroicons Solid), sem sombra. **Em toda a app**
   (organizador, parceiro e convidado): nas páginas, sobre fotos e nos popups
   — nunca branco, cinzento ou translúcido (pedido do Rafael, 2026-11-21).
-  Contador por cima (p. ex. mensagens por ler): pílula branca 20 com o
-  número 12 negrito preto e aro preto 2.
+  Contador por cima (p. ex. mensagens por ler, notificações): pílula branca
+  20 com o número 12 negrito preto e aro preto 2 (`CountBadge` / `WithCount`,
+  `shared/widgets/count_badge.dart`) — o **sino** de notificações é sempre
+  este botão preto, com o número por ler (nunca um ponto); os contadores
+  voltam a ler-se sozinhos (pedido 2026-11-23).
 - "+" de criar: círculo preto 44, "+" branco.
 
 ## 3. Letra
@@ -329,7 +332,9 @@ ecrãs. O resto da app mantém a tabela acima.
   **Barra do topo bloqueada** (pedido 2026-11-23): em todas as páginas com
   a seta fixa (`KitPage(pinnedBack)`, `ScrollBackView`), depois de passar o
   título aparece uma **barra branca fixa** no topo (cantos 35 em baixo,
-  sombra da navbar) com o título 16, e a seta por cima dela
+  sombra da navbar) com o título 16 e, à direita, **os mesmos botões
+  redondos do topo da página** («+», ⋯, sino… — pedido 2026-11-23; o
+  `KitHeader` passa-os sozinho), e a seta por cima dela
   (`LockedTopBar`, `page_kit.dart`). **Sem o nevoeiro/desvanecer branco** no
   topo das páginas (saiu do `GradientScaffold`). No painel do evento e nos
   perfis, o topo reduzido (§6.5) **já não tem a lista de secções** por
@@ -434,12 +439,10 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   scroll** até à faixa dos botões, que fica **sempre visível**. **Reduzida**
   (mockup «Topo reduzido», **D**, 2026-11-22): a foto dá lugar a uma **barra
   branca** (cantos 35 em baixo, sombra da navbar) com o logótipo 32, o nome
-  16 com o visto e a meta 13 `#57534E` («Fotografia · Porto»); fica só o
-  favorito (o partilhar está no topo aberto); por baixo, **atalhos para as
-  secções** (Pacotes/Menus, Portfólio, Onde fica, Avaliações — só as que
-  existem) em pílulas 32 brancas, a da secção onde estás a preto, que levam
-  à secção. Voltar e favorito ficam sempre no mesmo sítio e são os pretos
-  44 do §2. **Exceção ao «voltar ao topo» do
+  16 com o visto e a meta 13 `#57534E` («Fotografia · Porto») e **os mesmos
+  botões do topo** (partilhar e favorito); **sem atalhos para as secções**
+  por baixo (pedido 2026-11-23). Voltar, partilhar e favorito ficam sempre no
+  mesmo sítio e são os pretos 44 do §2. **Exceção ao «voltar ao topo» do
   §6:** aqui a seta é sempre «voltar» (não roda para ↑). O mesmo nos
   **eventos** (painel do organizador e as páginas do evento — Orçamento,
   Convidados, Reservas/Parceiros, Mesas, Convidar, Para os convidados,
@@ -653,11 +656,10 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
 - **Topo reduzido** (pedido 2026-11-22): o mesmo dos parceiros (§6.2) nos
   eventos (organizador e convidado) e nos perfis — `ReducedTopBar`
   (`shared/widgets/reduced_top_bar.dart`): depois da capa, a barra branca
-  com a foto 32, o nome 16 e a meta 13 («Casamento · Sáb, 12 jun»), ⋯ (no
-  convidado, o grupo do evento; no perfil, partilhar) e os atalhos —
-  organizador: Para fazer · Programa · Números · Reservas · Convite · Gerir;
-  convidado: Para fazer · A tua mesa · Programa · Dress code · Como chegar;
-  perfil: Próximos eventos · A seguir · Avaliações.
+  com a foto 32, o nome 16 e a meta 13 («Casamento · Sáb, 12 jun») e **os
+  mesmos botões do topo aberto** (pedido 2026-11-23) — organizador:
+  partilhar e ⋯; convidado: o grupo do evento (com o contador) e «Como
+  chegar»; perfil: partilhar e ⋯. Sem atalhos para as secções.
 
 - **Capa:** a foto com o véu, o tipo, o nome 28 e a data/local a branco em
   baixo; a seta fixa de voltar (§6) à esquerda; **partilhar** e **⋯** pretos

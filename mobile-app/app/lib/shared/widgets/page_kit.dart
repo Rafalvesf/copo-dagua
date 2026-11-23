@@ -57,11 +57,14 @@ class _KitPageScope extends InheritedWidget {
 
   /// O título da página (o [KitTitle] escreve-o aqui) para a barra do topo.
   final ValueNotifier<String?>? title;
-  const _KitPageScope({required this.pinnedBack, this.title, required super.child});
+
+  /// Os botões do topo (o [KitHeader] escreve-os aqui) para a barra do topo.
+  final ValueNotifier<List<Widget>>? actions;
+  const _KitPageScope({required this.pinnedBack, this.title, this.actions, required super.child});
   static _KitPageScope? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_KitPageScope>();
   @override
-  bool updateShouldNotify(_KitPageScope old) => old.pinnedBack != pinnedBack || old.title != title;
+  bool updateShouldNotify(_KitPageScope old) => old.pinnedBack != pinnedBack || old.title != title || old.actions != actions;
 }
 
 /// Barra do topo bloqueada (pedido do Rafael, 2026-11-23): depois de passar
@@ -71,14 +74,18 @@ class _KitPageScope extends InheritedWidget {
 class LockedTopBar extends StatelessWidget {
   final ScrollController controller;
   final ValueListenable<String?> title;
+
+  /// Os mesmos botões redondos que estão no topo da página (pedido
+  /// 2026-11-23): ao fazer scroll passam para a barra, à direita.
+  final ValueListenable<List<Widget>>? actions;
   final double showAfter;
-  const LockedTopBar({super.key, required this.controller, required this.title, this.showAfter = 64});
+  const LockedTopBar({super.key, required this.controller, required this.title, this.actions, this.showAfter = 64});
 
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
     return AnimatedBuilder(
-      animation: Listenable.merge([controller, title]),
+      animation: Listenable.merge([controller, title, if (actions != null) actions!]),
       builder: (context, _) {
         final y = controller.safeOffset;
         final show = ((y - showAfter) / 24).clamp(0.0, 1.0).toDouble();
@@ -96,8 +103,13 @@ class LockedTopBar extends StatelessWidget {
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(35)),
                 boxShadow: [BoxShadow(color: Color(0x1F171713), blurRadius: 24, offset: Offset(0, 8))],
               ),
-              child: Text(title.value ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              child: Row(children: [
+                Expanded(
+                  child: Text(title.value ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ),
+                for (final a in actions?.value ?? const <Widget>[]) ...[const SizedBox(width: 10), a],
+              ]),
             ),
           ),
         );
@@ -128,11 +140,13 @@ class ScrollBackView extends StatefulWidget {
 class _ScrollBackViewState extends State<ScrollBackView> {
   final _controller = ScrollController();
   final _title = ValueNotifier<String?>(null);
+  final _actions = ValueNotifier<List<Widget>>(const []);
 
   @override
   void dispose() {
     _controller.dispose();
     _title.dispose();
+    _actions.dispose();
     super.dispose();
   }
 
@@ -142,9 +156,10 @@ class _ScrollBackViewState extends State<ScrollBackView> {
     return _KitPageScope(
       pinnedBack: true,
       title: _title,
+      actions: _actions,
       child: Stack(children: [
         Positioned.fill(child: widget.builder(context, _controller)),
-        Positioned(top: 0, left: 0, right: 0, child: LockedTopBar(controller: _controller, title: _title)),
+        Positioned(top: 0, left: 0, right: 0, child: LockedTopBar(controller: _controller, title: _title, actions: _actions)),
         Positioned(
           left: AppTheme.screenMargin,
           top: topInset + 12,
@@ -168,6 +183,7 @@ class _KitPageState extends State<KitPage> {
   // Mostra o botão de "voltar ao topo" depois de passar o cabeçalho.
   bool _scrolled = false;
   final _title = ValueNotifier<String?>(null);
+  final _actions = ValueNotifier<List<Widget>>(const []);
 
   void _onScroll() {
     final v = _controller.safeOffset > 120;
@@ -185,6 +201,7 @@ class _KitPageState extends State<KitPage> {
     _controller.removeListener(_onScroll);
     _own?.dispose();
     _title.dispose();
+    _actions.dispose();
     super.dispose();
   }
 
@@ -194,6 +211,7 @@ class _KitPageState extends State<KitPage> {
     return _KitPageScope(
       pinnedBack: widget.pinnedBack,
       title: _title,
+      actions: _actions,
       child: Stack(children: [
         Positioned.fill(
           child: ListView(
@@ -213,7 +231,7 @@ class _KitPageState extends State<KitPage> {
         // ScrollAwareBackButton; o KitHeader deixa de desenhar o seu voltar).
         // Sem [pinnedBack]: mantém-se o botão ↑ que aparece ao fazer scroll.
         if (widget.pinnedBack)
-          Positioned(top: 0, left: 0, right: 0, child: LockedTopBar(controller: _controller, title: _title)),
+          Positioned(top: 0, left: 0, right: 0, child: LockedTopBar(controller: _controller, title: _title, actions: _actions)),
         if (widget.pinnedBack)
           Positioned(
             left: AppTheme.screenMargin,
@@ -267,7 +285,17 @@ class KitHeader extends StatelessWidget {
     final nav = Navigator.of(context);
     // Numa página com a seta fixa do §6, o voltar é o do overlay: aqui fica
     // só um espaço de 44 por baixo dele, e as ações à direita.
-    final pinned = _KitPageScope.of(context)?.pinnedBack ?? false;
+    final scope = _KitPageScope.of(context);
+    final pinned = scope?.pinnedBack ?? false;
+    // Os botões do topo também vão para a barra do topo bloqueada.
+    final holder = scope?.actions;
+    if (holder != null && !listEquals(holder.value, actions)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          if (!listEquals(holder.value, actions)) holder.value = actions;
+        } catch (_) {} // a página já fechou
+      });
+    }
     return SizedBox(
       height: 44,
       child: Row(children: [
