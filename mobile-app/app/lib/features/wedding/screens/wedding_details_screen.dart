@@ -51,7 +51,7 @@ import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/seating/seating_controller.dart';
 import '../../../core/supabase/supabase_config.dart';
-import '../../../core/events/events_providers.dart' show joinRequestsProvider;
+import '../../../core/events/events_providers.dart' show joinRequestsProvider, JoinRequest;
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import '../../../core/gifts/gift_shop.dart' show giftListProvider, GiftItem;
@@ -3848,15 +3848,31 @@ class _OrgBody extends ConsumerWidget {
           onTap: () => context.push('/bookings'),
         ));
       }
-      final requests = ref.watch(joinRequestsProvider(w.id)).value?.length ?? 0;
-      if (requests > 0) {
+      // Cada pedido para entrar é uma tarefa (pedido 2026-11-23): a pessoa,
+      // quando pediu e «Ver», que abre o pedido para aceitar ou recusar.
+      final requests = ref.watch(joinRequestsProvider(w.id)).value ?? const <JoinRequest>[];
+      for (final r in requests.take(kListPreview)) {
+        final days = DateTime.now().difference(r.createdAt).inDays;
         tasks.add(_orgTaskRow(
           context,
-          title: '$requests ${requests == 1 ? 'pedido' : 'pedidos'}',
-          sub: 'Para entrar · pelo link do convite',
-          action: 'Aceitar',
-          lead: _roundIcon(Hi.userPlus),
-          onTap: () => context.push('/guests'),
+          title: r.name,
+          sub: [
+            'Pediu para entrar',
+            days <= 0 ? 'hoje' : days == 1 ? 'ontem' : 'há $days dias',
+            if ((r.bringing ?? 0) > 0) 'traz ${r.bringing}',
+          ].join(' · '),
+          action: 'Ver',
+          lead: V2Avatar(r.name, size: 44),
+          onTap: () => context.push('/guests/pedidos?id=${r.id}'),
+        ));
+      }
+      if (requests.length > kListPreview) {
+        tasks.add(MoreFacesRow(
+          rest: [for (final r in requests.skip(kListPreview)) (r.name, null)],
+          noun: 'pedido',
+          nounPlural: 'pedidos',
+          action: 'Ver',
+          onTap: () => context.push('/guests/pedidos'),
         ));
       }
     }
@@ -3954,6 +3970,8 @@ class _OrgNumbers extends ConsumerWidget {
       tiles.add(_OrgTile(label: label, value: value, sub: sub, onTap: () => context.push(route)));
     }
 
+    // Orçamento, Convidados e Reservas aparecem sempre, mesmo a 0; Mesas só
+    // com mais de uma mesa (pedido do Rafael, 2026-11-23).
     final spent = budget?.spent ?? 0;
     final total = budget?.total ?? 0;
     if (spent > 0) {
@@ -3962,16 +3980,20 @@ class _OrgNumbers extends ConsumerWidget {
       add('Orçamento', euros(total), 'por gastar', '/budget');
     } else if ((w.estimatedBudget ?? 0) > 0) {
       add('Orçamento', euros(w.estimatedBudget!), 'estimativa', '/budget');
+    } else {
+      add('Orçamento', euros(0), 'ainda sem teto', '/budget');
     }
     if (guests.isNotEmpty) {
       add('Convidados', '$going / ${guests.length}', pending > 0 ? '${going == 1 ? 'vai' : 'vão'} · $pending por responder' : going == 1 ? 'vai' : 'vão', '/guests');
+    } else {
+      add('Convidados', '0', 'ainda sem convidados', '/guests');
     }
-    if (bookings.isNotEmpty) {
-      final others = bookings.length - reserved;
-      add('Parceiros', '$reserved', [reserved == 1 ? 'reservado' : 'reservados', if (others > 0) '$others por fechar'].join(' · '), '/bookings');
-    }
-    // Mesas: só num espaço com mesas separadas, e já com mesas feitas.
-    if (seating.hasVenue && seating.venueTypes.isNotEmpty && seating.tables.isNotEmpty) {
+    final others = bookings.length - reserved;
+    add('Reservas', '$reserved', bookings.isEmpty
+        ? 'ainda sem parceiros'
+        : [reserved == 1 ? 'reservada' : 'reservadas', if (others > 0) '$others por fechar'].join(' · '), '/bookings');
+    // Mesas: só num espaço com mesas separadas, e com mais de uma mesa.
+    if (seating.hasVenue && seating.venueTypes.isNotEmpty && seating.tables.length > 1) {
       final seated = seating.tables.fold<int>(0, (n, t) => n + t.guestIds.length);
       add('Mesas', '${seating.tables.length}', '$seated de ${going == 0 ? guests.length : going} sentados', '/seating');
     }

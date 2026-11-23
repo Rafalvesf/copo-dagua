@@ -673,8 +673,10 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   2026-11-22) («Pagar»; numa reserva com menus
   que o organizador escolhe — restaurante ou catering — os menus escolhem-se
   ao pagar: o nome do parceiro, «Menus e o sinal (300 €)» e «Escolher e
-  pagar», como no convidado), propostas dos parceiros («Ver») e pedidos
-  para entrar («Aceitar»), com o ponto da cor do prazo
+  pagar», como no convidado), propostas dos parceiros («Ver») e **cada
+  pedido para entrar** (a pessoa, «Pediu para entrar · ontem · traz 1» e
+  «Ver», que abre o pedido para aceitar ou recusar; mais de 4 → «+X
+  pedidos», pedido 2026-11-23), com o ponto da cor do prazo
   (§7). **«Pagar» e «Escolher e pagar» abrem popups** por cima do painel
   (pedido 2026-11-22), nunca a página das reservas: o mesmo fluxo de
   depois de aceitar uma proposta — «Queres juntar alguma coisa?» (1 DE 2,
@@ -731,8 +733,10 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   moldura** (1,5 `#CFCFCF`, cantos 16, interior 14×12, sem fundo), **sem
   ícones**; rótulo 12 em maiúsculas, valor **28** negrito e uma linha 13,
   tudo **ao centro na horizontal e na vertical**; as duas caixas de cada
-  fila com a mesma altura: orçamento, convidados, parceiros e mesas (só
-  num espaço com mesas separadas e já com mesas).
+  fila com a mesma altura: **Orçamento, Convidados e Reservas aparecem
+  sempre, mesmo a 0** («0 €  ainda sem teto», «0  ainda sem convidados»,
+  «0  ainda sem parceiros»); **Mesas só com mais de uma mesa** (pedido
+  2026-11-23).
 - **Gerir:** Presentes e Página dos convidados (os convidados e as mesas
   estão nos números); por baixo de uma linha grossa (2 px), **Definições
   do evento** à parte, com o botão redondo preto 44 (roda dentada).
