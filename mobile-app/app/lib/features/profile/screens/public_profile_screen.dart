@@ -84,7 +84,11 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
             width: 44,
             height: 44,
             alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: AppTheme.ink,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
             child: icon,
           ),
         ),
@@ -124,7 +128,8 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                     children: [
                       Container(
                         height: 200 + top,
-                        color: const Color(0xFFDDE5D3),
+                        // Faixa preta (2026-11-23, mockup «Perfis com contraste»).
+                        color: AppTheme.ink,
                         padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, top + 8, AppTheme.screenMargin, 0),
                         alignment: Alignment.topCenter,
                         child: Row(children: [
@@ -141,7 +146,11 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                                 width: 44,
                                 height: 44,
                                 alignment: Alignment.center,
-                                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.ink,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
                                 child: const Icon(Hi.ellipsisHorizontal, size: 20, color: Colors.white),
                               ),
                             ),

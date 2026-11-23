@@ -52,7 +52,7 @@ class InfoTag extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: green ? const Color(0xFFE6EDE1) : (onPhoto ? Colors.white : AppTheme.background),
+          color: green ? const Color(0xFFE6EDE1) : (onPhoto ? Colors.white : const Color(0xFFE6E6E6)),
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(text,
@@ -121,11 +121,13 @@ class PartnerPhoto extends StatelessWidget {
   Widget build(BuildContext context) => Stack(
         fit: StackFit.expand,
         children: [
-          Container(color: colorForCategorySlug(partner.primaryCategorySlug)),
+          // Sem foto: preto com as iniciais a branco (mockup «Perfis com
+          // contraste», 2026-11-23) — antes, ícone cinzento em cor pastel.
+          Container(color: partner.imageUrl == null ? AppTheme.ink : colorForCategorySlug(partner.primaryCategorySlug)),
           if (partner.imageUrl == null)
             Center(
-              child: Icon(iconForCategorySlug(partner.primaryCategorySlug),
-                  color: AppTheme.ink.withValues(alpha: 0.32), size: iconSize),
+              child: Text(V2Avatar.initials(partner.name),
+                  style: TextStyle(color: Colors.white, fontSize: iconSize, fontWeight: FontWeight.w700, letterSpacing: 2)),
             )
           else
             SizedNetworkImage(

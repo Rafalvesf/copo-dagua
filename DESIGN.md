@@ -224,9 +224,13 @@ ecrãs. O resto da app mantém a tabela acima.
 - **Filtros/categorias:** pílula 38, cantos 19, texto 14 negrito. Ativo:
   verde `#4F6B4A` + texto branco. Inativo: branco, **sem contorno**.
   Contador dentro: círculo 20 (preto no inativo, branco no ativo).
-- **Etiquetas:** pílula, interior 10×5, 12 negrito, **sem contorno**.
-- **Fotos de perfil:** redondas, **planas** (cor suave fixa por nome, sem aro
-  nem sombra) — `V2Avatar` (`flat` é o padrão). Lista de mensagens 52, perfil
+- **Etiquetas:** pílula, interior 10×5, 12 negrito, **sem contorno**; a
+  neutra é `#E6E6E6` com texto `#3A3733` (nunca a cor do fundo da página).
+- **Fotos de perfil:** redondas, **planas** (sem aro nem sombra) — `V2Avatar`
+  (`flat` é o padrão). **Sem foto:** iniciais **brancas** numa **cor forte**
+  fixa por nome (`#4F6B4A`, `#8A4B3C`, `#3E5A7A`, `#6B5A2E`, `#6A4A6E`,
+  `#3A3733`; contraste ≥ 5,9 — pedido 2026-11-23, mockup «Perfis com
+  contraste», B); o `InitialsAvatar` usa as mesmas. Lista de mensagens 52, perfil
   76, listas 44, avaliações 40, "seguido por" 24 sobrepostas.
 - **Caixas de números** (`MiniStats`: nota, seguidores, eventos no perfil
   do parceiro): fundo branco, linha preta 1,5 px à volta, cantos 12,
@@ -510,8 +514,13 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   todo, a reserva é cancelada; o convidado que não paga sai da reserva (os
   outros vão na mesma). A taxa de serviço só entra no passo de pagar e
   diz-se antes: «+ taxa de serviço no passo seguinte».
-- **Perfil do organizador:** faixa de cor 200 no topo (botões
-  pretos 44 do §2 — voltar, partilhar, ⋯), a `ProfileCard_Users` por baixo
+- **Sem foto** (pedido 2026-11-23, mockup «Perfis com contraste»): o topo do
+  parceiro e o cartão de parceiro ficam **pretos** `#171713` com as
+  **iniciais a branco**; o cartão de evento fica `#3A3733` com o símbolo do
+  tipo a branco. Sobre fundos escuros (fotos, topo preto) os botões redondos
+  pretos 44 levam um **aro branco 2** para se verem.
+- **Perfil do organizador:** faixa **preta** 200 no topo (botões
+  pretos 44 do §2 com aro branco 2 — voltar, partilhar, ⋯), a `ProfileCard_Users` por baixo
   dela (sem caixa branca, já não a sobrepõe), «Próximos eventos» em carrossel, «A seguir», e a barra fixa com
   «Mensagem» (contorno) e «Seguir» (preto) a 52.
 - **Moradas:** todos os campos de local (criar evento, local do evento,

@@ -164,7 +164,9 @@ class V2Avatar extends StatelessWidget {
   final bool flat;
   const V2Avatar(this.name, {super.key, this.size = 44, this.imageUrl, this.filled = false, this.flat = true});
 
-  static const _tints = [Color(0xFFE7D9C3), Color(0xFFDDE5D3), Color(0xFFF3DEE0), Color(0xFFE6EDE1), Color(0xFFEFE3CC), Color(0xFFE4E0EC)];
+  // Cores fortes com as letras a branco (pedido do Rafael, 2026-11-23,
+  // mockup «Perfis com contraste», B): contraste 5,9–11,8.
+  static const _tints = [Color(0xFF4F6B4A), Color(0xFF8A4B3C), Color(0xFF3E5A7A), Color(0xFF6B5A2E), Color(0xFF6A4A6E), Color(0xFF3A3733)];
   static Color tintFor(String name) {
     var h = 0;
     for (final c in name.codeUnits) {
@@ -205,7 +207,7 @@ class V2Avatar extends StatelessWidget {
               style: TextStyle(
                 fontSize: flat ? (size >= 70 ? 24 : (size >= 48 ? 16 : (size >= 40 ? 14 : 11))) : (size >= 40 ? 14 : 11),
                 fontWeight: FontWeight.w700,
-                color: filled ? Colors.white : AppTheme.accentOliveDark,
+                color: filled || flat ? Colors.white : AppTheme.accentOliveDark,
               )),
     );
   }

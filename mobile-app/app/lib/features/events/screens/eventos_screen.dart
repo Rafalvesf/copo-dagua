@@ -36,7 +36,6 @@ import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
@@ -427,19 +426,13 @@ class _PosterPlaceholder extends StatelessWidget {
   final int seed;
   const _PosterPlaceholder({required this.type, required this.seed});
 
-  static const _palettes = [
-    [Color(0xFF4F6B4A), Color(0xFF2F4430)],
-    [Color(0xFFC9A86A), Color(0xFF8A6A32)],
-    [Color(0xFF9DB4C0), Color(0xFF55707E)],
-    [Color(0xFFD7A49A), Color(0xFF9C5B50)],
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final c = _palettes[seed.abs() % _palettes.length];
-    return DecoratedBox(
-      decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: c)),
-      child: Center(child: Icon(_typeIcon(type), size: 72, color: Colors.white.withValues(alpha: 0.85))),
+    // Cinzento escuro liso com o símbolo a branco (2026-11-23): os degradês
+    // claros deixavam o ícone branco quase invisível.
+    return ColoredBox(
+      color: const Color(0xFF3A3733),
+      child: Center(child: Icon(_typeIcon(type), size: 72, color: Colors.white)),
     );
   }
 }
@@ -586,10 +579,12 @@ class _InviteTile extends StatelessWidget {
 /// Foto do evento (ou o símbolo do tipo, sem foto) para o [PhotoCard].
 Widget _coverImage(String id, EventType type, String? photo) => photo != null
     ? SizedNetworkImage(photo, fit: BoxFit.cover)
+    // Sem foto: cinzento escuro com o símbolo do tipo a branco (mockup
+    // «Perfis com contraste», 2026-11-23) — antes, bege claro.
     : Container(
-        color: const Color(0xFFE7D9C3),
+        color: const Color(0xFF3A3733),
         alignment: Alignment.center,
-        child: StickerIcon(_typeIcon(type), turns: StickerIcon.tilt(id.hashCode)),
+        child: Icon(_typeIcon(type), size: 56, color: Colors.white),
       );
 
 /// Pílula branca com o dia, por cima da foto («12 jun»).

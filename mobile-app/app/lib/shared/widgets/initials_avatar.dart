@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
+import 'v2_kit.dart' show V2Avatar;
 
 /// Avatar de iniciais — substitui `NetworkImage('https://i.pravatar.cc/...')`
 /// (serviço externo de avatares aleatórios) nos ecrãs de reservas do
@@ -15,15 +15,17 @@ import '../../core/theme/app_theme.dart';
 class InitialsAvatar extends StatelessWidget {
   final String name;
   final double radius;
-  final Color background;
+  /// Ignorada desde 2026-11-23: a cor vem do nome, como no [V2Avatar]
+  /// (cores fortes com letras brancas), para ler-se bem em todo o lado.
+  final Color? background;
   final Color foreground;
 
   const InitialsAvatar({
     super.key,
     required this.name,
     this.radius = 24,
-    this.background = AppColors.green,
-    this.foreground = AppTheme.ink,
+    this.background,
+    this.foreground = const Color(0xFFFFFFFF),
   });
 
   String get _initials {
@@ -37,7 +39,7 @@ class InitialsAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return CircleAvatar(
       radius: radius,
-      backgroundColor: background,
+      backgroundColor: V2Avatar.tintFor(name),
       child: Text(
         _initials,
         style: TextStyle(
