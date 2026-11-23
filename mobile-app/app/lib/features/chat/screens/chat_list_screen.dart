@@ -507,7 +507,7 @@ final _convMetaProvider = FutureProvider.autoDispose<Map<String, _ConvMeta>>((re
         .from('proposals')
         .select('partner_id, status, quote_requests!inner(wedding_id)')
         .inFilter('quote_requests.wedding_id', events)
-        .inFilter('status', ['sent', 'pending']);
+        .eq('status', 'sent'); // 'pending' não existe no enum: o pedido falhava (400).
     for (final r in (p as List).cast<Map<String, dynamic>>()) {
       final w = (r['quote_requests'] as Map?)?['wedding_id'] as String?;
       final k = key(w, r['partner_id'] as String?);
