@@ -539,6 +539,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Tabela de eventos reais em Portugal continental (mercados de Natal, concertos, passagem de ano), só informativos, com os primeiros 14. Os pagos levam ao site do organizador.",
     check: { kind: "table", table: "external_events" },
   },
+  {
+    file: "223_external_events_photos_nearby.sql",
+    date: "2026-11-23",
+    title: "Eventos reais: crédito da foto e parceiros perto",
+    what: "Crédito do autor da foto nos eventos reais e os parceiros perto do evento (destaque pago primeiro) na página do evento.",
+    check: { kind: "marker", id: "223" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

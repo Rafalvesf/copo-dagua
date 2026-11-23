@@ -17,6 +17,12 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/venue_map.dart';
 import '../../partners/widgets/partner_cards.dart' show InfoTag;
 import '../../profile/profile_widgets.dart' show ProfileButton;
+import '../../partners/widgets/partner_cards.dart' show PartnerCarousel;
+import '../../partners/screens/partner_detail_screen.dart' show PartnerDetailScreen;
+import '../../../core/partners/partner_providers.dart' show partnerByIdProvider;
+import '../../../core/partners/promotions.dart' show trackPromotionClick;
+import 'package:go_router/go_router.dart';
+import '../../../shared/widgets/v2_kit.dart' show softShadow;
 
 const _months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const _weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -51,11 +57,37 @@ IconData externalEventIcon(String category) => switch (category) {
 class ExternalEventPhoto extends StatelessWidget {
   final ExternalEvent event;
   final double iconSize;
-  const ExternalEventPhoto(this.event, {super.key, this.iconSize = 56});
+  const ExternalEventPhoto(this.event, {super.key, this.iconSize = 56}) : creditInside = false;
+
+  /// O crédito do autor dentro da foto, em baixo à esquerda (cartões).
+  final bool creditInside;
+  const ExternalEventPhoto.card(this.event, {super.key, this.iconSize = 56}) : creditInside = true;
 
   @override
   Widget build(BuildContext context) => event.imageUrl != null
-      ? SizedNetworkImage(event.imageUrl!, fit: BoxFit.cover)
+      ? Stack(fit: StackFit.expand, children: [
+          SizedNetworkImage(event.imageUrl!, fit: BoxFit.cover),
+          if (creditInside && event.imageCredit != null) ...[
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.center,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x00000000), Color(0x73000000)],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 12,
+              right: 60,
+              bottom: 8,
+              child: Text('Foto: ${event.imageCredit}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11, color: Colors.white)),
+            ),
+          ],
+        ])
       : Container(
           color: const Color(0xFF3A3733),
           alignment: Alignment.center,
@@ -117,6 +149,11 @@ class ExternalEventScreen extends ConsumerWidget {
           padding: EdgeInsets.only(bottom: 120 + bottom),
           children: [
             SizedBox(height: 200 + top, child: ExternalEventPhoto(e, iconSize: 64)),
+            if (e.imageUrl != null && e.imageCredit != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 6, AppTheme.screenMargin, 0),
+                child: Text('Foto: ${e.imageCredit}', style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 18, AppTheme.screenMargin, 0),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -138,6 +175,12 @@ class ExternalEventScreen extends ConsumerWidget {
                 ],
               ]),
             ),
+            // Vais com amigos? Cria o plano na À Nossa! (mockup B).
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
+              child: _PlanCard(event: e),
+            ),
+            if (e.latitude != null && e.longitude != null) _NearPartners(lat: e.latitude!, lng: e.longitude!),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
               child: KitCaps('Quando e quanto'),
@@ -278,4 +321,73 @@ class _Row extends StatelessWidget {
           ),
         ]),
       );
+}
+
+/// «Vais com amigos?» (mockup «Página do evento real», B): cria um evento na
+/// À Nossa! com o nome, o dia e o local já postos — a seguir convidam-se os
+/// amigos e aparecem as sugestões de onde jantar e como ir.
+class _PlanCard extends StatelessWidget {
+  final ExternalEvent event;
+  const _PlanCard({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    final e = event;
+    final type = switch (e.category) {
+      'concerto' => 'concert',
+      'festival' => 'festival',
+      'festa' => 'party',
+      _ => 'other',
+    };
+    final d = e.startsOn;
+    final date = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final uri = Uri(path: '/novo-evento', queryParameters: {
+      'tipo': type,
+      'nome': e.title,
+      'data': date,
+      'local': [?e.venue, e.city].join(', '),
+    });
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: softShadow),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        const Text('Vais com amigos?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const SizedBox(height: 4),
+        const Text('Faz disto um plano: o dia e o local já ficam postos, convidas quem vai e vês onde jantar antes.',
+            style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
+        const SizedBox(height: 12),
+        ProfileButton('Criar o plano', height: 36, onTap: () => context.push(uri.toString())),
+      ]),
+    );
+  }
+}
+
+/// «Perto deste evento · em destaque» (migração 223): o mesmo cartão da
+/// página Parceiros; o destaque pago primeiro e o clique conta (+6 %).
+class _NearPartners extends ConsumerWidget {
+  final double lat;
+  final double lng;
+  const _NearPartners({required this.lat, required this.lng});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final near = ref.watch(partnersNearEventProvider((lat: lat, lng: lng))).value ?? const [];
+    if (near.isEmpty) return const SizedBox.shrink();
+    final partners = [for (final n in near) ?ref.watch(partnerByIdProvider(n.partnerId)).value];
+    if (partners.isEmpty) return const SizedBox.shrink();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        child: KitCaps('Perto deste evento · em destaque'),
+      ),
+      PartnerCarousel(
+        partners: partners,
+        highlighted: {for (final n in near) if (n.paid) n.partnerId},
+        onTap: (p) async {
+          if (near.any((n) => n.partnerId == p.id && n.paid)) trackPromotionClick(p.id);
+          await PartnerDetailScreen.show(context, p);
+        },
+      ),
+    ]);
+  }
 }

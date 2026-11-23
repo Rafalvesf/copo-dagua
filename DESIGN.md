@@ -375,6 +375,19 @@ ecrãs. O resto da app mantém a tabela acima.
   fonte»; barra fixa com o preço e **«Comprar bilhetes»** (site do
   organizador), «Ver no site» (pago sem link de bilhetes) ou **«Como
   chegar»** (grátis).
+- **Foto** (mockup «Eventos reais com foto», 2026-11-23): foto livre do
+  local (Unsplash, Pexels, Wikimedia Commons) guardada no nosso
+  armazenamento, com o **crédito** do autor (`image_credit`): no cartão, 11
+  branco dentro da foto em baixo à esquerda (sobre a sombra); na página, 11
+  `#57534E` por baixo da foto.
+- **Para ganharmos** (mockup «Página do evento real», B): por baixo da
+  descrição, o cartão branco **«Vais com amigos?»** (sombra suave, título 16,
+  frase 13, «Criar o plano» com contorno 36 — abre `/novo-evento` com o
+  nome, o dia e o local já postos) e **«PERTO DESTE EVENTO · EM DESTAQUE»**:
+  o carrossel de parceiros (`PartnerCarousel`) até 10 km — restaurantes,
+  alojamento, transporte, bares e experiências —, o destaque pago primeiro
+  (o clique conta: as reservas daí pagam +6 %); sem parceiros perto, não
+  aparece (`partners_near_point`, migração 223).
 
 ## 6.1 Popups (folhas e diálogos)
 
