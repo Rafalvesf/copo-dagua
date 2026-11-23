@@ -3,6 +3,7 @@ import { stripeClient } from "../_shared/stripe.ts";
 import { confirmTicket } from "../_shared/tickets.ts";
 import { confirmGiftOrder } from "../_shared/gifts.ts";
 import { syncPartnerPro } from "../_shared/pro.ts";
+import { syncPayment } from "../_shared/event_pay.ts";
 
 // Contract: mobile-app/payments/stripe-connect.md
 //
@@ -107,6 +108,11 @@ Deno.serve(async (req) => {
           await confirmGiftOrder(stripe, supabase, intent.id);
           break;
         }
+        // QR de pagamento no evento (migração 229).
+        if (intent.metadata?.kind === "event_pay") {
+          await syncPayment(stripe, supabase, intent.id);
+          break;
+        }
         if (intent.metadata?.kind !== "booking_payment") break;
         const { error } = await supabase.rpc("confirm_stripe_deposit_payment", {
           p_session_id: intent.id,
@@ -116,6 +122,14 @@ Deno.serve(async (req) => {
           console.error("confirm_stripe_deposit_payment (pi) failed", error);
           return new Response("db error", { status: 500 });
         }
+        break;
+      }
+      // QR de pagamento no evento (migração 229): recusado depois de pedir
+      // confirmação (3DS) ou cancelado.
+      case "payment_intent.payment_failed":
+      case "payment_intent.canceled": {
+        const intent = event.data.object as { id: string; metadata?: Record<string, string> | null };
+        if (intent.metadata?.kind === "event_pay") await syncPayment(stripe, supabase, intent.id);
         break;
       }
       // Renovações, cancelamentos e falhas de pagamento do Pro (migração 161).

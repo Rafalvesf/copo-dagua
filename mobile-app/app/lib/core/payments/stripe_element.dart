@@ -40,6 +40,12 @@ abstract class StripePay {
   /// método (de [cardMethod]) em vez de ler os campos outra vez.
   Future<Map<String, dynamic>> payCard(String clientSecret, String? email, {String? paymentMethodId});
 
+  /// QR de pagamento no evento (migração 229): o banco pediu confirmação
+  /// (3DS) para um pagamento ([setup] = false) ou para guardar o cartão
+  /// ([setup] = true). O método já está no intent; não precisa dos campos.
+  /// Devolve `{status}` ou `{error}`.
+  Future<Map<String, dynamic>> confirmAction(String publishableKey, String clientSecret, {bool setup = false});
+
   /// `apple_pay`, `google_pay` ou `''` (não disponível neste telemóvel).
   Future<String> wallet(String publishableKey, int amountCents, String label);
 

@@ -11,6 +11,7 @@ extension type _TchinPay(JSObject _) implements JSObject {
   external JSPromise<JSString> mountCard(JSString pk, JSObject hosts, JSFunction onChange);
   external JSPromise<JSString> payCard(JSString secret, JSString email, JSString pmId);
   external JSPromise<JSString> cardMethod(JSString email);
+  external JSPromise<JSString> confirmAction(JSString pk, JSString secret, JSBoolean setup);
   external JSPromise<JSString> wallet(JSString pk, JSNumber cents, JSString label);
   external JSPromise<JSString> payWallet(JSFunction getSecret);
   external void unmount();
@@ -83,6 +84,14 @@ class _WebStripePay implements StripePay {
     final pay = _pay;
     if (pay == null) return {'error': 'Pagamento indisponível.'};
     final raw = (await pay.payCard(clientSecret.toJS, (email ?? '').toJS, (paymentMethodId ?? '').toJS).toDart).toDart;
+    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> confirmAction(String publishableKey, String clientSecret, {bool setup = false}) async {
+    final pay = _pay;
+    if (pay == null) return {'error': 'Pagamento indisponível.'};
+    final raw = (await pay.confirmAction(publishableKey.toJS, clientSecret.toJS, setup.toJS).toDart).toDart;
     return jsonDecode(raw) as Map<String, dynamic>;
   }
 

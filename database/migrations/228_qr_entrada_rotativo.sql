@@ -111,7 +111,14 @@ begin
     -- Segundos até esta janela acabar: a app pede o próximo nessa altura.
     'refresh_in', greatest(1, ceil((v_window + 1) * 30 - v_epoch))::int,
     'quantity', coalesce(v_ticket.quantity, 1),
-    'checked_in_at', coalesce(v_pass.checked_in_at, v_ticket.checked_in_at)
+    'checked_in_at', coalesce(v_pass.checked_in_at, v_ticket.checked_in_at),
+    -- Nome e mesa por baixo do QR (mockup aprovado, 2026-11-23). A app só
+    -- mostra a mesa quando o organizador já a revelou (opt_table_reveal).
+    'name', (select nullif(trim(full_name), '') from public.profiles where id = v_uid),
+    'table', (select t.position + 1 from public.seating_tables t
+              join public.guests g on g.wedding_id = t.wedding_id and g.id = any(t.guest_ids)
+              where t.wedding_id = p_wedding and g.linked_profile_id = v_uid
+              limit 1)
   );
 end;
 $$;

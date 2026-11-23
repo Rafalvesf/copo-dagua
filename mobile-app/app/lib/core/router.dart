@@ -4,6 +4,7 @@ import 'invite/public_invite.dart' show PendingInvite;
 import '../features/events/screens/external_event_screen.dart' deferred as lext;
 import '../features/events/screens/tickets_screens.dart' deferred as l1;
 import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
+import '../features/events/screens/event_pay_screens.dart' deferred as lpay;
 import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
 import '../features/gifts/screens/gift_list_screens.dart' show OrganizerGiftListScreen, GiftShopScreen, GiftReturnScreen;
 import '../features/gifts/screens/partner_shop_screen.dart' show PartnerShopScreen;
@@ -417,6 +418,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Plano Pro dos parceiros (migração 161).
       GoRoute(path: '/partner-pro', builder: (context, state) => PartnerProScreen(returned: state.uri.queryParameters['ok'] == '1')),
       GoRoute(path: '/entrada/:code', builder: (context, state) => CheckInScreen(code: state.pathParameters['code']!)),
+      // QR de pagamento no evento (migração 229): quem cobra lê o QR e abre
+      // «Cobrar»; quem paga vê os QR, o gasto e o cartão.
+      GoRoute(path: '/pagar/:code', builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.ChargeScreen(code: state.pathParameters['code']!))),
+      GoRoute(
+        path: '/pagar-no-evento/:weddingId',
+        builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.EventPayScreen(weddingId: state.pathParameters['weddingId']!)),
+      ),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) =>lazyPage([l7.loadLibrary], () =>  l7.PartnerPayoutSetupScreen(organizer: true))),
       // Evento público aberto por link partilhado (2026-11).
       // Envelopes recebidos (migração 156).

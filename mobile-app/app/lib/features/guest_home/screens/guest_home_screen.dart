@@ -3,6 +3,7 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/features/events/screens/tickets_screens.dart' show openTicketPurchase;
 import 'package:copo_dagua_app/core/events/tickets.dart';
 import 'package:copo_dagua_app/core/events/event_pass.dart';
+import 'package:copo_dagua_app/core/events/event_pay.dart' show eventPayEnabledProvider;
 import 'package:copo_dagua_app/features/events/screens/ticket_pass_screens.dart' show TicketPassCard;
 import 'package:flutter/material.dart';
 import '../../../core/chat/group_chat.dart' show openEventGroup, eventGroupUnreadProvider;
@@ -373,6 +374,13 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
           TicketPassCard(ticket: pass.ticket!, eventName: event.displayNames),
         ]);
       }
+      // QR de pagamento no evento (migração 229): só quando há quem cobre.
+      if (ref.watch(eventPayEnabledProvider(wedding.weddingId)).value == true) {
+        body.addAll([
+          const SizedBox(height: 12),
+          _EventPayShortcut(onTap: () => context.push('/pagar-no-evento/${wedding.weddingId}')),
+        ]);
+      }
       // «Para fazer» sempre (regra 2026-11-21): as tarefas, «Está tudo
       // tratado» ou «Aparecem aqui as tuas tarefas».
       if (going && hasTodo) {
@@ -529,4 +537,34 @@ class GuestHomeEventCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Atalho para «No evento» → Pagar (QR de pagamento, migração 229).
+class _EventPayShortcut extends StatelessWidget {
+  final VoidCallback onTap;
+  const _EventPayShortcut({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        child: Semantics(
+          button: true,
+          label: 'Pagar no evento com QR',
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg)),
+            child: Row(children: [
+              const Icon(Hi.qrCode, size: 28, color: AppTheme.ink),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Pagar no evento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  Text('Mostra o QR no bar; paga com o teu cartão.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                ]),
+              ),
+              const Icon(Hi.chevronRight, color: AppTheme.ink),
+            ]),
+          ),
+        ),
+      );
 }

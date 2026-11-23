@@ -99,25 +99,37 @@ class EntryQr {
   final Duration refreshIn;
   final int quantity;
   final DateTime? checkedInAt;
-  const EntryQr({required this.token, required this.refreshIn, this.quantity = 1, this.checkedInAt});
+  final String? name;
+  final int? table;
+  const EntryQr({required this.token, required this.refreshIn, this.quantity = 1, this.checkedInAt, this.name, this.table});
 
   /// O que vai no QR: abre a app do organizador e marca a entrada.
   String get qrData => publicLink('/entrada/$token');
 }
 
-/// `null` quando não há entrada (sem bilhete, não é convidado) ou sem rede.
-Future<EntryQr?> fetchEntryQr(String weddingId) async {
+/// O QR desta janela. `unavailable` = sem entrada neste evento (sem
+/// bilhete, não é convidado); `qr == null` sem isso = sem rede.
+Future<({EntryQr? qr, bool unavailable})> fetchEntryQr(String weddingId) async {
   try {
     final r = await supabase.rpc('my_entry_qr', params: {'p_wedding': weddingId});
-    if (r is! Map || r['result'] != 'ok' || r['token'] is! String) return null;
-    return EntryQr(
-      token: r['token'] as String,
-      refreshIn: Duration(seconds: ((r['refresh_in'] as num?)?.toInt() ?? 30).clamp(1, 30)),
-      quantity: (r['quantity'] as num?)?.toInt() ?? 1,
-      checkedInAt: DateTime.tryParse('${r['checked_in_at'] ?? ''}')?.toLocal(),
+    if (r is! Map) return (qr: null, unavailable: false);
+    if (r['result'] != 'ok' || r['token'] is! String) return (qr: null, unavailable: true);
+    return (
+      qr: EntryQr(
+        token: r['token'] as String,
+        refreshIn: Duration(seconds: ((r['refresh_in'] as num?)?.toInt() ?? 30).clamp(1, 30)),
+        quantity: (r['quantity'] as num?)?.toInt() ?? 1,
+        checkedInAt: DateTime.tryParse('${r['checked_in_at'] ?? ''}')?.toLocal(),
+        name: r['name'] as String?,
+        table: (r['table'] as num?)?.toInt(),
+      ),
+      unavailable: false,
     );
-  } on PostgrestException {
-    return null;
+  } on PostgrestException catch (e) {
+    // PGRST202: antes da migração 228 → sem QR de entrada.
+    return (qr: null, unavailable: e.code == 'PGRST202');
+  } catch (_) {
+    return (qr: null, unavailable: false);
   }
 }
 

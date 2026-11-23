@@ -16,14 +16,15 @@ import '../../../shared/widgets/snappy_tap.dart';
 
 String _hhmm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
-QrImageView _qr(String data, double size) => QrImageView(
+/// QR com as cores da app (bilhete, entrada e pagamento).
+QrImageView brandQr(String data, double size, {String label = 'Código QR do bilhete'}) => QrImageView(
       data: data,
       size: size,
       padding: EdgeInsets.zero,
       backgroundColor: Colors.white,
       eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: AppTheme.ink),
       dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: AppTheme.ink),
-      semanticsLabel: 'Código QR do bilhete',
+      semanticsLabel: label,
     );
 
 /// Cartão no início do convidado.
@@ -80,73 +81,16 @@ class TicketPassCard extends StatelessWidget {
 }
 
 /// Ecrã inteiro com o QR grande, para mostrar à porta.
-///
-/// QR rotativo (migração 228, 2026-11-23): o token vem do servidor e muda a
-/// cada 30 s; pedimos o próximo quando a janela acaba. Sem rede não há QR
-/// (de propósito: o segredo nunca fica no telemóvel).
-class TicketPassScreen extends StatefulWidget {
+class TicketPassScreen extends StatelessWidget {
   final MyTicket ticket;
   final String eventName;
   const TicketPassScreen({super.key, required this.ticket, required this.eventName});
 
   @override
-  State<TicketPassScreen> createState() => _TicketPassScreenState();
-}
-
-class _TicketPassScreenState extends State<TicketPassScreen> with WidgetsBindingObserver {
-  EntryQr? _qrNow;
-  bool _loading = true;
-  bool _failed = false;
-  Timer? _timer;
-  DateTime _expires = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _refresh();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Ao voltar à app o token pode já ter passado.
-    if (state == AppLifecycleState.resumed) _refresh();
-  }
-
-  Future<void> _refresh() async {
-    _timer?.cancel();
-    final q = await fetchEntryQr(widget.ticket.weddingId);
-    if (!mounted) return;
-    setState(() {
-      _loading = false;
-      _failed = q == null;
-      if (q != null) {
-        _qrNow = q;
-        _expires = DateTime.now().add(q.refreshIn);
-      }
-    });
-    // Sem rede: tenta outra vez daqui a 5 s.
-    _timer = Timer(q?.refreshIn ?? const Duration(seconds: 5), _refresh);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final ticket = widget.ticket;
-    final eventName = widget.eventName;
-    final q = _qrNow;
-    final checkedInAt = q?.checkedInAt ?? ticket.checkedInAt;
-    final w = MediaQuery.sizeOf(context).width;
-    final size = (w - 2 * AppTheme.screenMargin - 48).clamp(180.0, 300.0);
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(top: false, 
+      body: SafeArea(top: false,
         child: ListView(
           padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
@@ -167,56 +111,154 @@ class _TicketPassScreenState extends State<TicketPassScreen> with WidgetsBinding
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 20),
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg), boxShadow: AppTheme.searchBarShadow),
-                child: Column(children: [
-                  SizedBox(
-                    width: size,
-                    height: size,
-                    child: q != null && !_failed
-                        ? _qr(q.qrData, size)
-                        : Center(
-                            child: _loading
-                                ? const CircularProgressIndicator()
-                                : Column(mainAxisSize: MainAxisSize.min, children: [
-                                    const Icon(Hi.signalSlash, size: 40, color: AppTheme.inkMuted),
-                                    const SizedBox(height: 8),
-                                    const Text('Sem ligação. O QR aparece quando voltar a rede.',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
-                                    TextButton(onPressed: _refresh, child: const Text('Tentar outra vez')),
-                                  ]),
-                          ),
-                  ),
-                  if (q != null && !_failed) ...[
-                    const SizedBox(height: 12),
-                    _Countdown(key: ValueKey(q.token), until: _expires, total: const Duration(seconds: 30)),
-                  ],
-                  const SizedBox(height: 12),
-                  Text(
-                    ticket.quantity == 1 ? '1 pessoa' : '${ticket.quantity} pessoas',
-                    style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
-                  ),
-                ]),
-              ),
-            ),
-            const SizedBox(height: 18),
-            if (checkedInAt != null)
-              Text('Entrada registada às ${_hhmm(checkedInAt)}.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark))
-            else
-              const Text(
-                'Mostra este QR à entrada. Muda a cada 30 segundos e só serve para ti: um screenshot não dá entrada.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
-              ),
+            EntryQrPanel(weddingId: ticket.weddingId, fallbackQuantity: ticket.quantity, fallbackCheckedInAt: ticket.checkedInAt),
           ],
         ),
       ),
     );
+  }
+}
+
+/// QR de entrada rotativo (migração 228, 2026-11-23): o token vem do
+/// servidor e muda a cada 30 s; pedimos o próximo quando a janela acaba.
+/// Sem rede não há QR (de propósito: o segredo nunca fica no telemóvel).
+/// Por baixo: o nome e a mesa (mockup aprovado; a mesa só quando o
+/// organizador já a revelou).
+class EntryQrPanel extends ConsumerStatefulWidget {
+  final String weddingId;
+  final int fallbackQuantity;
+  final DateTime? fallbackCheckedInAt;
+  final DateTime? eventDate;
+  const EntryQrPanel({super.key, required this.weddingId, this.fallbackQuantity = 1, this.fallbackCheckedInAt, this.eventDate});
+
+  @override
+  ConsumerState<EntryQrPanel> createState() => _EntryQrPanelState();
+}
+
+class _EntryQrPanelState extends ConsumerState<EntryQrPanel> with WidgetsBindingObserver {
+  EntryQr? _qrNow;
+  bool _loading = true;
+  bool _failed = false;
+  bool _unavailable = false;
+  Timer? _timer;
+  DateTime _expires = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Ao voltar à app o token pode já ter passado.
+    if (state == AppLifecycleState.resumed && !_unavailable) _refresh();
+  }
+
+  Future<void> _refresh() async {
+    _timer?.cancel();
+    final (:qr, :unavailable) = await fetchEntryQr(widget.weddingId);
+    final q = qr;
+    if (!mounted) return;
+    if (unavailable) {
+      setState(() {
+        _loading = false;
+        _unavailable = true;
+      });
+      return;
+    }
+    setState(() {
+      _loading = false;
+      _failed = q == null;
+      if (q != null) {
+        _qrNow = q;
+        _expires = DateTime.now().add(q.refreshIn);
+      }
+    });
+    // Sem rede: tenta outra vez daqui a 5 s.
+    _timer = Timer(q?.refreshIn ?? const Duration(seconds: 5), _refresh);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final q = _qrNow;
+    final checkedInAt = q?.checkedInAt ?? widget.fallbackCheckedInAt;
+    final quantity = q?.quantity ?? widget.fallbackQuantity;
+    final sections = ref.watch(myEventPassProvider(widget.weddingId)).value?.sections;
+    final showTable = q?.table != null &&
+        sections != null &&
+        sections.shows(GuestSection.mesa) &&
+        (widget.eventDate != null ? sections.tableVisible(widget.eventDate) : sections.tableReveal == 'now');
+    final w = MediaQuery.sizeOf(context).width;
+    final size = (w - 2 * AppTheme.screenMargin - 48).clamp(180.0, 300.0);
+    if (_unavailable) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Text('Este evento não tem entrada com QR para ti.',
+            textAlign: TextAlign.center, style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+      );
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg), boxShadow: AppTheme.searchBarShadow),
+          child: Column(children: [
+            SizedBox(
+              width: size,
+              height: size,
+              child: q != null && !_failed
+                  ? brandQr(q.qrData, size)
+                  : Center(
+                      child: _loading
+                          ? const CircularProgressIndicator()
+                          : Column(mainAxisSize: MainAxisSize.min, children: [
+                              const Icon(Hi.signalSlash, size: 40, color: AppTheme.inkMuted),
+                              const SizedBox(height: 8),
+                              const Text('Sem ligação. O QR aparece quando voltar a rede.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+                              TextButton(onPressed: _refresh, child: const Text('Tentar outra vez')),
+                            ]),
+                    ),
+            ),
+            if (q != null && !_failed) ...[
+              const SizedBox(height: 12),
+              SizedBox(width: size, child: _Countdown(key: ValueKey(q.token), until: _expires, total: const Duration(seconds: 30))),
+            ],
+            const SizedBox(height: 12),
+            if (q?.name != null)
+              Text(q!.name!, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(
+              [
+                quantity == 1 ? '1 pessoa' : '$quantity pessoas',
+                if (showTable) 'Mesa ${q!.table}',
+              ].join(' · '),
+              style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+            ),
+          ]),
+        ),
+      ),
+      const SizedBox(height: 18),
+      if (checkedInAt != null)
+        Text('Entrada registada às ${_hhmm(checkedInAt)}.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark))
+      else
+        const Text(
+          'Mostra este QR à entrada. Muda a cada 30 segundos e só serve para ti: um screenshot não dá entrada.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
+        ),
+    ]);
   }
 }
 
