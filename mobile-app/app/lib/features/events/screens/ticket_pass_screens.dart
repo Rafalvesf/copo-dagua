@@ -338,7 +338,7 @@ class _CountdownState extends State<_Countdown> with SingleTickerProviderStateMi
             value: _c.value,
             minHeight: 4,
             backgroundColor: AppTheme.ink.withValues(alpha: 0.08),
-            color: AppTheme.accentOliveDark,
+            color: AppTheme.progress,
           ),
         ),
       ),
