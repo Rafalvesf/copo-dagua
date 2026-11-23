@@ -532,6 +532,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Acrescenta aos Pendentes a tarefa de pôr a chave GOOGLE_MAPS_API_KEY (moradas com sugestões do Google e mapas no «Onde fica»).",
     check: { kind: "marker", id: "221" },
   },
+  {
+    file: "222_external_events.sql",
+    date: "2026-11-23",
+    title: "Eventos reais na aba Eventos",
+    what: "Tabela de eventos reais em Portugal continental (mercados de Natal, concertos, passagem de ano), só informativos, com os primeiros 14. Os pagos levam ao site do organizador.",
+    check: { kind: "table", table: "external_events" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

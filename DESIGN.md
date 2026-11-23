@@ -356,6 +356,26 @@ ecrãs. O resto da app mantém a tabela acima.
     (`wedding_details_screen.dart`, no `Stack` do `_normal`). **Nunca** refazer
     esta seta à mão: ligar o componente.
 
+## 6.0 Eventos reais (pedido do Rafael, 2026-11-23; migração 222)
+
+- No **Descobrir** da aba Eventos, por cima dos eventos da À Nossa!, a linha
+  **«EM PORTUGAL · N»** com eventos reais de Portugal continental
+  (`external_events`, só publicados e que ainda não acabaram), num carrossel
+  com o mesmo `PhotoCard` (categoria e dia na foto, «data · hora», «local ·
+  cidade», etiqueta **«Grátis»** verde ou **«Bilhetes no site»** e o preço
+  `ENTRADA Grátis` / `DESDE 8 €` / `ENTRADA Paga`). De preferência
+  gratuitos; os pagos dizem-no. Seguem a pesquisa e os filtros do Descobrir.
+- **São só informativos:** a À Nossa! não vende estes bilhetes (sem
+  parceria). Tocar abre a **página do evento** (`/evento-real/:id`,
+  `ExternalEventScreen`) com o desenho da página do parceiro: foto 200 (sem
+  foto, `#3A3733` com o símbolo branco), voltar e partilhar pretos 44 com aro
+  branco, etiquetas, nome 20, «local · cidade» e a data 13, descrição
+  justificada, «QUANDO E QUANTO» (linhas de 48), «ONDE FICA» (`VenueMap`,
+  «Copiar morada» + «Abrir mapa»), a nota do que é informativo e «Ver a
+  fonte»; barra fixa com o preço e **«Comprar bilhetes»** (site do
+  organizador), «Ver no site» (pago sem link de bilhetes) ou **«Como
+  chegar»** (grátis).
+
 ## 6.1 Popups (folhas e diálogos)
 
 Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app

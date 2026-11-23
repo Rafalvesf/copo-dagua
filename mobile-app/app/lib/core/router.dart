@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pending_deep_link.dart';
 import 'invite/public_invite.dart' show PendingInvite;
+import '../features/events/screens/external_event_screen.dart' deferred as lext;
 import '../features/events/screens/tickets_screens.dart' deferred as l1;
 import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
 import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
@@ -427,6 +428,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           builder: (context, state) =>
               lazyPage([lpd.loadLibrary], () => lpd.PublicPartnerScreen(id: state.pathParameters['id']!))),
       GoRoute(path: '/evento/:id', builder: (context, state) =>lazyPage([l16.loadLibrary], () =>  l16.PublicEventScreen(id: state.pathParameters['id']!))),
+      // Eventos reais em Portugal (migração 222, 2026-11-23).
+      GoRoute(path: '/evento-real/:id', builder: (context, state) => lazyPage([lext.loadLibrary], () => lext.ExternalEventScreen(id: state.pathParameters['id']!))),
       // Criar mais um evento (vários por conta, 2026-11).
       GoRoute(
         path: '/novo-evento',
