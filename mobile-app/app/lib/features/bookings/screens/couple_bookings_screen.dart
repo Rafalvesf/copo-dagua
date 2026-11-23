@@ -186,19 +186,37 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                                 ref.invalidate(coupleBookingsProvider);
                               },
                             ),
+                          // Propostas: uma linha com «Ver», que abre a proposta
+                          // num popup (Recusar / Aceitar).
                           for (final proposal in shownProposals)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: _ProposalRow(proposal: proposal, eventName: eventIds.length > 1 ? names[proposal.weddingId] : null),
+                            FrameTaskRow(
+                              lead: V2Avatar(proposal.partnerName, size: 44),
+                              title: proposal.partnerName,
+                              sub: [
+                                if (names[proposal.weddingId] != null && eventIds.length > 1) names[proposal.weddingId]!,
+                                'Proposta',
+                                euros(proposal.price),
+                              ].join(' · '),
+                              action: 'Ver',
+                              onTap: () => showIslandSheet<void>(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (_) => SafeArea(
+                                  top: false,
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                                    child: _ProposalRow(proposal: proposal, eventName: names[proposal.weddingId]),
+                                  ),
+                                ),
+                              ),
                             ),
                         ]),
                       if (shownBookings.isNotEmpty)
                         SectionFrame(title: 'Os vossos serviços', children: [
-                          for (final booking in shownBookings)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: _CoupleBookingRow(booking: booking, eventName: names[booking.weddingId]),
-                            ),
+                          for (final (i, booking) in shownBookings.indexed) ...[
+                            if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
+                            _CoupleBookingRow(booking: booking, eventName: names[booking.weddingId]),
+                          ],
                         ]),
                       FrameButton44('Ver parceiros', outlined: true, onTap: () => context.push('/partners')),
                       ]),
@@ -355,15 +373,17 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
         '/bookings/detail',
         extra: booking,
       ),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: whiteLineCard(),
+      // Uma linha por parceiro, sem caixa (mockup «Páginas do evento · com
+      // molduras» → Reservas, 2026-11-23): logótipo 44, nome 16, «evento ·
+      // data · valor» 13 e, à direita, «Pagar» ou o estado.
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                StickerIcon(_icon, turns: StickerIcon.tilt(booking.id.hashCode)),
+                V2Avatar(booking.partnerName, size: 44, imageUrl: booking.partnerLogoUrl),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -376,7 +396,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
-                              fontSize: AppFontSize.base,
+                              fontSize: 16,
                               color: AppTheme.ink,
                             ),
                           ),
@@ -396,14 +416,17 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                           dateLabel,
                           euros(totalWithCommission(booking.amount, booking.depositAmount, commissionPct)),
                         ].join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: AppTheme.inkMuted,
-                          fontSize: AppFontSize.sm,
+                          fontSize: 13,
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 // `needsFinalPayment` só existe quando `admin_complete_booking()`
                 // já correu (`053_final_payment.sql`) mas ainda sobra valor por
                 // cobrar além do sinal — mostrar "Concluído" nesse intervalo
@@ -413,18 +436,35 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                 // restante como pendente.
                 // Só o sinal pago não é "tudo pago" (2026-10-17): se ainda
                 // falta valor, a etiqueta diz isso em vez de "Concluído".
-                StatusPill(
-                  label: needsFinalPayment
-                      ? 'Falta pagar o restante'
-                      : (booking.paidAmount > 0 && booking.remainingAmount > 0.009)
-                          ? 'Sinal pago'
-                          : (booking.paidAmount > 0 && booking.remainingAmount <= 0.009)
-                              ? 'Tudo pago'
-                              : booking.status.label,
-                  color: needsFinalPayment || (booking.paidAmount > 0 && booking.remainingAmount > 0.009)
-                      ? AppStatusColors.pending
-                      : bookingStatusColor(booking.status),
-                ),
+                if (needsDeposit && booking.depositOpen)
+                  FrameButton36('Pagar', onTap: () => _payPending(
+                        booking.pendingDepositPaymentId,
+                        deposit: true,
+                        amount: amountWithCommission(booking.depositAmount ?? 0, commissionPct),
+                      ))
+                else if (needsFinalPayment && booking.finalPaymentOpen)
+                  FrameButton36('Pagar', onTap: () => _payPending(
+                        booking.pendingFinalPaymentId,
+                        deposit: false,
+                        amount: amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct),
+                      ))
+                else
+                  KitTag(
+                    needsDeposit
+                        ? 'Pagar a partir de ${payDay(booking.depositOpensAt!)}'
+                        : needsFinalPayment
+                            ? 'Falta o resto'
+                            : (booking.paidAmount > 0 && booking.remainingAmount > 0.009)
+                                ? 'Sinal pago'
+                                : (booking.paidAmount > 0 && booking.remainingAmount <= 0.009)
+                                    ? 'Tudo pago'
+                                    : booking.status.label,
+                    kind: needsDeposit || needsFinalPayment
+                        ? KitTagKind.pending
+                        : (booking.paidAmount > 0 || booking.status == BookingStatus.concluido)
+                            ? KitTagKind.green
+                            : KitTagKind.neutral,
+                  ),
               ],
             ),
             if (booking.paidAmount > 0) ...[
@@ -439,60 +479,11 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                 style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
               ),
             ],
-            if (needsDeposit) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: !booking.depositOpen ? null : () => _payPending(
-                    booking.pendingDepositPaymentId,
-                    deposit: true,
-                    amount: amountWithCommission(booking.depositAmount ?? 0, commissionPct),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.ink,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: Text(
-                    booking.depositOpen
-                        ? '${booking.depositIsFull ? 'Pagar' : 'Pagar sinal'} — ${euros(amountWithCommission(booking.depositAmount ?? 0, commissionPct), cents: true)}'
-                        : 'Pagar a partir de ${payDay(booking.depositOpensAt!)}',
-                  ),
-                ),
-              ),
-            ],
             if (needsDeposit && !booking.depositIsFull) ...[
               const SizedBox(height: 6),
               const Text(
                 'A data só fica garantida com o sinal pago: até lá, o parceiro pode aceitar outro pedido para esse dia.',
                 style: TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.35),
-              ),
-            ],
-            if (needsFinalPayment) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  // O resto só se paga nos 6 dias antes do prazo (migração 204).
-                  onPressed: !booking.finalPaymentOpen ? null : () => _payPending(
-                    booking.pendingFinalPaymentId,
-                    deposit: false,
-                    amount: amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.ink,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: Text(
-                    booking.finalPaymentOpen
-                        ? 'Pagar o resto — ${euros(amountWithCommission(booking.finalPaymentAmount ?? 0, commissionPct), cents: true)}'
-                        : 'Pagar o resto a partir de ${payDay(booking.finalPaymentOpensAt!)}',
-                  ),
-                ),
               ),
             ],
             if (booking.status == BookingStatus.aceite ||
