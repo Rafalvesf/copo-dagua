@@ -122,6 +122,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
           allergies: ((c['allergies'] as List?) ?? const []).cast<String>(),
           accompaniedBy: c['accompanied_by'] as String?,
           willInstallApp: c['will_install_app'] as bool? ?? false,
+          highChair: c['high_chair'] as bool? ?? false,
         ),
     ];
     final nav = Navigator.of(context);
