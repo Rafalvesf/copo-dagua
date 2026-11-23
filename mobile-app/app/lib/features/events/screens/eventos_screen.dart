@@ -477,7 +477,7 @@ class _RealEventCard extends StatelessWidget {
     final (label, value) = externalEventPrice(e);
     return PhotoCard(
       onTap: () => context.push('/evento-real/${e.id}'),
-      photo: ExternalEventPhoto(e),
+      photo: ExternalEventPhoto.card(e),
       leftTag: InfoTag(e.categoryLabel, onPhoto: true),
       rightTag: PhotoPill('${e.startsOn.day} ${_monthsShort[e.startsOn.month - 1]}'),
       title: e.title,

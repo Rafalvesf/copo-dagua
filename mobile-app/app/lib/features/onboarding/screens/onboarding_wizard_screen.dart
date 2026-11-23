@@ -64,7 +64,21 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
   /// Tipo já escolhido no cartão "O que vamos celebrar?" (`?tipo=`).
   final String? initialType;
 
-  const OnboardingWizardScreen({super.key, this.initialStep = 0, this.newEvent = false, this.initialType});
+  /// Já preenchidos ao criar o plano a partir de um evento real
+  /// (`?nome=&data=AAAA-MM-DD&local=`, 2026-11-23).
+  final String? initialName;
+  final String? initialDate;
+  final String? initialLocation;
+
+  const OnboardingWizardScreen({
+    super.key,
+    this.initialStep = 0,
+    this.newEvent = false,
+    this.initialType,
+    this.initialName,
+    this.initialDate,
+    this.initialLocation,
+  });
 
   @override
   ConsumerState<OnboardingWizardScreen> createState() => _OnboardingWizardScreenState();
@@ -110,6 +124,13 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     _type ??= EventType.wedding;
     _location.text = IntroAnswers.city;
     _homeZone = IntroAnswers.city.isEmpty ? null : IntroAnswers.city;
+    if (widget.initialName?.trim().isNotEmpty == true) {
+      _name.text = widget.initialName!.trim();
+      _nameTouched = true;
+    }
+    final d = DateTime.tryParse(widget.initialDate ?? '');
+    if (d != null) _date = d;
+    if (widget.initialLocation?.trim().isNotEmpty == true) _location.text = widget.initialLocation!.trim();
     for (final c in [_otherLabel, _name, _location]) {
       c.addListener(() => setState(() {}));
     }

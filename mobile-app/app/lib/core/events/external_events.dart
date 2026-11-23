@@ -27,6 +27,9 @@ class ExternalEvent {
   final String? organizer;
   final String? imageUrl;
 
+  /// Autor e licença da foto («Nome · CC BY-SA 4.0 · Wikimedia Commons»).
+  final String? imageCredit;
+
   const ExternalEvent({
     required this.id,
     required this.title,
@@ -48,6 +51,7 @@ class ExternalEvent {
     this.sourceUrl,
     this.organizer,
     this.imageUrl,
+    this.imageCredit,
   });
 
   factory ExternalEvent.fromRow(Map<String, dynamic> r) => ExternalEvent(
@@ -71,6 +75,7 @@ class ExternalEvent {
         sourceUrl: r['source_url'] as String?,
         organizer: r['organizer'] as String?,
         imageUrl: r['image_url'] as String?,
+        imageCredit: r['image_credit'] as String?,
       );
 
   DateTime get lastDay => endsOn ?? startsOn;
@@ -104,5 +109,28 @@ final externalEventsProvider = FutureProvider<List<ExternalEvent>>((ref) async {
     return [for (final r in (rows as List).cast<Map<String, dynamic>>()) ExternalEvent.fromRow(r)];
   } catch (_) {
     return const [];
+  }
+});
+
+/// Parceiros perto de um evento real (migração 223): restaurantes,
+/// alojamento, transporte… com o destaque pago primeiro. `paid` serve para
+/// contar o clique no destaque (as reservas daí pagam +6 %).
+typedef NearPartner = ({String partnerId, double km, bool paid});
+
+final partnersNearEventProvider =
+    FutureProvider.family<List<NearPartner>, ({double lat, double lng})>((ref, p) async {
+  try {
+    final rows = await supabase.rpc('partners_near_point', params: {
+      'p_lat': p.lat,
+      'p_lng': p.lng,
+      'p_km': 10,
+      'p_limit': 8,
+    });
+    return [
+      for (final r in (rows as List).cast<Map<String, dynamic>>())
+        (partnerId: r['partner_id'] as String, km: (r['distance_km'] as num).toDouble(), paid: r['paid'] == true),
+    ];
+  } catch (_) {
+    return const []; // migração 223 por correr
   }
 });
