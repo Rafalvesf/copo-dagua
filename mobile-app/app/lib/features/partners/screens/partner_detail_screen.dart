@@ -2154,11 +2154,8 @@ class _BottomBar extends StatelessWidget {
         child: Row(children: [
           Container(
             constraints: const BoxConstraints(maxWidth: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.ink, width: 1.5),
-            ),
+            // Preço sem caixa nem linha (DESIGN.md §6, Preço).
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(box.$1,
                   maxLines: 1,
