@@ -27,11 +27,21 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
           .select("id, partner_name_1, partner_name_2, location, event_type, event_type_other, wedding_date")
           .or(`partner_name_1.ilike.${like},partner_name_2.ilike.${like},location.ilike.${like}`)
           .limit(10),
-        supabase
-          .from("bookings")
-          .select("id, booking_number, status, event_date, partner_profiles(business_name)")
-          .ilike("booking_number", like)
-          .limit(20),
+        // Referência curta (EMP-12) ou global (TASL-EMP-12, migração 231).
+        // Antes da 231 a coluna `reference` não existe: volta à curta.
+        (async () => {
+          const r = await supabase
+            .from("bookings")
+            .select("id, booking_number, reference, status, event_date, partner_profiles(business_name)")
+            .or(`booking_number.ilike.${like},reference.ilike.${like}`)
+            .limit(20);
+          if (!r.error) return r;
+          return supabase
+            .from("bookings")
+            .select("id, booking_number, status, event_date, partner_profiles(business_name)")
+            .ilike("booking_number", like)
+            .limit(20);
+        })(),
       ])
     : [null, null, null, null];
 
@@ -42,7 +52,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
     <div className="page" style={{ maxWidth: 860 }}>
       <PageHeader title="Pesquisa" subtitle={q ? `${total} ${total === 1 ? "resultado" : "resultados"} para “${q}”` : "Pessoas, parceiros, eventos e reservas."} />
       <form action="/search" className="row" style={{ flexWrap: "nowrap" }}>
-        <input type="search" name="q" defaultValue={raw} autoFocus placeholder="Nome, parceiro, local ou número da reserva (ex.: CAS-1)" className="input" style={{ flex: 1, minWidth: 0, height: 42 }} />
+        <input type="search" name="q" defaultValue={raw} autoFocus placeholder="Nome, parceiro, local ou reserva (ex.: CAS-1 ou TASL-CAS-1)" className="input" style={{ flex: 1, minWidth: 0, height: 42 }} />
         <button type="submit" className="btn btn-primary" style={{ height: 42 }}>
           Pesquisar
         </button>
@@ -91,7 +101,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
               <Row
                 key={b.id}
                 href={`/bookings/${b.id}`}
-                title={`${b.booking_number} · ${name}`}
+                title={`${(b as { reference?: string | null }).reference ?? b.booking_number} · ${name}`}
                 sub={`${bookingStatusLabel(b.status)} · ${new Date(b.event_date).toLocaleDateString("pt-PT")}`}
               />
             );
