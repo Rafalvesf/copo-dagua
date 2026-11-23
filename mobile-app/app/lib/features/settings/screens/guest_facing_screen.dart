@@ -20,6 +20,7 @@ import '../../../core/wedding/wedding_controller.dart';
 import '../../../core/wedding/wedding_venue.dart';
 import '../../../shared/widgets/venue_map.dart' show VenueMap;
 import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/guest_widgets.dart' show CompanionLimitRow;
 import '../../../shared/widgets/navigation_sheet.dart';
@@ -384,18 +385,38 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         const KitHeader(),
                         const KitTitle('Para os convidados', subtitle: 'O que os convidados veem e como entram.'),
-                        const SizedBox(height: 20),
-                        _CodeHero(
-                          wedding: widget.wedding,
-                          onShare: () => context.push('/guests/convidar'),
-                          onPreview: _preview,
+                        // Mockup «Páginas do evento · com molduras» → Para os
+                        // convidados (2026-11-22): «Ver como convidado», «A
+                        // página» e «Acesso e entrada» em molduras.
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: FrameButton44('Ver como convidado', outlined: true, onTap: _preview),
                         ),
-                        const SizedBox(height: 14),
-                        _CompanionsSection(weddingId: widget.wedding.id),
-                        const SizedBox(height: 14),
-                        _AccessCard(wedding: widget.wedding),
-                        const SizedBox(height: 8),
                         _PartsList(weddingId: widget.wedding.id, parts: _parts()),
+                        SectionFrame(title: 'Acesso e entrada', children: [
+                          _CompanionsSection(weddingId: widget.wedding.id),
+                          _AccessCard(wedding: widget.wedding),
+                          if (widget.wedding.guestCode?.isNotEmpty == true) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                              child: Row(children: [
+                                Expanded(
+                                  child: Text(widget.wedding.guestCode!,
+                                      style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                ),
+                                FrameButton36('Copiar', outlined: true, onTap: () async {
+                                  await copyText(widget.wedding.guestCode!);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Código copiado.')));
+                                  }
+                                }),
+                              ]),
+                            ),
+                          ],
+                          FrameButton44('Partilhar convite', onTap: () => context.push('/guests/convidar')),
+                        ]),
                           ]),
                         ),
                       ],
@@ -1671,9 +1692,8 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
     // seletores e uma nota; com Pago, o preço por baixo.
     // Mockup 2026-11-14: «ACESSO E ENTRADA» como título de grupo.
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const KitCaps('Acesso e entrada', top: 10),
       Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 12),
       decoration: _whiteCard(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         _segment([
@@ -2066,10 +2086,7 @@ const _heroGreen = Color(0xFF3F5A3B);
 // Cartão branco liso, cantos 22, sem linha nem sombra (DESIGN.md §4).
 /// Cada bloco numa moldura cinzenta, sem fundo (mockup «Páginas do evento ·
 /// com molduras», 2026-11-22).
-BoxDecoration _whiteCard() => BoxDecoration(
-      borderRadius: BorderRadius.circular(22),
-      border: Border.all(color: const Color(0xFFCFCFCF), width: 1.5),
-    );
+BoxDecoration _whiteCard() => const BoxDecoration();
 
 /// Cartão verde: código em grande, Partilhar convite e Ver como convidado.
 class _CodeHero extends ConsumerWidget {
@@ -2214,8 +2231,10 @@ class _PartsListState extends ConsumerState<_PartsList> {
     final parts = widget.parts;
     final countable = parts.where((p) => !p.locked).toList();
     final ready = countable.where((p) => !p.missing).length;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      KitSection('A página', action: '$ready de ${countable.length} prontas', top: 16),
+    return SectionFrame(
+      title: 'A página',
+      trailing: Text('$ready de ${countable.length} prontas', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+      children: [
       Container(
         decoration: _whiteCard(),
         clipBehavior: Clip.antiAlias,
@@ -2223,14 +2242,14 @@ class _PartsListState extends ConsumerState<_PartsList> {
           type: MaterialType.transparency,
           child: Column(children: [
             for (final (i, p) in parts.indexed) ...[
-              if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16, color: Color(0xFFD9D9D9)),
+              if (i > 0) const Divider(height: 1, color: AppTheme.line),
               InkWell(
                 onTap: p.locked
                     ? () => ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Dormir e transporte ainda não está disponível. Avisamos quando abrir.')))
                     : p.onOpen,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(children: [
                     Expanded(
                       child: Opacity(
