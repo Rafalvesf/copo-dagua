@@ -44,7 +44,7 @@ class ScrollAwareBackButton extends StatefulWidget {
     this.imageExtent = 0,
     this.rotateAfter = 80,
     this.backLabel = 'Voltar',
-    this.rotate = true,
+    this.rotate = false,
   });
 
   @override

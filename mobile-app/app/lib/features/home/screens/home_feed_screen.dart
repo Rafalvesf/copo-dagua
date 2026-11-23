@@ -119,7 +119,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                 SafeArea(top: false, 
                   bottom: false,
                   child: EdgeFade(
-                    topFadeHeight: 24,
+                    topFadeHeight: 0, // sem o desvanecer branco no topo (2026-11-23)
                     bottomFadeHeight: 140,
                     child: ListView(
                       padding: ( const EdgeInsets.fromLTRB(

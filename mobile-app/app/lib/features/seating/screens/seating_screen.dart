@@ -18,7 +18,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/wedding/wedding_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/mascot.dart';
-import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/green_hero.dart';
@@ -153,8 +152,8 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                 SafeArea(top: false, 
                   bottom: false,
                   // Sem o desvanecer nas páginas do evento (pedido 2026-11-22).
-                  child: EdgeFade(
-                    child: ListView(
+                  child: ScrollBackView(builder: (context, scroll) => ListView(
+                      controller: scroll,
                       padding: ( EdgeInsets.zero).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
                       children: [
                         // Mockup «Páginas do evento» → Lugares (2026-11-14).
@@ -292,8 +291,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
                           ),
                         ),
                       ],
-                    ),
-                  ),
+                    )),
                 ),
               ],
             ),

@@ -373,7 +373,8 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         Expanded(child: Center(child: CircularProgressIndicator())),
                       ]),
                     )
-                  : ListView(
+                  : ScrollBackView(builder: (context, scroll) => ListView(
+                      controller: scroll,
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
                       // Redesign 2026-11-08 (canvas "Para os convidados"):
                       // código, acompanhantes, acesso e uma só lista com
@@ -420,7 +421,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                           ]),
                         ),
                       ],
-                    ),
+                    )),
             ),
           ],
         ),

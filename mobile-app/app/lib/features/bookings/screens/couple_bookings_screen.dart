@@ -69,7 +69,8 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
         bottom: false,
         // Parceiros: a página inteira desliza, como no Orçamento e nos
         // Lugares (pedido 2026-11-08). Convidados (ofertas) fica igual.
-        child: Builder(builder: (context) {
+        // A seta fixa e a barra do topo bloqueada (pedido 2026-11-23).
+        child: ScrollBackView(builder: (context, scroll) {
           // Mockup «Páginas do evento» → Reservas (2026-11-14).
           final top = <Widget>[
             Padding(
@@ -93,7 +94,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
  body: weddingId == null ? const SizedBox.shrink() : OrganizerGuestOffers(weddingId: weddingId),
 );
           }
-          Widget whole(Widget body) => CustomScrollView(slivers: [
+          Widget whole(Widget body) => CustomScrollView(controller: scroll, slivers: [
                 SliverToBoxAdapter(child: Column(children: top)),
                 SliverFillRemaining(hasScrollBody: false, child: body),
               ]);
@@ -123,7 +124,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                           (b, id, what, due),
                   ];
                   if (bookings.isEmpty && proposals.isEmpty) {
-                    return ListView(padding: const EdgeInsets.only(bottom: 140), children: [
+                    return ListView(controller: scroll, padding: const EdgeInsets.only(bottom: 140), children: [
                       ...top,
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
@@ -138,6 +139,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                     ]);
                   }
                   return ListView(
+                    controller: scroll,
                     padding: const EdgeInsets.only(bottom: 140),
                     children: [
                       ...top,
