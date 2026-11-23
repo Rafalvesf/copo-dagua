@@ -541,6 +541,17 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   pagar; depois, sem reembolso; recusado ou sem resposta em 48 h, é
   libertado) e **«Pagar mais tarde» + «Pagar agora»**. Pago → «Sinal pago»
   (a piscar o olho).
+- **Informação do evento para o parceiro** (pedido do Rafael, 2026-11-23;
+  migração 226, `partner_event_brief`, `event_brief.dart`): na reserva
+  confirmada, em molduras — **todos**: «Quando e onde» (hora, local, morada,
+  convidados previstos, `VenueMap` + «Como chegar») e «Programa · N» (os
+  momentos dele com a etiqueta verde «Contigo»); **comida** (catering,
+  restaurantes, bolo, espaço): «Pessoas» (confirmados, crianças e idades),
+  «Menus» (das escolhas por pessoa), «Alergias» e «Mesas»; **foto, música,
+  banda, animação**: «Estilo» com o dress code; **flores e decoração, bolo,
+  convites**: «Estilo» com as cores; **transporte, aluguer, animação
+  infantil, bares**: «Pessoas». As alergias **só** vão para a comida.
+  **Nunca contactos** (telefone, email): fala-se pela conversa da app.
 - **Pedir orçamento:** o mesmo fluxo — evento, pessoas, «O que procuras?»
   (hora e mensagem), Tudo certo? → «Pedir orçamento» → «Orçamento pedido».
   Na proposta: «Recusar» (pergunta o motivo, que segue para o parceiro na
