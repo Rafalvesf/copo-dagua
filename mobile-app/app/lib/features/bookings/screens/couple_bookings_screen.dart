@@ -94,9 +94,11 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
  body: weddingId == null ? const SizedBox.shrink() : OrganizerGuestOffers(weddingId: weddingId),
 );
           }
-          Widget whole(Widget body) => CustomScrollView(controller: scroll, slivers: [
-                SliverToBoxAdapter(child: Column(children: top)),
-                SliverFillRemaining(hasScrollBody: false, child: body),
+          // Sempre uma ListView (a carregar, erro, vazio e com dados): trocar
+          // de tipo de lista ligava duas listas ao mesmo controlador.
+          Widget whole(Widget body) => ListView(controller: scroll, padding: const EdgeInsets.only(bottom: 140), children: [
+                ...top,
+                Padding(padding: const EdgeInsets.only(top: 80), child: body),
               ]);
           return bookingsAsync.when(
                 loading: () => whole(const Center(child: CircularProgressIndicator())),

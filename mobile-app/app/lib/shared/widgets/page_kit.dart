@@ -80,7 +80,7 @@ class LockedTopBar extends StatelessWidget {
     return AnimatedBuilder(
       animation: Listenable.merge([controller, title]),
       builder: (context, _) {
-        final y = controller.hasClients ? controller.offset : 0.0;
+        final y = controller.safeOffset;
         final show = ((y - showAfter) / 24).clamp(0.0, 1.0).toDouble();
         if (show <= 0) return const SizedBox.shrink();
         return IgnorePointer(
@@ -170,7 +170,7 @@ class _KitPageState extends State<KitPage> {
   final _title = ValueNotifier<String?>(null);
 
   void _onScroll() {
-    final v = _controller.hasClients && _controller.offset > 120;
+    final v = _controller.safeOffset > 120;
     if (v != _scrolled && mounted) setState(() => _scrolled = v);
   }
 
