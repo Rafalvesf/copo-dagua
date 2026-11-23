@@ -102,7 +102,7 @@ class _CoupleBookingsScreenState extends ConsumerState<CoupleBookingsScreen> {
                       _picked = id;
                     }),
                   ),
-                KitPills(
+                KitPills([
                   KitPill(label: 'Parceiros', selected: !_guests, onTap: () => setState(() => _guests = false)),
                   KitPill(label: 'Convidados', selected: _guests, onTap: () => setState(() => _guests = true)),
                 ]),
