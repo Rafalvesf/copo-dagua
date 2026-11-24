@@ -24,4 +24,17 @@ void main() {
     expect(later, isNot(first), reason: 'a cor tem de mudar durante a pulsação');
     expect(later, isNot(AppTheme.background));
   });
+
+  // 2026-11-24: num Stack (aviso «Sem ligação») a página encolhia à altura
+  // do conteúdo e via-se meio ecrã cinzento por baixo.
+  testWidgets('a página a carregar ocupa o ecrã inteiro, mesmo num Stack', (tester) async {
+    tester.view.physicalSize = const Size(400, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    for (final page in const <Widget>[SkeletonPage(), SkeletonProfilePage()]) {
+      await tester.pumpWidget(MaterialApp(home: Stack(children: [page])));
+      final size = tester.getSize(find.byWidget(page));
+      expect(size.height, 1600, reason: '${page.runtimeType} tem de ocupar a altura toda');
+    }
+  });
 }

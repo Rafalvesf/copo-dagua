@@ -95,7 +95,9 @@ class _LazyPageState extends State<LazyPage> {
     if (_ready) return widget.builder();
     // Enquanto o código do ecrã chega: esqueleto a pulsar (2026-11-23).
     if (!_offline) return const SkeletonPage();
-    return Stack(children: [
+    // fit: expand — sem isto o esqueleto encolhia à altura do conteúdo e
+    // via-se a sombra da transição por baixo (2026-11-24).
+    return Stack(fit: StackFit.expand, children: [
       const SkeletonPage(),
       Positioned(
         left: 0,

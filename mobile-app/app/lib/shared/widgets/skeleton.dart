@@ -337,7 +337,10 @@ class SkeletonPage extends StatelessWidget {
   const SkeletonPage({super.key, this.carousel = true, this.rows = 4});
 
   @override
-  Widget build(BuildContext context) => Material(
+  // SizedBox.expand: ocupa sempre o ecrã inteiro, mesmo dentro de um Stack
+  // ou de outro pai que não o estique (2026-11-24: ficava meio ecrã cinzento).
+  Widget build(BuildContext context) => SizedBox.expand(
+        child: Material(
         color: AppTheme.background,
         child: SafeArea(
           child: SingleChildScrollView(
@@ -354,6 +357,7 @@ class SkeletonPage extends StatelessWidget {
             ),
           ),
         ),
+        ),
       );
 }
 
@@ -362,7 +366,8 @@ class SkeletonProfilePage extends StatelessWidget {
   const SkeletonProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) => const Material(
+  Widget build(BuildContext context) => const SizedBox.expand(
+        child: Material(
         color: AppTheme.background,
         child: SafeArea(
           child: SingleChildScrollView(
@@ -387,6 +392,7 @@ class SkeletonProfilePage extends StatelessWidget {
               ],
             ),
           ),
+        ),
         ),
       );
 }
