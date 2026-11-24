@@ -537,7 +537,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                 child: OutlinedButton.icon(
                   onPressed: _openPartnerForNewQuote,
                   icon: const Icon(Hi.arrowPath, size: 18),
-                  label: const Text('Pedir nova proposta'),
+                  label: const Text('Nova proposta'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.accentOliveDark,
                     side: BorderSide(color: AppTheme.accentOliveDark),

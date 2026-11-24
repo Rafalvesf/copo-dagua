@@ -581,7 +581,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   aceite ou confirmada nesse dia, abre o popup — vermelho «… a essa hora»
   (as duas horas a menos de 3 h) ou amarelo «… nesse dia», «ESTE PEDIDO»,
   «JÁ MARCADO NESSE DIA · N» e **«Propor outro dia»** (contorno, abre o
-  popup «Propor outro dia» com os dias livres) + **«É possível,
+  popup «Propor outro dia» com os dias livres, que envia o cartão «Proposta de outro dia» na conversa — quem recebe tem «Recusar» + «Aceitar» e, aceite, o dia do pedido muda; migração 235) + **«É possível,
   aceitar»** (preto).
 - **Cancelar uma reserva** (pedido do Rafael, 2026-11-24, mockups
   «Cancelar reserva · organizador / parceiro»; `cancel_booking_sheet.dart`,

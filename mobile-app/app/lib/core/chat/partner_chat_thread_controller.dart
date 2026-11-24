@@ -102,6 +102,7 @@ class PartnerChatThreadController extends Notifier<ChatThreadState> {
       proposalDepositAmount: (row['proposal_deposit_amount'] as num?)
           ?.toDouble(),
       isQuoteRequestNotice: row['is_quote_request_notice'] as bool? ?? false,
+      changeRequestId: row['change_request_id'] as String?,
     );
   }
 }

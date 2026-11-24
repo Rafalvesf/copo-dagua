@@ -1631,6 +1631,9 @@ class ChatMessage {
   /// parceiro se trata, não precisa de nenhum campo extra.
   final bool isQuoteRequestNotice;
 
+  /// Cartão de alteração / outro dia (`booking_change_requests`, 233/235).
+  final String? changeRequestId;
+
   const ChatMessage({
     required this.id,
     this.partnerId,
@@ -1644,6 +1647,7 @@ class ChatMessage {
     this.proposalPrice,
     this.proposalDepositAmount,
     this.isQuoteRequestNotice = false,
+    this.changeRequestId,
     this.attachmentUrl,
     this.attachmentType,
     this.attachmentName,

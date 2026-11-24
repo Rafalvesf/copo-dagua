@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/models/models.dart';
@@ -272,15 +273,27 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
     setState(() => _busy = true);
     try {
       final r = widget.request;
-      final conv = await getOrCreateConversation(eventId: r.eventId, partnerId: r.partnerId);
-      final day = _day(_days[_picked].$1);
+      final picked = _days[_picked].$1;
       final text = _msg.text.trim();
-      await supabase.from('messages').insert({
-        'conversation_id': conv,
-        'sender_role': 'partner',
-        'sender_id': supabase.auth.currentUser!.id,
-        'body': 'Proposta de outro dia: $day.${text.isEmpty ? '' : '\n$text'}',
-      });
+      try {
+        // Cartão «Proposta de outro dia» na conversa (migração 235):
+        // aceite, o dia do pedido muda sozinho.
+        await supabase.rpc('propose_request_day', params: {
+          'p_quote_request': r.id,
+          'p_date': '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}',
+          'p_message': text.isEmpty ? null : text,
+        });
+      } on PostgrestException catch (e) {
+        // Sem a 235: fica como mensagem na conversa.
+        if (e.code != 'PGRST202' && e.code != '42883') rethrow;
+        final conv = await getOrCreateConversation(eventId: r.eventId, partnerId: r.partnerId);
+        await supabase.from('messages').insert({
+          'conversation_id': conv,
+          'sender_role': 'partner',
+          'sender_id': supabase.auth.currentUser!.id,
+          'body': 'Proposta de outro dia: ${_day(picked)}.${text.isEmpty ? '' : '\n$text'}',
+        });
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (_) {
       if (mounted) {
