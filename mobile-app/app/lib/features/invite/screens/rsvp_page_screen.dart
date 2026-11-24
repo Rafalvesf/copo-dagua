@@ -270,7 +270,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                                 Text(
                                   '${date.day} de ${months[date.month - 1]} de ${date.year}',
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                                  style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                 ),
                               ],
                               if (location != null && location.isNotEmpty) ...[
@@ -292,7 +292,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                       Text(
                         first.isEmpty ? 'Contamos contigo?' : '$first, contamos contigo?',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: AppFontSize.xl + 2, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                        style: const TextStyle(fontSize: AppFontSize.xl + 2, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 20),
                       if (answered) ...[

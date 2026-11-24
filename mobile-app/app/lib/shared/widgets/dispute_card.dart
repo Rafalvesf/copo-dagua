@@ -189,7 +189,7 @@ class _OpenDisputeSheetState extends State<_OpenDisputeSheet> {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
-        const Text('Abrir disputa', style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        const Text('Abrir disputa', style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 6),
         const Text(
           'A equipa À Nossa! analisa e decide em poucos dias úteis. Enquanto isso, a reserva fica em disputa.',

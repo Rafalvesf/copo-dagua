@@ -192,7 +192,7 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
             child: Text(full ? 'A pagar agora' : 'Sinal (${(pct * 100).round()} %) agora',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ),
-          Text(euros(now, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          Text(euros(now, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
         // A taxa só entra no passo de pagar: dizê-lo já (mockups 2026-11-21).
         const Align(

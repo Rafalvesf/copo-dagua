@@ -110,7 +110,7 @@ Future<void> openTask(BuildContext context, WidgetRef ref, EventTask task) async
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(task.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400)),
+            Text(task.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
             if ((task.description ?? '').trim().isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(task.description!.trim(), style: const TextStyle(fontSize: 14, height: 1.45)),

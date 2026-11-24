@@ -323,7 +323,7 @@ class _PartnerSuggestions extends ConsumerWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           child: Text('Sugestões para ti',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ),
         const Padding(
           padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 2, AppTheme.screenMargin, 10),

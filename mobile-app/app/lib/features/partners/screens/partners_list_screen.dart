@@ -574,7 +574,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                 Expanded(
                                   child: Text(
                                     '${partners.length} ${partners.length == 1 ? 'parceiro' : 'parceiros'}',
-                                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                   ),
                                 ),
                                 SnappyTap(
@@ -995,7 +995,7 @@ class _LocationPickerSheetState extends State<LocationPickerSheet> {
                 child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.borderMuted, borderRadius: BorderRadius.circular(2))),
               ),
               const SizedBox(height: 14),
-              const Text('Onde procurar parceiros?', style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              const Text('Onde procurar parceiros?', style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 8),
               _tile(
                 Hi.viewfinderCircle,

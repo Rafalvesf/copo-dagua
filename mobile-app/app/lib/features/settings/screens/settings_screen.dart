@@ -115,7 +115,7 @@ class SettingsScaffold extends StatelessWidget {
               child: Text(title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ),
           ]),
           const SizedBox(height: 6),
@@ -516,7 +516,7 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
         builder: (sheet, setSheet) => Padding(
           padding: EdgeInsets.fromLTRB(20, 22, 20, 20 + MediaQuery.viewInsetsOf(sheet).bottom),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 14),
             OnbField(
               controller: tmp,

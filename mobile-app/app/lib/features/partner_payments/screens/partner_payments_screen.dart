@@ -45,7 +45,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         title: const Text('Levantar saldo'),
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text(_eur(s.availableCents),
-              style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 12),
           _SheetRow(icon: Hi.buildingLibrary, text: 'Para o IBAN •••• ${s.bankLast4 ?? '—'}'),
           const SizedBox(height: 8),
@@ -158,7 +158,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
               ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 20),
-                child: Text('Pagamentos', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                child: Text('Pagamentos', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
@@ -195,7 +195,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Recebe pagamentos na app', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            Text('Recebe pagamentos na app', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             SizedBox(height: 6),
             Text('Os clientes pagam dentro da À Nossa! e o dinheiro vai para a tua conta.',
                 style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
@@ -242,7 +242,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           const SizedBox(height: 10),
           const Text('Disponível para receber', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
           const SizedBox(height: 6),
-          Text(_eur(s.availableCents), style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          Text(_eur(s.availableCents), style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 8),
           Text(
             [

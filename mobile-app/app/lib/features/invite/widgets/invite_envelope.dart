@@ -231,7 +231,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                 Text(
                   ev.displayNames,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 30, height: 1.1, fontWeight: FontWeight.w400, color: Colors.white),
+                  style: const TextStyle(fontSize: 30, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -303,7 +303,7 @@ class _Card extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(event.displayNames,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 28, height: 1.05, fontWeight: FontWeight.w400, color: _ink)),
+                    style: const TextStyle(fontSize: 28, height: 1.05, fontWeight: FontWeight.w700, color: _ink)),
                 if (event.date != null) ...[
                   const SizedBox(height: 8),
                   Text('${event.date!.day} · ${_monthsRoman[event.date!.month - 1]} · ${event.date!.year}',

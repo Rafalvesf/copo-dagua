@@ -122,7 +122,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('Bilhetes · ${e.displayNames}',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 4),
             Text('${euroLabel(unit)} por pessoa', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             const SizedBox(height: 20),
@@ -138,7 +138,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
                   width: 44,
                   child: Text('$_qty',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
                 IconButton.outlined(
                   tooltip: 'Mais',
@@ -150,7 +150,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
             const Divider(height: 28),
             Row(children: [
               const Expanded(child: Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
-              Text(euroLabel(unit * _qty), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400)),
+              Text(euroLabel(unit * _qty), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
             ]),
             if (_error != null) ...[
               const SizedBox(height: 10),
@@ -234,7 +234,7 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
                   _ => 'Pagamento ainda por confirmar',
                 },
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink),
               ),
               const SizedBox(height: 8),
               Text(

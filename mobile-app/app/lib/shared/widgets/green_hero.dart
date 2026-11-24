@@ -44,8 +44,8 @@ class GreenHero extends StatelessWidget {
               children: [
                 Text(value,
                     style: value.length > 12
-                        ? const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w400, color: AppTheme.ink)
-                        : const TextStyle(fontSize: 40, height: 44 / 40, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                        ? const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)
+                        : const TextStyle(fontSize: 40, height: 44 / 40, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 if (suffix != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
@@ -94,7 +94,7 @@ class SectionTitle extends StatelessWidget {
         Row(
         children: [
           // Títulos de secção como "Os meus eventos" / "Descobrir" (22, negrito).
-          Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           if (trailing != null) ...[const SizedBox(width: 8), Expanded(child: Align(alignment: Alignment.centerRight, child: trailing!))],
         ],
       ),

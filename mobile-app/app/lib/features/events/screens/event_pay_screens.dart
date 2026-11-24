@@ -128,7 +128,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 ]),
                 if (r.result == 'ok') ...[
                   const SizedBox(height: 12),
-                  const Text('Quem é', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  const Text('Quem é', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   const SizedBox(height: 18),
                 ] else
                   const SizedBox(height: 16),
@@ -152,7 +152,7 @@ class _ScanScreenState extends State<ScanScreen> {
       const SizedBox(height: 40),
       Icon(icon, size: 96, color: r.result == 'error' ? AppTheme.inkMuted : const Color(0xFFB3261E)),
       const SizedBox(height: 16),
-      Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+      Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       const SizedBox(height: 8),
       Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, height: 1.4, color: AppTheme.ink)),
       if (r.result == 'error') ...[
@@ -173,7 +173,7 @@ class _ScanScreenState extends State<ScanScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(name, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                Text(name, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const Text('Leste o QR agora', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
@@ -237,7 +237,7 @@ class _ScanScreenState extends State<ScanScreen> {
       const SizedBox(height: 4),
       _WhiteCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(i.event, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          Text(i.event, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           if (i.date != null)
             Padding(
               padding: const EdgeInsets.only(top: 2),
@@ -560,7 +560,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
               ),
               const SizedBox(height: 12),
               Text(_req == null ? 'Cobrar' : 'QR para pagar',
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 18),
               Expanded(child: _req == null ? _keypad() : _qr(_req!)),
             ]),
@@ -591,7 +591,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
                     child: Center(
                       child: k == 'del'
                           ? const Icon(Icons.backspace_outlined, size: 22, color: AppTheme.ink)
-                          : Text(k, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                          : Text(k, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                   ),
                 ),
@@ -615,7 +615,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
               Semantics(
                 liveRegion: true,
                 child: Text(euros(_cents),
-                    style: const TextStyle(fontSize: 44, height: 1.1, letterSpacing: -0.5, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 44, height: 1.1, letterSpacing: -0.5, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
             ]),
           ),
@@ -702,7 +702,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
               if (merchant != null && merchant.trim().isNotEmpty)
                 Text(merchant.trim(),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(what.isEmpty ? 'Pagamento no balcão' : what,
@@ -725,7 +725,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
                   ),
                 ),
               const SizedBox(height: 12),
-              Text(euros(_cents), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              Text(euros(_cents), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 2),
               Text(
                 paid
@@ -910,7 +910,7 @@ class _SheetShell extends StatelessWidget {
             const SizedBox(height: 14),
             Row(children: [
               Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
               V2RoundButton(icon: Hi.xMark, tooltip: 'Fechar', onTap: () => context.pop()),
             ]),

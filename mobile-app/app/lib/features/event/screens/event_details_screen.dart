@@ -937,7 +937,7 @@ class _CountdownBox extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: color,
-              fontWeight: FontWeight.w400,
+              fontWeight: FontWeight.w800,
               fontSize: AppFontSize.xl,
             ),
           ),
@@ -1452,7 +1452,7 @@ class _UpcomingPaymentsCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Text('Pagamentos próximos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              const Text('Pagamentos próximos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const Spacer(),
               SnappyTap(
                 onTap: () => context.push('/budget'),
@@ -1529,7 +1529,7 @@ class _BookingsSection extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Text('Reservas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                const Text('Reservas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const Spacer(),
                 SnappyTap(
                   onTap: () => context.push('/bookings'),
@@ -1798,7 +1798,7 @@ class _StickersTop extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Olá, $first!', style: const TextStyle(fontSize: 28, height: 1.2, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        Text('Olá, $first!', style: const TextStyle(fontSize: 28, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 6),
         if (days != null)
           Wrap(
@@ -1921,7 +1921,7 @@ class _MuralTop extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Olá, $first!', style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
-                  const Text('O nosso mural', style: TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  const Text('O nosso mural', style: TextStyle(fontSize: 22, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ],
               ),
             ),
@@ -1982,7 +1982,7 @@ class _MuralTop extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text('FALTAM', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: look.on)),
-                          Text('$days', style: TextStyle(fontSize: 24, height: 1.1, fontWeight: FontWeight.w400, color: look.on)),
+                          Text('$days', style: TextStyle(fontSize: 24, height: 1.1, fontWeight: FontWeight.w700, color: look.on)),
                           Text(days == 1 ? 'DIA' : 'DIAS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: look.on)),
                         ],
                       ),
@@ -2096,7 +2096,7 @@ class _ClotheslineTop extends ConsumerWidget {
                   Text(
                     event.displayNames,
                     maxLines: 2,
-                    style: const TextStyle(fontSize: 26, height: 1.2, fontWeight: FontWeight.w400, fontStyle: FontStyle.italic, color: AppTheme.ink),
+                    style: const TextStyle(fontSize: 26, height: 1.2, fontWeight: FontWeight.w700, fontStyle: FontStyle.italic, color: AppTheme.ink),
                   ),
                 ],
               ),
@@ -2286,7 +2286,7 @@ class _FilmStripState extends State<_FilmStrip> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(v, style: const TextStyle(fontSize: 20, height: 1.1, fontWeight: FontWeight.w400, color: Colors.white)),
+                        Text(v, style: const TextStyle(fontSize: 20, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white)),
                         Text(l, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1, color: Color(0xFFD9D6CF))),
                       ],
                     ),
@@ -2574,7 +2574,7 @@ class _TodoNow extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(week ? 'Esta semana' : 'Para fazer agora',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -2669,7 +2669,7 @@ class _StatBlocks extends ConsumerWidget {
               Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
               const SizedBox(height: 6),
               Text.rich(TextSpan(children: [
-                TextSpan(text: value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                TextSpan(text: value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                 if (of != null) TextSpan(text: ' $of', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
               ]), textAlign: TextAlign.center),
               const SizedBox(height: 4),
@@ -2887,7 +2887,7 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
               const SizedBox(height: 44), // espaço por baixo da seta fixa
               const SizedBox(height: 8),
               const Text('Definições do evento',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 4),
               const Text('Tudo sobre este evento, organizado por tema.',
                   style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -2937,7 +2937,7 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
                       child: Row(children: [
                         Expanded(
                           child: Text(w.guestCode!,
-                              style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                              style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                         ),
                         FrameButton36('Copiar', outlined: true, onTap: () async {
                           await copyText(w.guestCode!);
@@ -3031,7 +3031,7 @@ class _InviteCodeCard extends StatelessWidget {
             // Título em cima e o código por baixo, na largura toda: lado a
             // lado, um código comprido (JANTARDENATAL-7984) esmagava o
             // título letra a letra (2026-11-15).
-            const Text('O convite', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: Colors.white)),
+            const Text('O convite', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.white)),
             const SizedBox(height: 2),
             const Text('Código para entrar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
             if (code != null) ...[
@@ -3047,7 +3047,7 @@ class _InviteCodeCard extends StatelessWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: Text(code, maxLines: 1, style: const TextStyle(fontSize: 22, letterSpacing: 2, fontWeight: FontWeight.w400, color: Colors.white)),
+                    child: Text(code, maxLines: 1, style: const TextStyle(fontSize: 22, letterSpacing: 2, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ),
               ),
@@ -3188,7 +3188,7 @@ class _RemindSheetState extends State<_RemindSheet> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(
           _summary == null ? 'Lembrar quem não respondeu' : '$pending sem resposta',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink),
         ),
         const SizedBox(height: 14),
         if (_summary == null && !_failed)
@@ -3387,7 +3387,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
                 Text(capFirst(w.displayNames),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w400, color: photo != null ? Colors.white : AppTheme.ink)),
+                    style: TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: photo != null ? Colors.white : AppTheme.ink)),
                 if (place.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(place, style: TextStyle(fontSize: 13, color: photo != null ? Colors.white : AppTheme.inkMuted)),
@@ -3435,7 +3435,7 @@ class _MinimalCountdownState extends State<_MinimalCountdown> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: const BoxDecoration(border: Border(top: border, bottom: border)),
         child: const Text('É hoje!', textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
       );
     }
     final cells = [
@@ -3454,7 +3454,7 @@ class _MinimalCountdownState extends State<_MinimalCountdown> {
               if (i > 0) const VerticalDivider(width: 1, thickness: 1, color: _hairline),
               Expanded(
                 child: Column(children: [
-                  Text(v, style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  Text(v, style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w800, color: AppTheme.ink)),
                   const SizedBox(height: 4),
                   Text(l, style: const TextStyle(fontSize: 10, letterSpacing: 1.5, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                 ]),
@@ -3497,7 +3497,7 @@ class _NextSteps extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(children: [
-              Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink))),
+              Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink))),
               if (total > 0)
                 Text('$done de $total', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _green)),
             ]),
@@ -4048,7 +4048,7 @@ class _OrgTile extends StatelessWidget {
               const SizedBox(height: 4),
               FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(value, maxLines: 1, style: const TextStyle(fontSize: 28, height: 1.1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                child: Text(value, maxLines: 1, style: const TextStyle(fontSize: 28, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
               const SizedBox(height: 4),
               Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,

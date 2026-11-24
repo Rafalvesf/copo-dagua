@@ -67,7 +67,7 @@ class TicketPassCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   ticket.quantity == 1 ? '1 pessoa' : '${ticket.quantity} pessoas',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: Colors.white),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -127,7 +127,7 @@ class MyQrScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark)),
             const SizedBox(height: 4),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 20),
             MyQrPanel(subtitle: subtitle),
             const SizedBox(height: 18),
@@ -255,7 +255,7 @@ class _MyQrPanelState extends State<MyQrPanel> with WidgetsBindingObserver {
           ],
           if (q?.name != null) ...[
             const SizedBox(height: 12),
-            Text(q!.name!, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            Text(q!.name!, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ],
           if (widget.subtitle != null)
             Text(widget.subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
