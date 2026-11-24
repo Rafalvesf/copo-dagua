@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'lazy_page.dart';
+import 'lazy_reload_stub.dart' if (dart.library.js_interop) 'lazy_reload_web.dart' show newerVersionAvailable;
 import 'page_transitions.dart';
 import 'chat/group_chat.dart' show ChatGroup;
 import '../features/chat/screens/groups_screen.dart' deferred as l3;
@@ -814,8 +815,7 @@ class _LostRoute extends StatelessWidget {
 void prefetchEventPage() {
   l59.loadLibrary().then((_) {
     LazyPage.markLoaded([l59.loadLibrary]);
-    prefetchAllPages();
-  }, onError: (_) {});
+  }, onError: (_) {}).whenComplete(prefetchAllPages);
 }
 
 /// Depois de o início abrir, vai buscando os outros ecrãs um a um, em
@@ -828,14 +828,27 @@ void prefetchAllPages() {
   _prefetching = true;
   () async {
     await Future<void>.delayed(const Duration(seconds: 2));
-    for (final load in _deferredPages) {
-      try {
-        await load();
-        LazyPage.markLoaded([load]);
-      } catch (_) {
-        // Sem rede ou versão nova publicada: o ecrã carrega quando se abrir.
-        return;
+    // 2026-11-24: antes parava de vez à primeira falha, e os ecrãs que
+    // faltavam só se iam buscar ao abrir — às vezes horas depois, quando a
+    // versão antiga já tinha sido apagada do servidor («Não foi possível
+    // abrir»). Agora salta o que falhou, continua, e volta aos que falharam
+    // até 3 voltas; se entretanto saiu uma versão nova, para (o próximo
+    // ecrã recarrega a página com a versão nova).
+    var pending = _deferredPages.where((l) => !LazyPage.isLoaded([l])).toList();
+    for (var round = 0; round < 3 && pending.isNotEmpty; round++) {
+      final failed = <Future<void> Function()>[];
+      for (final load in pending) {
+        try {
+          await load();
+          LazyPage.markLoaded([load]);
+        } catch (_) {
+          failed.add(load);
+        }
       }
+      if (failed.isEmpty) return;
+      if (await newerVersionAvailable() == true) return;
+      pending = failed;
+      await Future<void>.delayed(Duration(seconds: 10 * (round + 1)));
     }
   }();
 }
@@ -846,7 +859,12 @@ Future<void> preloadDeferredPages() async {
   LazyPage.markLoaded(_deferredPages);
 }
 
-List<Future<void> Function()> get _deferredPages => <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary];
+List<Future<void> Function()> get _deferredPages => <Future<void> Function()>[l1.loadLibrary, l2.loadLibrary, l3.loadLibrary, l4.loadLibrary, l5.loadLibrary, l6.loadLibrary, l7.loadLibrary, l8.loadLibrary, l9.loadLibrary, l10.loadLibrary, l11.loadLibrary, l12.loadLibrary, l13.loadLibrary, l15.loadLibrary, l16.loadLibrary, l17.loadLibrary, l18.loadLibrary, l20.loadLibrary, l21.loadLibrary, l22.loadLibrary, l23.loadLibrary, l24.loadLibrary, l25.loadLibrary, l26.loadLibrary, l27.loadLibrary, l28.loadLibrary, l30.loadLibrary, l31.loadLibrary, l32.loadLibrary, l33.loadLibrary, l34.loadLibrary, l35.loadLibrary, l36.loadLibrary, l37.loadLibrary, l38.loadLibrary, l40.loadLibrary, l41.loadLibrary, l42.loadLibrary, l43.loadLibrary, l44.loadLibrary, l45.loadLibrary, l46.loadLibrary, l47.loadLibrary, l48.loadLibrary, l49.loadLibrary, l50.loadLibrary, l51.loadLibrary, l52.loadLibrary, l53.loadLibrary, l54.loadLibrary, l55.loadLibrary, l56.loadLibrary, l57.loadLibrary, l58.loadLibrary, l59.loadLibrary, l60.loadLibrary, l61.loadLibrary, l62.loadLibrary,
+  // 2026-11-24: estes ficavam de fora e só se iam buscar ao abrir (eram os
+  // «outros sítios» onde aparecia «Não foi possível abrir»). Um teste
+  // (test/core/deferred_pages_test.dart) garante que nenhum fica de fora.
+  l28b.loadLibrary, l28c.loadLibrary, l28d.loadLibrary, l63.loadLibrary, lacct.loadLibrary,
+  lentry.loadLibrary, lext.loadLibrary, lpay.loadLibrary, lpd.loadLibrary, lpub.loadLibrary];
 
 /// Ecrã de arranque (splash). Mostrado só no primeiro instante, enquanto a
 /// app recupera a sessão guardada — evita que a página «criar conta» pisque

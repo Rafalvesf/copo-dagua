@@ -116,6 +116,43 @@
         location.reload();
         return true;
       };
+      // Há uma versão publicada mais recente do que a que está a correr?
+      // (2026-11-24, «Não foi possível abrir» noutros sítios): com a app
+      // aberta horas seguidas, os ecrãs da versão antiga acabam por ser
+      // apagados do servidor. Pergunta sempre ao servidor, sem cache.
+      // Resolve com true (há versão nova), false (é a mesma) ou null (sem
+      // rede / sem versão, p.ex. em desenvolvimento).
+      window.tchinNewerVersionAvailable = function () {
+        if (!versioned || !window.fetch) return Promise.resolve(null);
+        return fetch('v/current.txt?t=' + Date.now(), { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.text() : null; })
+          .then(function (t) {
+            if (t == null) return null;
+            t = t.trim();
+            // A versão que está mesmo a correr é a do main.dart.js (pode
+            // ser diferente da deste index.html, se ele vier da cache).
+            var running = window.tchinBuild;
+            var ss = document.getElementsByTagName('script');
+            for (var i = 0; i < ss.length; i++) {
+              var m = /\/v\/([^/]+)\/main\.dart\.(js|mjs)/.exec(ss[i].src || '');
+              if (m) { running = m[1]; break; }
+            }
+            return t !== '' && t !== running;
+          })
+          .catch(function () { return null; });
+      };
+      // Recarrega já (sem o limite de um minuto) quando há mesmo uma versão
+      // nova; o limite de 10 s só evita um ciclo se algo correr mal.
+      window.tchinReloadNow = function () {
+        try {
+          var last = +(sessionStorage.getItem('tt-reload-at') || 0);
+          if (Date.now() - last < 10000) return false;
+          sessionStorage.setItem('tt-reload-at', String(Date.now()));
+          sessionStorage.setItem('tt-skip-opening', '1');
+        } catch (e) {}
+        location.reload();
+        return true;
+      };
       try {
         if (sessionStorage.getItem('tt-skip-opening')) {
           sessionStorage.removeItem('tt-skip-opening');

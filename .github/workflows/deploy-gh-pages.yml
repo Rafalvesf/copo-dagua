@@ -129,10 +129,11 @@ jobs:
             if [ -d "$d" ] && [[ "$OPEN" == *" $n "* ]]; then cp -a "$d" build/web/; fi
           done
           # Ecrãs das últimas versões (para quem tem a app aberta numa
-          # versão anterior): guarda as 8 mais recentes.
+          # versão anterior): guarda as 20 mais recentes (2026-11-24: com várias
+          # publicações por dia, 8 não chegavam para uma app aberta desde a véspera).
           if [ -f "$OLD/v/list.txt" ]; then cp "$OLD/v/list.txt" build/web/v/list.txt; fi
           echo "$(git rev-parse --short HEAD)" >> build/web/v/list.txt
-          tail -n 8 build/web/v/list.txt > build/web/v/list.tmp && mv build/web/v/list.tmp build/web/v/list.txt
+          tail -n 20 build/web/v/list.txt > build/web/v/list.tmp && mv build/web/v/list.tmp build/web/v/list.txt
           while read -r ver; do
             if [ -n "$ver" ] && [ -d "$OLD/v/$ver" ] && [ ! -d "build/web/v/$ver" ]; then cp -a "$OLD/v/$ver" build/web/v/; fi
           done < build/web/v/list.txt
