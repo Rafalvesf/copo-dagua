@@ -147,7 +147,7 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
             const Center(child: EstrelaMascot(Estrela.parabens, size: 120)),
             const SizedBox(height: 16),
             const Text('És Premium', textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
             const SizedBox(height: 6),
             Text(
               until == null

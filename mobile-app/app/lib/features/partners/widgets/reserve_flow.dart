@@ -739,7 +739,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         const SizedBox(height: 12),
         Row(children: [
           Expanded(child: Text(p!.perPerson ? 'Total previsto' : 'Total', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
-          Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(euros(total), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         ]),
       ],
       if (widget.quote) ...[
@@ -819,7 +819,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         Expanded(child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
         Text(value,
             style: big
-                ? const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)
+                ? const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)
                 : const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
       ]);
 
@@ -945,7 +945,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           ],
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               if (sub.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -1132,7 +1132,7 @@ class _PaidForSheetState extends State<PaidForSheet> {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Por quem pagamos?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Por quem pagamos?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               const SizedBox(height: 4),
               Text(_on.isEmpty ? 'Ninguém escolhido' : '${_on.length} ${_on.length == 1 ? 'pessoa escolhida' : 'pessoas escolhidas'}',
                   style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),

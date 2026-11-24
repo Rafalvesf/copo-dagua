@@ -235,7 +235,7 @@ class _ContractCard extends StatelessWidget {
               children: [
                 Text(c.number == null ? 'Contrato' : 'Contrato ${c.number}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 const SizedBox(height: 14),
                 row('Cliente', c.couple),
                 row('Serviço', c.title),
@@ -280,7 +280,7 @@ class _Empty extends StatelessWidget {
             const Text(
               'Ainda sem contratos',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink),
+              style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w400, color: AppTheme.ink),
             ),
             const SizedBox(height: 8),
             const Text(

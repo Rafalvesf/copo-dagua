@@ -236,7 +236,7 @@ class _Dashboard extends StatelessWidget {
                   'Pedidos por semana',
                   style: TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w400,
                     color: AppTheme.ink,
                   ),
                 ),
@@ -265,7 +265,7 @@ class _Dashboard extends StatelessWidget {
             'Do pedido à reserva',
             style: TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w400,
               color: AppTheme.ink,
             ),
           ),
@@ -295,7 +295,7 @@ class _Dashboard extends StatelessWidget {
                       : a.averageRating!.toStringAsFixed(1).replaceAll('.', ','),
                   style: const TextStyle(
                     fontSize: 32,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w400,
                     color: AppTheme.ink,
                   ),
                 ),
@@ -462,7 +462,7 @@ class _KpiTile extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            child: Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           ),
           if (sub != null) ...[
             const SizedBox(height: 4),
@@ -565,7 +565,7 @@ class _ProInsights extends ConsumerWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
               const SizedBox(height: 4),
-              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               if (sub != null) Text(sub, style: TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w700)),
             ]),
           ),
@@ -576,7 +576,7 @@ class _ProInsights extends ConsumerWidget {
         Row(children: [
           Icon(Hi.trophy, size: 18, color: green),
           const SizedBox(width: 6),
-          const Text('Premium · últimos 30 dias', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Premium · últimos 30 dias', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 12),
         Row(children: [

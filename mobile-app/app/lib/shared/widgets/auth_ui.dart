@@ -101,7 +101,7 @@ class AuthHeading extends StatelessWidget {
           const SizedBox(height: 20),
         ] else
           const SizedBox(height: 28),
-        Text(title, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(title, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         const SizedBox(height: 8),
         Text(subtitle, style: const TextStyle(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
       ],

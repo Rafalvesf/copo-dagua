@@ -290,7 +290,7 @@ Future<bool> askLeaveIsland(BuildContext context) async {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text('Tens a certeza que queres sair?',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           const SizedBox(height: 4),
           const Text('O que preencheste neste popup não fica guardado.',
               style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -444,7 +444,7 @@ class IslandAlert extends StatelessWidget {
                   fontFamily: AppTheme.fontFamily,
                   fontFamilyFallback: AppTheme.fontFamilyFallback,
                   fontSize: AppFontSize.xl + 2,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w400,
                   color: AppTheme.ink,
                 ),
                 child: title!,

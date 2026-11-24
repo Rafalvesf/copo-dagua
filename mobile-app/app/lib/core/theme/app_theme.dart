@@ -133,6 +133,11 @@ class AppTheme {
     // 2026-11-12: "os cartões precisam de um título a negrito").
     TextStyle? bold(TextStyle? t) => t?.copyWith(fontWeight: FontWeight.w700);
 
+    // Títulos grandes (18 px ou mais) na Regular (pedido 2026-11-24: «troca
+    // o bold nos títulos», como na amostra da Louis George Café): destacam-
+    // se pelo tamanho. O texto pequeno a negrito (nomes, botões) fica.
+    TextStyle? regular(TextStyle? t) => t?.copyWith(fontWeight: FontWeight.w400);
+
     final theme = ThemeData(
       useMaterial3: true,
       // Páginas abertas por botões descem de cima, com sombra
@@ -147,7 +152,7 @@ class AppTheme {
         headlineMedium: baseText.headlineMedium?.copyWith(
           fontSize: AppFontSize.hero,
           height: 40 / 34,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w400,
           letterSpacing: 0,
           color: ink,
         ),
@@ -205,7 +210,7 @@ class AppTheme {
           color: ink,
           fontSize: AppFontSize.h3,
           height: 28 / 22,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w400,
         ),
       ),
       // Campos, diálogos, folhas e avisos no estilo novo em toda a app —
@@ -254,7 +259,7 @@ class AppTheme {
           fontFamily: fontFamily,
           fontFamilyFallback: fontFamilyFallback,
           fontSize: AppFontSize.xl,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w400,
           color: ink,
         ),
         contentTextStyle: const TextStyle(
@@ -483,14 +488,14 @@ class AppTheme {
     final tt = theme.textTheme;
     return theme.copyWith(
       textTheme: tt.copyWith(
-        displayLarge: bold(tt.displayLarge),
-        displayMedium: bold(tt.displayMedium),
-        displaySmall: bold(tt.displaySmall),
-        headlineLarge: bold(tt.headlineLarge),
-        headlineMedium: bold(tt.headlineMedium),
-        headlineSmall: bold(tt.headlineSmall),
-        titleLarge: bold(tt.titleLarge),
-        titleMedium: bold(tt.titleMedium),
+        displayLarge: regular(tt.displayLarge),
+        displayMedium: regular(tt.displayMedium),
+        displaySmall: regular(tt.displaySmall),
+        headlineLarge: regular(tt.headlineLarge),
+        headlineMedium: regular(tt.headlineMedium),
+        headlineSmall: regular(tt.headlineSmall),
+        titleLarge: regular(tt.titleLarge),
+        titleMedium: regular(tt.titleMedium),
         titleSmall: bold(tt.titleSmall),
         bodyLarge: heavy(tt.bodyLarge),
         bodyMedium: heavy(tt.bodyMedium),
@@ -511,7 +516,7 @@ class AppTypography {
   static const cardTitle = TextStyle(
     fontSize: AppFontSize.h3,
     height: 28 / 22,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w400,
   );
   static const cardSubtitle = TextStyle(
     fontSize: AppFontSize.base,
@@ -526,7 +531,7 @@ class AppTypography {
   static const moduleTitle = TextStyle(
     fontSize: AppFontSize.xl,
     height: 24 / 18,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w400,
   );
   static const moduleDescription = TextStyle(
     fontSize: AppFontSize.base,

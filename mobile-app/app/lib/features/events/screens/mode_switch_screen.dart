@@ -114,7 +114,7 @@ class _ModeSwitchScreenState extends State<ModeSwitchScreen> with SingleTickerPr
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: AppFontSize.h1, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                  style: const TextStyle(fontSize: AppFontSize.h1, fontWeight: FontWeight.w400, color: AppTheme.ink),
                 ),
                 const SizedBox(height: 8),
                 Text(

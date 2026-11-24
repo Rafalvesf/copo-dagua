@@ -77,7 +77,7 @@ class InviteBenefitsCard extends ConsumerWidget {
         ),
         const SizedBox(height: 14),
         Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Text('${s.progress}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, height: 1, color: AppTheme.ink)),
+          Text('${s.progress}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w400, height: 1, color: AppTheme.ink)),
           const SizedBox(width: 8),
           Padding(
             padding: const EdgeInsets.only(bottom: 4),

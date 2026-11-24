@@ -80,7 +80,7 @@ class _EventActionsState extends State<_EventActions> {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(widget.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         const SizedBox(height: 14),
         if (!_confirmDelete) ...[
           _row('Arquivar evento',

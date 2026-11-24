@@ -104,7 +104,7 @@ class _PaymentDueSheet extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(full ? 'Pagar a reserva' : due.deposit ? 'Pagar o sinal' : 'Pagar o resto',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         const SizedBox(height: 4),
         Text(due.booking.partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         const SizedBox(height: 16),
@@ -126,7 +126,7 @@ class _PaymentDueSheet extends StatelessWidget {
         const SizedBox(height: 16),
         Row(children: [
           const Expanded(child: Text('A pagar', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
-          Text(euros(total, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(euros(total, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 6),
         Text(

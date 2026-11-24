@@ -102,7 +102,7 @@ class GuestHero extends StatelessWidget {
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
       const SizedBox(height: 6),
       Text(event.displayNames,
-          style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink)),
       if (when.isNotEmpty) ...[
         const SizedBox(height: 6),
         Text(
@@ -180,7 +180,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Row(children: [
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink))),
           if (action != null)
             GestureDetector(
               onTap: onAction,
@@ -548,7 +548,7 @@ class _GuestNowCardState extends State<GuestNowCard> {
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.1, color: guestButtonGreen)),
         const SizedBox(height: 4),
         if (current != null) ...[
-          Text(current.$1.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+          Text(current.$1.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           Text(
             [
               next == null ? 'Desde as ${hm(current.$2)}' : '${hm(current.$2)} – ${hm(next.$2)}',
@@ -601,7 +601,7 @@ class GuestBigTableCard extends StatelessWidget {
               ]),
             ),
             if (table != null)
-              Text('$table', style: const TextStyle(fontSize: 56, height: 1, fontWeight: FontWeight.w800, color: guestHeroGreen)),
+              Text('$table', style: const TextStyle(fontSize: 56, height: 1, fontWeight: FontWeight.w400, color: guestHeroGreen)),
           ]),
         ),
       );

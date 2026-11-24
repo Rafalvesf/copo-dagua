@@ -25,7 +25,7 @@ class BigNumber extends StatelessWidget {
         textBaseline: TextBaseline.alphabetic,
         children: [
           Text(number, softWrap: false,
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, height: 1.1, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w400, height: 1.1, color: AppTheme.ink)),
           const SizedBox(width: 6),
           Flexible(child: Text(unit, style: _meta)),
         ],
@@ -192,7 +192,7 @@ class FeaturedCard extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 KitTag(tag, kind: tagKind),
                 const SizedBox(height: 4),
-                Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 Text(meta, style: _meta),
               ]),
             ),

@@ -108,7 +108,7 @@ class GuestTableScreen extends ConsumerWidget {
                                 alignment: Alignment.center,
                                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                                   Text(tableNumber == null ? '—' : '$tableNumber',
-                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
+                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.accentOliveDark)),
                                   if (groups.isNotEmpty)
                                     SizedBox(
                                       width: 90,

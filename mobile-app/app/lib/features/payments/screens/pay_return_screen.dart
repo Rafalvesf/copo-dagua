@@ -93,7 +93,7 @@ class _PayReturnScreenState extends ConsumerState<PayReturnScreen> {
                     Icon(Hi.clock, size: 40, color: AppTheme.accentOliveDark),
                     const SizedBox(height: 14),
                     const Text('A confirmar o pagamento',
-                        style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                        style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                     const SizedBox(height: 8),
                     const Text(
                       'Ainda não recebemos a confirmação. Assim que chegar, a reserva atualiza sozinha.',

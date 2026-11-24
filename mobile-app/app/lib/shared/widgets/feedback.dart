@@ -277,7 +277,7 @@ class IllustratedEmptyState extends StatelessWidget {
             style: const TextStyle(
               fontSize: AppFontSize.h3,
               height: 28 / 22,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w400,
               color: AppTheme.ink,
             ),
           ),

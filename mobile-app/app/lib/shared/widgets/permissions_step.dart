@@ -184,7 +184,7 @@ class _PermissionsStepState extends State<PermissionsStep> {
                     children: [
                       const Text(
                         'Um último passo',
-                        style: TextStyle(fontSize: AppFontSize.h2 + 2, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                        style: TextStyle(fontSize: AppFontSize.h2 + 2, fontWeight: FontWeight.w400, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 8),
                       Text(c.intro, style: const TextStyle(fontSize: AppFontSize.base + 1, color: AppTheme.inkMuted, height: 1.45)),
@@ -456,7 +456,7 @@ class _SinglePermissionSheetState extends State<_SinglePermissionSheet> {
           Text(
             _blocked ? '${c.title}: bloqueado' : c.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink),
+            style: const TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w400, color: AppTheme.ink),
           ),
           const SizedBox(height: 8),
           Text(

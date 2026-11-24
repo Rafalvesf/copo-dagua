@@ -757,7 +757,7 @@ class _MenusStepState extends State<_MenusStep> {
           ),
           if (total + _upgradeTotal(picks, widget.packages) > 0)
             Text(euros(total + _upgradeTotal(picks, widget.packages)),
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 16),
         _Btn(cta, onTap: missing == null ? () => Navigator.of(context).pop(true) : null),
@@ -837,7 +837,7 @@ class _ExtrasStepState extends State<_ExtrasStep> {
                         : 'Menus + ${_on.length} ${_on.length == 1 ? 'extra' : 'extras'}',
                 style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ),
-          Text(euros(widget.base + add), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(euros(widget.base + add), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         ]),
         const SizedBox(height: 16),
         Row(children: [

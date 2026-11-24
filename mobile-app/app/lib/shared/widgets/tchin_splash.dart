@@ -63,7 +63,7 @@ class TchinSplash extends StatelessWidget {
       fontFamilyFallback: AppTheme.fontFamilyFallback,
       fontSize: 56,
       height: 52 / 56,
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w400,
       color: Colors.white,
       letterSpacing: -0.5,
     );
@@ -147,7 +147,7 @@ class TchinSplash extends StatelessWidget {
                     opacity: taglineOpacity,
                     child: Text(
                       greeting!,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
                     ),
                   ),
                   const SizedBox(height: 6),
