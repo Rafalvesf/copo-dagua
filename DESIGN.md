@@ -575,6 +575,14 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   (hora e mensagem), Tudo certo? → «Pedir orçamento» → «Orçamento pedido».
   Na proposta: «Recusar» (pergunta o motivo, que segue para o parceiro na
   conversa) ou «Aceitar» → extras → pagar o sinal.
+- **Marcação no mesmo dia/hora** (pedido do Rafael, 2026-11-24, mockup
+  «Já tens uma marcação nesse dia/hora»; `day_clash_sheet.dart`): antes de
+  o parceiro aceitar um pedido ou enviar a proposta, se já tem uma reserva
+  aceite ou confirmada nesse dia, abre o popup — vermelho «… a essa hora»
+  (as duas horas a menos de 3 h) ou amarelo «… nesse dia», «ESTE PEDIDO»,
+  «JÁ MARCADO NESSE DIA · N» e **«Propor outro dia»** (contorno, abre o
+  popup «Propor outro dia» com os dias livres) + **«É possível,
+  aceitar»** (preto).
 - **Cancelar uma reserva** (pedido do Rafael, 2026-11-24, mockups
   «Cancelar reserva · organizador / parceiro»; `cancel_booking_sheet.dart`,
   migração 234): popup com o aviso do §7, «AS CONTAS», «PORQUÊ» e
