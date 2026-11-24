@@ -609,6 +609,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Quem lê o QR de alguém: organizador com bilhetes de um evento pago onde a pessoa vai → verificar a entrada; parceiro com marcação → «Quem é» (chegada, cobrar); qualquer outra pessoa → abre o perfil dessa conta, sem bilhetes nem marcações. Nos dois primeiros casos há «Ver perfil». Os eventos gratuitos deixam de aparecer como entrada. Corre depois da 228 e da 229.",
     check: { kind: "marker", id: "232" },
   },
+  {
+    file: "233_editar_pedidos_alteracoes.sql",
+    date: "2026-11-24",
+    title: "Editar pedidos e propostas, alterações e outro dia",
+    what: "O organizador pode editar ou cancelar um pedido de orçamento/reserva (cancelar liberta o sinal cativo todo, na hora seguinte); o parceiro pode editar ou retirar uma proposta enquanto ninguém respondeu; os dois podem pedir uma alteração (pessoas, hora, o que inclui) e o parceiro propor outro dia — com cartão na conversa e notificação. Aceite, muda as pessoas ou o dia da reserva; o sinal mantém-se e a diferença de preço vem numa proposta nova. Corre depois da 232.",
+    check: { kind: "marker", id: "233" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
