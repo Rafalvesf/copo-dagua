@@ -560,10 +560,25 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     final pct = (widget.fee(ref, watch: true) ?? const FeeConfig())
         .effectivePct(message.proposalPrice ?? 0);
     double withFee(double v) => amountWithCommission(v, pct);
+    // Estado e cor (prancheta «Cartões nas mensagens», 2026-11-24).
+    final (String status, ChatCardTone tone) = _unavailable && !_accepted
+        ? ('Recusada ou expirada', ChatCardTone.neutral)
+        : !_accepted
+            ? ('Por responder', ChatCardTone.pending)
+            : switch (_bookingState) {
+                'deposit_paid' => ('Aceite e sinal pago', ChatCardTone.doneLine),
+                'final_due' => ('Falta pagar o resto', ChatCardTone.pending),
+                'paid' => ('Tudo pago', ChatCardTone.doneLine),
+                'completed' => ('Concluído', ChatCardTone.done),
+                'cancelled' => ('Reserva cancelada', ChatCardTone.neutral),
+                _ => ('Aceite · falta o sinal', ChatCardTone.pending),
+              };
     return ChatProposalCard(
       imageUrl: widget.imageUrl,
-      title: heading ?? message.proposalTitle ?? 'Proposta',
-      subtitle: heading == null ? null : message.proposalTitle,
+      status: status,
+      tone: tone,
+      title: (message.proposalTitle ?? '').trim().isEmpty ? 'Proposta' : message.proposalTitle!.trim(),
+      subtitle: heading == null ? null : 'Para o $heading',
       // O cliente vê logo o que vai pagar: valor do parceiro + comissão
       // (mesma conta do checkout). Pedido 2026-10-17.
       price: message.proposalPrice == null
