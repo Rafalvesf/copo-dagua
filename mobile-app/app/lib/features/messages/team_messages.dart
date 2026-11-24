@@ -11,6 +11,7 @@ import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/gradient_scaffold.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Mensagens da Equipa À Nossa! (migração 146): banners de novidade e a
 /// conversa "Equipa À Nossa!" com as mensagens diretas.
@@ -326,7 +327,7 @@ class _TeamThreadScreenState extends ConsumerState<TeamThreadScreen> {
             const PageHeader(title: 'Equipa À Nossa!', centered: true),
             Expanded(
               child: async.isLoading && items.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const SkeletonChat()
                   : items.isEmpty
                       ? const Center(
                           child: Padding(

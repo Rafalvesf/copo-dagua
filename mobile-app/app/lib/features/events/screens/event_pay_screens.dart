@@ -17,6 +17,7 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../payments/screens/pay_screen.dart' show PayScreen;
 import 'ticket_pass_screens.dart' show brandQr;
+import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 String _hhmm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
@@ -125,13 +126,18 @@ class _ScanScreenState extends State<ScanScreen> {
     final name = r.name ?? 'Convidado';
     return [
       Center(
-        child: CircleAvatar(
-          radius: 44,
-          backgroundColor: AppTheme.ink,
-          foregroundImage: r.avatarUrl != null && r.avatarUrl!.isNotEmpty ? NetworkImage(r.avatarUrl!) : null,
-          child: Text(name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: Colors.white)),
-        ),
+        // Foto: círculo do esqueleto enquanto carrega (2026-11-24); a
+        // inicial em fundo escuro só sem foto ou se a foto falhar.
+        child: Builder(builder: (context) {
+          final letter = CircleAvatar(
+            radius: 44,
+            backgroundColor: AppTheme.ink,
+            child: Text(name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: Colors.white)),
+          );
+          final url = r.avatarUrl;
+          return url != null && url.isNotEmpty ? NetworkAvatar(url, size: 88, fallback: letter) : letter;
+        }),
       ),
       const SizedBox(height: 12),
       Text(name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),

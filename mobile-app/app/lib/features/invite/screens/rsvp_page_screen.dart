@@ -13,6 +13,7 @@ import '../../../shared/widgets/install_app_sheet.dart';
 import '../../../core/models/models.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../guest_home/screens/guest_onboarding_wizard_screen.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Página pública de RSVP — acessível sem sessão nenhuma, para um
 /// convidado específico abrir o link partilhado pelos noivos
@@ -161,7 +162,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
           future: _dataFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
+              return const SkeletonProfilePage();
             }
             final data = snapshot.data;
             if (data == null) {

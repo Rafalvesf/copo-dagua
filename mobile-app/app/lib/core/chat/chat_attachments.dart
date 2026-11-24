@@ -260,7 +260,7 @@ class _GifPickerState extends State<_GifPicker> {
             child: _error != null
                 ? Center(child: Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.inkMuted)))
                 : _loading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const SkeletonGrid(count: 12)
                     : GridView.builder(
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 6, crossAxisSpacing: 6),
                         itemCount: _gifs.length,

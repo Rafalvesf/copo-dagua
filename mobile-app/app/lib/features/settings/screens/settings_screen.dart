@@ -44,6 +44,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/first_run_tour.dart' show FirstRunTour, TourRole;
 import '../../../core/supabase/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -333,7 +334,7 @@ class _CoupleSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final event = ref.watch(eventControllerProvider).event;
     if (event == null) {
-      return const Scaffold(backgroundColor: _pageBackground, body: Center(child: CircularProgressIndicator()));
+      return const SkeletonPage(carousel: false, rows: 7);
     }
     return _SettingsPage(
       title: 'Definições',

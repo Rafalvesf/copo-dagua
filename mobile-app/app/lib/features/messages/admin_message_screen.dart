@@ -8,6 +8,7 @@ import '../../shared/widgets/gradient_scaffold.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/sized_network_image.dart';
 import '../../shared/widgets/sticker_icon.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Mensagem da equipa À Nossa! (migrações 133/134): abre ao tocar na
 /// notificação. Mostra a mensagem completa e deixa responder — a resposta
@@ -97,7 +98,7 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
           const PageHeader(title: 'Mensagem da À Nossa!', centered: true),
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonChat(count: 2)
                 : m == null
                     ? const Padding(
                         padding: EdgeInsets.all(24),

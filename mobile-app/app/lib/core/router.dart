@@ -106,6 +106,7 @@ import '../features/messages/admin_message_screen.dart' deferred as l61;
 import '../features/legal/legal_texts.dart';
 import '../features/settings/screens/username_screen.dart' deferred as l62;
 import '../features/partner_onboarding/screens/partner_welcome_screen.dart' deferred as l63;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Rotas que vale a pena guardar para depois do login (não o início).
 bool _deepLinkWorthKeeping(String location) =>
@@ -805,7 +806,7 @@ class _LostRoute extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.mounted) GoRouter.of(context).go(to);
     });
-    return const Scaffold(backgroundColor: Colors.white, body: Center(child: CircularProgressIndicator()));
+    return const SkeletonPage();
   }
 }
 

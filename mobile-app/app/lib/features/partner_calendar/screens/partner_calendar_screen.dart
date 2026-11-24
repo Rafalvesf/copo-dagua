@@ -16,6 +16,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/staggered_fade_in.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 class PartnerCalendarScreen extends ConsumerStatefulWidget {
   const PartnerCalendarScreen({super.key});
@@ -60,7 +61,7 @@ class _PartnerCalendarScreenState
             KitSection(_dayTitle(_selected)),
             KitGroup([
               if (bookingsAsync.isLoading && bookings.isEmpty)
-                const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator()))
+                const SkeletonList(count: 3, padding: EdgeInsets.all(16))
               else if (dayBookings.isEmpty)
                 const KitRow(title: 'Sem compromissos neste dia', sub: 'Os dias com reservas aparecem marcados no mês.')
               else

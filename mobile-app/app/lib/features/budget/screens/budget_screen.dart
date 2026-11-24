@@ -179,7 +179,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     return GradientScaffold(
       background: AppBackground.feed,
       body: budget == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonPage(carousel: false, stats: true, rows: 6)
           : KitPage(
               pinnedBack: true,
               rotateBack: false,

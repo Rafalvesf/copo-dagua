@@ -25,6 +25,7 @@ import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Criar evento (mockup "Onboarding", 2026-11-12): uma ou duas perguntas
 /// por ecrã, sem repetir o que já sabemos (nome e telemóvel da conta,
@@ -460,7 +461,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
   Widget build(BuildContext context) {
     final profile = ref.watch(authControllerProvider).profile;
     if (profile == null) {
-      return const Scaffold(backgroundColor: AppTheme.background, body: Center(child: CircularProgressIndicator()));
+      return const SkeletonPage(carousel: false);
     }
     if (profile.role == UserRole.partner) return PartnerWelcomeScreen(initialStep: widget.initialStep);
 

@@ -25,6 +25,7 @@ import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 enum _PlanView { plan, list }
 
@@ -146,7 +147,7 @@ class _SeatingScreenState extends ConsumerState<SeatingScreen> {
     return GradientScaffold(
       background: AppBackground.feed,
       body: loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonGrid(count: 8, columns: 2)
           : Stack(
               children: [
                 SafeArea(top: false, 

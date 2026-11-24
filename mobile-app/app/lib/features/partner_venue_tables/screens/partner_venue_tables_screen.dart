@@ -13,6 +13,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Inventário de mesas do local — só um parceiro de categoria "venue"
 /// consegue chegar aqui (gate em `partner_profile_screen.dart`, RLS
@@ -56,7 +57,7 @@ class PartnerVenueTablesScreen extends ConsumerWidget {
           KitHeader(actions: [KitAddButton(tooltip: 'Novo tipo de mesa', onTap: () => _add(context, ref))]),
           const KitTitle('Mesas do local', subtitle: 'Tipos de mesa disponíveis para os clientes.'),
           if (state.loading)
-            const Padding(padding: EdgeInsets.only(top: 60), child: Center(child: CircularProgressIndicator()))
+            const SkeletonGrid(count: 6, columns: 2)
           else if (state.tableTypes.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: 40),

@@ -32,6 +32,7 @@ import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet
 import '../../guest_home/screens/guest_event_details_screen.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// "Para os convidados" — tudo o que os convidados veem, num só sítio:
 /// código, quem pode entrar, boas-vindas, programa (linha do tempo),
@@ -49,7 +50,7 @@ class GuestPageRoute extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final event = ref.watch(eventControllerProvider).event;
     if (event == null) {
-      return const Scaffold(backgroundColor: AppTheme.background, body: Center(child: CircularProgressIndicator()));
+      return const SkeletonPage(carousel: false);
     }
     return GuestFacingScreen(key: ValueKey(event.id), event: event);
   }
@@ -370,7 +371,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                         KitHeader(),
                         KitTitle('Para os convidados', subtitle: 'O que os convidados veem e como entram.'),
-                        Expanded(child: Center(child: CircularProgressIndicator())),
+                        Expanded(child: SkeletonList(count: 4)),
                       ]),
                     )
                   : ScrollBackView(builder: (context, scroll) => ListView(

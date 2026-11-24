@@ -312,11 +312,7 @@ class ConversationListItem extends StatelessWidget {
           children: [
             avatarUrl == null
                 ? InitialsAvatar(name: conversation.name, radius: 24, background: tint)
-                : CircleAvatar(
-                    radius: 24,
-                    backgroundColor: tint,
-                    backgroundImage: sizedNetworkImage(avatarUrl, 48, context),
-                  ),
+                : NetworkAvatar(avatarUrl, size: 48, fallback: InitialsAvatar(name: conversation.name, radius: 24, background: tint)),
             const SizedBox(width: 14),
             Expanded(
               child: Container(

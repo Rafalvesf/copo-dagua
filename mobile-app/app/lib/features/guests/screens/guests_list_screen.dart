@@ -27,6 +27,7 @@ import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 class GuestsListScreen extends ConsumerStatefulWidget {
   const GuestsListScreen({super.key});
@@ -139,7 +140,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
     return GradientScaffold(
       background: AppBackground.feed,
       body: state.loading && state.guests.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonPage(carousel: false, rows: 8)
           : KitPage(
               pinnedBack: true,
               rotateBack: false,

@@ -28,6 +28,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/onboarding_exit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Primeiro ecrã visto por uma conta de parceiro recém-registada.
 ///
@@ -641,7 +642,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
           question: 'O que oferecem?',
           subtitle: 'Até 5 categorias.',
           child: _categoryOptions.isEmpty
-              ? const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+              ? const SkeletonGrid(count: 6)
               : GridView(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
