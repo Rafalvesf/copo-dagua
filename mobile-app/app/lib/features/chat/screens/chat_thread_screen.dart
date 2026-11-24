@@ -29,6 +29,7 @@ import '../../partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import '../../payments/booking_extras_sheet.dart';
 import '../../bookings/widgets/reject_proposal.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -207,7 +208,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             child: ColoredBox(
             color: const Color(0xFFF2F2F2),
             child: chat.loading && chat.messages.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonChat()
                 // Invertida para abrir SEMPRE nas mensagens mais recentes
                 // (antes saltava para o fim com animação e, com cartões
                 // a crescer depois de desenhados, ficava a meio —

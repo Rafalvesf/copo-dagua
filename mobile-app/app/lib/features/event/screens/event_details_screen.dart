@@ -3192,7 +3192,7 @@ class _RemindSheetState extends State<_RemindSheet> {
         ),
         const SizedBox(height: 14),
         if (_summary == null && !_failed)
-          const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+          const Padding(padding: EdgeInsets.all(24), child: SkeletonStats())
         else ...[
           if (!_failed)
             block(

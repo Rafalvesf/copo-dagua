@@ -11,6 +11,7 @@ import '../../../core/models/models.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Fio de conversa com um cliente específico das Mensagens — versão
 /// parametrizada de `PartnerChatScreen` (que fica hardcoded a uma única
@@ -130,7 +131,7 @@ class _PartnerChatThreadScreenState
           ),
           Expanded(
             child: chat.loading && chat.messages.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonChat()
                 : ListView(
                     controller: _scrollController,
                     // Abre sempre nas mensagens mais recentes (2026-10-18).

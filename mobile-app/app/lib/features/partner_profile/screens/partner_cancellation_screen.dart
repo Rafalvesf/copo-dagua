@@ -8,6 +8,7 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/page_header.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// "Regras de cancelamento" do parceiro (migração 173). Começa na regra
 /// da categoria e o parceiro pode trocá-la quando quiser.
@@ -101,7 +102,7 @@ class _PartnerCancellationScreenState extends ConsumerState<PartnerCancellationS
           children: [
             const PageHeader(title: 'Regras de cancelamento', centered: true),
             if (!_loaded)
-              const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
+              const SkeletonList(count: 3)
             else
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),

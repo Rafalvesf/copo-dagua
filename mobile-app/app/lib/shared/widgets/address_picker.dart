@@ -10,6 +10,7 @@ import '../../core/theme/app_theme.dart';
 import 'island_sheet.dart';
 import 'snappy_tap.dart';
 import 'venue_map.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Seletor de moradas com o Google (pedido do Rafael, 2026-11-20; mockups
 /// «Morada · pesquisa» e «Morada · confirmar»), para **todos** os campos de
@@ -392,7 +393,7 @@ class _AddressPickerState extends State<_AddressPicker> {
             ),
           Expanded(
             child: _loading && _results.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonList(count: 4, padding: EdgeInsets.zero)
                 : ListView.builder(
                     itemCount: _results.length,
                     itemBuilder: (context, i) {

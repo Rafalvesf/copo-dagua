@@ -33,6 +33,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/push_opt_in.dart';
 import '../../../shared/widgets/first_run_tour.dart' show TourAnchor;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Perfil — conta de quem está com sessão iniciada. Pedido explícito do
 /// utilizador (redesign 2026-10): "o perfil fica apenas de quem criou a
@@ -114,7 +115,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     return GradientScaffold(
       background: AppBackground.cream,
       body: profile == null || (organizer && event == null)
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonPage()
           : Stack(
               children: [
                 SafeArea(top: false, 

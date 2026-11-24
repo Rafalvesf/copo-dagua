@@ -26,6 +26,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 enum _TasksTab { todo, done }
 
@@ -114,10 +115,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             const _PartnerSuggestions(),
             const KitSection('Próximas tarefas'),
             if (state.loading && state.systemActive.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Center(child: CircularProgressIndicator()),
-              )
+              const SkeletonList(count: 3, padding: EdgeInsets.symmetric(vertical: 12))
             else if (state.systemActive.isEmpty)
               const KitGroup([KitRow(title: 'Sem tarefas recomendadas por agora', sub: 'Bom trabalho!')])
             else

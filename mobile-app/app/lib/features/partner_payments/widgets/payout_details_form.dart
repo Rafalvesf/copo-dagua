@@ -9,6 +9,7 @@ import '../../../shared/widgets/line_icon.dart';
 import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Dados para receber pagamentos, pedidos com o UI da própria app
 /// (2026-10-25: "nada de links nem caixas com o site da Stripe"). Os dados
@@ -330,7 +331,7 @@ class _PayoutDetailsFormState extends State<PayoutDetailsForm> {
     if (_loading) {
       return const Scaffold(
         backgroundColor: AppTheme.background,
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF4F6B4A))),
+        body: SkeletonPage(carousel: false),
       );
     }
     final steps = _steps;

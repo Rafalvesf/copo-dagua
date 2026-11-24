@@ -19,6 +19,7 @@ import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:share_plus/share_plus.dart';
 import '../../../shared/public_link.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Perfil de outra pessoa (mockup "Perfil de um amigo", 2026-11-12):
 /// Seguir / Mensagem, quem a segue em comum, os próximos eventos
@@ -118,7 +119,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       // Fundo creme liso (mockup).
       gradientOverride: const LinearGradient(colors: [Color(0xFFF2F2F2), Color(0xFFF2F2F2)]),
       body: async.isLoading && p == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonProfilePage()
           : p == null
               ? const Center(child: Text('Perfil indisponível.'))
               : Stack(children: [

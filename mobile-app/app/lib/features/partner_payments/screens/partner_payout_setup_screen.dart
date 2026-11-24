@@ -7,6 +7,7 @@ import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/onb_kit.dart';
 import '../widgets/payout_details_form.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// "Confirma os teus dados" (pedido 2026-10-19): antes de receber e
 /// levantar, a página mostra tudo o que é preciso, com o estado de cada
@@ -73,7 +74,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
     if (async.isLoading && !async.hasValue) {
       return const Scaffold(
         backgroundColor: AppTheme.background,
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF4F6B4A))),
+        body: SkeletonPage(carousel: false),
       );
     }
     final submitted = s.hasAccount && s.detailsSubmitted && !s.needsData;

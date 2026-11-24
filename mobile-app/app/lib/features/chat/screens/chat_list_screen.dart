@@ -27,6 +27,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/search_pill.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/mascot.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   const ChatListScreen({super.key});
@@ -435,7 +436,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 const TeamThreadEntry(),
               ],
               body: state.loading && allConvs.isEmpty && allGroups.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const SkeletonList(count: 8)
                   : empty
                       ? IllustratedEmptyState(
                           mascot: MascotPose.chat,

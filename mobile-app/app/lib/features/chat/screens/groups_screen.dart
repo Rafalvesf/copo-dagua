@@ -464,7 +464,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
           child: ColoredBox(
           color: const Color(0xFFF2F2F2),
           child: thread.loading && thread.messages.isEmpty
-              ? const Center(child: CircularProgressIndicator())
+              ? const SkeletonChat()
               : ChatEventIsland(
                   title: eventTitle ?? 'Grupo do evento',
                   subtitle: eventTitle == null ? null : 'Grupo do evento',

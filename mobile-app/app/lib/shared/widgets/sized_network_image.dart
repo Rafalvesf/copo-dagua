@@ -25,6 +25,34 @@ ImageProvider sizedNetworkImage(String url, double logicalSize, BuildContext con
   return ResizeImage(NetworkImage(url), width: s, height: s, policy: ResizeImagePolicy.fit);
 }
 
+/// Foto redonda da internet (avatares). Enquanto carrega mostra o círculo
+/// cinzento do esqueleto, depois a foto com fade; se falhar, [fallback]
+/// (normalmente as iniciais). 2026-11-24: antes a foto era o fundo de um
+/// círculo de cor forte (castanho, verde…) e, enquanto não chegava, via-se
+/// só esse círculo colorido.
+class NetworkAvatar extends StatelessWidget {
+  const NetworkAvatar(this.url, {super.key, required this.size, required this.fallback});
+
+  final String url;
+  final double size;
+  final Widget fallback;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: size,
+        height: size,
+        child: ClipOval(
+          child: SizedNetworkImage(
+            url,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stack) => fallback,
+          ),
+        ),
+      );
+}
+
 /// Substituto de `Image.network` que mede a caixa onde está e descodifica
 /// a foto só nesse tamanho.
 class SizedNetworkImage extends StatelessWidget {

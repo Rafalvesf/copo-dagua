@@ -1,7 +1,38 @@
 import 'package:copo_dagua_app/core/theme/app_theme.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/v2_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// 2026-11-24 («mostram ícone castanho ao fazer load»): um avatar com foto
+/// mostra o círculo cinzento do esqueleto enquanto a foto não chega, e não
+/// o círculo de cor (castanho, verde…).
+void avatarTests() {
+  testWidgets('avatar com foto: esqueleto cinzento enquanto carrega', (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Center(child: V2Avatar('Quinta do Vale', size: 44, imageUrl: 'https://example.invalid/a.jpg')),
+    ));
+    expect(find.byType(SkeletonBox), findsOneWidget);
+    // Nenhum círculo com a cor do nome (a cor só aparece se a foto falhar).
+    final tint = V2Avatar.tintFor('Quinta do Vale');
+    final tinted = tester.widgetList<Container>(find.byType(Container)).where(
+          (c) => c.decoration is BoxDecoration && (c.decoration! as BoxDecoration).color == tint,
+        );
+    expect(tinted, isEmpty);
+  });
+
+  testWidgets('avatar sem foto: iniciais na cor do nome', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Center(child: V2Avatar('Quinta do Vale', size: 44))));
+    expect(find.text('QV'), findsOneWidget);
+    expect(find.byType(SkeletonBox), findsNothing);
+  });
+
+  testWidgets('conversa a carregar mostra balões dos dois lados', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: SkeletonChat())));
+    expect(find.byType(SkeletonBox), findsWidgets);
+    expect(find.byType(SkeletonCircle), findsNWidgets(3));
+  });
+}
 
 Color _boxColor(WidgetTester tester) {
   final box = tester.widget<Container>(
@@ -11,6 +42,8 @@ Color _boxColor(WidgetTester tester) {
 }
 
 void main() {
+  avatarTests();
+
   // 2026-11-24: o esqueleto tinha a cor do fundo (#F2F2F2) e não se via.
   testWidgets('o esqueleto destaca-se do fundo e pulsa', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SkeletonPage()));

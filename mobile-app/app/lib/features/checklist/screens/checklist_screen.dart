@@ -21,6 +21,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 enum _StatusFilter { all, todo, inProgress, done }
 
@@ -106,7 +107,7 @@ class _ChecklistScreenState extends ConsumerState<ChecklistScreen> {
     return GradientScaffold(
       background: AppBackground.feed,
       body: state.loading && state.items.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonPage(carousel: false, rows: 7)
           : KitPage(
               pinnedBack: true,
               children: [
