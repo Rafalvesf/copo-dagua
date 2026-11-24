@@ -63,6 +63,7 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
     // «Guardar e outro» volta a abrir o popup vazio (prancheta, 2026-11-24).
     var added = 0;
     while (mounted) {
+      if (!mounted) return;
       final evName = ref.read(eventControllerProvider).event?.displayNames;
       final result = await showGuestFormSheet(
         context,
