@@ -291,8 +291,22 @@ ecrãs. O resto da app mantém a tabela acima.
   (`LineIcon`) — menos dentro dos botões redondos, que levam sempre o ícone
   branco sólido (§2). Sem emojis (exceção: o "Parabéns! 🎉" do criar evento).
 - **Conversa:** bolha minha preta / dele branca, cantos 18 com o canto do lado
-  a 6; dia numa pílula `#E6E6E6`; "hh:mm · Visto"; ilha do evento flutuante
-  com cantos da navbar, esconde-se no scroll.
+  a 6; dia numa pílula `#E6E6E6`; por baixo das minhas mensagens «hh:mm» e
+  o ícone do estado (pedido 2026-11-24): **um visto cinzento** = enviada,
+  **dois vistos verdes** `#4F6B4A` = vista (nos grupos, «Visto por N» em
+  texto); ilha do evento flutuante com cantos da navbar, esconde-se no
+  scroll. **Descida rápida** (pedido 2026-11-24, `JumpToLatest`,
+  `shared/widgets/chat_ui.dart`): ao subir na conversa, aparece no canto
+  inferior direito o botão redondo preto 44 com a seta para baixo, com o
+  contador (§2) das mensagens que chegaram entretanto; leva à mais recente
+  e desaparece lá em baixo. Em todas as conversas (parceiros, convidados e
+  grupos).
+- **Teclado — regra** (pedido 2026-11-24): tudo o que tem uma caixa de
+  escrever em baixo — a caixa da conversa, as barras fixas com campos e os
+  popups (§6.1) — **sobe por cima do teclado**, para se ver sempre o que se
+  escreve. Nunca `resizeToAvoidBottomInset: false` num ecrã com campos em
+  baixo; na web, o `#app-host` encolhe até ao topo do teclado
+  (`web/index.html`).
 - **Onboarding** (`shared/widgets/onb_kit.dart`, mockup "Onboarding"
   2026-11-12): barra de progresso (§6) de **10** com a percentagem (12
   negrito) à direita — começa sempre em 20%; botão de voltar redondo

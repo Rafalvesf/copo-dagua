@@ -132,7 +132,10 @@ class _PartnerChatThreadScreenState
           Expanded(
             child: chat.loading && chat.messages.isEmpty
                 ? const SkeletonChat()
-                : ListView(
+                : JumpToLatest(
+                    controller: _scrollController,
+                    messageCount: chat.messages.length,
+                    child: ListView(
                     controller: _scrollController,
                     // Abre sempre nas mensagens mais recentes (2026-10-18).
                     reverse: true,
@@ -163,6 +166,7 @@ class _PartnerChatThreadScreenState
                               child: ChatBubble(text: message.text ?? '', isMe: isMe),
                             ),
                     ).reversed.toList(),
+                  ),
                   ),
           ),
           ColoredBox(

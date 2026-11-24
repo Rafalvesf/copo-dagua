@@ -218,6 +218,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                     subtitle: hasProposal ? 'Proposta recebida' : (partner?.categoryLabels.firstOrNull),
                     action: widget.conversation.partnerId == null ? null : 'Ver perfil',
                     onAction: widget.conversation.partnerId == null ? null : _openPartnerProfile,
+                    child: JumpToLatest(
+                    controller: _scrollController,
+                    messageCount: chat.messages.length,
                     child: ListView(
                     controller: _scrollController,
                     reverse: true,
@@ -250,6 +253,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               child: ChatBubble(text: message.text ?? '', isMe: isMe),
                             ),
                     ).reversed.toList(),
+                  ),
                   ),
                   ),
             ),

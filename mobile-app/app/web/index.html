@@ -192,7 +192,7 @@
       } catch (e) {}
     })();
   </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="À Nossa! — o teu evento, num só lugar.">
 
@@ -823,7 +823,8 @@
       if (!vv) return;
       function typing() {
         var a = document.activeElement;
-        return !!a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && a.style.pointerEvents !== 'none';
+        // Os campos auxiliares do Safari (⌃ ⌄) não contam: têm data-kbnav.
+        return !!a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !a.hasAttribute('data-kbnav');
       }
       function fit() {
         var host = document.getElementById('app-host');
@@ -851,6 +852,7 @@
         var i = document.createElement('input');
         i.type = 'text';
         i.setAttribute('aria-hidden', 'true');
+        i.setAttribute('data-kbnav', '1');
         i.setAttribute('autocomplete', 'off');
         i.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;font-size:16px;border:0;padding:0;margin:0;pointer-events:none;';
         i.addEventListener('focus', function () {

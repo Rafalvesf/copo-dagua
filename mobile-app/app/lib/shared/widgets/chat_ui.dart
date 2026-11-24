@@ -84,18 +84,29 @@ List<Widget> chatTimeline({
       ),
     );
     if (lastOfGroup) {
-      final seen = me && seenLabel != null
-          ? seenLabel(m)
-          : (me && seenUntil != null && !seenUntil.isBefore(m.sentAt) ? 'Visto' : '');
+      // Grupos: «Visto por 4» em texto. Conversas a dois: o ícone (pedido
+      // 2026-11-24) — um visto cinzento «enviada», dois verdes «vista».
+      final groupSeen = me && seenLabel != null ? seenLabel(m) : '';
+      final seenByOther = me && seenLabel == null && seenUntil != null && !seenUntil.isBefore(m.sentAt);
+      const meta = TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted);
       out.add(
         Padding(
           padding: const EdgeInsets.only(top: 4, bottom: 12),
           child: Align(
             alignment: me ? Alignment.centerRight : Alignment.centerLeft,
-            child: Text(
-              seen.isEmpty ? _hhmm(local) : '${_hhmm(local)} · $seen',
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
-            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(groupSeen.isEmpty ? _hhmm(local) : '${_hhmm(local)} · $groupSeen', style: meta),
+              if (me && seenLabel == null) ...[
+                const SizedBox(width: 4),
+                Semantics(
+                  label: seenByOther ? 'Vista' : 'Enviada',
+                  child: seenByOther
+                      ? const LineIcon('M2 12.5l4.5 4.5L16 7.5M11 15.5l1.5 1.5L22 7.5',
+                          size: 16, color: AppTheme.brandGreen, stroke: 2.4)
+                      : const LineIcon('M5 12.5l4.5 4.5L19 7.5', size: 14, color: AppTheme.inkMuted, stroke: 2.4),
+                ),
+              ],
+            ]),
           ),
         ),
       );
@@ -433,4 +444,113 @@ class ChatTypingLine extends StatelessWidget {
                 ),
               ),
       );
+}
+
+/// Descida rápida (pedido 2026-11-24, prancheta «Conversa · descida
+/// rápida»): botão redondo preto 44 no canto inferior direito da conversa,
+/// com a seta para baixo. Aparece quando se sobe na conversa e leva até à
+/// mensagem mais recente; o contador diz quantas chegaram entretanto.
+/// Para listas invertidas (`reverse: true`): a mais recente está no 0.
+class JumpToLatest extends StatefulWidget {
+  final ScrollController controller;
+  final int messageCount;
+  final Widget child;
+  const JumpToLatest({super.key, required this.controller, required this.messageCount, required this.child});
+
+  @override
+  State<JumpToLatest> createState() => _JumpToLatestState();
+}
+
+class _JumpToLatestState extends State<JumpToLatest> {
+  bool _away = false;
+  int _seenCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _seenCount = widget.messageCount;
+    widget.controller.addListener(_onScroll);
+  }
+
+  @override
+  void didUpdateWidget(JumpToLatest old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller.removeListener(_onScroll);
+      widget.controller.addListener(_onScroll);
+    }
+    if (!_away) _seenCount = widget.messageCount;
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onScroll);
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!widget.controller.hasClients) return;
+    final away = widget.controller.offset > 300;
+    if (away != _away) {
+      setState(() {
+        _away = away;
+        if (!away) _seenCount = widget.messageCount;
+      });
+    }
+  }
+
+  void _jump() {
+    if (!widget.controller.hasClients) return;
+    if (MediaQuery.of(context).disableAnimations) {
+      widget.controller.jumpTo(0);
+    } else {
+      widget.controller.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fresh = (widget.messageCount - _seenCount).clamp(0, 99);
+    return Stack(children: [
+      Positioned.fill(child: widget.child),
+      if (_away)
+        Positioned(
+          right: AppTheme.screenMargin,
+          bottom: 16,
+          child: Semantics(
+            button: true,
+            label: fresh > 0 ? 'Descer até às $fresh mensagens novas' : 'Descer até à última mensagem',
+            child: SnappyTap(
+              onTap: _jump,
+              child: Stack(clipBehavior: Clip.none, children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle, boxShadow: AppTheme.navBarShadow),
+                  alignment: Alignment.center,
+                  child: const Icon(Hi.arrowDown, size: 20, color: Colors.white),
+                ),
+                if (fresh > 0)
+                  Positioned(
+                    top: -6,
+                    right: -6,
+                    child: Container(
+                      constraints: const BoxConstraints(minWidth: 20),
+                      height: 20,
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.ink, width: 2),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text('$fresh', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ),
+                  ),
+              ]),
+            ),
+          ),
+        ),
+    ]);
+  }
 }
