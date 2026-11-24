@@ -268,7 +268,7 @@ class _EntryPage extends StatelessWidget {
                 child: V2RoundButton(icon: Hi.arrowLeft, tooltip: 'Voltar', onTap: () => Navigator.of(context).maybePop()),
               ),
               const SizedBox(height: 12),
-              const Text('Entrada', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Entrada', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               const SizedBox(height: 14),
               Wrap(spacing: 8, runSpacing: 8, children: pills),
               const SizedBox(height: 14),

@@ -246,7 +246,7 @@ class ChatProposalCard extends StatelessWidget {
                 Text(title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 const SizedBox(height: 10),
                 Wrap(spacing: 6, runSpacing: 6, children: [
                   if (subtitle != null && subtitle!.isNotEmpty) _chip(subtitle!),

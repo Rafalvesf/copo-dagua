@@ -353,7 +353,7 @@ class KitTitle extends StatelessWidget {
   Widget _build() => Padding(
         padding: EdgeInsets.only(top: top),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1.15)),
+          Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink, height: 1.15)),
           if (subtitle != null) ...[
             const SizedBox(height: 6),
             Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted, height: 1.4)),
@@ -444,7 +444,7 @@ class KitSummary extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(value,
                     maxLines: 1,
-                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1)),
+                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w400, color: AppTheme.ink, height: 1)),
               ),
             ),
             if (unit != null) ...[
@@ -505,7 +505,7 @@ class KitSection extends StatelessWidget {
           const SizedBox(height: 16),
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           Expanded(
-            child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           ),
           if (action != null)
             SnappyTap(

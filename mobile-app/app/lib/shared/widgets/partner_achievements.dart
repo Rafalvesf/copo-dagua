@@ -160,7 +160,7 @@ Future<void> showAchievementsSheet(BuildContext context, String partnerName, Lis
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Conquistas', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  const Text('Conquistas', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                   const SizedBox(height: 2),
                   Text(partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ]),

@@ -135,7 +135,7 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
           ],
           Expanded(
             child: Text(_step2 ? 'Faz a transferência' : 'Envelope digital',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           ),
         ]),
         const SizedBox(height: 4),

@@ -34,7 +34,7 @@ class StepSheetHead extends StatelessWidget {
         ],
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
             if (subtitle?.isNotEmpty == true) ...[
               const SizedBox(height: 4),
               Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),

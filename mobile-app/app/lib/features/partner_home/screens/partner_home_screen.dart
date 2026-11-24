@@ -154,7 +154,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                 const TeamBannerCard(padding: EdgeInsets.only(bottom: 16)),
                 Text(
                   firstName.isEmpty ? 'Olá!' : 'Olá, $firstName!',
-                  style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                  style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w400, color: AppTheme.ink),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -567,7 +567,7 @@ class _ProHero extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(s == null ? '—' : euros(s.revenue),
-              style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
+              style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: Colors.white)),
           const SizedBox(height: 8),
           Text(
             s == null
@@ -645,7 +645,7 @@ class _ProStatsRow extends StatelessWidget {
               children: [
                 Text(label, style: const TextStyle(fontSize: 11, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                 const SizedBox(height: 4),
-                Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 if (sub != null) Text(sub, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
               ],
             ),

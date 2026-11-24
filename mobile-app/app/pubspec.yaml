@@ -110,6 +110,9 @@ flutter:
     # grátis para uso pessoal e comercial (assets/fonts/louis_george_cafe/
     # LICENSE.txt). Subset Latin + Latin-1 + Latin Ext-A. A Roboto fica como
     # fallback. Bold completado com — … • – “ ” › da Regular e − (2026-11-08).
+    # Regular, Light e itálicas trocadas pelos ficheiros completos da fonte
+    # (2026-11-24: + ligaduras fi/fl e símbolos ≤ ≥ √ ∞ …); o Bold fica o
+    # completado acima. Títulos (18 px ou mais) usam a Regular (DESIGN.md).
     - family: LouisGeorgeCafe
       fonts:
         - asset: assets/fonts/louis_george_cafe/LouisGeorgeCafe-Light.ttf

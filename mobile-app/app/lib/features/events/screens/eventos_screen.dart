@@ -554,7 +554,7 @@ class _Title extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 18, AppTheme.screenMargin, 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           if (subtitle != null)
             Padding(
               padding: const EdgeInsets.only(top: 2),
@@ -597,7 +597,7 @@ class _CelebrateCard extends StatelessWidget {
                   style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w800, color: Color(0xFFDDE5D3))),
               SizedBox(height: 4),
               Text('O que vamos celebrar?',
-                  style: TextStyle(fontSize: 26, height: 1.15, fontWeight: FontWeight.w800, color: Colors.white)),
+                  style: TextStyle(fontSize: 26, height: 1.15, fontWeight: FontWeight.w400, color: Colors.white)),
               SizedBox(height: 4),
               Text('Escolhe e fica pronto em 1 minuto.',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),

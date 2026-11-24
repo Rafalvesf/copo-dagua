@@ -83,7 +83,7 @@ class LockedFeatureCard extends StatelessWidget {
           const StickerIcon(Hi.lockClosed, size: 48),
           const SizedBox(height: 12),
           const Text('Em breve',
-              style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           const SizedBox(height: 6),
           Text(text,
               textAlign: TextAlign.center,

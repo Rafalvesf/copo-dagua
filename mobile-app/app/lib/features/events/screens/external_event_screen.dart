@@ -164,7 +164,7 @@ class ExternalEventScreen extends ConsumerWidget {
                   InfoTag(e.isFree ? 'Grátis' : 'Pago', green: e.isFree),
                 ]),
                 const SizedBox(height: 12),
-                Text(e.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(e.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 const SizedBox(height: 4),
                 Text(place, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 Text([externalEventWhen(e), ?e.timeLabel].join(' · '),

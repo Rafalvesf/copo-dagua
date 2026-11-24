@@ -68,7 +68,7 @@ class GuestOffersScreen extends ConsumerWidget {
                       if (mine.isNotEmpty) ...[
                         const SizedBox(height: 20),
                         const Text('As tuas reservas',
-                            style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                            style: TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                         const SizedBox(height: 12),
                         for (final r in mine) ...[
                           _MyReservationCard(r, onChanged: refresh),
@@ -82,7 +82,7 @@ class GuestOffersScreen extends ConsumerWidget {
                         for (final kind in GuestOfferKind.values)
                           if (offers.any((o) => o.kind == kind)) ...[
                             Text(kind.label,
-                                style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                             const SizedBox(height: 12),
                             for (final o in offers.where((o) => o.kind == kind)) ...[
                               _OfferCard(offer: o, eventId: eventId, onReserved: refresh),
@@ -257,7 +257,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(o.title,
-                      style: const TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 ),
               ],
             ),
@@ -281,7 +281,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
                 children: [
                   const Expanded(child: Text('Total', style: TextStyle(fontSize: AppFontSize.base, color: AppTheme.inkMuted))),
                   Text(euros(total, cents: true),
-                      style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 ],
               ),
             ),

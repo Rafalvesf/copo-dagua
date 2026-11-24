@@ -76,7 +76,7 @@ class PageHeader extends StatelessWidget {
             title!,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink),
+            style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink),
           );
 
     if (!showBack && !centered) {

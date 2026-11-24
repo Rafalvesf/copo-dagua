@@ -859,7 +859,7 @@ class _MemberSheet extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(m.fullName, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700)),
+                            Text(m.fullName, style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400)),
                             const SizedBox(height: 4),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),

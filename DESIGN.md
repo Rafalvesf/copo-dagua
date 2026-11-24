@@ -75,15 +75,18 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 - Família: **Louis George Café** (só fina 300, normal 400, negrito 700).
   - `w500`/`w600` = normal (mapeado no `pubspec.yaml`); `w700`+ = negrito.
   - Nunca usar a fina (300).
-- **Títulos sempre a negrito (w700); o resto normal (w600).**
+- **Títulos (18 px ou mais) na Regular (w400), como na amostra da fonte;
+  destacam-se pelo tamanho** (pedido 2026-11-24: «troca o bold nos
+  títulos»; antes eram a negrito). O texto pequeno a negrito (nomes,
+  botões, etiquetas, abaixo de 18) continua negrito; o resto normal (w600).
 
 | Elemento | Tamanho | Peso |
 |---|---|---|
-| Título de página ("Eventos", "Perfil", "Mensagens") — à esquerda | 28 | negrito |
-| Título de secção ("Os meus eventos", "Descobrir", "Pacotes") | 22 | negrito |
+| Título de página ("Eventos", "Perfil", "Mensagens") — à esquerda | 28 | normal |
+| Título de secção ("Os meus eventos", "Descobrir", "Pacotes") | 22 | normal |
 | Ação da secção ("Ver todos (3)") | 14 | negrito, verde |
-| Nome no cartão de perfil | 20 | negrito |
-| Título de cartão de evento/parceiro | 19 | negrito |
+| Nome no cartão de perfil | 20 | normal |
+| Título de cartão de evento/parceiro | 19 | normal |
 | Título de linha de lista (nome, conversa, pacote) | 16 | negrito |
 | Corpo / descrição | 14 | normal (justificado nas descrições) |
 | Mensagem (bolha) | 15 | normal |

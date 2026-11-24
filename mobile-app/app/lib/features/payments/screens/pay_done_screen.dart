@@ -123,7 +123,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                       a.headline ?? (deposit ? 'Sinal pago!' : 'Tudo pago!'),
                       style: const TextStyle(
                         fontSize: AppFontSize.displayLg,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w400,
                         color: Colors.white,
                         height: 1.1,
                       ),

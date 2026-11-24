@@ -128,7 +128,7 @@ class DashCover extends StatelessWidget {
               Text(title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: Colors.white)),
+                  style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w400, color: Colors.white)),
               if (meta.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(meta, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Color(0xEBFFFFFF))),
@@ -177,7 +177,7 @@ class DashSummary extends StatelessWidget {
           Text(label.toUpperCase(), style: _caps),
           const SizedBox(height: 4),
           Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-            Text(big, style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text(big, style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
             const SizedBox(width: 8),
             Expanded(child: Text(unit, maxLines: 1, overflow: TextOverflow.ellipsis, style: _meta)),
           ]),
@@ -266,7 +266,7 @@ class _DashNowState extends State<DashNow> {
       padding: const EdgeInsets.all(18),
       decoration: dashHighlight(),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(current.$1.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(current.$1.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         Text(
           [
             next == null ? 'Desde as ${hm(current.$2)}' : '${hm(current.$2)} – ${hm(next.$2)}',
@@ -315,7 +315,7 @@ class DashTable extends StatelessWidget {
                   height: 56,
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(color: Color(0xFFE6E6E6), shape: BoxShape.circle),
-                  child: Text('$table', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  child: Text('$table', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 ),
               ),
               for (final (i, n) in people.indexed)
@@ -508,7 +508,7 @@ class DashDressCode extends StatelessWidget {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             if (style != null) ...[
-              Text(style, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(style, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               const SizedBox(height: 2),
               Text(dressStyleHints[style]!, style: const TextStyle(fontSize: 14, height: 1.35, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ],
@@ -610,7 +610,7 @@ class DashPhotos extends StatelessWidget {
         ],
         if (count > 0) ...[
           Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-            Text('$count', style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            Text('$count', style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
             const SizedBox(width: 8),
             Expanded(child: Text(count == 1 ? 'foto partilhada pelos convidados' : 'fotos partilhadas pelos convidados', style: _meta)),
           ]),

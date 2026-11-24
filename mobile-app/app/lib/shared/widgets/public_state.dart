@@ -65,7 +65,7 @@ class PublicStateView extends StatelessWidget {
                 title,
                 textAlign: TextAlign.center,
                 // Escala de primeiro contacto (DESIGN.md §3): título 32.
-                style: const TextStyle(fontSize: 32, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 32, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink),
               ),
               if (message != null) ...[
                 const SizedBox(height: 10),

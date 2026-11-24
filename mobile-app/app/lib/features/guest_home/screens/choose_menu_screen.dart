@@ -162,7 +162,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
                   style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                 ),
               ),
-              Text(euros(amount), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(euros(amount), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
             ]),
           ),
         FilledButton(

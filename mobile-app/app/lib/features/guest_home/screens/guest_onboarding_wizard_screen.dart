@@ -976,7 +976,7 @@ class _CompanionPageState extends State<_CompanionPage> {
         const SizedBox(height: 28),
         OnbGroupLabel('${widget.step} de ${widget.total}'),
         const SizedBox(height: 8),
-        const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        const Text('Quem é o teu acompanhante?', style: TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         const SizedBox(height: 8),
         const Text('O nome aparece na lista dos anfitriões.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
         const SizedBox(height: 24),
@@ -1124,7 +1124,7 @@ class _StepScaffold extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 8),
-        Text(question, style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(question, style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         if (subtitle != null) ...[
           const SizedBox(height: 8),
           Text(subtitle!, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
@@ -1199,7 +1199,7 @@ class _ConfirmedView extends StatelessWidget {
                     delay: Duration(milliseconds: 400),
                     child: Text(
                       'Presença confirmada!',
-                      style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w400, color: AppTheme.ink),
                     ),
                   ),
                   const SizedBox(height: 8),

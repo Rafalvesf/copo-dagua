@@ -424,7 +424,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
             const SizedBox(height: 12),
             Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
               const Expanded(child: Text('A pagar agora', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
-              Text(euros(deposit, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(euros(deposit, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
             ]),
             const Align(
               alignment: Alignment.centerRight,
@@ -504,7 +504,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
             const SizedBox(height: 16),
             Text(title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
             const SizedBox(height: 6),
             Text(body,
                 textAlign: TextAlign.center,
@@ -772,7 +772,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     Widget sectionTitle(String t, {String? action, VoidCallback? onAction}) => Padding(
           padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
           child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Expanded(child: Text(t, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink))),
+            Expanded(child: Text(t, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: ink))),
             if (action != null)
               SnappyTap(
                 onTap: onAction,
@@ -927,7 +927,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         ? Padding(
                             padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
                             child: Row(children: [
-                              const Expanded(child: Text('Menus', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: ink))),
+                              const Expanded(child: Text('Menus', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: ink))),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
@@ -1267,7 +1267,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
                   const Icon(Hi.star, size: 22, color: AppTheme.ink),
                   const SizedBox(width: 8),
                   Text(avg.toStringAsFixed(1).replaceAll('.', ','),
-                      style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 ]),
               ),
             ]),
@@ -1432,7 +1432,7 @@ class _PartnerUnavailable extends StatelessWidget {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const Text('Este parceiro não está disponível.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               const SizedBox(height: 16),
               ProfileButton('Ir para a À Nossa!', dark: true, onTap: () => context.go('/welcome')),
             ]),
@@ -1613,7 +1613,7 @@ class _EventPickerSheet extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             const Text('Reservar — para qual evento?',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
             const SizedBox(height: 4),
             Text('$partnerName vai ficar reservado no evento que escolheres.',
                 style: const TextStyle(fontSize: 13, color: Color(0xFF57534E))),
@@ -1804,7 +1804,7 @@ class _PartnerHero extends StatelessWidget {
                                   color: AppTheme.ink,
                                   alignment: Alignment.center,
                                   child: Text(V2Avatar.initials(partner.name),
-                                      style: const TextStyle(fontSize: 44, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
+                                      style: const TextStyle(fontSize: 44, fontWeight: FontWeight.w400, letterSpacing: 2, color: Colors.white)),
                                 )
                               : SizedNetworkImage(
                                   photo!,
@@ -1956,7 +1956,7 @@ class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
   bool _more = false;
 
   Widget _stat((String, String) s) => Column(children: [
-        Text(s.$1, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        Text(s.$1, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         Text(s.$2, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       ]);
 
@@ -2000,7 +2000,7 @@ class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
             child: Row(children: [
               Flexible(
                 child: Text(capFirst(p.name),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               ),
               const SizedBox(width: 4),
               VerifiedBadge(p),
@@ -2129,7 +2129,7 @@ class _ReferenceCard extends StatelessWidget {
           const Text('VALOR DE REFERÊNCIA',
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
           const SizedBox(height: 6),
-          Text('≈ ${euros(price)}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1.1)),
+          Text('≈ ${euros(price)}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w400, color: AppTheme.ink, height: 1.1)),
           if (note != null && note!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(note!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),

@@ -201,7 +201,7 @@ class FrameNumbers extends StatelessWidget {
         const SizedBox(height: 4),
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(n.value, maxLines: 1, style: const TextStyle(fontSize: 28, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          child: Text(n.value, maxLines: 1, style: const TextStyle(fontSize: 28, height: 1.1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
         ),
         const SizedBox(height: 4),
         Text(n.sub, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,

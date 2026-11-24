@@ -101,7 +101,7 @@ class OrganizersScreen extends ConsumerWidget {
             onTap: () => context.canPop() ? context.pop() : context.go('/home'),
           ),
           const SizedBox(height: 14),
-          const Text('Organizadores', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          const Text('Organizadores', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           const SizedBox(height: 4),
           const Text('Quem organiza o evento contigo. Convida por link e escolhe o que cada um pode fazer.',
               style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
@@ -474,7 +474,7 @@ class PermissionGate extends ConsumerWidget {
               const SizedBox(height: 14),
               Text('Sem acesso a ${perm.label.toLowerCase()}',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               const SizedBox(height: 8),
               const Text(
                 'O organizador principal não te deu esta permissão. Pede-lhe em Definições › Organizadores.',

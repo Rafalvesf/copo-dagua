@@ -24,7 +24,7 @@ Future<bool> askPayLater(
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Pagar mais tarde?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Pagar mais tarde?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               const SizedBox(height: 4),
               Text(partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),

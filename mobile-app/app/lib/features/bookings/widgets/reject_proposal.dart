@@ -71,7 +71,7 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Recusar a proposta?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Recusar a proposta?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
               const SizedBox(height: 4),
               Text(widget.partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),

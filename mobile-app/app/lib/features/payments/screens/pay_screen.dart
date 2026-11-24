@@ -526,7 +526,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                 ],
                 Expanded(
                   child: Text(_sheetTitle,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
                 ),
                 _SheetRound(icon: Hi.xMark, label: 'Fechar', onTap: () => context.pop()),
               ]),
@@ -753,7 +753,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const SizedBox(height: 12),
           Center(
             child: Text(_amountLabel,
-                style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
           ),
           const SizedBox(height: 10),
           const Text('Enviámos o pedido para o teu telemóvel. Tens 4 minutos para aprovar.',
