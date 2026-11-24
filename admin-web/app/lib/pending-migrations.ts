@@ -574,6 +574,34 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O convidado diz se a criança que leva precisa de cadeirinha; o organizador vê-o na ficha do convidado e a comida, o transporte, o aluguer e a animação infantil veem quantas são (e, nas mesas, de quem). Corre depois da 226.",
     check: { kind: "marker", id: "227" },
   },
+  {
+    file: "228_qr_da_conta.sql",
+    date: "2026-11-23",
+    title: "Um QR por conta, rotativo",
+    what: "Cada conta tem um QR que muda a cada 30 segundos (assinado no servidor; um screenshot não serve). Fica na página principal. Quem o lê (sobretudo o parceiro, para verificar a marcação, ou o organizador à entrada) vê o nome e só o que os liga, e regista a chegada ou a entrada. A página «Entrada» mostra todos os eventos onde o QR dá entrada e atualiza em tempo real (Realtime nas tabelas das entradas). Os códigos fixos antigos dos bilhetes deixam de valer. Corre depois da 227.",
+    check: { kind: "table", table: "user_qr" },
+  },
+  {
+    file: "229_qr_pagamento_cartao.sql",
+    date: "2026-11-23",
+    title: "Pagar com QR no balcão",
+    what: "O parceiro escreve o valor e mostra um QR de uso único (10 min); quem paga lê-o e paga na hora com cartão, Apple Pay ou Google Pay, por Stripe Connect. Sem saldo e sem taxa para quem paga (a comissão sai do parceiro). Depois: publicar a Edge Function event-pay e voltar a publicar o stripe-webhook. Corre depois da 228.",
+    check: { kind: "table", table: "pay_requests" },
+  },
+  {
+    file: "230_tipos_evento_e_prefixos.sql",
+    date: "2026-11-23",
+    title: "Sete tipos de evento e referência das reservas em português",
+    what: "Ao criar um evento só aparecem 7 tipos: Aniversário (ANI), Casamento (CAS), Festa (FES), Evento de empresa (EMP), Batizado (BAT), Passagem de Ano (PAN, novo) e Outros (EVT). Eventos existentes: comunhão → batizado, noite → festa, os restantes → Outros com o nome antigo guardado. As reservas mudam o prefixo (WED-3 → CAS-3); quando dois tipos se juntam e o número colide, a mais recente recebe o seguinte livre.",
+    check: { kind: "marker", id: "230" },
+  },
+  {
+    file: "231_referencia_global_reservas.sql",
+    date: "2026-11-23",
+    title: "Referência global das reservas",
+    what: "Cada parceiro ganha um código de 4 letras único, tirado do nome (Tasca do Largo → TASL), e cada reserva uma referência global única: TASL-EMP-12. A curta (EMP-12) continua a do dia a dia; a global serve para comprovativos, suporte e a pesquisa do admin. Corre depois da 230.",
+    check: { kind: "column", table: "bookings", column: "reference" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

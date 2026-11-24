@@ -175,6 +175,24 @@ class _NativeStripePay implements StripePay {
     }
   }
 
+  @override
+  Future<Map<String, dynamic>> confirmAction(String publishableKey, String clientSecret, {bool setup = false}) async {
+    try {
+      await _configure(publishableKey);
+      if (setup) {
+        final si = await Stripe.instance.handleNextActionForSetupIntent(clientSecret);
+        return {'status': si.status.toLowerCase()};
+      }
+      final pi = await Stripe.instance.handleNextAction(clientSecret);
+      return {'status': _status(pi.status)};
+    } on StripeException catch (e) {
+      if (e.error.code == FailureCode.Canceled) return {'error': 'Cancelado.'};
+      return {'error': e.error.localizedMessage ?? 'O banco não confirmou.'};
+    } catch (_) {
+      return {'error': 'Não foi possível confirmar. Tenta outra vez.'};
+    }
+  }
+
   static String _status(PaymentIntentsStatus s) => switch (s) {
         PaymentIntentsStatus.Succeeded => 'succeeded',
         PaymentIntentsStatus.Processing => 'processing',

@@ -126,6 +126,10 @@ class PartnerHomeScreen extends ConsumerWidget {
                         ),
                       ),
                     const Spacer(),
+                    // «Entrada» do parceiro: ler o QR dos clientes e cobrar
+                    // no balcão (migrações 228–229), ao lado do sino.
+                    V2RoundButton(icon: Hi.qrCode, tooltip: 'Entrada e cobrar', onTap: () => context.push('/entrada')),
+                    const SizedBox(width: 10),
                     const PartnerNotificationBell(),
                     IslandMenuButton<String>(
                       tooltip: 'Mais opções',

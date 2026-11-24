@@ -513,6 +513,19 @@
             })
             .catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Não foi possível ler o cartão.' }); });
         },
+        // QR de pagamento no evento (migração 229): 3DS de um pagamento
+        // ou de guardar o cartão; o método já está no intent.
+        confirmAction: function (pk, secret, setup) {
+          return init(pk).then(function () {
+            if (setup) {
+              return stripe.confirmCardSetup(secret).then(function (r) {
+                if (r.error) return JSON.stringify({ error: r.error.message || 'O banco não confirmou o cartão.' });
+                return JSON.stringify({ status: (r.setupIntent && r.setupIntent.status) || null });
+              });
+            }
+            return stripe.confirmCardPayment(secret).then(result);
+          }).catch(function (e) { return JSON.stringify({ error: (e && e.message) || 'Não foi possível confirmar.' }); });
+        },
         payCard: function (secret, email, pmId) {
           if (!stripe || (!parts.number && !pmId)) return Promise.resolve(JSON.stringify({ error: 'Os campos do cartão não carregaram.' }));
           return stripe.confirmCardPayment(secret, {

@@ -1,30 +1,39 @@
+import 'dart:async';
+
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../core/events/event_pass.dart';
+import '../../../core/events/my_qr.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 
-/// Bilhete com QR (migração 158): depois de pagar, o convidado mostra-o à
-/// entrada; o organizador lê-o com a câmara do telemóvel.
+/// Bilhete e QR da conta.
+///
+/// Migração 158: depois de pagar, o convidado mostra o QR à entrada.
+/// Migração 228 (2026-11-23): o QR passou a ser UM por conta ("apenas um qr
+/// code para todos os eventos … assim posso colocar na página principal"),
+/// assinado no servidor e a mudar a cada 30 s. Quem o lê (sobretudo o
+/// parceiro, para verificar a marcação; o organizador à entrada) abre
+/// «Quem é» (`ScanScreen`).
 
 String _hhmm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
-QrImageView _qr(String data, double size) => QrImageView(
+/// QR com as cores da app.
+QrImageView brandQr(String data, double size, {String label = 'O teu código QR'}) => QrImageView(
       data: data,
       size: size,
       padding: EdgeInsets.zero,
       backgroundColor: Colors.white,
       eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: AppTheme.ink),
       dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: AppTheme.ink),
-      semanticsLabel: 'Código QR do bilhete',
+      semanticsLabel: label,
     );
 
-/// Cartão no início do convidado.
+/// Cartão do bilhete no início do evento do convidado.
 class TicketPassCard extends StatelessWidget {
   final MyTicket ticket;
   final String eventName;
@@ -45,9 +54,10 @@ class TicketPassCard extends StatelessWidget {
           decoration: BoxDecoration(color: green, borderRadius: BorderRadius.circular(AppRadius.lg)),
           child: Row(children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-              child: _qr(ticket.qrData, 64),
+              child: const Icon(Hi.qrCode, size: 40, color: AppTheme.ink),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -61,7 +71,7 @@ class TicketPassCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  ticket.checkedInAt != null ? 'Entrada registada às ${_hhmm(ticket.checkedInAt!)}' : 'Mostra o QR à entrada',
+                  ticket.checkedInAt != null ? 'Entrada registada às ${_hhmm(ticket.checkedInAt!)}' : 'Mostra o teu QR à entrada',
                   style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85)),
                 ),
               ]),
@@ -74,69 +84,64 @@ class TicketPassCard extends StatelessWidget {
   }
 }
 
-/// Ecrã inteiro com o QR grande, para mostrar à porta.
+/// Ecrã do bilhete: o QR da conta, grande, para mostrar à porta.
 class TicketPassScreen extends StatelessWidget {
   final MyTicket ticket;
   final String eventName;
   const TicketPassScreen({super.key, required this.ticket, required this.eventName});
 
   @override
+  Widget build(BuildContext context) => MyQrScreen(
+        eyebrow: eventName,
+        title: 'O teu bilhete',
+        subtitle: ticket.quantity == 1 ? '1 pessoa' : '${ticket.quantity} pessoas',
+        footer: ticket.checkedInAt != null ? 'Entrada registada às ${_hhmm(ticket.checkedInAt!)}.' : null,
+      );
+}
+
+/// Ecrã inteiro com o QR da conta.
+class MyQrScreen extends StatelessWidget {
+  final String? eyebrow;
+  final String title;
+  final String? subtitle;
+  final String? footer;
+  const MyQrScreen({super.key, this.eyebrow, this.title = 'O teu QR', this.subtitle, this.footer});
+
+  @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.sizeOf(context).width;
-    final size = (w - 2 * AppTheme.screenMargin - 48).clamp(180.0, 300.0);
     return GradientScaffold(
       background: AppBackground.subtle,
-      body: SafeArea(top: false, 
+      body: SafeArea(
+        top: false,
         child: ListView(
-          padding: ( const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 40)).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
+          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 40)
+              .add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: IconButton(
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Hi.arrowLeft),
-                tooltip: 'Voltar',
-              ),
+              child: IconButton(onPressed: () => Navigator.of(context).maybePop(), icon: const Icon(Hi.arrowLeft), tooltip: 'Voltar'),
             ),
             const SizedBox(height: 4),
-            Text(eventName.toUpperCase(),
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark)),
-            const SizedBox(height: 4),
-            const Text('O teu bilhete',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 20),
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg), boxShadow: AppTheme.searchBarShadow),
-                child: Column(children: [
-                  _qr(ticket.qrData, size),
-                  const SizedBox(height: 16),
-                  Text(
-                    ticket.code,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 3, color: AppTheme.ink),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    ticket.quantity == 1 ? '1 pessoa' : '${ticket.quantity} pessoas',
-                    style: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
-                  ),
-                ]),
-              ),
-            ),
-            const SizedBox(height: 18),
-            if (ticket.checkedInAt != null)
-              Text('Entrada registada às ${_hhmm(ticket.checkedInAt!)}.',
+            if (eyebrow != null)
+              Text(eyebrow!.toUpperCase(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark))
-            else
-              const Text(
-                'Mostra este código à entrada.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentOliveDark)),
+            const SizedBox(height: 4),
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 20),
+            MyQrPanel(subtitle: subtitle),
+            const SizedBox(height: 18),
+            Text(
+              footer ??
+                  'Mostra este QR à entrada, no restaurante ou para pagar. Muda a cada 30 segundos e só serve para ti: um screenshot não serve.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: footer != null ? FontWeight.w700 : FontWeight.w400,
+                color: footer != null ? AppTheme.accentOliveDark : AppTheme.inkMuted,
               ),
+            ),
           ],
         ),
       ),
@@ -144,82 +149,197 @@ class TicketPassScreen extends StatelessWidget {
   }
 }
 
-/// O organizador leu o QR com a câmara: abre aqui e marca a entrada.
-class CheckInScreen extends ConsumerStatefulWidget {
-  final String code;
-  const CheckInScreen({super.key, required this.code});
+/// O QR da conta, sempre fresco: pede o token da janela ao servidor e o
+/// próximo quando a janela acaba. Sem rede não há QR (de propósito: o
+/// segredo nunca fica no telemóvel). [size] = null → grande, à largura.
+class MyQrPanel extends StatefulWidget {
+  final String? subtitle;
+  final double? size;
+  const MyQrPanel({super.key, this.subtitle, this.size});
 
   @override
-  ConsumerState<CheckInScreen> createState() => _CheckInScreenState();
+  State<MyQrPanel> createState() => _MyQrPanelState();
 }
 
-class _CheckInScreenState extends ConsumerState<CheckInScreen> {
-  late Future<CheckIn> _future = checkInTicket(widget.code);
+class _MyQrPanelState extends State<MyQrPanel> with WidgetsBindingObserver {
+  MyQr? _qrNow;
+  bool _loading = true;
+  bool _failed = false;
+  Timer? _timer;
+  DateTime _expires = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Ao voltar à app o token pode já ter passado; em segundo plano, pára.
+    if (state == AppLifecycleState.resumed) {
+      _refresh();
+    } else if (state == AppLifecycleState.paused) {
+      _timer?.cancel();
+    }
+  }
+
+  Future<void> _refresh() async {
+    _timer?.cancel();
+    final q = await fetchMyQr();
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _failed = q == null;
+      if (q != null) {
+        _qrNow = q;
+        _expires = DateTime.now().add(q.refreshIn);
+      }
+    });
+    // Sem rede: tenta outra vez daqui a 5 s.
+    _timer = Timer(q?.refreshIn ?? const Duration(seconds: 5), _refresh);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GradientScaffold(
-      background: AppBackground.subtle,
-      body: SafeArea(
-        child: FutureBuilder<CheckIn>(
-          future: _future,
-          builder: (context, snap) {
-            if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-            final c = snap.data!;
-            final (IconData icon, Color color, String title, String text) = switch (c.result) {
-              CheckInResult.ok => (
-                  Hi.checkCircle,
-                  AppTheme.accentOliveDark,
-                  'Entrada válida',
-                  '${c.name ?? 'Convidado'} · ${c.quantity == 1 ? '1 pessoa' : '${c.quantity} pessoas'}',
-                ),
-              CheckInResult.already => (
-                  Hi.informationCircle,
-                  const Color(0xFF9A5B00),
-                  'Já entrou',
-                  '${c.name ?? 'Convidado'} entrou às ${c.at == null ? '—' : _hhmm(c.at!)}.',
-                ),
-              CheckInResult.refunded => (
-                  Hi.xCircle,
-                  const Color(0xFFB3261E),
-                  'Bilhete reembolsado',
-                  'Este bilhete foi reembolsado e já não dá entrada.',
-                ),
-              CheckInResult.notPaid => (Hi.xCircle, const Color(0xFFB3261E), 'Bilhete por pagar', 'O pagamento deste bilhete não foi concluído.'),
-              CheckInResult.notFound => (Hi.xCircle, const Color(0xFFB3261E), 'Bilhete inválido', 'Este código não corresponde a nenhum bilhete.'),
-              CheckInResult.notOrganizer => (
-                  Hi.lockClosed,
-                  AppTheme.inkMuted,
-                  'Só o organizador',
-                  'Só quem organiza o evento, com a permissão de bilhetes e entradas, pode validar. Entra com essa conta.',
-                ),
-              CheckInResult.error => (Hi.signalSlash, AppTheme.inkMuted, 'Não foi possível validar', 'Verifica a ligação e tenta outra vez.'),
-            };
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 60, AppTheme.screenMargin, 40),
-              children: [
-                Icon(icon, size: 96, color: color),
-                const SizedBox(height: 16),
-                Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                const SizedBox(height: 8),
-                Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, height: 1.4, color: AppTheme.ink)),
-                if (c.event != null) ...[
-                  const SizedBox(height: 4),
-                  Text(c.event!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
-                ],
-                const SizedBox(height: 32),
-                if (c.result == CheckInResult.error)
-                  FilledButton(
-                    onPressed: () => setState(() => _future = checkInTicket(widget.code)),
-                    child: const Text('Tentar outra vez'),
-                  ),
-                TextButton(
-                  onPressed: () => context.go('/bilhetes'),
-                  child: const Text('Ver todos os bilhetes'),
-                ),
-              ],
-            );
-          },
+    final q = _qrNow;
+    final compact = widget.size != null;
+    final w = MediaQuery.sizeOf(context).width;
+    final size = widget.size ?? (w - 2 * AppTheme.screenMargin - 48).clamp(180.0, 300.0);
+    final qr = SizedBox(
+      width: size,
+      height: size,
+      child: q != null && !_failed
+          ? brandQr(q.qrData, size)
+          : Center(
+              child: _loading
+                  ? SkeletonBox(width: size, height: size, radius: AppRadius.md)
+                  : compact
+                      ? const Icon(Hi.signalSlash, size: 28, color: AppTheme.inkMuted)
+                      : Column(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Hi.signalSlash, size: 40, color: AppTheme.inkMuted),
+                          const SizedBox(height: 8),
+                          const Text('Sem ligação. O QR aparece quando voltar a rede.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
+                          TextButton(onPressed: _refresh, child: const Text('Tentar outra vez')),
+                        ]),
+            ),
+    );
+    if (compact) {
+      return Column(mainAxisSize: MainAxisSize.min, children: [
+        qr,
+        if (q != null && !_failed) ...[
+          const SizedBox(height: 6),
+          SizedBox(width: size, child: _Countdown(key: ValueKey(q.token), until: _expires, total: const Duration(seconds: 30))),
+        ],
+      ]);
+    }
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg), boxShadow: AppTheme.searchBarShadow),
+        child: Column(children: [
+          qr,
+          if (q != null && !_failed) ...[
+            const SizedBox(height: 12),
+            SizedBox(width: size, child: _Countdown(key: ValueKey(q.token), until: _expires, total: const Duration(seconds: 30))),
+          ],
+          if (q?.name != null) ...[
+            const SizedBox(height: 12),
+            Text(q!.name!, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ],
+          if (widget.subtitle != null)
+            Text(widget.subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        ]),
+      ),
+    );
+  }
+}
+
+/// Na página principal: o QR da conta, já vivo, e toque para o ver grande.
+class MyQrCard extends StatelessWidget {
+  const MyQrCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SnappyTap(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MyQrScreen())),
+      child: Semantics(
+        button: true,
+        label: 'Abrir o teu QR em grande',
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg)),
+          child: Row(children: [
+            const MyQrPanel(size: 84),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('O teu QR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                SizedBox(height: 2),
+                Text('Mostra-o à entrada, no restaurante ou para pagar. Muda a cada 30 segundos.',
+                    style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ]),
+            ),
+            const Icon(Hi.chevronRight, color: AppTheme.ink),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+/// Barra fina com o tempo que falta até o QR mudar.
+class _Countdown extends StatefulWidget {
+  final DateTime until;
+  final Duration total;
+  const _Countdown({super.key, required this.until, required this.total});
+
+  @override
+  State<_Countdown> createState() => _CountdownState();
+}
+
+class _CountdownState extends State<_Countdown> with SingleTickerProviderStateMixin {
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    final left = widget.until.difference(DateTime.now());
+    final start = (left.inMilliseconds / widget.total.inMilliseconds).clamp(0.0, 1.0);
+    _c = AnimationController(vsync: this, duration: left.isNegative ? Duration.zero : left, value: start);
+    _c.animateTo(0, duration: left.isNegative ? Duration.zero : left);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'O código QR muda daqui a pouco',
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (context, _) => ClipRRect(
+          borderRadius: BorderRadius.circular(2),
+          child: LinearProgressIndicator(
+            value: _c.value,
+            minHeight: 4,
+            backgroundColor: AppTheme.ink.withValues(alpha: 0.08),
+            color: AppTheme.progress,
+          ),
         ),
       ),
     );

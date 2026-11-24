@@ -288,7 +288,26 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                 children: [
                   // Sino com os avisos pessoais (convites, lembretes) — 2026-11-11.
                   // À esquerda, como Parceiros (pedido 2026-11-12).
-                  const PageHeader(title: 'Eventos', showBack: false, titleFontSize: 28, trailing: PartnerNotificationBell()),
+                  PageHeader(
+                    title: 'Eventos',
+                    showBack: false,
+                    titleFontSize: 28,
+                    // QR da conta ao lado do sino (pedido 2026-11-23: "adiciona
+                    // um icon do qr code ao lado do das notificações na página
+                    // dos eventos"; migração 228). Abre «Entrada»: o QR e todos
+                    // os eventos onde dá entrada.
+                    trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                      if (role != null) ...[
+                        V2RoundButton(
+                          icon: Hi.qrCode,
+                          tooltip: 'O teu QR',
+                          onTap: () => context.push('/entrada'),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                      const PartnerNotificationBell(),
+                    ]),
+                  ),
                   const SizedBox(height: 14),
                   const TeamBannerCard(),
                   // Quem não tem Chat vê aqui a conversa com a equipa.

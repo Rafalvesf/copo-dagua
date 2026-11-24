@@ -73,6 +73,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
 
   /// 191: sem sinal nesta categoria — paga-se tudo de uma vez.
   bool get _full => a.isBooking && a.kind == 'deposit' && (ref.watch(paymentIsFullProvider(a.paymentId)).value ?? false);
+  /// Pagar com QR no balcão (migração 229): sem taxa para quem paga.
+  bool get _counter => a.kind == 'pay_request';
   String get _amountLabel => euros((_amountCents ?? (a.amount * 100).round()) / 100, cents: true);
   String? get _email => ref.read(authControllerProvider).profile?.email;
   String get _walletName => _wallet == 'apple_pay' ? 'Apple Pay' : 'Google Pay';
@@ -462,7 +464,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         _Step.mbWayPhone => 'MB WAY',
         _Step.mbWayWaiting => 'Aprova na app MB WAY',
         _Step.multibanco => 'Referência Multibanco',
-        _Step.done => _full ? 'Pago' : '${a.title} pago',
+        _Step.done => _full || _counter ? 'Pago' : '${a.title} pago',
         _ => a.isGuestShare
             ? 'Pagar a tua parte'
             : a.isBooking
@@ -777,7 +779,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                         ? '${a.partnerName} está reservado e pago.'
                         : '${a.partnerName} está reservado. O resto paga-se mais perto do evento e avisamos-te.')
                     : 'Está tudo pago a ${a.partnerName}.')
-                : 'Pagamento feito.',
+                : _counter
+                    ? 'Pagaste a ${a.partnerName}.'
+                    : 'Pagamento feito.',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
           ),
@@ -789,8 +793,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                 const Spacer(),
                 Text(_amountLabel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
               ]),
-              const SizedBox(height: 8),
-              const Row(children: [
+              if (!_counter) const SizedBox(height: 8),
+              if (!_counter)
+                const Row(children: [
                 Text('Fatura', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
                 Spacer(),
                 Text('Enviada por email', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),

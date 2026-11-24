@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
 import { auditActionLabel } from "@/lib/audit-labels";
 import { createClient } from "@/lib/supabase/server";
@@ -581,7 +581,7 @@ function CoinIcon() {
   );
 }
 
-// O número da reserva repete-se entre parceiros (WED-1 de cada um,
+// O número da reserva repete-se entre parceiros (CAS-1 de cada um,
 // migração 107) — o nome do parceiro identifica a reserva no admin.
 function partnerName(p: PartnerRef): string {
   const one = Array.isArray(p) ? p[0] : p;

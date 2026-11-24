@@ -40,9 +40,25 @@ enum EventType {
   nightlife('Discoteca / noite', 'evento'),
   concert('Concerto', 'concerto'),
   festival('Festival', 'festival'),
+  // Migração 230 (2026-11-23).
+  newYear('Passagem de Ano', 'passagem de ano'),
   other('Outro', 'evento');
 
   const EventType(this.label, this.noun);
+
+  /// Os sete que se escolhem ao criar ou mudar um evento (pedido
+  /// 2026-11-23: "escolhe apenas 5 das mais comuns no mundo" + "e adiciona
+  /// Passagem De Ano e outros"; migração 230). Os outros valores ficam para
+  /// eventos antigos e apps antigas, mas já não aparecem para escolher.
+  static const selectable = [
+    EventType.birthday,
+    EventType.wedding,
+    EventType.party,
+    EventType.corporate,
+    EventType.baptism,
+    EventType.newYear,
+    EventType.other,
+  ];
 
   /// Nome para mostrar ("Batizado").
   final String label;
@@ -65,6 +81,7 @@ enum EventType {
         EventType.nightlife => 'nightlife',
         EventType.concert => 'concert',
         EventType.festival => 'festival',
+        EventType.newYear => 'new_year',
         EventType.other => 'other',
       };
 
@@ -77,6 +94,7 @@ enum EventType {
         EventType.nightlife,
         EventType.concert,
         EventType.festival,
+        EventType.newYear,
         EventType.other,
       }.contains(this);
 

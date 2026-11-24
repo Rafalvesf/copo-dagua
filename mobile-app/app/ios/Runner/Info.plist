@@ -14,7 +14,7 @@
 		</dict>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Para tirares fotografias do evento e do teu perfil.</string>
+	<string>Para tirares fotografias do evento e do teu perfil e para leres códigos QR.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Para escolheres fotografias e vídeos para o evento e o teu perfil.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

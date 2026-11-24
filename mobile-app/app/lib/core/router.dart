@@ -3,7 +3,8 @@ import 'pending_deep_link.dart';
 import 'invite/public_invite.dart' show PendingInvite;
 import '../features/events/screens/external_event_screen.dart' deferred as lext;
 import '../features/events/screens/tickets_screens.dart' deferred as l1;
-import '../features/events/screens/ticket_pass_screens.dart' show CheckInScreen;
+import '../features/events/screens/event_pay_screens.dart' deferred as lpay;
+import '../features/events/screens/entry_screen.dart' deferred as lentry;
 import '../features/settings/screens/organizers_screen.dart' show OrganizersScreen, PermissionGate;
 import '../features/gifts/screens/gift_list_screens.dart' show OrganizerGiftListScreen, GiftShopScreen, GiftReturnScreen;
 import '../features/gifts/screens/partner_shop_screen.dart' show PartnerShopScreen;
@@ -416,7 +417,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/username', builder: (context, state) =>lazyPage([l62.loadLibrary], () =>  l62.UsernameScreen())),
       // Plano Pro dos parceiros (migração 161).
       GoRoute(path: '/partner-pro', builder: (context, state) => PartnerProScreen(returned: state.uri.queryParameters['ok'] == '1')),
-      GoRoute(path: '/entrada/:code', builder: (context, state) => CheckInScreen(code: state.pathParameters['code']!)),
+      // QR da conta (migração 228): quem lê abre «Quem é». `/entrada/` fica
+      // para os QR lidos por apps antigas (códigos fixos dão «QR inválido»).
+      // «Entrada»: o QR da conta e todos os eventos onde dá entrada (2026-11-23).
+      GoRoute(path: '/entrada', builder: (context, state) => lazyPage([lentry.loadLibrary], () => lentry.EntryScreen())),
+      GoRoute(path: '/q/:token', builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.ScanScreen(token: state.pathParameters['token']!))),
+      GoRoute(path: '/entrada/:code', builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.ScanScreen(token: state.pathParameters['code']!))),
+      // Pagar com QR no balcão (migração 229): o parceiro cobra («Cobrar»);
+      // quem lê o QR abre a folha «Pagar», por cima do ecrã de onde veio.
+      GoRoute(path: '/cobrar', builder: (context, state) => lazyPage([lpay.loadLibrary], () => lpay.ChargeScreen())),
+      GoRoute(
+        path: '/pagar/:code',
+        pageBuilder: (context, state) => _sheetPage(
+          state,
+          lazyPage([lpay.loadLibrary], () => lpay.PayRequestSheet(code: state.pathParameters['code']!)),
+        ),
+      ),
       GoRoute(path: '/bilhetes/ativar', builder: (context, state) =>lazyPage([l7.loadLibrary], () =>  l7.PartnerPayoutSetupScreen(organizer: true))),
       // Evento público aberto por link partilhado (2026-11).
       // Envelopes recebidos (migração 156).
@@ -665,19 +681,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/pay',
         // Folha que sobe por cima do ecrã de onde se carregou em pagar
         // (mockup "Pagamentos", 2026-11-14), em vez de uma página à parte.
-        pageBuilder: (context, state) => CustomTransitionPage<void>(
-          key: state.pageKey,
-          opaque: false,
-          barrierDismissible: true,
-          barrierColor: const Color(0x6B171713),
-          transitionDuration: const Duration(milliseconds: 320),
-          reverseTransitionDuration: const Duration(milliseconds: 240),
-          transitionsBuilder: (context, animation, secondary, child) => SlideTransition(
-            position: Tween(begin: const Offset(0, 1), end: Offset.zero)
-                .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
-            child: child,
-          ),
-          child: lazyPage([l6.loadLibrary], () => state.extra is PayArgs
+        pageBuilder: (context, state) => _sheetPage(
+          state,
+          lazyPage([l6.loadLibrary], () => state.extra is PayArgs
               ? l6.PayScreen(args: state.extra as PayArgs)
               : const _LostRoute('/bookings')),
         ),
@@ -768,6 +774,23 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
+
+/// Folha que sobe por cima do ecrã de onde se abriu («Pagar», mockup
+/// "Pagamentos", 2026-11-14), em vez de uma página à parte.
+CustomTransitionPage<void> _sheetPage(GoRouterState state, Widget child) => CustomTransitionPage<void>(
+      key: state.pageKey,
+      opaque: false,
+      barrierDismissible: true,
+      barrierColor: const Color(0x6B171713),
+      transitionDuration: const Duration(milliseconds: 320),
+      reverseTransitionDuration: const Duration(milliseconds: 240),
+      transitionsBuilder: (context, animation, secondary, child) => SlideTransition(
+        position: Tween(begin: const Offset(0, 1), end: Offset.zero)
+            .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+        child: child,
+      ),
+      child: child,
+    );
 
 /// Ecrã aberto sem os dados de que precisa (ex.: recarregar a página no
 /// telemóvel num detalhe — o `extra` do go_router perde-se). Antes ficava

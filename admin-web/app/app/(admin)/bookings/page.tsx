@@ -53,7 +53,7 @@ export default async function BookingsPage({ searchParams }: PageProps<"/booking
     <div className="page">
       <PageHeader
         title="Reservas"
-        subtitle="Cada reserva nasce de uma proposta aceite. O número (WED-1, BAP-1…) é por parceiro, por isso aparece sempre com o nome do parceiro."
+        subtitle="Cada reserva nasce de uma proposta aceite. O número (CAS-1, BAT-1…) é por parceiro, por isso aparece sempre com o nome do parceiro."
       />
 
       <div className="toolbar">

@@ -193,7 +193,7 @@ Future<ReportData> loadPartnerReport() async {
   final business = (profile?['business_name'] ?? 'Parceiro').toString();
   final rows = await supabase
       .from('bookings')
-      .select('id, booking_number, event_date, status, total_amount, events(partner_name_1, partner_name_2, location), proposals(title)')
+      .select('*, events(partner_name_1, partner_name_2, location), proposals(title)')
       .eq('partner_id', uid)
       .order('event_date', ascending: false);
   final pays = await supabase
@@ -212,7 +212,7 @@ Future<ReportData> loadCoupleReport(String eventId) async {
   final event = await supabase.from('events').select('partner_name_1, partner_name_2').eq('id', eventId).maybeSingle();
   final rows = await supabase
       .from('bookings')
-      .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), events(partner_name_1, partner_name_2, location), proposals(title)')
+      .select('*, partner_profiles(business_name), events(partner_name_1, partner_name_2, location), proposals(title)')
       .eq('wedding_id', eventId)
       .order('event_date', ascending: false);
   final ids = [for (final r in rows) r['id'] as String];
@@ -246,7 +246,7 @@ Future<ReportData> loadSingleBookingReport(String bookingId, {bool partnerSide =
   await _loadCommission();
   final rows = await supabase
       .from('bookings')
-      .select('id, booking_number, event_date, status, total_amount, partner_profiles(business_name), events(partner_name_1, partner_name_2, location), proposals(title)')
+      .select('*, partner_profiles(business_name), events(partner_name_1, partner_name_2, location), proposals(title)')
       .eq('id', bookingId);
   final pays = await supabase
       .from('payments')
@@ -259,14 +259,17 @@ Future<ReportData> loadSingleBookingReport(String bookingId, {bool partnerSide =
           ? ((rows.first['partner_profiles'] as Map?)?['business_name'] ?? 'Parceiro').toString()
           : _couple(rows.first['events'] as Map?);
   final partnerName = rows.isEmpty ? '' : ((rows.first['partner_profiles'] as Map?)?['business_name'] ?? '').toString();
-  final base = _assemble(owner, 'Reserva ${rows.isEmpty ? '' : bookingRef(rows.first['booking_number'], partnerName)}', rows, pays, partnerSide: partnerSide);
+  final base = _assemble(owner, 'Reserva ${rows.isEmpty ? '' : bookingRef(rows.first['booking_number'], partnerName, reference: rows.first['reference'])}', rows, pays, partnerSide: partnerSide);
   return base;
 }
 
 /// Número da reserva com o nome do parceiro (2026-10-20): os números
-/// repetem-se entre parceiros (WED-1 de cada um, migração 107).
-String bookingRef(Object? number, String partnerName) {
-  final n = (number ?? '').toString();
+/// repetem-se entre parceiros (CAS-1 de cada um, migração 107). Com a
+/// [reference] global (TASL-CAS-1, migração 231), única em toda a À Nossa!,
+/// mostra essa; sem ela (antes da 231), a curta.
+String bookingRef(Object? number, String partnerName, {Object? reference}) {
+  final ref = (reference ?? '').toString();
+  final n = ref.isNotEmpty ? ref : (number ?? '').toString();
   if (n.isEmpty) return partnerName;
   return partnerName.isEmpty ? n : '$n · $partnerName';
 }
@@ -286,7 +289,7 @@ ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows
         final couple = _couple(r?['events'] as Map?);
         final partner = ((r?['partner_profiles'] as Map?)?['business_name'] ?? (partnerSide ? owner : '')).toString();
         return ReportPayment(
-          bookingNumber: bookingRef(r?['booking_number'], partner),
+          bookingNumber: bookingRef(r?['booking_number'], partner, reference: r?['reference']),
           payer: partnerSide ? couple : owner,
           payee: partnerSide ? owner : partner,
           type: _paymentType[p['type']] ?? '${p['type']}',
@@ -310,7 +313,7 @@ ReportData _assemble(String owner, String title, List<Map<String, dynamic>> rows
   final bookings = [
     for (final r in rows)
       ReportBooking(
-        number: bookingRef(r['booking_number'], ((r['partner_profiles'] as Map?)?['business_name'] ?? (partnerSide ? owner : '')).toString()),
+        number: bookingRef(r['booking_number'], ((r['partner_profiles'] as Map?)?['business_name'] ?? (partnerSide ? owner : '')).toString(), reference: r['reference']),
         counterpart: other(r),
         service: service(r),
         eventDate: _date(r['event_date']),

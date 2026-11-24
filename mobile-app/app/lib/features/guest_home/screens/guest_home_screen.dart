@@ -530,3 +530,4 @@ class GuestHomeEventCard extends StatelessWidget {
     );
   }
 }
+

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
-import '../../shared/public_link.dart';
 import '../models/models.dart' show EventType;
 import '../supabase/supabase_config.dart';
 
@@ -85,13 +84,10 @@ class GuestSections {
 
 class MyTicket {
   final String id;
+  final String eventId;
   final int quantity;
-  final String code;
   final DateTime? checkedInAt;
-  const MyTicket({required this.id, required this.quantity, required this.code, this.checkedInAt});
-
-  /// O que vai no QR: abre a app do organizador e marca a entrada.
-  String get qrData => publicLink('/entrada/$code');
+  const MyTicket({required this.id, required this.eventId, required this.quantity, this.checkedInAt});
 }
 
 class EventPass {
@@ -111,11 +107,11 @@ final myEventPassProvider = FutureProvider.family<EventPass, String>((ref, event
     return EventPass(
       sections: GuestSections.fromJson(r['sections']),
       isPaid: r['is_paid'] == true,
-      ticket: t is Map && t['code'] is String
+      ticket: t is Map && t['id'] is String
           ? MyTicket(
               id: t['id'] as String,
+              eventId: eventId,
               quantity: (t['quantity'] as num?)?.toInt() ?? 1,
-              code: t['code'] as String,
               checkedInAt: DateTime.tryParse('${t['checked_in_at'] ?? ''}')?.toLocal(),
             )
           : null,
@@ -138,43 +134,6 @@ final guestSectionsProvider = FutureProvider.family<GuestSections?, String>((ref
 
 Future<void> saveGuestSections(String eventId, GuestSections sections) async {
   await supabase.rpc('set_guest_sections', params: {'p_wedding': eventId, 'p_sections': sections.toJson()});
-}
-
-enum CheckInResult { ok, already, notFound, notOrganizer, refunded, notPaid, error }
-
-class CheckIn {
-  final CheckInResult result;
-  final String? name;
-  final int quantity;
-  final String? event;
-  final DateTime? at;
-  const CheckIn(this.result, {this.name, this.quantity = 1, this.event, this.at});
-}
-
-/// O organizador leu o QR de um bilhete (`check_in_ticket`, migração 158).
-Future<CheckIn> checkInTicket(String code) async {
-  try {
-    final r = await supabase.rpc('check_in_ticket', params: {'p_code': code});
-    if (r is! Map) return const CheckIn(CheckInResult.error);
-    final result = switch (r['result']) {
-      'ok' => CheckInResult.ok,
-      'already' => CheckInResult.already,
-      'not_found' => CheckInResult.notFound,
-      'not_organizer' => CheckInResult.notOrganizer,
-      'refunded' => CheckInResult.refunded,
-      'not_paid' => CheckInResult.notPaid,
-      _ => CheckInResult.error,
-    };
-    return CheckIn(
-      result,
-      name: r['name'] as String?,
-      quantity: (r['quantity'] as num?)?.toInt() ?? 1,
-      event: r['event'] as String?,
-      at: DateTime.tryParse('${r['checked_in_at'] ?? ''}')?.toLocal(),
-    );
-  } on PostgrestException {
-    return const CheckIn(CheckInResult.error);
-  }
 }
 
 /// Tipos de evento em que, por omissão, o menu é escolhido pelo

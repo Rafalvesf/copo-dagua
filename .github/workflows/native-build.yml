@@ -6,6 +6,19 @@ name: Native build (Android + iOS)
 # Só à mão (pedido 2026-11-23): por agora a app é só web.
 on:
   workflow_dispatch:
+    inputs:
+      modo:
+        description: 'debug (testar) ou release (ofuscado, como vai para as lojas)'
+        type: choice
+        options: [debug, release]
+        default: debug
+
+# Release (2026-11-23, pedido do utilizador: bloquear «tinkering» do código):
+# --obfuscate troca os nomes de classes e funções do Dart no binário e
+# --split-debug-info tira os símbolos para fora (guardados como artefacto,
+# para ler os erros do Sentry). Torna a engenharia reversa mais lenta, mas
+# NÃO a impede: a segurança está no servidor (RLS, tokens assinados e
+# validados no servidor, nada de segredos na app).
 
 concurrency:
   group: native-build-${{ github.ref }}
@@ -40,15 +53,26 @@ jobs:
           FIREBASE_ANDROID_API_KEY: ${{ secrets.FIREBASE_ANDROID_API_KEY }}
         run: |
           set -o pipefail
-          flutter build apk --debug --dart-define=FIREBASE_ANDROID_API_KEY="$FIREBASE_ANDROID_API_KEY" 2>&1 | tee build.txt || {
+          if [ "${{ inputs.modo }}" = "release" ]; then
+            MODE="--release --obfuscate --split-debug-info=build/symbols/android"
+          else
+            MODE="--debug"
+          fi
+          flutter build apk $MODE --dart-define=FIREBASE_ANDROID_API_KEY="$FIREBASE_ANDROID_API_KEY" 2>&1 | tee build.txt || {
             grep -iE "error|exception|failed|what went wrong|because|incompatible|requires|symbol|location:|plugin" build.txt | grep -v "^\s*at " | tail -40 | while read -r line; do echo "::error::$line"; done
             exit 1
           }
       - uses: actions/upload-artifact@v4
         with:
-          name: a-nossa-android-debug
-          path: mobile-app/app/build/app/outputs/flutter-apk/app-debug.apk
+          name: a-nossa-android-${{ inputs.modo }}
+          path: mobile-app/app/build/app/outputs/flutter-apk/app-${{ inputs.modo }}.apk
           retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: inputs.modo == 'release'
+        with:
+          name: a-nossa-android-symbols
+          path: mobile-app/app/build/symbols/android
+          retention-days: 90
 
   ios:
     runs-on: macos-latest
@@ -73,7 +97,12 @@ jobs:
           FIREBASE_IOS_API_KEY: ${{ secrets.FIREBASE_IOS_API_KEY }}
         run: |
           set -o pipefail
-          flutter build ios --debug --no-codesign --dart-define=FIREBASE_IOS_API_KEY="$FIREBASE_IOS_API_KEY" 2>&1 | tee build.txt || {
+          if [ "${{ inputs.modo }}" = "release" ]; then
+            MODE="--release --obfuscate --split-debug-info=build/symbols/ios"
+          else
+            MODE="--debug"
+          fi
+          flutter build ios $MODE --no-codesign --dart-define=FIREBASE_IOS_API_KEY="$FIREBASE_IOS_API_KEY" 2>&1 | tee build.txt || {
             grep -iE "error|exception|failed|what went wrong|because|incompatible|requires|symbol|location:|plugin" build.txt | grep -v "^\s*at " | tail -40 | while read -r line; do echo "::error::$line"; done
             exit 1
           }
