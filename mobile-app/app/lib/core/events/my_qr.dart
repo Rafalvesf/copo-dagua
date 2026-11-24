@@ -91,7 +91,13 @@ class ScanResult {
   final String? name;
   final String? avatarUrl;
   final List<ScanItem> items;
-  const ScanResult(this.result, {this.scanId, this.name, this.avatarUrl, this.items = const []});
+
+  /// Migração 232: `entry` (organizador de evento pago), `partner`
+  /// (parceiro com marcação) ou `profile` (o resto: abre o perfil).
+  final String mode;
+  final String? profileId;
+  const ScanResult(this.result,
+      {this.scanId, this.name, this.avatarUrl, this.items = const [], this.mode = 'entry', this.profileId});
 }
 
 Future<ScanResult> scanQr(String token) async {
@@ -104,6 +110,10 @@ Future<ScanResult> scanQr(String token) async {
       name: r['name'] as String?,
       avatarUrl: r['avatar_url'] as String?,
       items: [for (final i in (r['items'] as List? ?? const [])) if (i is Map) ScanItem.fromJson(i)],
+      // Antes da 232 não vem `mode`: sem items, era só o perfil.
+      mode: r['mode'] as String? ??
+          (((r['items'] as List?)?.isNotEmpty ?? false) ? 'entry' : 'profile'),
+      profileId: r['profile_id'] as String?,
     );
   } on PostgrestException {
     return const ScanResult('error');
