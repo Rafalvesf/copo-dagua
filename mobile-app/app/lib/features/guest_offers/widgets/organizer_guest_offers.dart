@@ -10,6 +10,7 @@ import '../../../shared/money.dart';
 import 'guest_offer_widgets.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Separador "Convidados" das Reservas do organizador: alojamento e
 /// transporte combinados com parceiros, que os convidados reservam e
@@ -50,7 +51,7 @@ class OrganizerGuestOffers extends ConsumerWidget {
         children: [
           _Hero(guests: guests, paidCount: paid.length, offers: offers.length),
           if (offersAsync.isLoading && offers.isEmpty)
-            const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
+            const SkeletonList(count: 3)
           else if (offersAsync.hasError)
             Padding(
               padding: const EdgeInsets.only(top: 24),
@@ -512,7 +513,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
               ),
               const SizedBox(height: 16),
               partners.when(
-                loading: () => const LinearProgressIndicator(),
+                loading: () => const SkeletonLine(height: 14),
                 error: (_, __) => const Text('Não foi possível carregar os parceiros.'),
                 data: (list) => list.isEmpty
                     ? Container(

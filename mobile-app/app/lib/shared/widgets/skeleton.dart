@@ -334,7 +334,10 @@ class SkeletonButton extends StatelessWidget {
 class SkeletonPage extends StatelessWidget {
   final bool carousel;
   final int rows;
-  const SkeletonPage({super.key, this.carousel = true, this.rows = 4});
+
+  /// Fila de números por baixo do título (orçamento, resumos).
+  final bool stats;
+  const SkeletonPage({super.key, this.carousel = true, this.rows = 4, this.stats = false});
 
   @override
   // SizedBox.expand: ocupa sempre o ecrã inteiro, mesmo dentro de um Stack
@@ -351,12 +354,47 @@ class SkeletonPage extends StatelessWidget {
               children: [
                 const SkeletonTitle(),
                 const SizedBox(height: 16),
+                if (stats) ...const [SkeletonStats(), SizedBox(height: 20)],
                 if (carousel) ...const [SkeletonEventCarousel(), SizedBox(height: 20)],
                 for (var i = 0; i < rows; i++) SkeletonListRow(delay: i),
               ],
             ),
           ),
         ),
+        ),
+      );
+}
+
+/// Conversa a carregar: balões alternados (recebidos à esquerda, enviados à
+/// direita), com larguras e alturas variadas, como as mensagens reais.
+class SkeletonChat extends StatelessWidget {
+  final int count;
+  const SkeletonChat({super.key, this.count = 6});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < count; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  mainAxisAlignment: i.isOdd ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (i.isEven) ...[SkeletonCircle(size: 28, delay: i), const SizedBox(width: 8)],
+                    Flexible(
+                      child: FractionallySizedBox(
+                        widthFactor: const [0.62, 0.48, 0.7, 0.4, 0.55, 0.66][i % 6],
+                        child: SkeletonBox(height: i % 3 == 2 ? 58 : 38, radius: 18, delay: i),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       );
 }

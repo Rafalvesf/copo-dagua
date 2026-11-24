@@ -17,6 +17,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'ticket_pass_screens.dart' show TicketPassCard;
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 // ───────────────────────── Comprar ─────────────────────────
 
@@ -416,7 +417,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.inkMuted)),
                 const SizedBox(height: 6),
                 if (statusAsync.isLoading && s == null)
-                  const Padding(padding: EdgeInsets.all(12), child: Center(child: CircularProgressIndicator()))
+                  const SkeletonList(count: 2, padding: EdgeInsets.all(12))
                 else ...[
                   Text(
                     s == null || !s.hasAccount

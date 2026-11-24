@@ -9,6 +9,7 @@ import '../../../shared/widgets/address_picker.dart' show AddressField;
 import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, IslandCloseButton, showIslandSheet;
 import '../../../shared/widgets/snappy_tap.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Pedido de reserva em passos (mockups «Reservar por categoria»,
 /// 2026-11-20/21) — o mesmo fluxo em todas as categorias: Para que evento?
@@ -463,7 +464,7 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
 
   List<Widget> _peopleStep() {
     if (_loadingPeople || _eventTotal == null) {
-      return const [Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))];
+      return const [SkeletonList(count: 3, padding: EdgeInsets.all(24))];
     }
     final n = _adults + _children;
     final ev = _eventTotal!;

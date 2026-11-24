@@ -190,25 +190,35 @@ class V2Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final letters = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         color: filled ? AppTheme.accentOliveDark : (flat ? tintFor(name) : Colors.white),
         shape: BoxShape.circle,
-        border: flat ? null : Border.all(color: Colors.white, width: 2),
-        boxShadow: flat ? null : StickerIcon.shadow,
-        image: imageUrl == null ? null : DecorationImage(image: sizedNetworkImage(imageUrl!, size, context), fit: BoxFit.cover),
       ),
       alignment: Alignment.center,
-      child: imageUrl != null
-          ? null
-          : Text(initials(name),
-              style: TextStyle(
-                fontSize: flat ? (size >= 70 ? 24 : (size >= 48 ? 16 : (size >= 40 ? 14 : 11))) : (size >= 40 ? 14 : 11),
-                fontWeight: FontWeight.w700,
-                color: filled || flat ? Colors.white : AppTheme.accentOliveDark,
-              )),
+      child: Text(initials(name),
+          style: TextStyle(
+            fontSize: flat ? (size >= 70 ? 24 : (size >= 48 ? 16 : (size >= 40 ? 14 : 11))) : (size >= 40 ? 14 : 11),
+            fontWeight: FontWeight.w700,
+            color: filled || flat ? Colors.white : AppTheme.accentOliveDark,
+          )),
+    );
+    // Com foto (2026-11-24): círculo cinzento do esqueleto enquanto a foto
+    // carrega, em vez do círculo de cor forte (castanho, verde…) sem nada;
+    // as iniciais só aparecem se a foto falhar.
+    final inner = imageUrl == null ? letters : NetworkAvatar(imageUrl!, size: size, fallback: letters);
+    if (flat) return inner;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: StickerIcon.shadow,
+      ),
+      child: ClipOval(child: inner),
     );
   }
 }
