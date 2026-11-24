@@ -575,6 +575,15 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   (hora e mensagem), Tudo certo? → «Pedir orçamento» → «Orçamento pedido».
   Na proposta: «Recusar» (pergunta o motivo, que segue para o parceiro na
   conversa) ou «Aceitar» → extras → pagar o sinal.
+- **Cancelar uma reserva** (pedido do Rafael, 2026-11-24, mockups
+  «Cancelar reserva · organizador / parceiro»; `cancel_booking_sheet.dart`,
+  migração 234): popup com o aviso do §7, «AS CONTAS», «PORQUÊ» e
+  contorno + preto («Manter reserva» é o preto). Nas **primeiras 48 h**
+  depois de pagar, o sinal está cativo e **volta todo** (aviso amarelo).
+  Depois, o **organizador** pode cancelar mas **perde o sinal** (aviso
+  vermelho «Perdes o sinal de X €», botão «Cancelar e perder o sinal»); o
+  **parceiro já não pode cancelar** («Já não podes cancelar», «O sinal já
+  é teu», «Falar com a equipa» + «OK»).
 - **Pagar mais tarde:** enquanto houver tempo, o ecrã de pagar tem
   «Pagar mais tarde» ao lado de «Pagar». Abre «Pagar mais tarde?» com o
   aviso do que acontece sem pagamento (amarelo; vermelho nos últimos 3
