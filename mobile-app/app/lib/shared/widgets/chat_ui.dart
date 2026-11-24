@@ -580,3 +580,141 @@ class _JumpToLatestState extends State<JumpToLatest> {
     ]);
   }
 }
+
+/// Uma linha do «Por tratar».
+class PendingItem {
+  final String title;
+  final String status;
+  final ChatCardTone tone;
+
+  /// O cartão todo, que aparece ao tocar na linha.
+  final Widget card;
+  const PendingItem({required this.title, required this.status, required this.tone, required this.card});
+}
+
+/// «POR TRATAR · N» por cima da caixa de escrever (prancheta «Conversa com
+/// cartões», 2026-11-24): os pedidos e propostas em aberto, uma linha cada;
+/// tocar abre o cartão todo; «Esconder» deixa só a barra.
+class PendingTray extends StatefulWidget {
+  final List<PendingItem> items;
+  const PendingTray({super.key, required this.items});
+
+  @override
+  State<PendingTray> createState() => _PendingTrayState();
+}
+
+class _PendingTrayState extends State<PendingTray> {
+  bool _hidden = false;
+  int? _open;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = widget.items;
+    if (items.isEmpty) return const SizedBox.shrink();
+    final maxH = MediaQuery.sizeOf(context).height * 0.5;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 8),
+      child: Container(
+        constraints: BoxConstraints(maxHeight: maxH),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        child: SingleChildScrollView(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Semantics(
+              button: true,
+              expanded: !_hidden,
+              child: SnappyTap(
+                onTap: () => setState(() {
+                  _hidden = !_hidden;
+                  _open = null;
+                }),
+                child: SizedBox(
+                  height: 44,
+                  child: Row(children: [
+                    Expanded(
+                      child: Text('POR TRATAR · ${items.length}',
+                          style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                    ),
+                    Text(_hidden ? 'Mostrar' : 'Esconder',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    const SizedBox(width: 6),
+                    LineIcon(_hidden ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', size: 16, color: AppTheme.ink, stroke: 2.2),
+                  ]),
+                ),
+              ),
+            ),
+            if (!_hidden)
+              for (var i = 0; i < items.length; i++) ...[
+                const Divider(height: 1, thickness: 1, color: AppTheme.line),
+                Semantics(
+                  button: true,
+                  expanded: _open == i,
+                  child: SnappyTap(
+                    onTap: () => setState(() => _open = _open == i ? null : i),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+                            alignment: Alignment.center,
+                            child: const LineIcon('M3 3h8l10 10-8 8L3 11V3zM7 6.5a1 1 0 1 0 0 .01', size: 15, color: Color(0xFF3A3733), stroke: 2),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(items[i].title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                              const SizedBox(height: 3),
+                              _TrayStatus(items[i].status, items[i].tone),
+                            ]),
+                          ),
+                          LineIcon(_open == i ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', size: 16, color: AppTheme.inkMuted, stroke: 2.2),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_open == i) Padding(padding: const EdgeInsets.only(bottom: 10), child: Center(child: items[i].card)),
+              ],
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrayStatus extends StatelessWidget {
+  final String text;
+  final ChatCardTone tone;
+  const _TrayStatus(this.text, this.tone);
+
+  @override
+  Widget build(BuildContext context) {
+    final line = switch (tone) {
+      ChatCardTone.pending => const Color(0xFFF2A01B),
+      ChatCardTone.urgent => const Color(0xFFC8553D),
+      _ => null,
+    };
+    final green = tone == ChatCardTone.done || tone == ChatCardTone.doneLine;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: line != null ? Colors.white : (green ? const Color(0xFFE6EDE1) : const Color(0xFFE6E6E6)),
+        borderRadius: BorderRadius.circular(999),
+        border: line == null ? null : Border.all(color: line, width: 1.5),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 6, height: 6, decoration: BoxDecoration(color: line ?? (green ? const Color(0xFF3F7A4F) : AppTheme.inkMuted), shape: BoxShape.circle)),
+        const SizedBox(width: 5),
+        Text(text,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: line != null ? AppTheme.ink : (green ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733)))),
+      ]),
+    );
+  }
+}
