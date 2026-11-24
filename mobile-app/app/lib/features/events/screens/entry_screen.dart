@@ -15,7 +15,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../widgets/qr_scan_box.dart';
-import 'ticket_pass_screens.dart' show MyQrPanel;
+import 'ticket_pass_screens.dart' show brandQr;
 
 /// «Entrada» (pedido 2026-11-23: "faz a pagina entrada do codigo qr para
 /// todos os eventos, updates to all"). Um QR da conta (migração 228) e, por
@@ -117,16 +117,12 @@ class _MyEntryState extends State<_MyEntry> with WidgetsBindingObserver {
               QrScanBox(height: 420, showTorch: true),
             ]
           : [
-              const MyQrPanel(),
-              const SizedBox(height: 14),
-              const Text(
-                'Um QR para todos os eventos. Mostra-o à entrada, no restaurante ou ao parceiro. Muda a cada 30 segundos e só serve para ti.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
-              ),
-              const SizedBox(height: 24),
+              const _AccountQrCard(),
+              const SizedBox(height: 12),
+              const Center(child: _Tag('Só funciona na tua conta', green: true)),
+              const SizedBox(height: 18),
               const _Caps('DÁ ENTRADA EM'),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               if (entries == null && !_failed)
                 const SkeletonList(count: 3, padding: EdgeInsets.zero)
               else if (entries == null)
@@ -137,11 +133,10 @@ class _MyEntryState extends State<_MyEntry> with WidgetsBindingObserver {
                   child: Text('Ainda não tens eventos. Quando entrares num, aparece aqui.',
                       style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
                 )
-              else
-                for (final (i, e) in entries.indexed) ...[
-                  if (i > 0) const Divider(height: 1, thickness: 1, color: AppTheme.line),
-                  _EntryRow(entry: e),
-                ],
+              else ...[
+                for (final e in entries) ...[_thinLine, _EntryRow(entry: e)],
+                _thinLine,
+              ],
             ],
     );
   }
@@ -221,7 +216,7 @@ class _PartnerEntryState extends State<_PartnerEntry> with WidgetsBindingObserve
               child: Text('Sem marcações para hoje.', style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
             ),
           for (final b in t.bookings) ...[
-            const Divider(height: 1, thickness: 1, color: AppTheme.line),
+            _thinLine,
             _TodayRow(
               title: b.event,
               meta: [?b.number, if (b.people != null) b.people == 1 ? '1 pessoa' : '${b.people} pessoas'].join(' · '),
@@ -231,13 +226,13 @@ class _PartnerEntryState extends State<_PartnerEntry> with WidgetsBindingObserve
               green: b.arrived > 0,
             ),
           ],
-          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          _thinLine,
           _TodayRow(
             title: 'Cobrado hoje',
             meta: t.chargedCount == 1 ? '1 pagamento com QR' : '${t.chargedCount} pagamentos com QR',
             value: euros(t.chargedCents),
           ),
-          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          _thinLine,
         ],
       ],
     );
@@ -391,8 +386,33 @@ class _TodayRow extends StatelessWidget {
 
 String _hhmm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
+const _weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const _months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
+/// Linha fina 0,5 #E3E3E3 entre as linhas das listas (pranchetas do QR).
+const _thinLine = Divider(height: 0.5, thickness: 0.5, color: AppTheme.line);
+
+/// Etiqueta 12 negrito: verde #E6EDE1/#3F7A4F ou neutra #E6E6E6/#3A3733.
+class _Tag extends StatelessWidget {
+  final String text;
+  final bool green;
+  const _Tag(this.text, {this.green = false});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: green ? const Color(0xFFE6EDE1) : const Color(0xFFE6E6E6),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(text,
+            style: TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w700, color: green ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
+      );
+}
+
+/// Linha de «Dá entrada em» (prancheta «Entrada · QR code»): título 16,
+/// «Sáb, 12 dez · Quinta do Vale · Mesa 4» 13 e a etiqueta à direita.
 class _EntryRow extends StatelessWidget {
   final MyEntry entry;
   const _EntryRow({required this.entry});
@@ -400,56 +420,180 @@ class _EntryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e = entry;
-    final today = DateUtils.dateOnly(DateTime.now());
-    final when = e.date == null
-        ? null
-        : DateUtils.isSameDay(e.date, today)
-            ? 'Hoje'
-            : '${e.date!.day} ${_months[e.date!.month - 1]}';
+    final d = e.date;
     final meta = [
-      ?when,
+      if (d != null) '${_weekdays[d.weekday - 1]}, ${d.day} ${_months[d.month - 1]}',
       ?e.location,
       if (e.table != null) 'Mesa ${e.table}',
-      if (e.organizer) 'Organizas',
-      if (!e.organizer && e.isPaid && e.ticketStatus == 'paid') e.quantity == 1 ? 'Bilhete · 1 pessoa' : 'Bilhete · ${e.quantity} pessoas',
+      if (!e.organizer && e.isPaid && e.ticketStatus == 'paid') e.quantity == 1 ? 'bilhete para 1' : 'bilhete para ${e.quantity}',
     ].join(' · ');
-    final green = AppTheme.accentOliveDark;
-    final (String status, Color color) = e.blocked
-        ? ('Sem bilhete pago: o QR não dá entrada', const Color(0xFFB3261E))
-        : e.checkedInAt != null
-            ? ('Entrada registada às ${_hhmm(e.checkedInAt!)}', green)
-            : e.organizer
-                ? ('És tu que organizas', AppTheme.inkMuted)
-                : ('Mostra o QR à entrada', AppTheme.inkMuted);
+    final arrived = e.arrivals.isEmpty ? null : e.arrivals.last;
+    final (String tag, bool green) = e.checkedInAt != null
+        ? ('Entrou às ${_hhmm(e.checkedInAt!)}', true)
+        : arrived != null
+            ? ('Chegou às ${_hhmm(arrived.at)}', true)
+            : e.blocked
+                ? ('Sem bilhete pago', false)
+                : e.organizer
+                    ? ('Organizas', false)
+                    : e.isPaid
+                        ? ('Bilhete', false)
+                        : ('Por entrar', false);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: e.checkedInAt != null ? green : Colors.white,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            e.checkedInAt != null ? Hi.check : Hi.calendar,
-            size: 20,
-            color: e.checkedInAt != null ? Colors.white : AppTheme.ink,
-          ),
-        ),
-        const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(e.event, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            const SizedBox(height: 4),
-            Text(status, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
-            for (final a in e.arrivals)
-              Text('Chegada registada: ${a.partner} às ${_hhmm(a.at)}',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: green)),
+            if (meta.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ),
           ]),
         ),
+        const SizedBox(width: 10),
+        _Tag(tag, green: green),
       ]),
     );
   }
 }
+
+/// O QR da conta como na prancheta «Entrada · QR code»: cartão branco
+/// (contorno 0,5, cantos 16), o QR 186 numa caixa 214, a barra verde clara
+/// do tempo até mudar, «Novo código em N s» e a pessoa (foto 32, nome 16,
+/// «Um QR para todos os eventos»). Muda a cada 30 s (migração 228).
+class _AccountQrCard extends ConsumerStatefulWidget {
+  const _AccountQrCard();
+
+  @override
+  ConsumerState<_AccountQrCard> createState() => _AccountQrCardState();
+}
+
+class _AccountQrCardState extends ConsumerState<_AccountQrCard> with WidgetsBindingObserver {
+  MyQr? _qr;
+  bool _loading = true;
+  DateTime _expires = DateTime.now();
+  Duration _total = const Duration(seconds: 30);
+  Timer? _refresh;
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _load();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _refresh?.cancel();
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _load();
+    } else if (state == AppLifecycleState.paused) {
+      _refresh?.cancel();
+    }
+  }
+
+  Future<void> _load() async {
+    _refresh?.cancel();
+    final q = await fetchMyQr();
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      if (q != null) {
+        _qr = q;
+        _expires = DateTime.now().add(q.refreshIn);
+        _total = q.refreshIn > const Duration(seconds: 30) ? q.refreshIn : const Duration(seconds: 30);
+      }
+    });
+    // Sem rede: tenta outra vez daqui a 5 s.
+    _refresh = Timer(q?.refreshIn ?? const Duration(seconds: 5), _load);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = ref.watch(authControllerProvider).profile;
+    final q = _qr;
+    final name = (q?.name?.trim().isNotEmpty ?? false) ? q!.name!.trim() : (profile?.fullName ?? '');
+    final left = _expires.difference(DateTime.now());
+    final secs = left.isNegative ? 0 : (left.inMilliseconds / 1000).ceil();
+    final frac = (left.inMilliseconds / _total.inMilliseconds).clamp(0.0, 1.0);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.line, width: 0.5),
+      ),
+      child: Column(children: [
+        Container(
+          width: 214,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.line, width: 0.5),
+          ),
+          child: SizedBox(
+            width: 186,
+            height: 186,
+            child: q != null
+                ? brandQr(q.qrData, 186, label: 'Código QR da conta')
+                : _loading
+                    ? const SkeletonBox(width: 186, height: 186, radius: 8)
+                    : Center(
+                        child: Column(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Hi.signalSlash, size: 28, color: AppTheme.inkMuted),
+                          const SizedBox(height: 6),
+                          const Text('Sem ligação', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                          TextButton(onPressed: _load, child: const Text('Tentar outra vez')),
+                        ]),
+                      ),
+          ),
+        ),
+        if (q != null) ...[
+          const SizedBox(height: 10),
+          // Barra do tempo até o código mudar (4, #A9C79A sobre #E3E3E3).
+          Container(
+            width: 214,
+            height: 4,
+            decoration: BoxDecoration(color: AppTheme.line, borderRadius: BorderRadius.circular(2)),
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: frac,
+              child: Container(decoration: BoxDecoration(color: AppTheme.progress, borderRadius: BorderRadius.circular(2))),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Semantics(
+            liveRegion: false,
+            child: Text('Novo código em $secs s', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ),
+        ],
+        const SizedBox(height: 12),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          V2Avatar(name.isEmpty ? '?' : name, size: 32, imageUrl: profile?.avatarUrl),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const Text('Um QR para todos os eventos', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+        ]),
+      ]),
+    );
+  }
+}
+

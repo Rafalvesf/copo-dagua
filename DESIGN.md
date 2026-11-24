@@ -310,7 +310,9 @@ ecrãs. O resto da app mantém a tabela acima.
   ideia). Anima 3 vezes ao aparecer e fica parada; só «a pensar» pode
   continuar enquanto carrega; parada com «reduzir movimento». Onde:
   listas vazias → a dormir; erros → triste; evento criado → parabéns;
-  pagamento feito e «Reserva feita!» → piscar o olho (pedido 2026-11-22); convites e «vou» → apaixonada; aceitar/juntar →
+  pagamento feito e «Reserva feita!» → piscar o olho (pedido 2026-11-22;
+  exceção: o pagar no balcão com QR mostra o visto verde 72 da prancheta
+  «Pagar no balcão», pedido 2026-11-24); convites e «vou» → apaixonada; aceitar/juntar →
   contente; sugestões → ideia; conversas vazias e «Está tudo tratado» → piscar o olho; Premium → fixe
   (de óculos, pedido 2026-11-21). Substitui
   as duas taças.
