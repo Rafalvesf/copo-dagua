@@ -329,7 +329,7 @@ class _AddChooser extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Adicionar ao programa', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          const Text('Adicionar ao programa', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 4),
           const Text('Uma etapa com um parceiro do evento, ou uma à tua maneira.',
               style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -497,7 +497,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(widget.item.isEmpty ? 'Nova etapa' : 'Editar etapa',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 16),
           const _Label('NOME'),
           _PillField(controller: _name, hint: hasPartner ? 'Ex.: Jantar' : 'Ex.: Passeio no parque'),
@@ -694,7 +694,7 @@ class _PartnerPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return _Sheet(
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('Escolher parceiro', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        const Text('Escolher parceiro', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 4),
         const Text('Parceiros do teu evento. Se ainda não aceitaram, a etapa fica à espera.',
             style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -752,7 +752,7 @@ class _NoPartnersSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return _Sheet(
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('Ainda sem parceiros', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        const Text('Ainda sem parceiros', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 6),
         const Text(
             'Ainda não pediste a nenhum parceiro neste evento. Explora e pede a um; depois escolhe-o aqui e, se aceitar, aparece no programa.',

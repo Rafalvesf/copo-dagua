@@ -121,7 +121,7 @@ Expanded(child: ScrollingHeader(
                               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
                           const SizedBox(height: 6),
                           Text(booking.clientName,
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                           const SizedBox(height: 6),
                           if (booking.proposalSent && booking.status != BookingStatus.confirmado && booking.status != BookingStatus.concluido)
                             const KitTag('Proposta enviada', kind: KitTagKind.neutral)
@@ -183,7 +183,7 @@ Expanded(child: ScrollingHeader(
                     const SizedBox(height: 18),
                     const Padding(
                       padding: EdgeInsets.only(left: 4, bottom: 8),
-                      child: Text('Informação do evento', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                      child: Text('Informação do evento', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     PartnerEventBrief(bookingId: booking.id),
                   ],
@@ -192,7 +192,7 @@ Expanded(child: ScrollingHeader(
                     const SizedBox(height: 18),
                     const Padding(
                       padding: EdgeInsets.only(left: 4, bottom: 8),
-                      child: Text('Documentos', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                      child: Text('Documentos', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     ExportCard(
                       reportLabel: 'Resumo da reserva',
@@ -504,7 +504,7 @@ class BookingChoicesSummary extends ConsumerWidget {
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('${choices.length}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w400, color: AppTheme.ink, height: 1)),
+              Text('${choices.length}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1)),
               const SizedBox(width: 8),
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -603,7 +603,7 @@ class _ChosenPackageCard extends StatelessWidget {
         ]),
         const SizedBox(height: 10),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(child: Text('${p['name'] ?? 'Pacote'}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink))),
+          Expanded(child: Text('${p['name'] ?? 'Pacote'}', style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink))),
           Text('${starting ? 'desde ' : ''}${euros(price)}${priceUnitSuffix(unit)}',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         ]),
@@ -636,7 +636,7 @@ class _ChosenPackageCard extends StatelessWidget {
           const SizedBox(height: 6),
           Row(children: [
             const Expanded(child: Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            Text(euros(booking.totalAmount!), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            Text(euros(booking.totalAmount!), style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ]),
         ],
       ]),

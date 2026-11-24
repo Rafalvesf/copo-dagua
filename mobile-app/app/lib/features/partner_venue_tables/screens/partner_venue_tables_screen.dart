@@ -236,7 +236,7 @@ class _TableTypeSheetState extends State<_TableTypeSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Tipo de mesa', style: TextStyle(fontWeight: FontWeight.w400, fontSize: AppFontSize.xl)),
+            const Text('Tipo de mesa', style: TextStyle(fontWeight: FontWeight.w800, fontSize: AppFontSize.xl)),
             const SizedBox(height: 16),
             const Text(
               'Forma',

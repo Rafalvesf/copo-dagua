@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show RealtimeChannel;
 
+import '../../../core/auth/auth_controller.dart';
 import '../../../core/events/event_pay.dart';
 import '../../../core/events/my_qr.dart';
 import '../../../core/home/home_providers.dart' show CheckoutUnavailable;
@@ -17,7 +19,6 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../payments/screens/pay_screen.dart' show PayScreen;
 import 'ticket_pass_screens.dart' show brandQr;
-import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 
 String _hhmm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
@@ -27,9 +28,43 @@ class _WhiteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        padding: const EdgeInsets.all(14),
+        decoration: _cardBox,
         child: child,
+      );
+}
+
+/// Cartão das pranchetas do QR (2026-11-23): branco, contorno 0,5 #E3E3E3,
+/// cantos 16.
+final _cardBox = BoxDecoration(
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(16),
+  border: Border.all(color: AppTheme.line, width: 0.5),
+);
+
+const _weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+const _monthsPt = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+/// «Sex, 18 dez».
+String _day(DateTime d) => '${_weekdays[d.weekday - 1]}, ${d.day} ${_monthsPt[d.month - 1]}';
+
+/// Linha de detalhe dentro de um cartão: rótulo 14 cinzento à esquerda,
+/// valor 14 negrito (ou etiqueta) à direita, linha 0,5 por cima.
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String? value;
+  final Widget? trailing;
+  const _DetailRow(this.label, {this.value, this.trailing});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.line, width: 0.5))),
+        child: Row(children: [
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
+          if (value != null) Text(value!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ?trailing,
+        ]),
       );
 }
 
@@ -91,7 +126,12 @@ class _ScanScreenState extends State<ScanScreen> {
                 Row(children: [
                   V2RoundButton(icon: Hi.arrowLeft, tooltip: 'Voltar', onTap: () => Navigator.of(context).maybePop()),
                 ]),
-                const SizedBox(height: 16),
+                if (r.result == 'ok') ...[
+                  const SizedBox(height: 12),
+                  const Text('Quem é', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  const SizedBox(height: 18),
+                ] else
+                  const SizedBox(height: 16),
                 if (r.result != 'ok') ..._problem(r) else ..._person(r),
               ],
             );
@@ -112,7 +152,7 @@ class _ScanScreenState extends State<ScanScreen> {
       const SizedBox(height: 40),
       Icon(icon, size: 96, color: r.result == 'error' ? AppTheme.inkMuted : const Color(0xFFB3261E)),
       const SizedBox(height: 16),
-      Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+      Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       const SizedBox(height: 8),
       Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, height: 1.4, color: AppTheme.ink)),
       if (r.result == 'error') ...[
@@ -125,96 +165,107 @@ class _ScanScreenState extends State<ScanScreen> {
   List<Widget> _person(ScanResult r) {
     final name = r.name ?? 'Convidado';
     return [
-      Center(
-        // Foto: círculo do esqueleto enquanto carrega (2026-11-24); a
-        // inicial em fundo escuro só sem foto ou se a foto falhar.
-        child: Builder(builder: (context) {
-          final letter = CircleAvatar(
-            radius: 44,
-            backgroundColor: AppTheme.ink,
-            child: Text(name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: Colors.white)),
-          );
-          final url = r.avatarUrl;
-          return url != null && url.isNotEmpty ? NetworkAvatar(url, size: 88, fallback: letter) : letter;
-        }),
-      ),
-      const SizedBox(height: 12),
-      Text(name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
-      const SizedBox(height: 4),
-      const Text('QR verificado agora', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-      // «Ver perfil» também na entrada e nas marcações (migração 232).
-      if (r.profileId != null) ...[
-        const SizedBox(height: 10),
-        Center(
-          child: SizedBox(
-            height: 36,
-            child: OutlinedButton(
-              onPressed: () => context.push('/u/${r.profileId}'),
-              style: OutlinedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppTheme.ink,
-                side: const BorderSide(color: AppTheme.ink, width: 1.5),
-                shape: const StadiumBorder(),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-              child: const Text('Ver perfil', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+      // Prancheta «Quem é»: cartão com a pessoa e «Verificado».
+      _WhiteCard(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            V2Avatar(name, size: 44, imageUrl: r.avatarUrl),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                const Text('Leste o QR agora', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ]),
             ),
-          ),
-        ),
-      ],
-      const SizedBox(height: 24),
-      if (r.items.isEmpty)
+            const SizedBox(width: 8),
+            const _Tag('Verificado', green: true),
+          ]),
+          // «Ver perfil» também na entrada e nas marcações (migração 232).
+          if (r.profileId != null) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                height: 36,
+                child: OutlinedButton(
+                  onPressed: () => context.push('/u/${r.profileId}'),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: AppTheme.ink,
+                    side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Text('Ver perfil', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ),
+          ],
+        ]),
+      ),
+      if (r.items.isEmpty) ...[
+        const SizedBox(height: 18),
         const Text(
           'Esta pessoa não tem marcações contigo nem entradas em eventos que organizas.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16, height: 1.4, color: AppTheme.ink),
-        )
-      else
-        for (final i in r.items) ...[_item(r, i), const SizedBox(height: 12)],
+          style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
+        ),
+      ] else
+        for (final i in r.items) ..._item(r, i),
     ];
   }
 
-  Widget _item(ScanResult r, ScanItem i) {
+  List<Widget> _item(ScanResult r, ScanItem i) {
     final key = _key(i);
     final done = _done[key];
-    final at = done?.at ?? i.doneAt;
     final booking = i.kind == 'booking';
-    final already = done == null && i.doneAt != null;
     final blocked = !booking && i.isPaid && i.ticketStatus != 'paid';
-    final meta = [
-      if (i.date != null) '${i.date!.day.toString().padLeft(2, '0')}/${i.date!.month.toString().padLeft(2, '0')}/${i.date!.year}',
-      if (booking && i.bookingNumber != null) 'Marcação ${i.bookingNumber}',
-      if (booking && i.people != null) '${i.people} pessoas',
-      if (!booking && i.isPaid) i.ticketStatus == 'paid' ? (i.quantity == 1 ? 'Bilhete pago · 1 pessoa' : 'Bilhete pago · ${i.quantity} pessoas') : 'Sem bilhete pago',
-    ].join(' · ');
-    final (String? statusText, Color statusColor) = switch (done?.result) {
-      'ok' => ('${booking ? 'Chegada' : 'Entrada'} registada às ${_hhmm(done!.at ?? DateTime.now())}', AppTheme.accentOliveDark),
-      'already' => ('Já ${booking ? 'chegou' : 'entrou'} às ${at == null ? '—' : _hhmm(at)}', const Color(0xFF9A5B00)),
-      'expired' => ('A leitura expirou. Lê o QR outra vez.', const Color(0xFFB3261E)),
-      'not_paid' => ('Bilhete por pagar.', const Color(0xFFB3261E)),
-      'refunded' => ('Bilhete reembolsado.', const Color(0xFFB3261E)),
-      null => already
-          ? ('Já ${booking ? 'chegou' : 'entrou'} às ${_hhmm(i.doneAt!)}', const Color(0xFF9A5B00))
-          : blocked
-              ? ('Sem bilhete pago: não dá entrada.', const Color(0xFFB3261E))
-              : (null, AppTheme.ink),
-      _ => ('Não foi possível registar. Tenta outra vez.', const Color(0xFFB3261E)),
+    // A hora da chegada/entrada: a que acabou de ser registada ou a de antes.
+    final at = (done?.result == 'ok' || done?.result == 'already') ? (done!.at ?? i.doneAt) : i.doneAt;
+    final registered = at != null;
+    final String? problem = switch (done?.result) {
+      'expired' => 'A leitura expirou. Lê o QR outra vez.',
+      'not_paid' => 'Bilhete por pagar: não dá entrada.',
+      'refunded' => 'Bilhete reembolsado: não dá entrada.',
+      'ok' || 'already' || null => null,
+      _ => 'Não foi possível registar. Tenta outra vez.',
     };
-    final showConfirm = !already && !blocked && (done == null || done.result == 'error');
-    return _WhiteCard(
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(booking ? 'A TUA MARCAÇÃO' : 'ENTRADA NO TEU EVENTO',
-            style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-        const SizedBox(height: 4),
-        Text(i.event, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
-        if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-        if (statusText != null) ...[
-          const SizedBox(height: 8),
-          Text(statusText, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: statusColor)),
-        ],
-        const SizedBox(height: 12),
-        Row(children: [
+    final showConfirm = !registered && !blocked && (done == null || done.result == 'error');
+    return [
+      const SizedBox(height: 18),
+      Text(booking ? 'A TUA MARCAÇÃO' : 'ENTRADA NO TEU EVENTO',
+          style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+      const SizedBox(height: 4),
+      _WhiteCard(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(i.event, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          if (i.date != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(_day(i.date!), style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ),
+          const SizedBox(height: 10),
+          if (booking) ...[
+            if (i.bookingNumber != null) _DetailRow('Marcação', value: i.bookingNumber),
+            if (i.people != null) _DetailRow('Pessoas', value: '${i.people}'),
+            _DetailRow('Chegada',
+                trailing: registered ? _Tag('Registada às ${_hhmm(at)}', green: true) : const _Tag('Por registar')),
+          ] else ...[
+            _DetailRow('Bilhete',
+                trailing: i.ticketStatus == 'paid'
+                    ? _Tag(i.quantity == 1 ? 'Pago · 1 pessoa' : 'Pago · ${i.quantity} pessoas', green: true)
+                    : const _Tag('Sem bilhete pago')),
+            _DetailRow('Entrada',
+                trailing: registered ? _Tag('Registada às ${_hhmm(at)}', green: true) : const _Tag('Por registar')),
+          ],
+          if (problem != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(problem, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFFC8553D))),
+            ),
+        ]),
+      ),
+      if (showConfirm || booking) const SizedBox(height: 12),
+      Row(children: [
           if (showConfirm)
             Expanded(
               child: SizedBox(
@@ -248,8 +299,7 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
           ],
         ]),
-      ]),
-    );
+    ];
   }
 }
 
@@ -510,7 +560,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
               ),
               const SizedBox(height: 12),
               Text(_req == null ? 'Cobrar' : 'QR para pagar',
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 18),
               Expanded(child: _req == null ? _keypad() : _qr(_req!)),
             ]),
@@ -529,7 +579,10 @@ class _ChargeScreenState extends State<ChargeScreen> {
               excludeSemantics: true,
               child: Material(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: AppTheme.line, width: 0.5),
+                ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
                   onTap: () => _press(k),
@@ -538,7 +591,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
                     child: Center(
                       child: k == 'del'
                           ? const Icon(Icons.backspace_outlined, size: 22, color: AppTheme.ink)
-                          : Text(k, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                          : Text(k, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                   ),
                 ),
@@ -548,31 +601,33 @@ class _ChargeScreenState extends State<ChargeScreen> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Expanded(
         child: ListView(padding: EdgeInsets.zero, children: [
+          // Prancheta «Cobrar»: a frase 13 por cima e o valor 44.
           Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+            decoration: _cardBox,
             child: Column(children: [
-              const Text('VALOR',
-                  style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-              const SizedBox(height: 6),
+              Text(
+                ok ? 'Quem paga escolhe como paga quando ler o QR' : 'Mínimo 0,50 €',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+              ),
+              const SizedBox(height: 10),
               Semantics(
                 liveRegion: true,
                 child: Text(euros(_cents),
-                    style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                ok ? 'Quem paga escolhe como paga quando ler o QR.' : 'Mínimo 0,50 €',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                    style: const TextStyle(fontSize: 44, height: 1.1, letterSpacing: -0.5, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
             ]),
           ),
           const SizedBox(height: 10),
           Container(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26)),
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: AppTheme.line, width: 0.5),
+            ),
             child: Row(children: [
               const Text('O quê', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               const SizedBox(width: 10),
@@ -581,7 +636,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
                   controller: _what,
                   maxLength: 80,
                   textCapitalization: TextCapitalization.sentences,
-                  style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.ink),
                   decoration: const InputDecoration(
                     isCollapsed: true,
                     filled: false,
@@ -601,7 +656,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
             ['7', '8', '9'],
             ['00', '0', 'del'],
           ]) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: row.first == '1' ? 16 : 10),
             Row(children: [
               for (final (j, k) in row.indexed) ...[if (j > 0) const SizedBox(width: 10), key(k)],
             ]),
@@ -627,23 +682,32 @@ class _ChargeScreenState extends State<ChargeScreen> {
       _ => ('À espera…', false),
     };
     Widget row(String label, Widget value) => Container(
-          constraints: const BoxConstraints(minHeight: 48),
-          decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.line))),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.line, width: 0.5))),
           child: Row(children: [
             Expanded(child: Text(label, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted))),
             value,
           ]),
         );
+    final merchant = ProviderScope.containerOf(context, listen: false).read(authControllerProvider).profile?.businessName;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Expanded(
         child: ListView(padding: EdgeInsets.zero, children: [
+          // Prancheta «QR da cobrança»: o nome do parceiro 19, o que é 13,
+          // o QR, o valor uma só vez e «Uso único».
           Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+            padding: const EdgeInsets.all(14),
+            decoration: _cardBox,
             child: Column(children: [
-              Text(what.isEmpty ? 'Pagamento no balcão' : what,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              if (merchant != null && merchant.trim().isNotEmpty)
+                Text(merchant.trim(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(what.isEmpty ? 'Pagamento no balcão' : what,
+                    textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ),
               const SizedBox(height: 12),
               if (paid)
                 const SizedBox(height: 214, child: Center(child: EstrelaMascot(Estrela.piscar, size: 150)))
@@ -653,7 +717,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.line),
+                    border: Border.all(color: AppTheme.line, width: 0.5),
                   ),
                   child: Opacity(
                     opacity: open ? 1 : 0.15,
@@ -661,7 +725,7 @@ class _ChargeScreenState extends State<ChargeScreen> {
                   ),
                 ),
               const SizedBox(height: 12),
-              Text(euros(_cents), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              Text(euros(_cents), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 2),
               Text(
                 paid
@@ -677,9 +741,8 @@ class _ChargeScreenState extends State<ChargeScreen> {
           ),
           const SizedBox(height: 14),
           Semantics(liveRegion: true, child: row('Estado', _Tag(state, green: green))),
-          if (open)
-            row('Expira em', Text(expires, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-          const Divider(height: 1, thickness: 1, color: AppTheme.line),
+          row('Expira em',
+              Text(open ? expires : '—', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink))),
         ]),
       ),
       const SizedBox(height: 12),
@@ -847,7 +910,7 @@ class _SheetShell extends StatelessWidget {
             const SizedBox(height: 14),
             Row(children: [
               Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
               V2RoundButton(icon: Hi.xMark, tooltip: 'Fechar', onTap: () => context.pop()),
             ]),

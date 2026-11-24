@@ -422,7 +422,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         builder: (ctx, setD) {
           final err = WordFilter.allowed(c.text) ? null : WordFilter.message;
           return IslandAlert(
-            title: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            title: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             content: OnbField(controller: c, hint: hint, autofocus: true, keyboardType: keyboard, error: err, onChanged: (_) => setD(() {})),
             actions: [
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
@@ -655,7 +655,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                                 _peopleFocus.unfocus();
                                 _commitPeople();
                               },
-                              style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                              style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
                               decoration: const InputDecoration(
                                 isCollapsed: true,
                                 filled: false,
@@ -674,7 +674,7 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
                                 border: Border(bottom: BorderSide(color: Color(0xFFD8D3C9), width: 2)),
                               ),
                               child: Text('$_people',
-                                  style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                                  style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             ),
                           ),
                     const SizedBox(height: 2),
@@ -882,7 +882,7 @@ class _DoneView extends StatelessWidget {
                 const SizedBox(height: 20),
                 const Text('Parabéns! 🎉',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 35, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                    style: TextStyle(fontSize: 35, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 16),
                 Text('$name está criado. Agora é convidar.',
                     textAlign: TextAlign.center,

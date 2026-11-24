@@ -146,7 +146,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                           children: [
                             const Expanded(
                               child: Text('Perfil',
-                                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             ),
                             if (event != null)
                               WithCount(

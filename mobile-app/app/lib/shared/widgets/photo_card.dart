@@ -96,7 +96,7 @@ class PhotoCard extends StatelessWidget {
                 child: Text(title,
                     maxLines: titleLines,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 19, height: 1.2, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 19, height: 1.2, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
               if (titleBadges != null) ...[const SizedBox(width: 4), titleBadges!],
             ]),

@@ -125,7 +125,7 @@ class ProfileCard_Users extends StatelessWidget {
   });
 
   Widget _stat(int n, String label) => Column(children: [
-        Text('$n', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        Text('$n', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
       ]);
 
@@ -149,7 +149,7 @@ class ProfileCard_Users extends StatelessWidget {
           Row(children: [
             Expanded(
               child: Row(children: [
-                Flexible(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink))),
+                Flexible(child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink))),
                 ?nameBadge,
               ]),
             ),
@@ -251,7 +251,7 @@ class ProfileCard_Partners extends StatelessWidget {
                     child: Text(name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ),
                   ?nameBadge,
                 ]),
@@ -295,7 +295,7 @@ class ProfileSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 2, 22, AppTheme.screenMargin, 10),
         child: Row(children: [
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink))),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
           if (action != null)
             SnappyTap(
               onTap: onAction,
@@ -457,7 +457,7 @@ Future<void> showEditProfileSheet(BuildContext context, WidgetRef ref, PublicPro
       padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.viewInsetsOf(ctx).bottom + 24),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Editar perfil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          const Text('Editar perfil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 12),
           // O @ edita-se só aqui, no perfil (pedido 2026-11-12).
           UsernameEditRow(onTap: () {
@@ -530,7 +530,7 @@ Future<void> showPartnerEditProfileSheet(BuildContext context) async {
     builder: (ctx) => Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text('Editar perfil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        const Text('Editar perfil', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         const SizedBox(height: 12),
         UsernameEditRow(onTap: () => Navigator.of(ctx).pop('/username')),
         const SizedBox(height: 8),

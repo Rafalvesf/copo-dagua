@@ -194,7 +194,7 @@ Future<void> showReportPicker(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Que mensagem queres denunciar?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 4),
           const Text('Também podes tocar sem largar numa mensagem.',
               style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),

@@ -164,7 +164,7 @@ class OnbStep extends StatelessWidget {
       const SizedBox(height: 28),
       if (kicker != null) ...[OnbGroupLabel(kicker!), const SizedBox(height: 8)],
       // Escala de primeiro contacto (DESIGN.md §6): título 32.
-      Text(title, style: const TextStyle(fontSize: 32, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+      Text(title, style: const TextStyle(fontSize: 32, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       if (subtitle != null) ...[
         const SizedBox(height: 8),
         Text(subtitle!, style: const TextStyle(fontSize: 17, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
@@ -500,7 +500,7 @@ class OnbSheetHeader extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Row(children: [
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink))),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
           _SheetRound(icon: Hi.xMark, onTap: () => Navigator.of(context).pop()),
         ]),
       ]);

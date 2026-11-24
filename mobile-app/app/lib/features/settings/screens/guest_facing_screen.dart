@@ -127,7 +127,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
         builder: (context, _, _) => SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 14),
             ...body(),
             const SizedBox(height: 18),
@@ -406,7 +406,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                               child: Row(children: [
                                 Expanded(
                                   child: Text(widget.event.guestCode!,
-                                      style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                                      style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                                 ),
                                 FrameButton36('Copiar', outlined: true, onTap: () async {
                                   await copyText(widget.event.guestCode!);
@@ -968,7 +968,7 @@ class _InviteLinkCard extends ConsumerWidget {
                           style: TextStyle(fontSize: AppFontSize.sm, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.accentTint)),
                       const SizedBox(height: 2),
                       Text(code!,
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, letterSpacing: 2, color: Colors.white)),
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 2, color: Colors.white)),
                     ]),
                   ),
                   const Icon(Hi.documentDuplicate, size: 18, color: Colors.white, semanticLabel: 'Copiar código'),
@@ -1397,7 +1397,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
         builder: (context, setSheet) => SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.of(context).viewInsets.bottom),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Text('Acompanhantes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            const Text('Acompanhantes', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 14),
             ..._sheetBody(() => setSheet(() {})),
             const SizedBox(height: 18),
@@ -1773,7 +1773,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
                       textInputAction: TextInputAction.done,
                       onChanged: (_) => setState(() {}),
                       onSubmitted: (_) => _savePrice(),
-                      style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                      style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       // Sem o fundo cinzento do tema (só metade da caixa ficava cinzenta).
                       decoration: const InputDecoration(
                         hintText: '25',
@@ -1788,7 +1788,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
                   ),
                   const SizedBox(width: 6),
                   const Expanded(
-                    child: Text('€', style: TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w400, color: AppTheme.inkMuted)),
+                    child: Text('€', style: TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   ),
                 ]),
               ),
@@ -1953,7 +1953,7 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
                     textInputAction: TextInputAction.done,
                     onChanged: (_) => setState(() {}),
                     onSubmitted: (_) => _value == null ? null : _save(_value),
-                    style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                    style: const TextStyle(fontSize: 26, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
                     decoration: const InputDecoration(
                       hintText: '100',
                       filled: false,
@@ -2115,7 +2115,7 @@ class _CodeHero extends ConsumerWidget {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(code?.isNotEmpty == true ? code! : '—',
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400, letterSpacing: 1, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppTheme.ink)),
             ),
           ),
           if (code?.isNotEmpty == true)

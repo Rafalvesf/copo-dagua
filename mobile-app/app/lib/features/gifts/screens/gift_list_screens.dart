@@ -407,7 +407,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
       padding: EdgeInsets.fromLTRB(22, 18, 22, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(widget.existing == null ? 'Novo desejo' : 'Editar desejo',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 4),
         const Text('O que precisam? Os convidados reservam e compram onde quiserem.',
             style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -511,10 +511,10 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
               child: AspectRatio(aspectRatio: 4 / 3, child: Image.network(p.photoUrl!, fit: BoxFit.cover, cacheWidth: 1100, semanticLabel: p.title, frameBuilder: skeletonImageFrame, errorBuilder: skeletonImageError)),
             ),
           const SizedBox(height: 14),
-          Text(p.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          Text(p.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           Text('${p.partnerName}${p.city != null ? ' · ${p.city}' : ''}', style: const TextStyle(fontSize: 13.5, color: AppTheme.inkMuted)),
           const SizedBox(height: 8),
-          Text(giftEuros(p.price), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          Text(giftEuros(p.price), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.ink)),
           if (p.description?.isNotEmpty == true) ...[
             const SizedBox(height: 10),
             Text(p.description!, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
@@ -644,7 +644,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 12),
                       child: Text('${items.length} ${items.length == 1 ? 'produto' : 'produtos'}',
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     for (final p in items)
                       Padding(
@@ -959,7 +959,7 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(22, 18, 22, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(i.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        Text(i.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 4),
         Text(
           i.isProduct
@@ -1049,7 +1049,7 @@ class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
               Text(
                 _status == 'checking' ? 'A confirmar o pagamento…' : (paid ? 'Presente oferecido!' : 'Pagamento por confirmar'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink),
               ),
               const SizedBox(height: 8),
               Text(

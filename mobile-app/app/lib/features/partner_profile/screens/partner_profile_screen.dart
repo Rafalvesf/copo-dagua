@@ -68,7 +68,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                     // à esquerda, avisos e Definições em botões redondos.
                     Row(children: [
                       const Expanded(
-                        child: Text('Perfil', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                        child: Text('Perfil', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                       ),
                       const PartnerNotificationBell(round: true),
                       const SizedBox(width: 10),

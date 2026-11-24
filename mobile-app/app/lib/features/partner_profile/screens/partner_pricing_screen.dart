@@ -658,7 +658,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(widget.name.isEmpty ? 'Novo pacote' : 'Pacote',
-                  style: const TextStyle(fontWeight: FontWeight.w400, fontSize: 22, color: AppTheme.ink)),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: AppTheme.ink)),
               const SizedBox(height: 4),
               const Text('Diz exatamente o que o cliente recebe. É isto que ele vê antes de pedir e o que fica combinado.',
                   style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -792,7 +792,7 @@ class _EditExtraSheetState extends State<_EditExtraSheet> {
         child: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Text(widget.extra == null ? 'Novo extra' : 'Extra',
-                style: const TextStyle(fontWeight: FontWeight.w400, fontSize: 22, color: AppTheme.ink)),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: AppTheme.ink)),
             const SizedBox(height: 4),
             const Text('Aparece ao cliente só depois de ele escolher um dos pacotes que marcares.',
                 style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),

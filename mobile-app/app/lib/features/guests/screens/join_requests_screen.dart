@@ -173,7 +173,7 @@ class _RequestProfile extends ConsumerWidget {
         Center(child: V2Avatar(r.name, size: 76, imageUrl: p?.avatarUrl)),
         const SizedBox(height: 8),
         Text(r.name, textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (handle.isNotEmpty)
           Text(handle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
         if (p != null || bringing != null) ...[

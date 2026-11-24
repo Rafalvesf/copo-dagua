@@ -1052,7 +1052,7 @@ class _IntroView extends StatelessWidget {
                       const SizedBox(height: 24),
                       const Text(
                         'Olá, parceiro!',
-                        style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                        style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -1101,7 +1101,7 @@ class _StepScaffold extends StatelessWidget {
           const SizedBox(height: 12),
         ] else
           const SizedBox(height: 8),
-        Text(question, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        Text(question, style: const TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
         if (subtitle != null && subtitle!.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(subtitle!, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
@@ -1342,7 +1342,7 @@ class _SentViewState extends State<_SentView> {
                     delay: Duration(milliseconds: 1300),
                     child: Text(
                       'Perfil enviado!',
-                      style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                      style: TextStyle(fontSize: 28, height: 34 / 28, fontWeight: FontWeight.w700, color: AppTheme.ink),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1423,7 +1423,7 @@ class _NumberStepper extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    Text(value == null ? '—' : '$v', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                    Text(value == null ? '—' : '$v', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     Text(unit, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
                   ],
                 ),
