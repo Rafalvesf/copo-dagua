@@ -13,11 +13,20 @@ import '../../core/theme/app_theme.dart';
 
 const _pulse = Duration(milliseconds: 900);
 
+/// Cores do esqueleto (2026-11-24, «não vejo a animação do load»): antes o
+/// bloco era `AppTheme.surface` (#F2F2F2), a mesma cor do fundo da página,
+/// e não se via. Agora é um cinzento que se destaca do fundo e dos cartões
+/// brancos, e pulsa entre este tom e um mais escuro.
+const skeletonBase = Color(0xFFE2E2E2);
+const skeletonPeak = Color(0xFFCFCFCF);
+
 /// Bloco que pulsa suavemente. Fotos, botões, QR, números.
 class SkeletonBox extends StatefulWidget {
   final double? width;
   final double height;
   final double radius;
+
+  /// Cor de base; a pulsação escurece-a um pouco. Por omissão, [skeletonBase].
   final Color color;
 
   /// Atraso da pulsação, em passos de 150 ms (0, 1 ou 2).
@@ -28,7 +37,7 @@ class SkeletonBox extends StatefulWidget {
     this.width,
     required this.height,
     this.radius = AppRadius.lg,
-    this.color = AppTheme.surface,
+    this.color = skeletonBase,
     this.delay = 0,
   });
 
@@ -49,13 +58,22 @@ class _SkeletonBoxState extends State<SkeletonBox> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    // Pulsa a cor (não a transparência): com transparência, um bloco
+    // claro sobre um fundo claro quase não mudava.
+    final peak = widget.color == skeletonBase
+        ? skeletonPeak
+        : Color.lerp(widget.color, const Color(0xFF000000), 0.08)!;
+    final curve = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     return ExcludeSemantics(
-      child: FadeTransition(
-        opacity: Tween(begin: 0.55, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut)),
-        child: Container(
+      child: AnimatedBuilder(
+        animation: curve,
+        builder: (context, _) => Container(
           width: widget.width,
           height: widget.height,
-          decoration: BoxDecoration(color: widget.color, borderRadius: BorderRadius.circular(widget.radius)),
+          decoration: BoxDecoration(
+            color: Color.lerp(widget.color, peak, curve.value),
+            borderRadius: BorderRadius.circular(widget.radius),
+          ),
         ),
       ),
     );
@@ -392,7 +410,7 @@ Widget skeletonImageFrame(BuildContext context, Widget child, int? frame, bool w
 /// `errorBuilder` de fotos: bloco neutro com um ícone, em vez de nada ou
 /// de uma foto errada.
 Widget skeletonImageError(BuildContext context, Object error, StackTrace? stack) => Container(
-      color: AppTheme.surface,
+      color: skeletonBase,
       alignment: Alignment.center,
       child: const Icon(Icons.image_not_supported_outlined, color: AppTheme.inkMuted, size: 22),
     );
