@@ -7,9 +7,6 @@ import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import '../money.dart';
 import 'snappy_tap.dart';
-import 'dense_card.dart' show PriceBox;
-import 'v2_kit.dart';
-import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Peças da conversa exatamente como no design (canvas "Conversa"):
 /// bolhas com o canto do lado de quem fala mais fechado, separador de
@@ -206,6 +203,8 @@ class ChatProposalCard extends StatelessWidget {
     this.actions = const [],
     this.note,
     this.imageUrl,
+    this.status,
+    this.tone = ChatCardTone.neutral,
   });
 
   /// Linha pequena por baixo dos valores (ex.: "Inclui a comissão …").
@@ -214,108 +213,135 @@ class ChatProposalCard extends StatelessWidget {
   /// Foto do parceiro no topo do cartão (mockup "Conversa").
   final String? imageUrl;
 
-  Widget _chip(String t) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(color: const Color(0xFFF2F2F2), borderRadius: BorderRadius.circular(999)),
-        child: Text(t, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
-      );
+  /// Estado do cartão (prancheta «Cartões nas mensagens», 2026-11-24):
+  /// «Por responder · até 27 nov», «Aceite · falta o sinal», «Reservado»…
+  final String? status;
+  final ChatCardTone tone;
 
   @override
   Widget build(BuildContext context) {
-    // Mockup "Conversa com parceiro" (2026-11-12): o cartão dos eventos —
-    // foto com "Proposta" e o total, título, etiquetas e os botões.
+    final (Color? line, Color pillBg, Color pillFg, Color dot, Border? pillBorder) = switch (tone) {
+      ChatCardTone.pending => (const Color(0xFFF2A01B), Colors.white, AppTheme.ink, const Color(0xFFF2A01B), Border.all(color: const Color(0xFFF2A01B), width: 1.5)),
+      ChatCardTone.urgent => (const Color(0xFFC8553D), Colors.white, AppTheme.ink, const Color(0xFFC8553D), Border.all(color: const Color(0xFFC8553D), width: 1.5)),
+      ChatCardTone.done => (null, const Color(0xFFE6EDE1), const Color(0xFF3F7A4F), const Color(0xFF3F7A4F), null),
+      ChatCardTone.doneLine => (AppTheme.brandGreen, const Color(0xFFE6EDE1), const Color(0xFF3F7A4F), const Color(0xFF3F7A4F), null),
+      ChatCardTone.neutral => (null, const Color(0xFFE6E6E6), const Color(0xFF3A3733), AppTheme.inkMuted, null),
+    };
+    Widget valueRow(String l, String v) => Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.line))),
+          child: Row(children: [
+            Expanded(child: Text(l, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
+            Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          ]),
+        );
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.84,
+      width: (MediaQuery.of(context).size.width * 0.78).clamp(260.0, 320.0),
       child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: softCard(radius: 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              height: 120,
-              child: Stack(fit: StackFit.expand, children: [
-                imageUrl == null
-                    ? Container(color: const Color(0xFFE7D9C3))
-                    : Image.network(imageUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => Container(color: const Color(0xFFE7D9C3)), frameBuilder: skeletonImageFrame),
-                Positioned(
-                  left: 12,
-                  top: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(999)),
-                    child: Text(eyebrow == 'PROPOSTA' ? 'Proposta' : eyebrow,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
-                  ),
-                ),
-                Positioned(right: 12, top: 12, child: PriceBox('TOTAL', price == null ? '—' : euros(price!))),
-              ]),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: line == null ? null : Border.all(color: line, width: 1.5),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
+              alignment: Alignment.center,
+              child: const LineIcon('M3 3h8l10 10-8 8L3 11V3zM7 6.5a1 1 0 1 0 0 .01', size: 14, color: Color(0xFF3A3733), stroke: 2),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Text(title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
-                const SizedBox(height: 10),
-                Wrap(spacing: 6, runSpacing: 6, children: [
-                  if (subtitle != null && subtitle!.isNotEmpty) _chip(subtitle!),
-                  if (deposit != null) _chip('Sinal ${euros(deposit!)}'),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(eyebrow.toUpperCase(),
+                  style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+            ),
+          ]),
+          if (status != null) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: pillBg, borderRadius: BorderRadius.circular(999), border: pillBorder),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Container(width: 7, height: 7, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+                  const SizedBox(width: 6),
+                  Text(status!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: pillFg)),
                 ]),
-                if (note != null) ...[
-                  const SizedBox(height: 8),
-                  Text(note!, style: const TextStyle(fontSize: 11, color: AppTheme.inkMuted)),
-                ],
-                if (actions.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      for (var i = 0; i < actions.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        Expanded(
-                          child: SnappyTap(
-                            onTap: actions[i].onTap,
-                            child: Container(
-                              height: 40,
-                              alignment: Alignment.center,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              decoration: BoxDecoration(
-                                color: actions[i].primary && actions[i].onTap != null ? AppTheme.ink : Colors.white,
-                                borderRadius: BorderRadius.circular(999),
-                                border: actions[i].primary && actions[i].onTap != null
-                                    ? null
-                                    : Border.all(color: actions[i].onTap == null ? const Color(0xFFE4E1D8) : AppTheme.ink, width: 1.5),
-                              ),
-                              child: Text(
-                                actions[i].label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: actions[i].onTap == null
-                                      ? AppTheme.inkMuted
-                                      : actions[i].primary
-                                          ? Colors.white
-                                          : AppTheme.ink,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ]),
+              ),
             ),
           ],
-        ),
+          const SizedBox(height: 10),
+          Text(title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          if (subtitle != null && subtitle!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ),
+          const SizedBox(height: 10),
+          if (price != null) valueRow('Total', euros(price!)),
+          if (deposit != null) valueRow('Sinal para confirmar', euros(deposit!)),
+          if (note != null) ...[
+            const SizedBox(height: 4),
+            Text(note!, style: const TextStyle(fontSize: 12, height: 1.4, color: AppTheme.inkMuted)),
+          ],
+          if (actions.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                for (var i = 0; i < actions.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: SnappyTap(
+                      onTap: actions[i].onTap,
+                      child: Container(
+                        height: 36,
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: actions[i].primary && actions[i].onTap != null ? AppTheme.ink : Colors.white,
+                          borderRadius: BorderRadius.circular(999),
+                          border: actions[i].primary && actions[i].onTap != null
+                              ? null
+                              : Border.all(color: actions[i].onTap == null ? AppTheme.line : AppTheme.ink, width: 1.5),
+                        ),
+                        child: Text(
+                          actions[i].label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: actions[i].onTap == null
+                                ? AppTheme.inkMuted
+                                : actions[i].primary
+                                    ? Colors.white
+                                    : AppTheme.ink,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ]),
       ),
     );
   }
 }
+
+/// Tom do cartão da conversa (DESIGN §7): amarelo por responder/pagar,
+/// vermelho com o prazo a 3 dias ou menos, verde feito (com a linha verde
+/// na reserva confirmada), cinzento enviado/recusado.
+enum ChatCardTone { pending, urgent, done, doneLine, neutral }
 
 /// Caixa de escrever do fundo: pílula cinzenta + botão verde redondo.
 class ChatComposer extends StatelessWidget {

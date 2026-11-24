@@ -46,12 +46,12 @@ class MessageRow extends StatelessWidget {
     return SnappyTap(
       onTap: onTap,
       child: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        // Sem caixa: direto no fundo, alinhado com a margem 20 (DESIGN §4).
+        color: Colors.transparent,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            border: last ? null : const Border(bottom: BorderSide(color: Color(0xFFD9D9D9))),
+            border: last ? null : const Border(bottom: BorderSide(color: AppTheme.line)),
           ),
           child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             SizedBox(
@@ -128,9 +128,14 @@ class MessageRow extends StatelessWidget {
                       height: 20,
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(10)),
+                      // Contador do §2: pílula branca com aro preto 2.
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.ink, width: 2),
+                      ),
                       child: Text('$unread',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                   ],
                 ]),
@@ -168,7 +173,7 @@ class MessageChip extends StatelessWidget {
     final (bg, fg) = switch (tone) {
       MessageChipTone.warn => (const Color(0xFFF7EACA), const Color(0xFF5A3E0C)),
       MessageChipTone.done => (const Color(0xFFE6EDE1), const Color(0xFF3F7A4F)),
-      MessageChipTone.plain => (const Color(0xFFF2F2F2), const Color(0xFF3A3733)),
+      MessageChipTone.plain => (const Color(0xFFE6E6E6), const Color(0xFF3A3733)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
