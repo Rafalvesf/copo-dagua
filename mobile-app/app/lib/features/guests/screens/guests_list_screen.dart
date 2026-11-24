@@ -60,23 +60,33 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
         .read(guestsControllerProvider.notifier)
         .currentEventId;
     if (eventId == null) return;
-    final result = await showGuestFormSheet(context);
-    if (result == null) return;
-    ref
-        .read(guestsControllerProvider.notifier)
-        .addGuest(
-          Guest(
-            id: '',
-            eventId: eventId,
-            name: result.name,
-            email: result.email,
-            phone: result.phone,
-            group: result.group,
-            side: result.side,
-            plusOneAllowed: result.plusOneAllowed,
-            maxCompanions: result.maxCompanions,
-          ),
-        );
+    // «Guardar e outro» volta a abrir o popup vazio (prancheta, 2026-11-24).
+    var added = 0;
+    while (mounted) {
+      final evName = ref.read(eventControllerProvider).event?.displayNames;
+      final result = await showGuestFormSheet(
+        context,
+        subtitle: [?evName, if (added > 0) (added == 1 ? '1 adicionado agora' : '$added adicionados agora')].join(' · '),
+      );
+      if (result == null) return;
+      await ref
+          .read(guestsControllerProvider.notifier)
+          .addGuest(
+            Guest(
+              id: '',
+              eventId: eventId,
+              name: result.name,
+              email: result.email,
+              phone: result.phone,
+              group: result.group,
+              side: result.side,
+              plusOneAllowed: result.plusOneAllowed,
+              maxCompanions: result.maxCompanions,
+            ),
+          );
+      added++;
+      if (!result.another) return;
+    }
   }
 
 
