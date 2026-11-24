@@ -30,6 +30,7 @@ import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import '../../payments/booking_extras_sheet.dart';
 import '../../bookings/widgets/reject_proposal.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import '../../../shared/widgets/change_request_card.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -274,6 +275,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               message,
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
+                          : message.changeRequestId != null
+                          ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, imageUrl: widget.conversation.avatarUrl)
                           : message.isProposal
                           ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, partnerName: widget.conversation.name, conversationId: widget.conversation.id, imageUrl: widget.conversation.avatarUrl, onRequestNew: _openPartnerProfile)
                           : message.isQuoteRequestNotice
@@ -585,6 +588,23 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     }
   }
 
+  /// «Ver detalhe» abre a página desta reserva com o parceiro (pedido do
+  /// Rafael, 2026-11-24), não a lista geral. Sem ela, a lista das reservas.
+  Future<void> _openDetail() async {
+    CoupleBooking? found;
+    try {
+      final all = await ref.read(coupleBookingsProvider.future);
+      final mine = all.where((b) => b.partnerId != null && b.partnerId == widget.partnerId).toList();
+      found = mine.where((b) => b.status != BookingStatus.recusado).firstOrNull ?? mine.firstOrNull;
+    } catch (_) {}
+    if (!mounted) return;
+    if (found == null) {
+      context.push('/bookings');
+    } else {
+      context.push('/bookings/detail', extra: found);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final message = widget.message;
@@ -629,17 +649,17 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
         if (!_accepted && !_unavailable)
           ChatCardAction('Recusar', _accepting ? null : _reject)
         else
-          ChatCardAction('Ver detalhe', () => context.push('/bookings')),
+          ChatCardAction('Ver detalhe', _openDetail),
         if (_accepted && _bookingState == 'cancelled')
           // Reserva cancelada: pode pedir uma proposta nova (2026-10-21).
-          ChatCardAction('Pedir nova proposta', widget.onRequestNew, primary: true)
+          ChatCardAction('Nova proposta', widget.onRequestNew, primary: true)
         else if (_accepted)
           // Já aceite: o passo seguinte é pagar o sinal nas Reservas.
           ChatCardAction(
             _acceptedLabel,
             () => (_bookingState == null || _bookingState == 'deposit_due' || _bookingState == 'final_due')
                 ? _openPay(pct)
-                : context.push('/bookings'),
+                : _openDetail(),
             primary: true,
           )
         else if (_unavailable)

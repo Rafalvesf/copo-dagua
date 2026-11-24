@@ -13,6 +13,7 @@ import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import '../../../shared/widgets/change_request_card.dart';
 
 /// Fio de conversa com um cliente específico das Mensagens — versão
 /// parametrizada de `PartnerChatScreen` (que fica hardcoded a uma única
@@ -151,6 +152,8 @@ class _PartnerChatThreadScreenState
                               message,
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
+                          : message.changeRequestId != null
+                          ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe)
                           : message.isProposal
                           ? _PartnerProposalCard(message: message)
                           : isMe

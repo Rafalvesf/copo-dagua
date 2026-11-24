@@ -623,6 +623,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O parceiro só pode cancelar uma reserva antes de o cliente pagar ou nas 48 h em que o sinal está cativo (o cliente recebe tudo de volta). Depois disso o sinal é do parceiro e só o organizador pode cancelar, perdendo o sinal. Junta booking_cancel_state() para os avisos da app. Corre depois da 233.",
     check: { kind: "marker", id: "234" },
   },
+  {
+    file: "235_outro_dia_nos_pedidos.sql",
+    date: "2026-11-24",
+    title: "Propor outro dia nos pedidos",
+    what: "O parceiro pode propor outro dia a um pedido (antes de haver reserva), por exemplo quando já tem uma marcação nesse dia. Aparece um cartão na conversa com «Aceitar»/«Recusar»; aceite, o dia do pedido muda (o dia do evento não muda sozinho). Corre depois da 233.",
+    check: { kind: "marker", id: "235" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
