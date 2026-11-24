@@ -117,7 +117,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
               const Text(
                 'Entrar num evento',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: AppFontSize.xxl, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                style: TextStyle(fontSize: AppFontSize.xxl, fontWeight: FontWeight.w700, color: AppTheme.ink),
               ),
               const SizedBox(height: 4),
               const Text(
@@ -131,7 +131,7 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                 textAlign: TextAlign.center,
                 textCapitalization: TextCapitalization.characters,
                 onSubmitted: (_) => _join(),
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, letterSpacing: 3, color: AppTheme.ink),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 3, color: AppTheme.ink),
                 decoration: InputDecoration(
                   hintText: 'CÓDIGO',
                   hintStyle: const TextStyle(color: Color(0xFF6E6A63), letterSpacing: 3),

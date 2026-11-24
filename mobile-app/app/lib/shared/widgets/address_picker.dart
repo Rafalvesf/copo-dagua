@@ -259,7 +259,7 @@ class _AddressPickerState extends State<_AddressPicker> {
   Widget _header(String title, {String? subtitle}) => Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             if (subtitle != null) ...[
               const SizedBox(height: 4),
               Text(subtitle, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),

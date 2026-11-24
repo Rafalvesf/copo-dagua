@@ -112,7 +112,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       builder: (sheet) => Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('Nova conversa', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+          const Text('Nova conversa', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 12),
           if (mine.isNotEmpty)
             ListTile(

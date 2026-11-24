@@ -111,7 +111,7 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(top: 24, bottom: 12),
-        child: Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+        child: Text(text, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       );
 }
 
@@ -149,7 +149,7 @@ class _Hero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text('$guests', style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w400, color: Colors.white)),
+              Text('$guests', style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white)),
               const SizedBox(width: 8),
               Text(guests == 1 ? 'convidado' : 'convidados', style: const TextStyle(fontSize: AppFontSize.base, color: Colors.white)),
             ],
@@ -501,7 +501,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
               const SizedBox(height: 16),
               const Text('Para os convidados',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  style: TextStyle(fontSize: AppFontSize.h3, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               const SizedBox(height: 16),
               SegmentedButton<GuestOfferKind>(
                 segments: const [

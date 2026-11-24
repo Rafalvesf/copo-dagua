@@ -578,7 +578,7 @@ class _GuestHeader extends StatelessWidget {
     final initials = Center(
       child: Text(
         _initialsOf(name).isEmpty ? '?' : _initialsOf(name),
-        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppTheme.ink),
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink),
       ),
     );
     return Container(
@@ -628,7 +628,7 @@ class _GuestHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, maxLines: 2, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 if (email.isNotEmpty)
                   Text(email, maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
@@ -733,7 +733,7 @@ class _CompanionFormState extends State<_CompanionForm> {
           ),
           const SizedBox(height: 16),
           Text(widget.existing == null ? 'Novo acompanhante' : 'Acompanhante',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           const SizedBox(height: 14),
           TextField(
             controller: _name,

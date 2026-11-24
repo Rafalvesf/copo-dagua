@@ -62,7 +62,7 @@ class PartnerInviteCard extends ConsumerWidget {
           const SizedBox(height: 14),
         ],
         const Text('Convida os teus clientes',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 4),
         Text(
           'A cada ${stats.freeEvery} clientes que trazes pelo teu link, o ${stats.freeEvery}.º fica '

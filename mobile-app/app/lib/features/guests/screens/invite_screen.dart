@@ -212,7 +212,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
                   child: Row(children: [
                     Expanded(
                       child: Text(event.guestCode!,
-                          style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 22, letterSpacing: 4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                     FrameButton36('Copiar', outlined: true, onTap: () async {
                       await copyText(event.guestCode!);
@@ -368,7 +368,7 @@ class _SendSheet extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Enviar a $first', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                Text('Enviar a $first', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 Text([if (guest.group.isNotEmpty) guest.group, 'link só para $first'].join(' · '),
                     style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),

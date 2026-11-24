@@ -309,7 +309,7 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
       padding: EdgeInsets.fromLTRB(22, 18, 22, 20 + MediaQuery.viewInsetsOf(context).bottom),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text(widget.existing == null ? 'Novo produto' : 'Editar produto',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.ink)),
         const SizedBox(height: 12),
         Center(
           child: InkWell(

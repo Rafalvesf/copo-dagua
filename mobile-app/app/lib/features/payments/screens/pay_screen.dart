@@ -526,7 +526,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                 ],
                 Expanded(
                   child: Text(_sheetTitle,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
                 _SheetRound(icon: Hi.xMark, label: 'Fechar', onTap: () => context.pop()),
               ]),
@@ -753,7 +753,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const SizedBox(height: 12),
           Center(
             child: Text(_amountLabel,
-                style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           const SizedBox(height: 10),
           const Text('Enviámos o pedido para o teu telemóvel. Tens 4 minutos para aprovar.',
@@ -762,6 +762,27 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           const SizedBox(height: 14),
           const Center(child: _PendingTag('À espera da aprovação')),
           const SizedBox(height: 12),
+        ];
+      case _Step.done when _counter:
+        // Pagar no balcão (prancheta «Pagar no balcão», 2026-11-23): o visto
+        // verde, «parceiro · método» e «Fechar».
+        return [
+          const SizedBox(height: 16),
+          Center(
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(color: Color(0xFF4F6B4A), shape: BoxShape.circle),
+              alignment: Alignment.center,
+              child: const LineIcon(LineIcon.check, size: 34, color: Colors.white, stroke: 2.6),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '${a.partnerName} · ${_method == PayMethod.wallet ? _walletName : 'Cartão'}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          ),
         ];
       case _Step.done:
         return [

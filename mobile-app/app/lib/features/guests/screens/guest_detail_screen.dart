@@ -77,7 +77,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text('Quantas pessoas pode trazer ${guest.name.split(' ').first}?',
-                    style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                    style: const TextStyle(fontSize: AppFontSize.xl, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 6),
                 const Text('Conta adultos e crianças. O convidado não consegue indicar mais pessoas do que isto.',
                     style: TextStyle(fontSize: AppFontSize.md, color: AppTheme.inkMuted)),
@@ -284,7 +284,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(guest.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                Text(guest.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 const SizedBox(height: 4),
                 Text(
                   [guest.group.isEmpty ? 'Convidado' : guest.group, if (guest.ageGroup != 'adult') ageGroupLabel(guest.ageGroup)].join(' · '),

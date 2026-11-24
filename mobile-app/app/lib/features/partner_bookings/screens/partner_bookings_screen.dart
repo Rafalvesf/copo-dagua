@@ -82,7 +82,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                 height: 44,
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('Pedidos', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  child: Text('Pedidos', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
               ),
               KitPills([

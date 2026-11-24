@@ -250,7 +250,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                 children: [
                   Text(
                     attending ? 'Boa! Como te chamas?' : 'Que pena. Como te chamas?',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppTheme.ink),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.ink),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -397,7 +397,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           const SizedBox(height: 26),
           Text(
             native ? 'Cria a tua conta para responder num instante' : 'Responde pela app',
-            style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink),
+            style: const TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink),
           ),
           const SizedBox(height: 8),
           Text(
@@ -478,7 +478,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (ev.venue != null)
-                  Text(ev.venue!, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  Text(ev.venue!, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 if ((ev.address ?? ev.location) != null) ...[
                   const SizedBox(height: 4),
                   Text(ev.address ?? ev.location!, style: const TextStyle(fontSize: AppFontSize.base, height: 1.45, color: AppTheme.inkMuted)),
@@ -611,7 +611,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           Text(
             a == null ? 'Contamos contigo?' : '${a.name.split(' ').first}, contamos contigo?',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppTheme.ink),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink),
           ),
           const SizedBox(height: 14),
           Row(
@@ -678,7 +678,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
         Text(
           a.declined ? 'Obrigado por avisares, $first' : 'Até lá, $first!',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 30, height: 1.15, fontWeight: FontWeight.w400, color: AppTheme.ink),
+          style: const TextStyle(fontSize: 30, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink),
         ),
         const SizedBox(height: 8),
         Text(
@@ -827,7 +827,7 @@ class _EventSummary extends StatelessWidget {
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('${d.day}', style: const TextStyle(fontSize: 22, height: 1, fontWeight: FontWeight.w400, color: Colors.white)),
+                      Text('${d.day}', style: const TextStyle(fontSize: 22, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
                       Text(_months[d.month - 1].substring(0, 3).toUpperCase(),
                           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: Colors.white)),
                     ],
@@ -840,7 +840,7 @@ class _EventSummary extends StatelessWidget {
               children: [
                 Text('${ev.displayNames} ${_invitedTo(ev).split(' para ').first} para',
                     style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
-                Text(ev.eventType.label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                Text(ev.eventType.label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 Text(
                   [
                     if (d != null) _weekdays[d.weekday - 1],
@@ -914,7 +914,7 @@ class _InviteCard extends StatelessWidget {
             const SizedBox(height: 18),
             Text(ev.displayNames,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 38, height: 1.05, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                style: const TextStyle(fontSize: 38, height: 1.05, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             const SizedBox(height: 6),
             Text(_invitedTo(ev),
                 textAlign: TextAlign.center, style: const TextStyle(fontSize: AppFontSize.base, height: 1.45, color: AppTheme.inkMuted)),
@@ -932,7 +932,7 @@ class _InviteCard extends StatelessWidget {
                   band(_weekdays[d.weekday - 1].split('-').first),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Text('${d.day}', style: const TextStyle(fontSize: 54, height: 1, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                    child: Text('${d.day}', style: const TextStyle(fontSize: 54, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                   ),
                   band(ev.time == null ? '${d.year}' : 'às ${ev.time}'),
                 ],
@@ -1056,7 +1056,7 @@ class _CodeBox extends StatelessWidget {
                   const Text('CÓDIGO DO EVENTO',
                       style: TextStyle(fontSize: 11, letterSpacing: 1.2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   const SizedBox(height: 2),
-                  Text(code, style: const TextStyle(fontSize: 18, letterSpacing: 2.4, fontWeight: FontWeight.w400, color: AppTheme.ink)),
+                  Text(code, style: const TextStyle(fontSize: 18, letterSpacing: 2.4, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ],
               ),
             ),
