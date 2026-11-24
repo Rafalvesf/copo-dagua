@@ -602,6 +602,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Cada parceiro ganha um código de 4 letras único, tirado do nome (Tasca do Largo → TASL), e cada reserva uma referência global única: TASL-EMP-12. A curta (EMP-12) continua a do dia a dia; a global serve para comprovativos, suporte e a pesquisa do admin. Corre depois da 230.",
     check: { kind: "column", table: "bookings", column: "reference" },
   },
+  {
+    file: "232_qr_scan_perfil.sql",
+    date: "2026-11-24",
+    title: "Ler o QR da conta: entrada, parceiro ou perfil",
+    what: "Quem lê o QR de alguém: organizador com bilhetes de um evento pago onde a pessoa vai → verificar a entrada; parceiro com marcação → «Quem é» (chegada, cobrar); qualquer outra pessoa → abre o perfil dessa conta, sem bilhetes nem marcações. Nos dois primeiros casos há «Ver perfil». Os eventos gratuitos deixam de aparecer como entrada. Corre depois da 228 e da 229.",
+    check: { kind: "marker", id: "232" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

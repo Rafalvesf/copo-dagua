@@ -46,9 +46,21 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  late Future<ScanResult> _future = scanQr(widget.token);
+  late Future<ScanResult> _future = _scan();
   final Map<String, ({String result, DateTime? at})> _done = {};
   String? _busy;
+
+  /// Migração 232: sem entrada nem marcação para quem lê, o QR abre o
+  /// perfil da pessoa (no lugar deste ecrã).
+  Future<ScanResult> _scan() async {
+    final r = await scanQr(widget.token);
+    if (r.result == 'ok' && r.mode == 'profile' && r.profileId != null && mounted) {
+      context.pushReplacement('/u/${r.profileId}');
+      // Fica a carregar até o perfil abrir.
+      return Completer<ScanResult>().future;
+    }
+    return r;
+  }
 
   String _key(ScanItem i) => i.bookingId ?? 'e${i.eventId}';
 
@@ -104,7 +116,7 @@ class _ScanScreenState extends State<ScanScreen> {
       Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, height: 1.4, color: AppTheme.ink)),
       if (r.result == 'error') ...[
         const SizedBox(height: 24),
-        FilledButton(onPressed: () => setState(() => _future = scanQr(widget.token)), child: const Text('Tentar outra vez')),
+        FilledButton(onPressed: () => setState(() => _future = _scan()), child: const Text('Tentar outra vez')),
       ],
     ];
   }
@@ -125,6 +137,26 @@ class _ScanScreenState extends State<ScanScreen> {
       Text(name, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
       const SizedBox(height: 4),
       const Text('QR verificado agora', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+      // «Ver perfil» também na entrada e nas marcações (migração 232).
+      if (r.profileId != null) ...[
+        const SizedBox(height: 10),
+        Center(
+          child: SizedBox(
+            height: 36,
+            child: OutlinedButton(
+              onPressed: () => context.push('/u/${r.profileId}'),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.ink,
+                side: const BorderSide(color: AppTheme.ink, width: 1.5),
+                shape: const StadiumBorder(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              child: const Text('Ver perfil', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ),
+      ],
       const SizedBox(height: 24),
       if (r.items.isEmpty)
         const Text(
