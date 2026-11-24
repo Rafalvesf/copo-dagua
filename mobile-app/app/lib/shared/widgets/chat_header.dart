@@ -26,6 +26,13 @@ class ChatHeader extends StatelessWidget {
   /// Caras por cima da foto (grupos): no lugar da foto redonda.
   final Widget? leading;
 
+  /// Pílula verde por baixo do nome («Responde em ~1 h», «Online»), como
+  /// na prancheta «Conversa» (2026-11-24). Fica no lugar de [subtitle].
+  final String? pill;
+
+  /// Visto verde de parceiro verificado ao lado do nome (DESIGN §6).
+  final bool verified;
+
   const ChatHeader({
     super.key,
     required this.name,
@@ -35,30 +42,51 @@ class ChatHeader extends StatelessWidget {
     this.onOpenProfile,
     this.onReport,
     this.leading,
+    this.pill,
+    this.verified = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final info = Row(
       children: [
-        leading ?? V2Avatar(name, size: 44, imageUrl: avatarUrl, flat: true),
-        const SizedBox(width: 10),
+        leading ?? V2Avatar(name, size: 40, imageUrl: avatarUrl, flat: true),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              if (subtitle != null)
+              Row(children: [
+                Flexible(
+                  child: Text(name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ),
+                if (verified) ...[
+                  const SizedBox(width: 4),
+                  const Icon(Hi.checkBadge, size: 18, color: AppTheme.brandGreen, semanticLabel: 'Verificado'),
+                ],
+              ]),
+              if (pill != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+                    child: Text(pill!,
+                        maxLines: 1,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+                  ),
+                )
+              else if (subtitle != null)
                 Text(subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
                         color: subtitleOnline ? const Color(0xFF3F7A4F) : AppTheme.inkMuted)),
             ],
           ),
@@ -80,19 +108,21 @@ class ChatHeader extends StatelessWidget {
           ),
         );
     return Container(
+      // Prancheta «Conversa» (2026-11-24): branco, cantos 35 em baixo.
       decoration: BoxDecoration(
         color: Colors.white,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(kNavRadius)),
         boxShadow: [BoxShadow(color: AppTheme.ink.withValues(alpha: 0.06), blurRadius: 14, offset: const Offset(0, 4))],
       ),
-      padding: EdgeInsets.fromLTRB(16, MediaQuery.paddingOf(context).top + 10, 16, 12),
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.paddingOf(context).top + 20, 20, 14),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(
           children: [
-            roundBtn(const Icon(Hi.chevronLeft, size: 20, color: Colors.white), 'Voltar', () => Navigator.of(context).maybePop()),
-            const SizedBox(width: 10),
+            roundBtn(const Icon(Hi.arrowLeft, size: 20, color: Colors.white), 'Voltar', () => Navigator.of(context).maybePop()),
+            const SizedBox(width: 12),
             Expanded(child: onOpenProfile == null ? info : SnappyTap(onTap: onOpenProfile, child: info)),
             if (onReport != null) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               IslandMenuButton<String>(
                 tooltip: 'Mais opções',
                 position: PopupMenuPosition.under,
@@ -153,42 +183,42 @@ class _ChatEventIslandState extends State<ChatEventIsland> {
   @override
   Widget build(BuildContext context) {
     if (widget.title == null) return widget.child;
+    // Prancheta «Conversa» (2026-11-24): ilha 52 com o calendário, uma só
+    // linha («Casamento · Sáb, 12 jun · Quinta do Freixo») e «Ver evento»
+    // preto 36.
     final island = Container(
-      padding: const EdgeInsets.fromLTRB(18, 8, 8, 8),
+      height: 52,
+      padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(kNavRadius),
-        boxShadow: [BoxShadow(color: AppTheme.ink.withValues(alpha: 0.10), blurRadius: 18, offset: const Offset(0, 6))],
+        boxShadow: [BoxShadow(color: AppTheme.ink.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
       ),
       child: Row(children: [
+        const Icon(Hi.calendar, size: 18, color: AppTheme.inkMuted),
+        const SizedBox(width: 10),
         Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Text(widget.title!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            if (widget.subtitle != null)
-              Text(widget.subtitle!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-          ]),
+          child: Text.rich(
+            TextSpan(children: [
+              TextSpan(text: widget.title!, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              if (widget.subtitle != null) TextSpan(text: ' · ${widget.subtitle!}'),
+            ]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+          ),
         ),
         if (widget.action != null && widget.onAction != null) ...[
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           SnappyTap(
             onTap: widget.onAction,
             child: Container(
-              height: 38,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              height: 36,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(19),
-                border: Border.all(color: AppTheme.ink, width: 1.5),
-              ),
+              decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
               child: Text(widget.action!,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
           ),
         ],
@@ -199,9 +229,9 @@ class _ChatEventIslandState extends State<ChatEventIsland> {
         child: NotificationListener<ScrollUpdateNotification>(onNotification: _onScroll, child: widget.child),
       ),
       Positioned(
-        top: 10,
-        left: 16,
-        right: 16,
+        top: 12,
+        left: AppTheme.screenMargin,
+        right: AppTheme.screenMargin,
         child: IgnorePointer(
           ignoring: !_visible,
           child: AnimatedSlide(

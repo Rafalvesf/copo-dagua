@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/alert_outline.dart';
-import '../../../shared/widgets/line_icon.dart';
+import '../../../shared/hero_icons.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/snappy_tap.dart';
@@ -24,6 +23,9 @@ class MessageRow extends StatelessWidget {
   /// Ponto verde de "online agora" no canto da foto.
   final bool online;
 
+  /// Grupo: o símbolo das pessoas no canto da foto (prancheta «Mensagens»).
+  final bool group;
+
   const MessageRow({
     super.key,
     required this.avatar,
@@ -38,6 +40,7 @@ class MessageRow extends StatelessWidget {
     this.chips = const [],
     this.last = false,
     this.online = false,
+    this.group = false,
   });
 
   @override
@@ -49,7 +52,7 @@ class MessageRow extends StatelessWidget {
         // Sem caixa: direto no fundo, alinhado com a margem 20 (DESIGN §4).
         color: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             border: last ? null : const Border(bottom: BorderSide(color: AppTheme.line)),
           ),
@@ -59,6 +62,22 @@ class MessageRow extends StatelessWidget {
               height: 52,
               child: Stack(clipBehavior: Clip.none, children: [
                 Positioned.fill(child: avatar),
+                if (group)
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppTheme.ink,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.background, width: 2),
+                      ),
+                      child: const Icon(Hi.userGroup, size: 12, color: Colors.white),
+                    ),
+                  ),
                 if (online)
                   Positioned(
                     right: -2,
@@ -93,30 +112,25 @@ class MessageRow extends StatelessWidget {
                     Text(time!,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: hasUnread ? AppTheme.accentOliveDark : AppTheme.inkMuted,
+                          fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w400,
+                          color: hasUnread ? AppTheme.ink : AppTheme.inkMuted,
                         )),
                   ],
                 ]),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Row(children: [
-                  if (mine) ...[
-                    LineIcon(mineSeen ? LineIcon.checks : LineIcon.check,
-                        size: 16, stroke: 2.4, color: mineSeen ? const Color(0xFF3F7A4F) : AppTheme.inkMuted),
-                    const SizedBox(width: 4),
-                  ],
                   Expanded(
                     child: Text.rich(
                       TextSpan(children: [
                         if (previewPrefix != null)
-                          TextSpan(text: '$previewPrefix: ', style: const TextStyle(color: AppTheme.inkMuted)),
+                          TextSpan(text: '$previewPrefix: '),
                         TextSpan(text: preview),
                       ]),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w600,
+                        fontSize: 13,
+                        fontWeight: hasUnread ? FontWeight.w700 : FontWeight.w400,
                         color: hasUnread ? AppTheme.ink : AppTheme.inkMuted,
                       ),
                     ),
@@ -140,7 +154,7 @@ class MessageRow extends StatelessWidget {
                   ],
                 ]),
                 if (chips.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Wrap(spacing: 6, runSpacing: 4, children: chips),
                 ],
               ]),
@@ -152,7 +166,7 @@ class MessageRow extends StatelessWidget {
   }
 }
 
-enum MessageChipTone { plain, warn, done }
+enum MessageChipTone { plain, warn, urgent, done }
 
 class MessageChip extends StatelessWidget {
   final String text;
@@ -161,24 +175,26 @@ class MessageChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Pendente: branco com linha amarela que brilha ao aparecer (DESIGN.md).
-    if (tone == MessageChipTone.warn) {
-      return AlertOutline(
-        tone: AlertTone.pending,
-        radius: 999,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Text(text, maxLines: 1, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-      );
-    }
-    final (bg, fg) = switch (tone) {
-      MessageChipTone.warn => (const Color(0xFFF7EACA), const Color(0xFF5A3E0C)),
-      MessageChipTone.done => (const Color(0xFFE6EDE1), const Color(0xFF3F7A4F)),
-      MessageChipTone.plain => (const Color(0xFFE6E6E6), const Color(0xFF3A3733)),
+    // Prancheta «Mensagens» (2026-11-24): etiqueta 12 negrito com o ponto.
+    // Pendente/urgente: branco com a linha da cor (DESIGN §7); feito: verde.
+    final (Color bg, Color fg, Color dot, Color? line) = switch (tone) {
+      MessageChipTone.warn => (Colors.white, AppTheme.ink, const Color(0xFFF2A01B), const Color(0xFFF2A01B)),
+      MessageChipTone.urgent => (Colors.white, AppTheme.ink, const Color(0xFFC8553D), const Color(0xFFC8553D)),
+      MessageChipTone.done => (const Color(0xFFE6EDE1), const Color(0xFF3F7A4F), const Color(0xFF3F7A4F), null),
+      MessageChipTone.plain => (const Color(0xFFE6E6E6), const Color(0xFF3A3733), const Color(0xFF3A3733), null),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, maxLines: 1, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg)),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+        border: line == null ? null : Border.all(color: line, width: 1.5),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 7, height: 7, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+        const SizedBox(width: 6),
+        Text(text, maxLines: 1, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
+      ]),
     );
   }
 }

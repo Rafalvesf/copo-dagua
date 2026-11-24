@@ -212,7 +212,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               alignment: Alignment.center,
               decoration: BoxDecoration(color: on ? Colors.white : AppTheme.ink, borderRadius: BorderRadius.circular(10)),
               child: Text('$count',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: on ? AppTheme.accentOliveDark : Colors.white)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: on ? AppTheme.ink : Colors.white)),
             ),
           ],
         ]),
@@ -228,13 +228,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     final me = ref.watch(authControllerProvider.select((s) => s.profile?.id));
     final online = ref.watch(onlineNowProvider);
 
-    // Nome de cada evento (as conversas e os grupos de todos os eventos).
+    // Eventos para o «+» (grupos novos).
     final mine = ref.watch(eventControllerProvider).events;
     final invited = ref.watch(guestEventsProvider).value ?? const [];
-    final eventNames = <String, String>{
-      for (final g in invited) g.eventId: g.displayNames,
-      for (final w in mine) w.id: w.displayNames,
-    };
     final groupEvents = <(String, String)>[
       for (final w in mine) (w.id, w.displayNames),
       for (final g in invited)
@@ -292,7 +288,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       if (it is ChatGroup) {
         final people = ref.watch(groupPeopleProvider(it.id)).value?.values.where((p) => p.id != me).toList() ??
             const <EventPerson>[];
-        final ev = eventNames[it.eventId];
         return _deletable(
           it.id,
           it,
@@ -307,10 +302,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 (people.isEmpty ? 'Grupo' : people.map((p) => p.name.split(' ').first).take(4).join(', ')),
             unread: it.unread ? 1 : 0,
             last: last,
-            chips: [
-              if (ev != null) MessageChip(ev),
-              if (people.isNotEmpty) MessageChip('${people.length + 1} pessoas'),
-            ],
+            group: true,
             onTap: () async {
               await context.push('/group/${it.id}', extra: it);
               ref.invalidate(myChatGroupsProvider);
@@ -320,7 +312,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       }
       final c = it as ChatConversation;
       final m = meta[c.id];
-      final ev = c.eventId == null ? null : eventNames[c.eventId];
       return _deletable(
         c.id,
         c,
@@ -336,7 +327,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           unread: c.unreadCount,
           last: last,
           chips: [
-            if (ev != null) MessageChip(ev),
             if (m?.status == _Status.proposal) const MessageChip('Proposta por responder', tone: MessageChipTone.warn),
             if (m?.status == _Status.toPay) const MessageChip('Sinal por pagar', tone: MessageChipTone.warn),
             if (m?.status == _Status.booked) const MessageChip('Reserva confirmada', tone: MessageChipTone.done),
@@ -354,7 +344,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
     final listChildren = <Widget>[
       Padding(
-        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, 0, 0),
+        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, 0, 0),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(children: [
@@ -387,13 +377,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             ]),
           ),
         ],
-      if (items.isNotEmpty)
-        const Padding(
-          padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
-          child: Text('Desliza uma conversa para a esquerda para a apagar.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-        ),
       if (items.isEmpty && !(state.loading && allConvs.isEmpty))
         Padding(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 40, AppTheme.screenMargin, 0),
@@ -435,7 +418,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   ]),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
+                  padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 14, AppTheme.screenMargin, 0),
                   child: SearchPill(flat: true, controller: _search, hint: 'Pesquisar pessoas, parceiros ou grupos'),
                 ),
                 // Mensagens diretas da equipa (migração 146).

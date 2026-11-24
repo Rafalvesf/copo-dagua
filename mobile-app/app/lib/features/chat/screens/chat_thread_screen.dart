@@ -21,7 +21,6 @@ import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
@@ -193,10 +192,16 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     final events = ref.watch(eventControllerProvider).events;
     final ev = events.where((w) => w.id == widget.conversation.eventId).firstOrNull;
     final evDate = ev?.eventDate;
-    final eventTitle = ev == null
+    // Ilha do evento (prancheta «Conversa», 2026-11-24): «Casamento · Sáb,
+    // 12 jun · Quinta do Freixo».
+    const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    final eventTitle = ev?.eventType.label;
+    final eventLine = ev == null
         ? null
-        : [ev.displayNames, if (evDate != null) '${evDate.day} ${months[evDate.month - 1]} ${evDate.year}'].join(' · ');
-    final hasProposal = chat.messages.any((m) => m.isProposal);
+        : [
+            if (evDate != null) '${weekdays[evDate.weekday - 1]}, ${evDate.day} ${months[evDate.month - 1]}',
+            if ((ev.venue ?? '').trim().isNotEmpty) ev.venue!.trim() else if ((ev.location ?? '').trim().isNotEmpty) ev.location!.trim(),
+          ].join(' · ');
     final partnerId = widget.conversation.partnerId;
     final online = partnerId != null && ref.watch(isOnlineProvider(partnerId));
     final responds = partnerId == null ? null : responseLabel(ref.watch(partnerPublicStatsProvider(partnerId)).value?.responseMinutes);
@@ -223,13 +228,14 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               name: widget.conversation.name,
               avatarUrl: widget.conversation.avatarUrl,
               // Online agora (presença) e "responde em ~1 h" (184).
-              subtitle: online
-                  ? ['Online', ?respondsLower].join(' · ')
-                  : partner == null
-                      ? null
-                      : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
-                          .join(' · '),
-              subtitleOnline: online,
+              // Pílula verde por baixo do nome (prancheta «Conversa»):
+              // «Online» ou «Responde em ~1 h».
+              pill: online ? (respondsLower == null ? 'Online' : 'Online · $respondsLower') : responds,
+              verified: partner != null,
+              subtitle: partner == null
+                  ? null
+                  : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
+                      .join(' · '),
               onOpenProfile: widget.conversation.partnerId == null
                   ? null
                   : _openPartnerProfile,
@@ -253,9 +259,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 // reportado 2026-10-18).
                 : ChatEventIsland(
                     title: eventTitle,
-                    subtitle: hasProposal ? 'Proposta recebida' : (partner?.categoryLabels.firstOrNull),
-                    action: widget.conversation.partnerId == null ? null : 'Ver perfil',
-                    onAction: widget.conversation.partnerId == null ? null : _openPartnerProfile,
+                    subtitle: (eventLine ?? '').isEmpty ? null : eventLine,
+                    action: 'Ver evento',
+                    onAction: () => context.go('/home'),
                     child: JumpToLatest(
                     controller: _scrollController,
                     messageCount: chat.messages.length,
@@ -300,25 +306,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
           ),
           ColoredBox(color: const Color(0xFFF2F2F2), child: _pendingTray(chat.messages)),
           ColoredBox(color: const Color(0xFFF2F2F2), child: ChatTypingLine(typing)),
-          if (widget.conversation.partnerId != null)
-            ColoredBox(
-              color: const Color(0xFFF2F2F2),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Row(children: [
-                  for (final q in const ['Posso visitar?', 'Pedir outra proposta', 'Obrigado!']) ...[
-                    _QuickReply(q, () => _quick(q)),
-                    const SizedBox(width: 8),
-                  ],
-                ]),
-              ),
-            ),
           ChatComposer(
             controller: _messageController,
             onSend: _send,
             onAttach: _attach,
             onChanged: (_) => ref.read(typingNowProvider('c:${widget.conversation.id}').notifier).typing(_myName()),
+            quickReplies: widget.conversation.partnerId == null ? const [] : const ['Posso visitar?', 'Obrigado!', 'Qual é o prazo?'],
+            onQuickReply: _quick,
           ),
         ],
       ),
@@ -685,28 +679,6 @@ final _partnerReadProvider = FutureProvider.autoDispose.family<DateTime?, String
     return null;
   }
 });
-
-class _QuickReply extends StatelessWidget {
-  final String text;
-  final VoidCallback onTap;
-  const _QuickReply(this.text, this.onTap);
-
-  @override
-  Widget build(BuildContext context) => SnappyTap(
-        onTap: onTap,
-        child: Container(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          alignment: Alignment.center,
-          // Sem fundo, só o contorno (pedido 2026-11-12).
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(17),
-            border: Border.all(color: const Color(0xFFD6D0C2), width: 1.5),
-          ),
-          child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        ),
-      );
-}
 
 /// Folha "pagar ou pagar depois" a seguir a aceitar uma proposta
 /// (mockup «Parceiro — Reservar», artboard Reservar-pagar, 2026-11-17).
