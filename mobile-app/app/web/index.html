@@ -153,6 +153,36 @@
         location.reload();
         return true;
       };
+      // Ao voltar à app (2026-11-24, «aconteceu novamente», app no ícone
+      // do ecrã principal): o telemóvel não fecha a app ao mudar de app —
+      // fica em pausa, às vezes dias, com a versão que tinha. Ao voltar
+      // (depois de pelo menos 30 s fora) ou a cada 20 min, pergunta ao
+      // servidor se há versão nova e, se houver, recarrega — nunca a meio
+      // de escrever.
+      (function () {
+        var hiddenAt = 0;
+        function typing() {
+          var a = document.activeElement;
+          return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+        }
+        function check() {
+          if (document.visibilityState !== 'visible' || typing()) return;
+          window.tchinNewerVersionAvailable().then(function (newer) {
+            if (newer === true && !typing()) window.tchinReloadNow();
+          });
+        }
+        window.tchinCheckForUpdate = check;
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+          if (hiddenAt && Date.now() - hiddenAt >= 30000) check();
+        });
+        // Voltar a uma página guardada pelo browser (bfcache).
+        window.addEventListener('pageshow', function (e) { if (e.persisted) check(); });
+        setInterval(check, 20 * 60 * 1000);
+        // E uma vez logo a seguir a abrir: o index.html pode ter vindo da
+        // cache do telemóvel (até 10 min) com uma versão anterior.
+        setTimeout(check, 8000);
+      })();
       try {
         if (sessionStorage.getItem('tt-skip-opening')) {
           sessionStorage.removeItem('tt-skip-opening');
