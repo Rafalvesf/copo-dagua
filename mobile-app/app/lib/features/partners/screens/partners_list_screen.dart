@@ -439,7 +439,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                         ),
                       );
                     },
-                    orElse: () => const SizedBox(height: 52),
+                    orElse: () => const SkeletonPills(),
                   ),
                 if (widget.selectionMode)
                   Padding(
@@ -464,8 +464,8 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
               body: _tab == 1 && !widget.selectionMode
                   ? const GiftShopView(bottomPadding: 190, showListLink: true)
                   : partnersAsync.when(
-                    loading: () =>
-                        const SkeletonEventCards(),
+                    // Esqueleto com o desenho da página real (2026-11-24).
+                    loading: () => const SkeletonPartnersPage(),
                     error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar parceiros.', onRetry: () => ref.invalidate(
                       partnersProvider(widget.selectionMode ? widget.categorySlug : _filter),
                     )),
@@ -742,7 +742,10 @@ class _FavoritesSheet extends ConsumerWidget {
                 const SizedBox(height: 14),
                 Expanded(
                   child: partnersAsync.when(
-                    loading: () => const SkeletonList(),
+                    loading: () => const SingleChildScrollView(
+                          physics: NeverScrollableScrollPhysics(),
+                          child: SkeletonPhotoCardList(count: 2),
+                        ),
                     error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar os favoritos.', onRetry: () => ref.invalidate(partnersProvider(null))),
                     data: (allPartners) {
                       final favorites = allPartners.where((p) => favoriteIds.contains(p.id)).toList();

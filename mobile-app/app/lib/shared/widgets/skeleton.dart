@@ -414,3 +414,230 @@ Widget skeletonImageError(BuildContext context, Object error, StackTrace? stack)
       alignment: Alignment.center,
       child: const Icon(Icons.image_not_supported_outlined, color: AppTheme.inkMuted, size: 22),
     );
+
+// ---------------------------------------------------------------------------
+// Cartões com foto (PhotoCard): parceiros, eventos públicos, eventos reais.
+// 2026-11-24 («o esqueleto tem que ficar respetivo a cada elemento e ao seu
+// tamanho»): as medidas são as do PhotoCard (shared/widgets/photo_card.dart)
+// — moldura 1 #E3E3E3 cantos 22, foto 150 com cantos 21, avatar 44 (+3 de
+// borda branca) a sair 22 por baixo da foto, informação a partir de 28,
+// título 19, coração 32, metas 13, divisor 1 e rodapé.
+// ---------------------------------------------------------------------------
+
+/// Esqueleto de um `PhotoCard` com o mesmo tamanho. Com [height] (p.ex. 332
+/// do cartão de parceiro) fica exatamente com essa altura; sem ela, fica
+/// com a altura natural do conteúdo.
+class SkeletonPhotoCard extends StatelessWidget {
+  final double? width;
+  final double? height;
+  final bool avatar;
+  final bool footer;
+  final int delay;
+
+  const SkeletonPhotoCard({
+    super.key,
+    this.width,
+    this.height,
+    this.avatar = true,
+    this.footer = true,
+    this.delay = 0,
+  });
+
+  /// O cartão de parceiro (`PartnerBigCard`).
+  const SkeletonPhotoCard.partner({super.key, this.width = 330, this.delay = 0})
+      : height = 332,
+        avatar = true,
+        footer = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final cover = SizedBox(
+      height: 150,
+      child: Stack(clipBehavior: Clip.none, fit: StackFit.expand, children: [
+        SkeletonBox(height: 150, radius: 21, delay: delay),
+        if (avatar)
+          Positioned(
+            left: 12,
+            bottom: -22,
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              child: SkeletonCircle(size: 44, delay: delay + 1),
+            ),
+          ),
+      ]),
+    );
+    final info = Padding(
+      padding: EdgeInsets.fromLTRB(12, avatar ? 28 : 12, 12, 0),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        Row(children: [
+          Expanded(child: SkeletonLine(widthFactor: 0.65, height: 19, delay: delay + 1)),
+          const SizedBox(width: 8),
+          SkeletonCircle(size: 26, delay: delay + 2),
+        ]),
+        const SizedBox(height: 7),
+        SkeletonLine(widthFactor: 0.45, height: 12, delay: delay + 2),
+        const SizedBox(height: 6),
+        SkeletonLine(widthFactor: 0.7, height: 12, delay: delay),
+      ]),
+    );
+    final foot = !footer
+        ? null
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Divider(height: 1, thickness: 1, color: Color(0xFFD9D9D9)),
+              const SizedBox(height: 10),
+              Row(children: [
+                for (var i = 0; i < 3; i++)
+                  Align(widthFactor: 0.7, child: SkeletonCircle(size: 24, delay: delay + i)),
+                const SizedBox(width: 10),
+                Expanded(child: SkeletonLine(widthFactor: 0.6, height: 11, delay: delay + 1)),
+                const SizedBox(width: 8),
+                Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
+                  SkeletonBox(width: 30, height: 9, radius: 4, delay: delay + 2),
+                  const SizedBox(height: 4),
+                  SkeletonBox(width: 56, height: 16, radius: 5, delay: delay),
+                ]),
+              ]),
+            ]),
+          );
+    final body = height != null
+        ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            cover,
+            Expanded(child: Align(alignment: Alignment.topLeft, child: info)),
+            ?foot,
+            const SizedBox(height: 8),
+          ])
+        : Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            cover,
+            info,
+            ?foot,
+            const SizedBox(height: 8),
+          ]);
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppTheme.line),
+          ),
+          child: body,
+        ),
+      ),
+    );
+  }
+}
+
+/// Título de secção (22, negrito) como o `SectionHeading`, com a ação à
+/// direita opcional («Ver todos», «Filtrar»).
+class SkeletonSectionHeading extends StatelessWidget {
+  final bool action;
+  final double widthFactor;
+  final EdgeInsetsGeometry padding;
+  const SkeletonSectionHeading({
+    super.key,
+    this.action = false,
+    this.widthFactor = 0.5,
+    this.padding = const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 12),
+  });
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: padding,
+        child: Row(children: [
+          Expanded(child: SkeletonLine(widthFactor: widthFactor, height: 24)),
+          if (action) ...const [SizedBox(width: 12), SkeletonBox(width: 52, height: 14, radius: 6, delay: 1)],
+        ]),
+      );
+}
+
+/// Pílulas das categorias (altura 52: «Todos» fixo com 72 à esquerda e as
+/// outras com larguras de palavras diferentes).
+class SkeletonPills extends StatelessWidget {
+  const SkeletonPills({super.key});
+
+  static const _widths = [96.0, 78.0, 110.0, 70.0, 92.0, 84.0];
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        height: 52,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 6),
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.centerLeft,
+              maxWidth: double.infinity,
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const SizedBox(width: AppTheme.screenMargin),
+                const SkeletonBox(width: 72, height: 34, radius: 999),
+                for (final (i, w) in _widths.indexed) ...[
+                  const SizedBox(width: 8),
+                  SkeletonBox(width: w, height: 34, radius: 999, delay: i + 1),
+                ],
+              ]),
+            ),
+          ),
+        ),
+      );
+}
+
+/// Página dos parceiros a carregar, com o mesmo desenho da página real:
+/// «Em destaque» + carrossel de cartões de 330, «N parceiros» + «Filtrar» e
+/// os cartões a toda a largura separados pela linha grossa (CardsDivider).
+/// Não faz scroll nem transborda (fica no `body` de um NestedScrollView).
+class SkeletonPartnersPage extends StatelessWidget {
+  const SkeletonPartnersPage({super.key});
+
+  @override
+  Widget build(BuildContext context) => ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
+        children: [
+          const SkeletonSectionHeading(widthFactor: 0.45),
+          SizedBox(
+            height: 332 + 20,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 20),
+              itemCount: 3,
+              separatorBuilder: (context, i) => const SizedBox(width: 10),
+              itemBuilder: (context, i) => SkeletonPhotoCard.partner(delay: i),
+            ),
+          ),
+          const SkeletonSectionHeading(
+            action: true,
+            widthFactor: 0.4,
+            padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 4, AppTheme.screenMargin, 12),
+          ),
+          const SkeletonPhotoCardList(count: 2),
+        ],
+      );
+}
+
+/// Cartões com foto empilhados a toda a largura, separados pela linha grossa
+/// (como as listas de parceiros, favoritos e eventos públicos).
+class SkeletonPhotoCardList extends StatelessWidget {
+  final int count;
+  final double? cardHeight;
+  final bool avatar;
+  const SkeletonPhotoCardList({super.key, this.count = 2, this.cardHeight = 332, this.avatar = true});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          for (var i = 0; i < count; i++) ...[
+            if (i > 0)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: SizedBox(height: 2, child: ColoredBox(color: AppTheme.sectionLine)),
+              ),
+            SkeletonPhotoCard(height: cardHeight, avatar: avatar, delay: i),
+          ],
+        ]),
+      );
+}
