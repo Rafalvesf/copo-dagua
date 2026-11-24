@@ -87,6 +87,7 @@ class ExpenseController extends Notifier<ExpenseState> {
           'category': expense.categorySlug ?? expense.category?.name,
           'amount': expense.amount,
           'due_date': expense.dueDate?.toIso8601String().split('T').first,
+          if (expense.paid) 'paid': true,
         })
         .select()
         .single();

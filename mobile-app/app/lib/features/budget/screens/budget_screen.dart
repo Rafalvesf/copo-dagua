@@ -80,10 +80,18 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
         .read(expenseControllerProvider.notifier)
         .currentEventId;
     if (eventId == null) return;
+    final ceiling = ref.read(budgetControllerProvider).budget?.total;
+    final spent = ref.read(expenseControllerProvider).expenses.fold<double>(0, (a, e) => a + e.amount);
+    final evName = ref.read(eventControllerProvider).event?.displayNames;
+    String eur(double v) => '${v.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]} ')} €';
     final result = await showIslandSheet<_AddExpenseResult>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => const _AddExpenseSheet(),
+      builder: (context) => _AddExpenseSheet(
+        subtitle: [?evName, if (ceiling != null && ceiling > 0) 'teto de ${eur(ceiling)}'].join(' · '),
+        ceiling: ceiling != null && ceiling > 0 ? ceiling : null,
+        spent: spent,
+      ),
     );
     if (result == null) return;
     ref
@@ -96,6 +104,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             amount: result.amount,
             dueDate: result.dueDate,
             categorySlug: result.categorySlug,
+            paid: result.paid,
           ),
         );
   }
@@ -566,12 +575,23 @@ class _AddExpenseResult {
   final double amount;
   final DateTime? dueDate;
   final String? categorySlug;
+  final bool paid;
 
-  _AddExpenseResult({required this.title, required this.amount, this.dueDate, this.categorySlug});
+  _AddExpenseResult({required this.title, required this.amount, this.dueDate, this.categorySlug, this.paid = false});
 }
 
+/// Popup «Nova despesa» (prancheta «Orçamento · adicionar despesa»,
+/// 2026-11-24): o valor grande com o que ainda fica no teto, «O QUÊ»,
+/// «CATEGORIA», «ESTADO» (Por pagar / Já está pago, com o prazo) e
+/// «Guardar · valor».
 class _AddExpenseSheet extends StatefulWidget {
-  const _AddExpenseSheet();
+  /// «Casamento · teto de 18 000 €».
+  final String? subtitle;
+
+  /// Teto e o que já está gasto (para «Ainda tens X no teto»).
+  final double? ceiling;
+  final double spent;
+  const _AddExpenseSheet({this.subtitle, this.ceiling, this.spent = 0});
 
   @override
   State<_AddExpenseSheet> createState() => _AddExpenseSheetState();
@@ -582,8 +602,15 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
   final _amount = TextEditingController();
   DateTime? _dueDate;
   String? _category;
-  String? _titleError;
-  String? _amountError;
+  bool _paid = false;
+  bool _tried = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _title.addListener(() => setState(() {}));
+    _amount.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -592,70 +619,228 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
     super.dispose();
   }
 
+  double? get _value => double.tryParse(_amount.text.trim().replaceAll(' ', '').replaceAll(',', '.'));
+
+  static String _eur(double v) {
+    final whole = v == v.roundToDouble();
+    final s = whole ? v.toStringAsFixed(0) : v.toStringAsFixed(2).replaceAll('.', ',');
+    final parts = s.split(',');
+    final int = parts[0].replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]} ');
+    return '${parts.length > 1 ? '$int,${parts[1]}' : int} €';
+  }
+
+  void _save() {
+    final v = _value;
+    setState(() => _tried = true);
+    if (_title.text.trim().isEmpty || v == null || v <= 0) return;
+    Navigator.of(context).pop(_AddExpenseResult(
+      title: _title.text.trim(),
+      amount: v,
+      dueDate: _paid ? null : _dueDate,
+      categorySlug: _category,
+      paid: _paid,
+    ));
+  }
+
+  Widget _caps(String t) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(t, style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+      );
+
+  Widget _state(String label, String sub, bool on, VoidCallback onTap, {bool line = true}) => Semantics(
+        button: true,
+        selected: on,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(border: line ? const Border(bottom: BorderSide(color: Color(0xFFD9D9D9))) : null),
+            child: Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  const SizedBox(height: 2),
+                  Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                ]),
+              ),
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: on ? AppTheme.brandGreen : null,
+                  border: on ? null : Border.all(color: const Color(0xFFC9C3B8), width: 1.5),
+                ),
+                child: on ? const Icon(Hi.check, size: 14, color: Colors.white) : null,
+              ),
+            ]),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Adicionar despesa',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          AuthTextField(
-            label: 'Despesa',
-            controller: _title,
-            errorText: _titleError,
-          ),
-          const SizedBox(height: 12),
-          AuthTextField(
-            label: 'Valor (€)',
-            controller: _amount,
-            keyboardType: TextInputType.number,
-            errorText: _amountError,
-          ),
-          const SizedBox(height: 12),
-          DatePickerField(
-            label: 'Prazo (opcional)',
-            value: _dueDate,
-            onChanged: (d) => setState(() => _dueDate = d),
-          ),
-          const SizedBox(height: 14),
-          CompanyCategoryPicker(selected: _category, onChanged: (c) => setState(() => _category = c)),
-          const SizedBox(height: 16),
-          PrimaryButton(
-            label: 'Guardar',
-            onPressed: () {
-              final amount = double.tryParse(
-                _amount.text.trim().replaceAll(',', '.'),
-              );
-              setState(() {
-                _titleError = _title.text.trim().isEmpty
-                    ? 'A despesa precisa de um título'
-                    : null;
-                _amountError = amount == null ? 'Indica um valor válido' : null;
-              });
-              if (_titleError != null || _amountError != null) return;
-              Navigator.of(context).pop(
-                _AddExpenseResult(
-                  title: _title.text.trim(),
-                  amount: amount!,
-                  dueDate: _dueDate,
-                  categorySlug: _category,
+    final v = _value ?? 0;
+    final left = widget.ceiling == null ? null : widget.ceiling! - widget.spent - v;
+    final ok = _title.text.trim().isNotEmpty && v > 0;
+    String two(int n) => n.toString().padLeft(2, '0');
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Nova despesa', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                if (widget.subtitle != null) Text(widget.subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ]),
+            ),
+            Semantics(
+              button: true,
+              label: 'Fechar',
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                  child: const Icon(Hi.xMark, size: 20, color: Colors.white),
                 ),
-              );
-            },
+              ),
+            ),
+          ]),
+        ),
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+                child: Column(children: [
+                  const Text('VALOR', style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+                    IntrinsicWidth(
+                      child: TextField(
+                        controller: _amount,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                        decoration: const InputDecoration(
+                          isCollapsed: true,
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          hintText: '0,00',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text('€', style: TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ]),
+                  if (left != null)
+                    Text(left >= 0 ? 'Ainda tens ${_eur(left)} no teto' : 'Passa o teto em ${_eur(-left)}',
+                        style: TextStyle(fontSize: 13, color: left >= 0 ? AppTheme.inkMuted : const Color(0xFFC8553D))),
+                  if (_tried && v <= 0)
+                    const Text('Indica um valor válido', style: TextStyle(fontSize: 13, color: Color(0xFFC8553D))),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              _caps('O QUÊ'),
+              Container(
+                height: 52,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                decoration: BoxDecoration(
+                  color: AppTheme.background,
+                  borderRadius: BorderRadius.circular(26),
+                  border: _tried && _title.text.trim().isEmpty ? Border.all(color: const Color(0xFFC8553D), width: 1.5) : null,
+                ),
+                alignment: Alignment.centerLeft,
+                child: TextField(
+                  controller: _title,
+                  textCapitalization: TextCapitalization.sentences,
+                  style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    filled: false,
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    hintText: 'Ex.: vestido, convites, alianças',
+                  ),
+                ),
+              ),
+              if (_tried && _title.text.trim().isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(top: 6, left: 6),
+                  child: Text('A despesa precisa de um título', style: TextStyle(fontSize: 13, color: Color(0xFFC8553D))),
+                ),
+              const SizedBox(height: 16),
+              CompanyCategoryPicker(selected: _category, onChanged: (c) => setState(() => _category = c)),
+              const SizedBox(height: 16),
+              _caps('ESTADO'),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+                child: Column(children: [
+                  _state('Por pagar', 'Fica em «Por pagar» até marcares como pago.', !_paid, () => setState(() => _paid = false)),
+                  _state('Já está pago', 'Conta logo no «Gasto».', _paid, () => setState(() => _paid = true), line: !_paid),
+                  if (!_paid)
+                    Semantics(
+                      button: true,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () async {
+                          final now = DateTime.now();
+                          final d = await showDatePicker(
+                            context: context,
+                            initialDate: _dueDate ?? now,
+                            firstDate: DateTime(now.year - 1),
+                            lastDate: DateTime(now.year + 5),
+                          );
+                          if (d != null && mounted) setState(() => _dueDate = d);
+                        },
+                        child: SizedBox(
+                          height: 56,
+                          child: Row(children: [
+                            const Expanded(child: Text('Prazo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+                            Text(_dueDate == null ? 'Opcional' : '${two(_dueDate!.day)}/${two(_dueDate!.month)}/${_dueDate!.year}',
+                                style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                            const SizedBox(width: 4),
+                            const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
+                          ]),
+                        ),
+                      ),
+                    ),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              const Text('Fica só no orçamento: os pagamentos que juntas à mão fazem-se fora da app.',
+                  style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
+            ]),
           ),
-        ],
-      ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.paddingOf(context).bottom),
+          child: SizedBox(
+            height: 52,
+            child: FilledButton(
+              onPressed: _save,
+              style: FilledButton.styleFrom(
+                backgroundColor: ok ? AppTheme.ink : AppTheme.ink.withValues(alpha: 0.35),
+                foregroundColor: Colors.white,
+                shape: const StadiumBorder(),
+                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+              child: Text(ok ? 'Guardar · ${_eur(v)}' : 'Guardar'),
+            ),
+          ),
+        ),
+      ]),
     );
   }
 }
