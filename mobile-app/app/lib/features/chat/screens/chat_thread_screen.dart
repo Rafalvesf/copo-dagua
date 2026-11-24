@@ -129,6 +129,43 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     }
   }
 
+  /// «Por tratar» por cima da caixa de escrever (prancheta «Conversa com
+  /// cartões», 2026-11-24): propostas por responder e aceites com
+  /// pagamento por fazer.
+  Widget _pendingTray(List<ChatMessage> messages) {
+    final proposals = [for (final m in messages) if (m.isProposal && m.proposalId != null) m];
+    if (proposals.isEmpty) return const SizedBox.shrink();
+    final states = ref.watch(_proposalStatesProvider(proposals.map((m) => m.proposalId!).join(','))).value ?? const {};
+    final items = <PendingItem>[];
+    for (final m in proposals.reversed) {
+      final st = states[m.proposalId];
+      if (st == null) continue;
+      final (status, booking) = st;
+      final (String? label, ChatCardTone tone) = status == 'sent'
+          ? ('Por responder', ChatCardTone.pending)
+          : status == 'accepted' && (booking == null || booking == 'deposit_due')
+              ? ('Aceite · falta o sinal', ChatCardTone.pending)
+              : status == 'accepted' && booking == 'final_due'
+                  ? ('Falta pagar o resto', ChatCardTone.pending)
+                  : (null, ChatCardTone.neutral);
+      if (label == null) continue;
+      items.add(PendingItem(
+        title: (m.proposalTitle ?? '').trim().isEmpty ? 'Proposta' : m.proposalTitle!.trim(),
+        status: label,
+        tone: tone,
+        card: _ProposalCard(
+          message: m,
+          partnerId: widget.conversation.partnerId,
+          partnerName: widget.conversation.name,
+          conversationId: widget.conversation.id,
+          imageUrl: widget.conversation.avatarUrl,
+          onRequestNew: _openPartnerProfile,
+        ),
+      ));
+    }
+    return PendingTray(items: items);
+  }
+
   /// Toque longo numa mensagem minha: apagar (`delete_message`, 179).
   Widget _ownDeletable(bool isMe, ChatMessage message, Widget child) {
     if (!isMe) return child;
@@ -218,6 +255,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                     subtitle: hasProposal ? 'Proposta recebida' : (partner?.categoryLabels.firstOrNull),
                     action: widget.conversation.partnerId == null ? null : 'Ver perfil',
                     onAction: widget.conversation.partnerId == null ? null : _openPartnerProfile,
+                    child: JumpToLatest(
+                    controller: _scrollController,
+                    messageCount: chat.messages.length,
                     child: ListView(
                     controller: _scrollController,
                     reverse: true,
@@ -252,8 +292,10 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                     ).reversed.toList(),
                   ),
                   ),
+                  ),
             ),
           ),
+          ColoredBox(color: const Color(0xFFF2F2F2), child: _pendingTray(chat.messages)),
           ColoredBox(color: const Color(0xFFF2F2F2), child: ChatTypingLine(typing)),
           if (widget.conversation.partnerId != null)
             ColoredBox(
@@ -556,10 +598,25 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
     final pct = (widget.fee(ref, watch: true) ?? const FeeConfig())
         .effectivePct(message.proposalPrice ?? 0);
     double withFee(double v) => amountWithCommission(v, pct);
+    // Estado e cor (prancheta «Cartões nas mensagens», 2026-11-24).
+    final (String status, ChatCardTone tone) = _unavailable && !_accepted
+        ? ('Recusada ou expirada', ChatCardTone.neutral)
+        : !_accepted
+            ? ('Por responder', ChatCardTone.pending)
+            : switch (_bookingState) {
+                'deposit_paid' => ('Aceite e sinal pago', ChatCardTone.doneLine),
+                'final_due' => ('Falta pagar o resto', ChatCardTone.pending),
+                'paid' => ('Tudo pago', ChatCardTone.doneLine),
+                'completed' => ('Concluído', ChatCardTone.done),
+                'cancelled' => ('Reserva cancelada', ChatCardTone.neutral),
+                _ => ('Aceite · falta o sinal', ChatCardTone.pending),
+              };
     return ChatProposalCard(
       imageUrl: widget.imageUrl,
-      title: heading ?? message.proposalTitle ?? 'Proposta',
-      subtitle: heading == null ? null : message.proposalTitle,
+      status: status,
+      tone: tone,
+      title: (message.proposalTitle ?? '').trim().isEmpty ? 'Proposta' : message.proposalTitle!.trim(),
+      subtitle: heading == null ? null : 'Para o $heading',
       // O cliente vê logo o que vai pagar: valor do parceiro + comissão
       // (mesma conta do checkout). Pedido 2026-10-17.
       price: message.proposalPrice == null
@@ -732,3 +789,18 @@ class _PayOrLaterSheet extends StatelessWidget {
     );
   }
 }
+
+/// Estado de cada proposta da conversa (e da reserva, se aceite), para o
+/// «Por tratar». A chave são os ids separados por vírgulas.
+final _proposalStatesProvider =
+    FutureProvider.autoDispose.family<Map<String, (String?, String?)>, String>((ref, joined) async {
+  final out = <String, (String?, String?)>{};
+  for (final id in joined.split(',').where((s) => s.isNotEmpty)) {
+    try {
+      final s = await fetchProposalStatus(id);
+      final b = s == 'accepted' ? await fetchProposalBookingState(id) : null;
+      out[id] = (s, b);
+    } catch (_) {}
+  }
+  return out;
+});

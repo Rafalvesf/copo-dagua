@@ -12,7 +12,8 @@ import '../widgets/message_row.dart';
 import '../../../core/chat/chat_list_controller.dart';
 import '../../../core/chat/presence.dart';
 import '../../../shared/widgets/island_sheet.dart';
-import '../../../shared/widgets/v2_kit.dart' show softCard, V2Avatar;
+import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
+import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/chat/group_chat.dart';
@@ -370,20 +371,20 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       ),
       for (final k in [0, 1, 2])
         if (sections[k] != null) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 4, 18, AppTheme.screenMargin, 8),
+          // Prancheta «Mensagens» (2026-11-24): sem caixa branca; título de
+          // grupo com a linha grossa 2 px por cima (DESIGN §4).
+          Container(
+            margin: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 4),
+            padding: const EdgeInsets.only(top: 16),
+            decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.sectionLine, width: 2))),
             child: Text(sectionNames[k],
                 style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-            child: Container(
-              clipBehavior: Clip.antiAlias,
-              decoration: softCard(radius: 22),
-              child: Column(children: [
-                for (var i = 0; i < sections[k]!.length; i++) row(sections[k]![i], i == sections[k]!.length - 1),
-              ]),
-            ),
+            child: Column(children: [
+              for (var i = 0; i < sections[k]!.length; i++) row(sections[k]![i], i == sections[k]!.length - 1),
+            ]),
           ),
         ],
       if (items.isNotEmpty)
@@ -423,10 +424,15 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   titleFontSize: 28,
                   topPadding: 8,
                   showBack: false,
-                  trailing: AddActionButton(
-                    line: true,
-                    onTap: _startingConversation ? () {} : () => _newMenu(groupEvents),
-                  ),
+                  // «+» e o sino com o contador (prancheta «Mensagens»).
+                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                    AddActionButton(
+                      line: true,
+                      onTap: _startingConversation ? () {} : () => _newMenu(groupEvents),
+                    ),
+                    const SizedBox(width: 10),
+                    const PartnerNotificationBell(),
+                  ]),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),

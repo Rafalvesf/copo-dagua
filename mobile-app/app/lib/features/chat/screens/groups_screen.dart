@@ -263,10 +263,12 @@ class GroupThreadScreen extends ConsumerStatefulWidget {
 
 class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
   final _text = TextEditingController();
+  final _scroll = ScrollController();
 
   @override
   void dispose() {
     _text.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -470,7 +472,11 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                   subtitle: eventTitle == null ? null : 'Grupo do evento',
                   action: ev == null ? null : 'Ver evento',
                   onAction: ev == null ? null : () => context.go('/home'),
+                  child: JumpToLatest(
+                  controller: _scroll,
+                  messageCount: msgs.length,
                   child: ListView.builder(
+                  controller: _scroll,
                   reverse: true,
                   padding: const EdgeInsets.fromLTRB(16, 82, 16, 16),
                   itemCount: msgs.length,
@@ -564,6 +570,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                       ),
                     ]);
                   },
+                ),
                 ),
                 ),
           ),

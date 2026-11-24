@@ -8,6 +8,7 @@ import '../../../core/chat/partner_chat_thread_controller.dart';
 import '../../../core/chat/presence.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
+import '../../../core/home/home_providers.dart' show fetchProposalStatus, fetchProposalBookingState;
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -132,7 +133,10 @@ class _PartnerChatThreadScreenState
           Expanded(
             child: chat.loading && chat.messages.isEmpty
                 ? const SkeletonChat()
-                : ListView(
+                : JumpToLatest(
+                    controller: _scrollController,
+                    messageCount: chat.messages.length,
+                    child: ListView(
                     controller: _scrollController,
                     // Abre sempre nas mensagens mais recentes (2026-10-18).
                     reverse: true,
@@ -148,12 +152,7 @@ class _PartnerChatThreadScreenState
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
                           : message.isProposal
-                          ? ChatProposalCard(
-                              eyebrow: 'PROPOSTA ENVIADA',
-                              title: message.proposalTitle ?? 'Proposta',
-                              price: message.proposalPrice,
-                              deposit: message.proposalDepositAmount,
-                            )
+                          ? _PartnerProposalCard(message: message)
                           : isMe
                           ? _ownDeletable(isMe, message, ChatBubble(text: message.text ?? '', isMe: isMe))
                           : GestureDetector(
@@ -163,6 +162,7 @@ class _PartnerChatThreadScreenState
                               child: ChatBubble(text: message.text ?? '', isMe: isMe),
                             ),
                     ).reversed.toList(),
+                  ),
                   ),
           ),
           ColoredBox(
@@ -181,6 +181,62 @@ class _PartnerChatThreadScreenState
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A proposta do lado do parceiro, com o estado (prancheta «Cartões nas
+/// mensagens», 2026-11-24): enviada, aceite à espera do sinal, sinal
+/// recebido (linha verde) ou recusada.
+class _PartnerProposalCard extends StatefulWidget {
+  final ChatMessage message;
+  const _PartnerProposalCard({required this.message});
+
+  @override
+  State<_PartnerProposalCard> createState() => _PartnerProposalCardState();
+}
+
+class _PartnerProposalCardState extends State<_PartnerProposalCard> {
+  String? _status;
+  String? _booking;
+
+  @override
+  void initState() {
+    super.initState();
+    final id = widget.message.proposalId;
+    if (id == null) return;
+    fetchProposalStatus(id).then((s) async {
+      if (!mounted) return;
+      setState(() => _status = s);
+      if (s == 'accepted') {
+        final b = await fetchProposalBookingState(id);
+        if (mounted) setState(() => _booking = b);
+      }
+    }).catchError((_) {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final m = widget.message;
+    final (String status, ChatCardTone tone) = switch (_status) {
+      'accepted' => switch (_booking) {
+          'deposit_paid' || 'final_due' => ('Aceite · sinal recebido', ChatCardTone.doneLine),
+          'paid' || 'completed' => ('Tudo pago', ChatCardTone.doneLine),
+          'cancelled' => ('Reserva cancelada', ChatCardTone.neutral),
+          _ => ('Aceite · à espera do sinal', ChatCardTone.pending),
+        },
+      'rejected' || 'declined' => ('Recusada', ChatCardTone.neutral),
+      'expired' => ('Expirou', ChatCardTone.neutral),
+      _ => ('Enviada · à espera da resposta', ChatCardTone.neutral),
+    };
+    return ChatProposalCard(
+      eyebrow: 'PROPOSTA',
+      status: status,
+      tone: tone,
+      title: (m.proposalTitle ?? '').trim().isEmpty ? 'Proposta' : m.proposalTitle!.trim(),
+      price: m.proposalPrice,
+      deposit: m.proposalDepositAmount,
+      note: _status == null || _status == 'sent' ? 'Recebes o total menos a taxa de serviço.' : null,
     );
   }
 }

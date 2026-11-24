@@ -55,94 +55,214 @@ class PartnerNotificationBell extends ConsumerWidget {
   }
 }
 
-class _PartnerNotificationsSheet extends ConsumerWidget {
+/// Popup das notificações (prancheta «Popup das notificações», 2026-11-24):
+/// título 22 com «N por ler» e o «×», pílulas «Todas» / «Por ler» com o
+/// contador, o cartão dos avisos no telemóvel e as notificações por dia
+/// (ícone num círculo 44, título 16, hora 12, ponto verde por ler, texto 13
+/// e «Ver» quando leva a algum lado).
+class _PartnerNotificationsSheet extends ConsumerStatefulWidget {
   const _PartnerNotificationsSheet();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notificationsAsync = ref.watch(partnerNotificationsProvider);
+  ConsumerState<_PartnerNotificationsSheet> createState() => _PartnerNotificationsSheetState();
+}
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.3,
-      maxChildSize: 0.9,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
+class _PartnerNotificationsSheetState extends ConsumerState<_PartnerNotificationsSheet> {
+  bool _unreadOnly = false;
+
+  static String _day(DateTime d) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final that = DateTime(d.year, d.month, d.day);
+    final diff = today.difference(that).inDays;
+    if (diff <= 0) return 'HOJE';
+    if (diff < 7) return 'ESTA SEMANA';
+    return 'ANTES';
+  }
+
+  static String _time(DateTime d) {
+    final now = DateTime.now();
+    final local = d.toLocal();
+    String two(int v) => v.toString().padLeft(2, '0');
+    if (now.difference(local).inHours < 24 && now.day == local.day) return '${two(local.hour)}:${two(local.minute)}';
+    const wd = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const mo = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    return now.difference(local).inDays < 7 ? wd[local.weekday - 1] : '${local.day} ${mo[local.month - 1]}';
+  }
+
+  Future<void> _open(PartnerNotification n) async {
+    if (!n.read) {
+      await markPartnerNotificationRead(n.id);
+      ref.invalidate(partnerNotificationsProvider);
+    }
+    final link = n.link;
+    if (link != null && mounted) {
+      final router = GoRouter.of(context);
+      Navigator.of(context).pop();
+      router.push(link);
+    }
+  }
+
+  Widget _pill(String label, int count, bool on, VoidCallback onTap) => Semantics(
+        button: true,
+        selected: on,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(color: on ? AppTheme.brandGreen : AppTheme.background, borderRadius: BorderRadius.circular(19)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+              const SizedBox(width: 6),
               Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.borderMuted,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                constraints: const BoxConstraints(minWidth: 20),
+                height: 20,
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: on ? Colors.white : AppTheme.ink, borderRadius: BorderRadius.circular(10)),
+                child: Text('$count', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: on ? AppTheme.ink : Colors.white)),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Notificações',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: AppFontSize.lg),
-              ),
-              const SizedBox(height: 12),
-              const PushOptInCard(),
-              Expanded(
-                child: notificationsAsync.when(
-                  loading: () => const SkeletonList(),
-                  error: (err, st) => AsyncErrorView(onRetry: () => ref.invalidate(partnerNotificationsProvider)),
-                  data: (notifications) {
-                    if (notifications.isEmpty) {
-                      return const EmptyStateView(message: 'Sem notificações.', icon: Hi.bell);
-                    }
-                    return ListView.builder(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: notifications.length,
-                      itemBuilder: (context, index) {
-                        final n = notifications[index];
-                        return ListTile(
-                          leading: Icon(
-                            switch (n.type) {
-                              'new_message' => n.read ? Hi.chatBubbleOvalLeft : Hi.chatBubbleOvalLeft,
-                              'support_reply' => Hi.lifebuoy,
-                              'admin_message' => Hi.megaphone,
-                              _ => n.read ? Hi.bell : Hi.bellAlert,
-                            },
-                            color: n.read ? AppTheme.inkMuted : AppTheme.accentOliveDark,
-                          ),
-                          title: Text(
-                            n.title,
-                            style: TextStyle(
-                              fontWeight: n.read ? FontWeight.w600 : FontWeight.w700,
-                            ),
-                          ),
-                          subtitle: n.body == null ? null : Text(n.body!, maxLines: 2, overflow: TextOverflow.ellipsis),
-                          onTap: () async {
-                            if (!n.read) {
-                              await markPartnerNotificationRead(n.id);
-                              ref.invalidate(partnerNotificationsProvider);
-                            }
-                            final link = n.link;
-                            if (link != null && context.mounted) {
-                              Navigator.of(context).pop();
-                              GoRouter.of(context).push(link);
-                            }
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
+            ]),
           ),
-        );
-      },
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final async = ref.watch(partnerNotificationsProvider);
+    final all = async.value ?? const <PartnerNotification>[];
+    final unread = all.where((n) => !n.read).length;
+    final shown = _unreadOnly ? all.where((n) => !n.read).toList() : all;
+    final groups = <String, List<PartnerNotification>>{};
+    for (final n in shown) {
+      groups.putIfAbsent(_day(n.createdAt.toLocal()), () => []).add(n);
+    }
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.85,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Notificações', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(unread == 0 ? 'Está tudo lido' : (unread == 1 ? '1 por ler' : '$unread por ler'),
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              ]),
+            ),
+            Semantics(
+              button: true,
+              label: 'Fechar',
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                  child: const Icon(Hi.xMark, size: 20, color: Colors.white),
+                ),
+              ),
+            ),
+          ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Row(children: [
+            _pill('Todas', all.length, !_unreadOnly, () => setState(() => _unreadOnly = false)),
+            const SizedBox(width: 8),
+            _pill('Por ler', unread, _unreadOnly, () => setState(() => _unreadOnly = true)),
+          ]),
+        ),
+        Expanded(
+          child: async.isLoading && all.isEmpty
+              ? const SkeletonList()
+              : async.hasError && all.isEmpty
+                  ? AsyncErrorView(onRetry: () => ref.invalidate(partnerNotificationsProvider))
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+                      children: [
+                        const PushOptInCard(),
+                        if (shown.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 32),
+                            child: Text(_unreadOnly ? 'Sem notificações por ler.' : 'Sem notificações.',
+                                textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+                          ),
+                        for (final k in const ['HOJE', 'ESTA SEMANA', 'ANTES'])
+                          if (groups[k] != null) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 20, bottom: 4),
+                              child: Text(k,
+                                  style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                            ),
+                            for (var i = 0; i < groups[k]!.length; i++) _row(groups[k]![i], i == groups[k]!.length - 1),
+                          ],
+                      ],
+                    ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _row(PartnerNotification n, bool last) {
+    final icon = switch (n.type) {
+      'new_message' => Hi.chatBubbleOvalLeft,
+      'support_reply' => Hi.lifebuoy,
+      'admin_message' => Hi.megaphone,
+      _ => Hi.bell,
+    };
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _open(n),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: AppTheme.line))),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(color: Color(0xFFE6E6E6), shape: BoxShape.circle),
+              child: Icon(icon, size: 20, color: const Color(0xFF3A3733)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Expanded(
+                    child: Text(n.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(_time(n.createdAt), style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
+                  if (!n.read) ...[
+                    const SizedBox(width: 8),
+                    Semantics(
+                      label: 'Por ler',
+                      child: Container(width: 10, height: 10, decoration: const BoxDecoration(color: AppTheme.brandGreen, shape: BoxShape.circle)),
+                    ),
+                  ],
+                ]),
+                if (n.body != null && n.body!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(n.body!, style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted)),
+                ],
+                if (n.link != null) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+                    alignment: Alignment.center,
+                    child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+                  ),
+                ],
+              ]),
+            ),
+          ]),
+        ),
+      ),
     );
   }
 }
