@@ -19,6 +19,7 @@ import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/event_brief.dart';
+import '../widgets/day_clash_sheet.dart';
 import '../widgets/request_row.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/cancel_booking_sheet.dart';
@@ -56,6 +57,31 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Já tem uma reserva nesse dia (ou a essa hora)? Mostra o aviso do
+  /// mockup «Já tens uma marcação nesse dia/hora» (2026-11-24). `true` para
+  /// seguir com a aceitação.
+  Future<bool> _dayOk() async {
+    final List<Booking> all;
+    try {
+      all = await ref.read(partnerBookingsProvider(null).future);
+    } catch (_) {
+      return true;
+    }
+    final found = await findDayClashes(booking, all);
+    if (found.clashes.isEmpty || !mounted) return true;
+    final choice = await showDayClashSheet(context, request: booking, clashes: found.clashes, hour: found.hour);
+    if (choice == DayClashChoice.accept) return true;
+    if (choice == DayClashChoice.proposeDay && mounted) {
+      final sent = await showProposeOtherDaySheet(context, request: booking, all: all, hour: found.hour);
+      if (sent && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Proposta de outro dia enviada na conversa.')),
+        );
+      }
+    }
+    return false;
   }
 
   /// Quanto o parceiro já recebeu desta reserva e ainda não devolveu
@@ -219,6 +245,7 @@ Expanded(child: ScrollingHeader(
                         onPressed: _busy
                             ? null
                             : () => _run(() async {
+                                  if (!await _dayOk()) return;
                                   await supabase.rpc('accept_package_request', params: {'p_quote_request_id': booking.id});
                                   ref.invalidate(partnerBookingsProvider);
                                   if (mounted) {
@@ -256,6 +283,7 @@ Expanded(child: ScrollingHeader(
                         onPressed: _busy
                             ? null
                             : () => _run(() async {
+                                  if (!await _dayOk()) return;
                                   await supabase.rpc('accept_table_request', params: {'p_quote_request_id': booking.id});
                                   ref.invalidate(partnerBookingsProvider);
                                   if (mounted) {
@@ -282,10 +310,13 @@ Expanded(child: ScrollingHeader(
                     SizedBox(
                       height: 52,
                       child: FilledButton(
-                        onPressed: () => context.push(
-                          '/partner-requests/${booking.id}/proposal',
-                          extra: booking,
-                        ),
+                        onPressed: () async {
+                          if (!await _dayOk() || !context.mounted) return;
+                          context.push(
+                            '/partner-requests/${booking.id}/proposal',
+                            extra: booking,
+                          );
+                        },
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.ink,
                           shape: const StadiumBorder(),
