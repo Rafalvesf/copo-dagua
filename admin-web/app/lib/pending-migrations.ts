@@ -616,6 +616,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O organizador pode editar ou cancelar um pedido de orçamento/reserva (cancelar liberta o sinal cativo todo, na hora seguinte); o parceiro pode editar ou retirar uma proposta enquanto ninguém respondeu; os dois podem pedir uma alteração (pessoas, hora, o que inclui) e o parceiro propor outro dia — com cartão na conversa e notificação. Aceite, muda as pessoas ou o dia da reserva; o sinal mantém-se e a diferença de preço vem numa proposta nova. Corre depois da 232.",
     check: { kind: "marker", id: "233" },
   },
+  {
+    file: "234_parceiro_so_cancela_com_sinal_cativo.sql",
+    date: "2026-11-24",
+    title: "Parceiro só cancela com o sinal cativo",
+    what: "O parceiro só pode cancelar uma reserva antes de o cliente pagar ou nas 48 h em que o sinal está cativo (o cliente recebe tudo de volta). Depois disso o sinal é do parceiro e só o organizador pode cancelar, perdendo o sinal. Junta booking_cancel_state() para os avisos da app. Corre depois da 233.",
+    check: { kind: "marker", id: "234" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

@@ -32,13 +32,13 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
-import '../../../core/payments/refunds.dart';
 import '../../../core/partners/partner_providers.dart';
 import '../../partners/screens/partner_detail_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import '../widgets/service_preferences_frame.dart';
 import '../../../shared/widgets/event_pills.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import '../../../shared/widgets/cancel_booking_sheet.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -298,34 +298,25 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
   /// função aceita (`invalid_state` para qualquer outro).
   Future<void> _cancel() async {
     if (_cancelling) return;
-    // Decisão do servidor com a regra do parceiro (174); sem ela, a antiga.
-    final refundNote = await cancelPreviewNote(booking.id) ??
-        coupleCancelRefundNote(eventDate: booking.serviceDate, info: await bookingRefundInfo(booking.id));
+    // Popup do mockup «Cancelar reserva · organizador» (2026-11-24, 234):
+    // nas primeiras 48 h o sinal volta todo; depois perde-se.
+    final state = await fetchBookingCancelState(booking.id, depositAmount: booking.depositAmount);
     if (!mounted) return;
-    final confirmed = await showIslandDialog<bool>(
-      context: context,
-      builder: (context) => IslandAlert(
-        title: const Text('Cancelar reserva'),
-        content: Text(
-          'Cancelar a reserva com ${booking.partnerName}? Esta ação não pode ser desfeita.$refundNote',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Voltar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cancelar reserva'),
-          ),
-        ],
-      ),
+    final d = booking.serviceDate;
+    const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    final deposit = booking.depositAmount ?? 0;
+    final reason = await showCoupleCancelSheet(
+      context,
+      partnerName: booking.partnerName,
+      subtitle: '${booking.partnerName} · ${d.day} ${months[d.month - 1]} ${d.year}',
+      state: state,
+      rest: deposit > 0 && booking.amount > deposit ? booking.amount - deposit : null,
     );
-    if (confirmed != true || !mounted) return;
+    if (reason == null || !mounted) return;
 
     setState(() => _cancelling = true);
     try {
-      await cancelBookingByCouple(booking.id);
+      await cancelBookingByCouple(booking.id, reason: reason.isEmpty ? null : reason);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

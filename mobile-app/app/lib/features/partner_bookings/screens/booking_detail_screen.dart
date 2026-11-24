@@ -21,6 +21,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/event_brief.dart';
 import '../widgets/request_row.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import '../../../shared/widgets/cancel_booking_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
@@ -374,37 +375,25 @@ Expanded(child: ScrollingHeader(
                               : (booking.status == BookingStatus.aceite ||
                                     booking.status == BookingStatus.confirmado)
                               ? () async {
-                                  // Já recebeu dinheiro desta reserva (sinal
-                                  // libertado 48 h depois de pago)? Para
+                                  // Popup do mockup «Cancelar reserva · parceiro»
+                                  // (2026-11-24, 234): só com o sinal cativo;
+                                  // depois disso só o organizador cancela.
+                                  final state = await fetchBookingCancelState(booking.id);
+                                  if (!context.mounted) return;
+                                  final d = booking.eventDate;
+                                  const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+                                  final reason = await showPartnerCancelSheet(
+                                    context,
+                                    clientName: booking.clientName,
+                                    subtitle: '${booking.clientName} · ${booking.eventType.label} · ${d.day} ${months[d.month - 1]}',
+                                    state: state,
+                                    onTalkToTeam: () => context.push('/support'),
+                                  );
+                                  if (reason == null || !context.mounted) return;
+                                  // Já recebeu dinheiro desta reserva? Para
                                   // cancelar tem de o devolver (migração 125).
                                   final owed = await _releasedAmount(booking.id);
                                   if (!context.mounted) return;
-                                  final confirmed = await showIslandDialog<bool>(
-                                    context: context,
-                                    builder: (context) => IslandAlert(
-                                      title: const Text('Cancelar reserva'),
-                                      content: Text(
-                                        owed > 0
-                                            ? 'Já recebeste ${euros(owed, cents: true)} desta reserva. Para cancelar, tens de devolver esse valor: '
-                                                'é retirado do teu saldo À Nossa! e o cliente recebe de volta o que pagou, menos a taxa de serviço.\n\nEsta ação não pode ser desfeita.'
-                                            : 'Cancelar a reserva com ${booking.clientName}? Esta ação não pode ser desfeita.'
-                                                '${booking.status == BookingStatus.confirmado ? '\n\nO cliente recebe de volta o que pagou, menos a taxa de serviço, de forma automática.' : ''}',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.of(context).pop(false),
-                                          child: const Text('Voltar'),
-                                        ),
-                                        FilledButton(
-                                          onPressed: () =>
-                                              Navigator.of(context).pop(true),
-                                          child: Text(owed > 0 ? 'Devolver ${euros(owed, cents: true)} e cancelar' : 'Cancelar reserva'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                  if (confirmed != true) return;
                                   if (owed > 0) {
                                     final problem = await _returnFunds(booking.id);
                                     if (problem != null) {
@@ -429,7 +418,7 @@ Expanded(child: ScrollingHeader(
                                   await _run(() async {
                                     await supabase.rpc(
                                       'cancel_booking_by_partner',
-                                      params: {'p_booking_id': booking.id},
+                                      params: {'p_booking_id': booking.id, if (reason.isNotEmpty) 'p_reason': reason},
                                     );
                                     // Parceiro cancela → o casal é sempre reembolsado.
                                     await requestBookingRefund(booking.id);
