@@ -14,6 +14,7 @@ import '../../shared/widgets/island_sheet.dart';
 import '../supabase/supabase_config.dart';
 import '../theme/app_theme.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Anexos do chat (pedido do utilizador, 2026-10-20): fotos, ficheiros,
 /// stickers e GIFs, nas conversas com parceiros e nos grupos do evento.
@@ -313,9 +314,8 @@ class ChatAttachmentView extends StatelessWidget {
             child: SizedNetworkImage(
               url,
               fit: BoxFit.cover,
-              loadingBuilder: (c, child, p) => p == null
-                  ? child
-                  : Container(width: maxW, height: 180, color: const Color(0xFFF2F2F2), child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
+              // Esqueleto com o tamanho da imagem a chegar (2026-11-24).
+              loadingBuilder: (c, child, p) => p == null ? child : SkeletonBox(width: maxW, height: 180, radius: 0),
               errorBuilder: (c, e, s) => Container(
                 width: maxW,
                 height: 120,

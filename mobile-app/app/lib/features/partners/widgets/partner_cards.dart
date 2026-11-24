@@ -133,7 +133,9 @@ class PartnerPhoto extends StatelessWidget {
             SizedNetworkImage(
               partner.imageUrl!,
               fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) => progress == null ? child : const SizedBox.shrink(),
+              // Sem loadingBuilder (2026-11-24): assim o SizedNetworkImage
+              // mostra o esqueleto a pulsar enquanto a foto carrega. Se
+              // falhar, fica a cor da categoria por baixo.
               errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
             ),
         ],

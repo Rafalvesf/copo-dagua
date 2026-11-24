@@ -42,6 +42,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Separador "Eventos" (pedido 2026-11): os eventos da conta — o que
 /// organizo e aqueles a que já tenho acesso — e os eventos públicos
@@ -255,7 +256,8 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         if (publicEvents.isNotEmpty) _RowLabel('Na À Nossa!', publicEvents.length),
       ],
       if (publicAsync.isLoading && publicAsync.value == null)
-        const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
+        // Cartões de evento a carregar, com o tamanho dos reais (2026-11-24).
+        const SkeletonPhotoCardList(count: 2, cardHeight: null)
       else if (publicEvents.isEmpty)
         _Pad(_EmptyNote(filtering
             ? 'Nenhum evento público com estes filtros.'
@@ -1147,7 +1149,7 @@ class PublicEventScreen extends ConsumerWidget {
           children: [
             const PageHeader(title: 'Evento', centered: true),
             if (async.isLoading && e == null)
-              const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
+              const SkeletonPhotoCardList(count: 1, cardHeight: null)
             else if (e == null)
               const _Pad(_EmptyNote('Este evento já não está disponível ou deixou de ser público.'))
             else ...[

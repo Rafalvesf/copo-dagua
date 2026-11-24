@@ -34,8 +34,7 @@ class PhotoCardBackground extends StatelessWidget {
         SizedNetworkImage(
           imageUrl,
           fit: BoxFit.cover,
-          loadingBuilder: (context, child, progress) =>
-              progress == null ? child : const SizedBox.shrink(),
+          // Sem loadingBuilder (2026-11-24): esqueleto enquanto a foto carrega.
           errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
         ),
         DecoratedBox(
