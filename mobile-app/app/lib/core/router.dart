@@ -720,13 +720,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Grupos do evento (2026-10-20).
       GoRoute(
         path: '/groups/:weddingId',
-        builder: (context, state) =>lazyPage([l3.loadLibrary], () =>  l3.GroupsScreen(eventId: state.pathParameters['weddingId']!)),
+        // Sem a página «Grupos» (2026-11-25): avisos antigos abrem o grupo do evento.
+        builder: (context, state) =>lazyPage([l3.loadLibrary], () =>  l3.GroupLoaderScreen(weddingId: state.pathParameters['weddingId']!)),
       ),
       GoRoute(
         path: '/group/:id',
         builder: (context, state) =>lazyPage([l3.loadLibrary], () =>  state.extra is ChatGroup
             ? l3.GroupThreadScreen(group: state.extra as ChatGroup)
-            : const _LostRoute('/chat')),
+            // Sem `extra` (notificações): vai buscar o grupo pelo id.
+            : l3.GroupLoaderScreen(groupId: state.pathParameters['id']!)),
       ),
       tabRoute(
         path: '/chat',

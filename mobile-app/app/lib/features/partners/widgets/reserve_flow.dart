@@ -5,6 +5,7 @@ import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/time_wheels.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
 import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, IslandCloseButton, showIslandSheet;
 import '../../../shared/widgets/snappy_tap.dart';
@@ -640,13 +641,16 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     const gap = SizedBox(height: 16);
     if (widget.quote) {
       return [
-        _caps('COMEÇA ÀS'),
-        _pills(_times(9, 22), _time, (v) => setState(() => _time = _time == v ? null : v)),
-        gap,
-        // «ACABA ÀS» e a hora do pedido (prancheta de 2026-11-25).
-        _caps('ACABA ÀS'),
-        _pills(['Sem fim', ..._times(12, 28)], _endTime ?? 'Sem fim',
-            (v) => setState(() => _endTime = v == 'Sem fim' ? null : v)),
+        // Roda de horas como no iPhone (2026-11-25): começa e acaba às.
+        TimeWheels(columns: [
+          WheelColumn(label: 'COMEÇA ÀS', options: _times(8, 23), value: _time, fallback: '14:00', onChanged: (v) => setState(() => _time = v)),
+          WheelColumn(
+            label: 'ACABA ÀS',
+            options: ['Sem fim', ..._times(10, 30)],
+            value: _endTime ?? 'Sem fim',
+            onChanged: (v) => setState(() => _endTime = v == 'Sem fim' ? null : v),
+          ),
+        ]),
         if (_time != null) ...[
           gap,
           Container(
@@ -696,13 +700,22 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     }
     switch (widget.kind) {
       case ReserveKind.mesa:
-        return [_caps('HORA'), _pills(_times(12, 22), _time, (v) => setState(() => _time = v))];
+        return [
+          TimeWheels(columns: [
+            WheelColumn(label: 'HORA', options: _times(12, 23), value: _time, fallback: '20:00', onChanged: (v) => setState(() => _time = v)),
+          ]),
+        ];
       case ReserveKind.atividade:
-        return [_caps('SESSÃO'), _pills(_times(9, 20), _time, (v) => setState(() => _time = v))];
+        return [
+          TimeWheels(columns: [
+            WheelColumn(label: 'SESSÃO', options: _times(9, 20), value: _time, fallback: '10:00', onChanged: (v) => setState(() => _time = v)),
+          ]),
+        ];
       case ReserveKind.servico:
         return [
-          _caps('COMEÇA ÀS'),
-          _pills(_times(9, 22), _time, (v) => setState(() => _time = v)),
+          TimeWheels(columns: [
+            WheelColumn(label: 'COMEÇA ÀS', options: _times(8, 23), value: _time, fallback: '14:00', onChanged: (v) => setState(() => _time = v)),
+          ]),
           gap,
           _group([_counter('Duração', 'Horas de serviço', _duration, (v) => setState(() => _duration = v), min: 1, max: 16, label: (v) => '$v h')]),
         ];
@@ -715,11 +728,10 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             _pills(['Nós', 'Cada hóspede o seu'], _roomsEach ? 'Cada hóspede o seu' : 'Nós', (v) => setState(() => _roomsEach = v != 'Nós')),
           ],
           gap,
-          _caps('COMEÇA ÀS'),
-          _pills(_times(10, 20), _time, (v) => setState(() => _time = v)),
-          gap,
-          _caps('ACABA ÀS'),
-          _pills(_times(20, 28), _endTime, (v) => setState(() => _endTime = v)),
+          TimeWheels(columns: [
+            WheelColumn(label: 'COMEÇA ÀS', options: _times(8, 23), value: _time, fallback: '14:00', onChanged: (v) => setState(() => _time = v)),
+            WheelColumn(label: 'ACABA ÀS', options: _times(12, 30), value: _endTime, fallback: '00:00', onChanged: (v) => setState(() => _endTime = v)),
+          ]),
         ];
       case ReserveKind.encomenda:
         return [
@@ -740,12 +752,15 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             onPicked: (_) => setState(() {}),
           ),
           gap,
-          _caps('IDA'),
-          _pills(_times(8, 22), _time, (v) => setState(() => _time = v)),
-          gap,
-          _caps('REGRESSO'),
-          _pills(['Sem regresso', ..._times(20, 28)], _returnTime ?? 'Sem regresso',
-              (v) => setState(() => _returnTime = v == 'Sem regresso' ? null : v)),
+          TimeWheels(columns: [
+            WheelColumn(label: 'IDA', options: _times(6, 23), value: _time, fallback: '14:00', onChanged: (v) => setState(() => _time = v)),
+            WheelColumn(
+              label: 'REGRESSO',
+              options: ['Sem regresso', ..._times(12, 30)],
+              value: _returnTime ?? 'Sem regresso',
+              onChanged: (v) => setState(() => _returnTime = v == 'Sem regresso' ? null : v),
+            ),
+          ]),
         ];
     }
   }
