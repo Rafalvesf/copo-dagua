@@ -1,3 +1,4 @@
+import '../../../shared/widgets/time_wheels.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -447,7 +448,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
     final initial = parts.length == 2
         ? TimeOfDay(hour: int.tryParse(parts[0]) ?? 16, minute: int.tryParse(parts[1]) ?? 0)
         : const TimeOfDay(hour: 16, minute: 0);
-    final t = await showTimePicker(context: context, initialTime: initial);
+    final t = await pickTimeWheel(context, initial: initial, title: 'Hora do momento');
     if (t != null) {
       setState(() => _time = '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}');
     }

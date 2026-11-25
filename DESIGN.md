@@ -332,6 +332,23 @@ ecrãs. O resto da app mantém a tabela acima.
 - **Hora do pedido:** «O que procuras?» pergunta «COMEÇA ÀS» e «ACABA ÀS»
   e mostra a «HORA DO PEDIDO» com a duração; fica no pedido e muda-se em
   «Editar pedido».
+- **Horas — sempre a roda** (pedido 2026-11-25; `TimeWheels` /
+  `pickTimeWheel`, `shared/widgets/time_wheels.dart`): toda a escolha de
+  hora é a roda como no iPhone — caixa `#F2F2F2`, cantos 22, faixa branca
+  da escolha ao meio, títulos 12 em maiúsculas («COMEÇA ÀS» / «ACABA ÀS»,
+  «Sem fim» no topo de «Acaba às»). Pedir orçamento, «Editar pedido»,
+  «Pedir alteração · Hora», programa, ofertas e momentos. **Nunca** caixas
+  «Início» / «Fim» para escrever nem o `showTimePicker`.
+- **Número de pessoas — também se escreve** (pedido 2026-11-25;
+  `TypeCount`, `shared/widgets/type_count.dart`): nos contadores «−» / «+»
+  de pessoas o número é uma caixa que se toca e se escreve (teclado de
+  números), além dos botões.
+- **Sinal na proposta** (pedido 2026-11-25): quem trabalha com sinal só
+  escolhe 20 / 30 / 50 % — **sem «Sem sinal»**; sinal a 100 %
+  (restaurantes) não escolhe: «Sem sinal: paga-se tudo de uma vez.».
+- **Cancelar reserva · parceiro** (mockup, 2026-11-25): antes das contas,
+  «O QUE PODES FAZER» — «Propor outro dia» («O sinal fica para o dia
+  novo») e «Pedir alteração» («Pessoas, hora ou o que está incluído»).
 - **Notificações:** um só popup em toda a app (`PartnerNotificationBell`,
   prancheta «Popup das notificações»): «Todas» / «Por ler», «Avisos no
   telemóvel» com «Ativar», grupos HOJE / ESTA SEMANA / ANTES e o botão

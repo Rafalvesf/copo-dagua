@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../hero_icons.dart';
+import 'island_sheet.dart';
 
 /// Uma coluna da roda: o título («COMEÇA ÀS»), as opções e a escolhida.
 class WheelColumn {
@@ -110,4 +112,58 @@ class _TimeWheelsState extends State<TimeWheels> {
       ]),
     );
   }
+}
+
+/// Escolher uma hora (programa, ofertas, momentos…) — a mesma roda num
+/// popup (DESIGN §6, «Horas — sempre a roda», 2026-11-25). Nunca o
+/// `showTimePicker` do Material. De 15 em 15 minutos.
+Future<TimeOfDay?> pickTimeWheel(BuildContext context, {TimeOfDay? initial, String title = 'Escolhe a hora', String label = 'HORA'}) {
+  String two(int v) => v.toString().padLeft(2, '0');
+  final options = [for (var m = 0; m < 24 * 60; m += 15) '${two(m ~/ 60)}:${two(m % 60)}'];
+  final init = initial ?? const TimeOfDay(hour: 16, minute: 0);
+  final snapped = (init.hour * 60 + init.minute) ~/ 15 * 15;
+  var value = '${two(snapped ~/ 60)}:${two(snapped % 60)}';
+  return showIslandSheet<TimeOfDay>(
+    context: context,
+    builder: (c) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            Semantics(
+              button: true,
+              label: 'Fechar',
+              child: GestureDetector(
+                onTap: () => Navigator.of(c).pop(),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                  child: const Icon(Hi.xMark, size: 20, color: Colors.white),
+                ),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          TimeWheels(columns: [
+            WheelColumn(label: label, options: options, value: value, onChanged: (v) => value = v),
+          ]),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 52,
+            child: FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+              onPressed: () {
+                final p = value.split(':');
+                Navigator.of(c).pop(TimeOfDay(hour: int.parse(p[0]), minute: int.parse(p[1])));
+              },
+              child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+          ),
+        ]),
+      ),
+    ),
+  );
 }
