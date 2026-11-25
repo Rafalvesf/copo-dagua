@@ -32,6 +32,7 @@ import '../../bookings/widgets/reject_proposal.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import '../../../shared/widgets/change_request_card.dart';
 import '../../../shared/widgets/request_card.dart';
+import '../../../shared/widgets/chat_summary_sheets.dart';
 import '../../../shared/widgets/deal_sheets.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
@@ -52,7 +53,8 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
 
-  String get _conversationKey => widget.conversation.id;
+  // Uma só conversa por parceiro (2026-11-25): as de todos os eventos.
+  String get _conversationKey => widget.conversation.threadKey;
 
   @override
   void dispose() {
@@ -217,10 +219,49 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     );
   }
 
+  /// O evento de uma mensagem (a conversa dela, entre as juntas).
+  Event? _eventOf(List<Event> events, ChatMessage m) {
+    final id = widget.conversation.of(m.conversationId).eventId;
+    return events.where((e) => e.id == id).firstOrNull;
+  }
+
+  /// «Casamento · Sáb, 12 jun 2027» — só quando há mais de um evento com
+  /// este parceiro (senão a etiqueta não diz nada de novo).
+  String? _labelOf(List<Event> events, ChatMessage m) {
+    if (widget.conversation.merged.isEmpty) return null;
+    final c = widget.conversation.of(m.conversationId);
+    final e = _eventOf(events, m);
+    return c.eventLabel ?? (e == null ? null : eventLabelOf(e.eventType, e.eventDate));
+  }
+
+  String _lineOf(Event e) {
+    const wd = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const mo = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    final d = e.eventDate;
+    return [
+      if (d != null) '${wd[d.weekday - 1]}, ${d.day} ${mo[d.month - 1]}',
+      if ((e.venue ?? '').trim().isNotEmpty) e.venue!.trim() else if ((e.location ?? '').trim().isNotEmpty) e.location!.trim(),
+    ].join(' · ');
+  }
+
+  /// Resumo dos trabalhos com este parceiro, em todos os meus eventos.
+  void _openSummary(List<Event> events) {
+    final pid = widget.conversation.partnerId;
+    if (pid == null) return;
+    showPartnerSummary(
+      context,
+      partnerId: pid,
+      name: widget.conversation.name,
+      avatarUrl: widget.conversation.avatarUrl,
+      eventLabels: {for (final e in events) e.id: eventLabelOf(e.eventType, e.eventDate)},
+      onOpenProfile: _openPartnerProfile,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chat = ref.watch(chatThreadControllerProvider(_conversationKey));
-    final seenUntil = ref.watch(_partnerReadProvider(_conversationKey)).value;
+    final seenUntil = ref.watch(_partnerReadProvider(widget.conversation.id)).value;
     final partner = widget.conversation.partnerId == null
         ? null
         : ref.watch(partnerByIdProvider(widget.conversation.partnerId!)).value;
@@ -273,9 +314,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                   ? null
                   : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
                       .join(' · '),
-              onOpenProfile: widget.conversation.partnerId == null
-                  ? null
-                  : _openPartnerProfile,
+              // Tocar no topo: o resumo dos trabalhos com este parceiro
+              // (prancheta «Conversa única com o parceiro · resumo»).
+              onOpenProfile: widget.conversation.partnerId == null ? null : () => _openSummary(events),
               menu: widget.conversation.partnerId == null ? const [] : [('Pedir alteração', _requestChange)],
               onReport: () => showReportPicker(context, ref,
                   kind: ReportKind.message,
@@ -295,18 +336,15 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 // (antes saltava para o fim com animação e, com cartões
                 // a crescer depois de desenhados, ficava a meio —
                 // reportado 2026-10-18).
-                : ChatEventIsland(
-                    title: eventTitle,
-                    subtitle: (eventLine ?? '').isEmpty ? null : eventLine,
-                    action: 'Ver evento',
-                    onAction: () => context.go('/home'),
-                    child: JumpToLatest(
+                // Sem a ilha «Ver evento» (2026-11-25): tocar no topo abre
+                // o resumo.
+                : JumpToLatest(
                     controller: _scrollController,
                     messageCount: chat.messages.length,
                     child: ListView(
                     controller: _scrollController,
                     reverse: true,
-                    padding: EdgeInsets.fromLTRB(16, eventTitle == null ? 16 : 82, 16, 16),
+                    padding: const EdgeInsets.all(16),
                     children: chatTimeline(
                       messages: chat.messages,
                       // Aqui é sempre o casal a enviar — `fromPartner`
@@ -320,21 +358,22 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
                           : message.changeRequestId != null
-                          ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, imageUrl: widget.conversation.avatarUrl)
+                          ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, imageUrl: widget.conversation.avatarUrl, eventLabel: _labelOf(events, message))
                           : message.isProposal
-                          ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, partnerName: widget.conversation.name, conversationId: widget.conversation.id, imageUrl: widget.conversation.avatarUrl, onRequestNew: _openPartnerProfile)
+                          ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, partnerName: widget.conversation.name, conversationId: widget.conversation.id, imageUrl: widget.conversation.avatarUrl, onRequestNew: _openPartnerProfile, eventLabel: _labelOf(events, message))
                           // Cartão do pedido (prancheta «Todos os cartões»).
                           : message.isQuoteRequestNotice &&
                                   (message.text ?? '').startsWith('Pediu um orçamento') &&
-                                  widget.conversation.eventId != null &&
+                                  widget.conversation.of(message.conversationId).eventId != null &&
                                   widget.conversation.partnerId != null
                           ? RequestCard(
-                              eventId: widget.conversation.eventId!,
+                              eventId: widget.conversation.of(message.conversationId).eventId!,
                               partnerId: widget.conversation.partnerId!,
                               partnerSide: false,
                               otherName: widget.conversation.name,
-                              eventTitle: eventTitle,
-                              eventLine: eventLine,
+                              eventTitle: _eventOf(events, message)?.eventType.label ?? eventTitle,
+                              eventLine: _eventOf(events, message) == null ? eventLine : _lineOf(_eventOf(events, message)!),
+                              eventLabel: _labelOf(events, message),
                             )
                           : message.isQuoteRequestNotice
                           ? GestureDetector(
@@ -350,7 +389,6 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               child: ChatBubble(text: message.text ?? '', isMe: isMe),
                             ),
                     ).reversed.toList(),
-                  ),
                   ),
                   ),
             ),
@@ -384,7 +422,11 @@ class _ProposalCard extends ConsumerStatefulWidget {
   final String partnerName;
   final String conversationId;
   final String? imageUrl;
+  /// Etiqueta do evento (conversas juntas, 2026-11-25).
+  final String? eventLabel;
+
   const _ProposalCard({
+    this.eventLabel,
     required this.message,
     this.partnerId,
     required this.partnerName,
@@ -726,7 +768,8 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
         status: status,
         tone: tone,
         title: title,
-        subtitle: heading == null ? null : 'Para o $heading',
+        subtitle: widget.eventLabel != null || heading == null ? null : 'Para o $heading',
+      eventLabel: widget.eventLabel,
         price: null,
         deposit: null,
         rows: [
@@ -748,7 +791,8 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
       status: status,
       tone: tone,
       title: title,
-      subtitle: heading == null ? null : 'Para o $heading',
+      subtitle: widget.eventLabel != null || heading == null ? null : 'Para o $heading',
+      eventLabel: widget.eventLabel,
       // O cliente vê logo o que vai pagar: valor do parceiro + comissão
       // (mesma conta do checkout). Pedido 2026-10-17.
       price: total,

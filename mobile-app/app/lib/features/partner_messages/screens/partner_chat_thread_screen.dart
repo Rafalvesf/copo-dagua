@@ -16,6 +16,8 @@ import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import '../../../shared/widgets/change_request_card.dart';
 import '../../../shared/widgets/deal_sheets.dart';
 import '../../../shared/widgets/request_card.dart';
+import '../../../shared/widgets/chat_summary_sheets.dart';
+import '../../../core/social/social.dart' show publicProfileProvider;
 import '../../../shared/money.dart';
 import '../../../shared/hero_icons.dart';
 import '../../../core/supabase/supabase_config.dart';
@@ -68,7 +70,7 @@ class _PartnerChatThreadScreenState
     ref.read(typingNowProvider('c:${widget.conversation.id}').notifier).stop();
     await ref
         .read(
-          partnerChatThreadControllerProvider(widget.conversation.id).notifier,
+          partnerChatThreadControllerProvider(widget.conversation.threadKey).notifier,
         )
         .sendText(text);
     _scrollToBottom();
@@ -79,7 +81,7 @@ class _PartnerChatThreadScreenState
     try {
       final a = await pickChatAttachment(context);
       if (a == null || !mounted) return;
-      await ref.read(partnerChatThreadControllerProvider(widget.conversation.id).notifier).sendAttachment(a);
+      await ref.read(partnerChatThreadControllerProvider(widget.conversation.threadKey).notifier).sendAttachment(a);
       _scrollToBottom();
     } catch (_) {
       if (!mounted) return;
@@ -97,10 +99,23 @@ class _PartnerChatThreadScreenState
         final ok = await confirmChatDelete(context,
             title: 'Apagar a mensagem?', body: 'A mensagem desaparece para os dois lados.', cta: 'Apagar mensagem');
         if (!ok || !mounted) return;
-        await runChatDelete(context, () => ref.read(partnerChatThreadControllerProvider(widget.conversation.id).notifier).delete(message.id));
+        await runChatDelete(context, () => ref.read(partnerChatThreadControllerProvider(widget.conversation.threadKey).notifier).delete(message.id));
       },
       child: child,
     );
+  }
+
+  /// Etiqueta do evento de uma mensagem, quando há mais de um evento com
+  /// este cliente (conversas juntas, 2026-11-25).
+  String? _labelOf(ChatMessage m) =>
+      widget.conversation.merged.isEmpty ? null : widget.conversation.of(m.conversationId).eventLabel;
+
+  /// «Organiza 3 eventos» por baixo do nome.
+  String? _organizes() {
+    final id = widget.conversation.clientId;
+    if (id == null) return null;
+    final n = ref.watch(publicProfileProvider(id)).value?.events ?? 0;
+    return n <= 0 ? null : (n == 1 ? 'Organiza 1 evento' : 'Organiza $n eventos');
   }
 
   /// «Pedir alteração» (prancheta «Pedir ou editar alteração»): só com uma
@@ -140,10 +155,10 @@ class _PartnerChatThreadScreenState
   @override
   Widget build(BuildContext context) {
     final chat = ref.watch(
-      partnerChatThreadControllerProvider(widget.conversation.id),
+      partnerChatThreadControllerProvider(widget.conversation.threadKey),
     );
 
-    ref.listen(partnerChatThreadControllerProvider(widget.conversation.id), (
+    ref.listen(partnerChatThreadControllerProvider(widget.conversation.threadKey), (
       previous,
       next,
     ) {
@@ -162,6 +177,21 @@ class _PartnerChatThreadScreenState
             child: ChatHeader(
               name: widget.conversation.name,
               avatarUrl: widget.conversation.avatarUrl,
+              // «Organiza N eventos» e, ao tocar, o resumo deste cliente
+              // (prancheta «Conversa única com o parceiro · resumo»).
+              pill: _organizes(),
+              onOpenProfile: widget.conversation.clientId == null
+                  ? null
+                  : () => showClientSummary(
+                        context,
+                        clientId: widget.conversation.clientId!,
+                        name: widget.conversation.name,
+                        avatarUrl: widget.conversation.avatarUrl,
+                        eventLabels: {
+                          for (final c in widget.conversation.all)
+                            if (c.eventId != null) c.eventId!: c.eventLabel ?? 'Evento',
+                        },
+                      ),
               menu: [('Pedir alteração', _requestChange)],
               onReport: () => showReportPicker(context, ref,
                   kind: ReportKind.message,
@@ -194,18 +224,19 @@ class _PartnerChatThreadScreenState
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
                           : message.changeRequestId != null
-                          ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe)
+                          ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, eventLabel: _labelOf(message))
                           : message.isQuoteRequestNotice &&
                                   (message.text ?? '').startsWith('Pediu um orçamento') &&
-                                  widget.conversation.eventId != null
+                                  widget.conversation.of(message.conversationId).eventId != null
                           ? RequestCard(
-                              eventId: widget.conversation.eventId!,
+                              eventLabel: _labelOf(message),
+                              eventId: widget.conversation.of(message.conversationId).eventId!,
                               partnerId: widget.conversation.partnerId ?? supabase.auth.currentUser!.id,
                               partnerSide: true,
                               otherName: widget.conversation.name,
                             )
                           : message.isProposal
-                          ? _PartnerProposalCard(message: message, clientName: widget.conversation.name)
+                          ? _PartnerProposalCard(message: message, clientName: widget.conversation.name, eventLabel: _labelOf(message))
                           : isMe
                           ? _ownDeletable(isMe, message, ChatBubble(text: message.text ?? '', isMe: isMe))
                           : GestureDetector(
@@ -244,7 +275,8 @@ class _PartnerChatThreadScreenState
 class _PartnerProposalCard extends StatefulWidget {
   final ChatMessage message;
   final String clientName;
-  const _PartnerProposalCard({required this.message, required this.clientName});
+  final String? eventLabel;
+  const _PartnerProposalCard({required this.message, required this.clientName, this.eventLabel});
 
   @override
   State<_PartnerProposalCard> createState() => _PartnerProposalCardState();
@@ -333,6 +365,7 @@ class _PartnerProposalCardState extends State<_PartnerProposalCard> {
     // Cada estado como na prancheta «Todos os cartões» (2026-11-24/25).
     if (_status == 'accepted' && (_booking == 'deposit_paid' || _booking == 'final_due' || _booking == 'paid' || _booking == 'completed')) {
       return ChatProposalCard(
+        eventLabel: widget.eventLabel,
         icon: Hi.checkCircle,
         eyebrow: 'Reserva confirmada',
         status: 'Dia reservado na tua agenda',
@@ -346,6 +379,7 @@ class _PartnerProposalCardState extends State<_PartnerProposalCard> {
     }
     if (_status == 'accepted' && _booking == 'cancelled') {
       return ChatProposalCard(
+        eventLabel: widget.eventLabel,
         icon: Hi.xCircle,
         eyebrow: 'Reserva cancelada',
         status: 'Cancelada',
@@ -357,6 +391,7 @@ class _PartnerProposalCardState extends State<_PartnerProposalCard> {
     }
     if (_status == 'accepted') {
       return ChatProposalCard(
+        eventLabel: widget.eventLabel,
         status: 'Aceite · à espera do sinal',
         tone: ChatCardTone.pending,
         title: title,
@@ -368,6 +403,7 @@ class _PartnerProposalCardState extends State<_PartnerProposalCard> {
     }
     if (_status == 'rejected' || _status == 'declined' || _status == 'expired') {
       return ChatProposalCard(
+        eventLabel: widget.eventLabel,
         icon: Hi.xCircle,
         status: _status == 'expired' ? 'Expirou' : 'Recusada',
         tone: ChatCardTone.neutral,
@@ -379,6 +415,7 @@ class _PartnerProposalCardState extends State<_PartnerProposalCard> {
       );
     }
     return ChatProposalCard(
+      eventLabel: widget.eventLabel,
       status: 'Enviada · à espera da resposta',
       tone: ChatCardTone.neutral,
       title: title,
