@@ -100,3 +100,15 @@ final partnerUnreadNotificationsCountProvider = Provider<int>((ref) {
 Future<void> markPartnerNotificationRead(String id) async {
   await supabase.from('notifications').update({'read': true}).eq('id', id);
 }
+
+/// Tocar numa notificação tira-a da lista (pedido 2026-11-25: «as
+/// notificações têm de desaparecer após clicar»). Só apaga as que são
+/// minhas; as do evento partilhadas por todos os organizadores ficam lidas.
+Future<void> dismissPartnerNotification(String id) async {
+  final me = supabase.auth.currentUser?.id;
+  if (me == null) return;
+  try {
+    await supabase.from('notifications').delete().eq('id', id).or('profile_id.eq.$me,partner_id.eq.$me');
+  } catch (_) {}
+  await markPartnerNotificationRead(id).catchError((_) {});
+}

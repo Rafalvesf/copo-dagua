@@ -91,10 +91,8 @@ class _PartnerNotificationsSheetState extends ConsumerState<_PartnerNotification
   }
 
   Future<void> _open(PartnerNotification n) async {
-    if (!n.read) {
-      await markPartnerNotificationRead(n.id);
-      ref.invalidate(partnerNotificationsProvider);
-    }
+    await dismissPartnerNotification(n.id);
+    ref.invalidate(partnerNotificationsProvider);
     final link = n.link;
     if (link != null && mounted) {
       final router = GoRouter.of(context);
