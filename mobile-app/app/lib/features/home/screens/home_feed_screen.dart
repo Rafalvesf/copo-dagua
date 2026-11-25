@@ -356,6 +356,7 @@ class _NotificationsSheetState extends ConsumerState<_NotificationsSheet> {
               ),
               const SizedBox(height: 14),
               SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(

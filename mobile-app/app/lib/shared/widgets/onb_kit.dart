@@ -10,6 +10,7 @@ import 'line_icon.dart';
 import 'snappy_tap.dart';
 import 'app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/widgets/step_slide.dart';
 
 /// Peças do onboarding (mockup "Onboarding", 2026-11-12), com os
 /// tamanhos do DESIGN.md: título 28, subtítulo 14, botões 52, filtros 38,
@@ -198,7 +199,8 @@ class OnbStep extends StatelessWidget {
                 ],
               ]),
             ),
-            Expanded(child: scroll ? SingleChildScrollView(child: body) : body),
+            // Passos a deslizar (skill `animacoes`, 2026-11-25).
+            Expanded(child: StepSlide(id: kicker ?? title, order: progress, child: scroll ? SingleChildScrollView(child: body) : body)),
             ?bottom,
           ]),
         ),

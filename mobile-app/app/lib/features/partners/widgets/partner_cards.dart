@@ -455,6 +455,7 @@ class PartnerCarousel extends StatelessWidget {
         // A sombra precisa de espaço por baixo.
         height: PartnerBigCard.height + 20,
         child: ListView.separated(
+          physics: const BouncingScrollPhysics(),
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 20),

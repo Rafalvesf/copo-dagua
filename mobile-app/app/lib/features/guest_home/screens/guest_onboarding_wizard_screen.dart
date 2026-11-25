@@ -19,6 +19,7 @@ import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/pronto_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/widgets/step_slide.dart';
 
 /// Onboarding do convidado — uma pergunta por ecrã (canvas "Convidado
 /// 1–8"). Pedido do utilizador (2026-10-17): não só casamentos, vários
@@ -454,7 +455,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
               ),
               const SizedBox(height: 28),
               OnbGroupLabel('${_index + 1} de ${steps.length}'),
-              Expanded(child: SingleChildScrollView(child: _buildStep(step))),
+              Expanded(child: StepSlide(id: _index, order: _index, child: SingleChildScrollView(child: _buildStep(step)))),
               const SizedBox(height: 12),
               SizedBox(
                 height: 52,

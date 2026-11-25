@@ -221,7 +221,8 @@ class _AuthFieldState extends State<AuthField> {
               ],
             ),
           ),
-          if (error) ...[
+          // `errorText: ''` = só a linha vermelha, sem frase (2026-11-25).
+          if (error && widget.errorText!.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(widget.errorText!, style: const TextStyle(fontSize: 12, color: AppStatusColors.declined)),
           ],

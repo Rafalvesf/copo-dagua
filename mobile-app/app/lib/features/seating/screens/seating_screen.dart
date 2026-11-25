@@ -893,6 +893,7 @@ class _UnseatedStrip extends StatelessWidget {
           SizedBox(
             height: 82,
             child: ListView.separated(
+              physics: const BouncingScrollPhysics(),
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
               itemCount: guests.length,

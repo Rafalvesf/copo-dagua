@@ -587,6 +587,7 @@ class KitPills extends StatelessWidget {
       : Padding(
         padding: EdgeInsets.only(top: top),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           child: Row(children: [

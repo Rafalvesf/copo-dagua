@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../hero_icons.dart';
@@ -130,13 +131,9 @@ class _IslandRoute<T> extends PopupRoute<T> {
           children: [
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: math.max(200, maxH), maxWidth: 560),
-              child: GestureDetector(
-                // Puxar para baixo fecha, como a folha antiga.
-                onVerticalDragEnd: dismissible
-                    ? (d) {
-                        if ((d.primaryVelocity ?? 0) > 700) Navigator.of(context).maybePop();
-                      }
-                    : null,
+              child: _DragToDismiss(
+                enabled: dismissible,
+                springBackFirst: confirmExit,
                 child: _NavGrow(animation: animation, waveFromBottom: waveFromBottom, child: content),
               ),
             ),
@@ -609,4 +606,73 @@ class IslandMenuButton<T> extends StatelessWidget {
 class _Picked<T> {
   final T value;
   const _Picked(this.value);
+}
+
+
+/// Puxar o popup para baixo (skill `animacoes`, 2026-11-25): o popup segue
+/// o dedo; ao largar depressa ou a mais de um terço da altura, fecha; senão
+/// volta ao sítio com uma mola que mantém a velocidade do dedo (sem
+/// ressalto), em vez de uma transição de duração fixa. Para cima resiste.
+class _DragToDismiss extends StatefulWidget {
+  final bool enabled;
+  /// Nos popups que perguntam antes de sair, volta primeiro ao sítio.
+  final bool springBackFirst;
+  final Widget child;
+  const _DragToDismiss({required this.enabled, required this.springBackFirst, required this.child});
+
+  @override
+  State<_DragToDismiss> createState() => _DragToDismissState();
+}
+
+class _DragToDismissState extends State<_DragToDismiss> with SingleTickerProviderStateMixin {
+  late final _c = AnimationController.unbounded(vsync: this);
+  static final _spring = SpringDescription.withDampingRatio(mass: 1, stiffness: 158, ratio: 1);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _update(DragUpdateDetails d) {
+    _c.stop();
+    final next = _c.value + d.delta.dy;
+    // Para cima, só um pouco e cada vez mais difícil.
+    _c.value = next >= 0 ? next : next * 0.3;
+  }
+
+  void _end(DragEndDetails d) {
+    final v = d.velocity.pixelsPerSecond.dy;
+    final h = context.size?.height ?? 400;
+    final close = v > 700 || _c.value > h / 3;
+    if (close && !widget.springBackFirst) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    _c.animateWith(SpringSimulation(_spring, _c.value, 0, v));
+    if (close) Navigator.of(context).maybePop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.enabled || (MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
+      return GestureDetector(
+        onVerticalDragEnd: widget.enabled
+            ? (d) {
+                if ((d.primaryVelocity ?? 0) > 700) Navigator.of(context).maybePop();
+              }
+            : null,
+        child: widget.child,
+      );
+    }
+    return GestureDetector(
+      onVerticalDragUpdate: _update,
+      onVerticalDragEnd: _end,
+      child: AnimatedBuilder(
+        animation: _c,
+        child: widget.child,
+        builder: (context, child) => Transform.translate(offset: Offset(0, _c.value), child: child),
+      ),
+    );
+  }
 }

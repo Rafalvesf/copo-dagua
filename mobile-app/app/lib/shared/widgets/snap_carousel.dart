@@ -70,6 +70,8 @@ class _SnapCarouselState extends State<SnapCarousel> {
             padding: EdgeInsets.only(right: widget.peek && widget.itemCount > 1 ? AppTheme.screenMargin : 0),
             child: PageView.builder(
               controller: _controllerFor(c.maxWidth),
+              // Resistência nas pontas e volta com mola (skill `animacoes`).
+              physics: const BouncingScrollPhysics(),
               // A ponta do cartão seguinte desenha-se para lá da área.
               clipBehavior: widget.peek && widget.itemCount > 1 ? Clip.none : Clip.hardEdge,
               padEnds: !(widget.peek && widget.itemCount > 1),

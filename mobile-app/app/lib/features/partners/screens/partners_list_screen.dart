@@ -405,6 +405,7 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                                     stops: [0, (fadeStart + 2) / r.width, (fadeStart + 16) / r.width],
                                   ).createShader(r),
                                   child: ListView.separated(
+                                    physics: const BouncingScrollPhysics(),
                                     scrollDirection: Axis.horizontal,
                                     padding: const EdgeInsets.only(left: fadeStart + 17, right: AppTheme.screenMargin),
                                     itemCount: options.length,

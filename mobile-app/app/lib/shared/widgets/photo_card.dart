@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/page_transitions.dart' show ExpandOrigin;
 import '../../core/theme/app_theme.dart';
 import 'alert_outline.dart';
 import 'snappy_tap.dart';
@@ -184,7 +185,17 @@ class PhotoCard extends StatelessWidget {
     if (onTap == null && onLongPress == null) return card;
     return GestureDetector(
       onLongPress: onLongPress,
-      child: SnappyTap(onTap: onTap ?? () {}, child: card),
+      // Cartão que cresce até à página (2026-11-25): guarda onde está antes
+      // de abrir, para a página crescer daqui e voltar para aqui.
+      child: Builder(
+        builder: (context) => SnappyTap(
+          onTap: () {
+            ExpandOrigin.capture(context);
+            onTap?.call();
+          },
+          child: card,
+        ),
+      ),
     );
   }
 }

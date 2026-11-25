@@ -33,6 +33,7 @@ import '../../../shared/widgets/opening_hours.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/widgets/step_slide.dart';
 
 /// Primeiro ecrã visto por uma conta de parceiro recém-registada.
 ///
@@ -578,7 +579,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
               ),
               const SizedBox(height: 28),
               OnbGroupLabel('$_stepIndex de $total'),
-              Expanded(child: SingleChildScrollView(child: _buildStep(context))),
+              Expanded(child: StepSlide(id: _stepIndex, order: _stepIndex, child: SingleChildScrollView(child: _buildStep(context)))),
               const SizedBox(height: 12),
               SizedBox(
                 height: 52,

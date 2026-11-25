@@ -154,7 +154,7 @@ class PartnerDetailScreen extends ConsumerStatefulWidget {
         ),
         // Mesma animação dos botões da app (`page_transitions.dart`).
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            TopDownTransition(animation: animation, child: child),
+            PushTransition(animation: animation, child: child),
       ),
     );
   }
@@ -1020,6 +1020,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                   SizedBox(
                     height: 128,
                     child: ListView.separated(
+                      physics: const BouncingScrollPhysics(),
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                       itemCount: portfolioPhotos.length,
