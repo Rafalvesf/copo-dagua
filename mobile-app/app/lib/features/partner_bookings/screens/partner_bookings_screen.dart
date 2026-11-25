@@ -1,6 +1,4 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,11 +6,9 @@ import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/page_kit.dart';
-import '../../../shared/widgets/gradient_mark.dart';
-import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/request_row.dart';
-import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/partner_bottom_nav.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/v2_kit.dart';
@@ -35,6 +31,62 @@ class PartnerBookingsScreen extends ConsumerStatefulWidget {
 }
 
 class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
+  void _open(BuildContext context, Booking b) => context.push('/partner-requests/${b.id}', extra: b);
+
+  Widget _rows(BuildContext context, List<Booking> list) => KitGroup([
+        for (final b in list) RequestRow(booking: b, flat: true, onTap: () => _open(context, b)),
+      ]);
+
+  List<Widget> _frames(BuildContext context, List<Booking> bookings) {
+    if (bookings.isEmpty) {
+      return [
+        SectionFrame(title: _segmentLabel(_segment), children: [
+          FrameEmpty(
+            title: switch (_segment) {
+              _BookingSegment.recebidos => 'Sem pedidos por tratar',
+              _BookingSegment.confirmados => 'Ainda sem reservas confirmadas',
+              _BookingSegment.concluidos => 'Ainda sem eventos concluídos',
+            },
+            text: switch (_segment) {
+              _BookingSegment.recebidos => 'Os pedidos de orçamento e de reserva aparecem aqui.',
+              _BookingSegment.confirmados => 'As reservas aceites e pagas aparecem aqui.',
+              _BookingSegment.concluidos => 'Os eventos que já fizeste aparecem aqui.',
+            },
+          ),
+        ]),
+      ];
+    }
+    switch (_segment) {
+      case _BookingSegment.recebidos:
+        final answer = bookings.where((b) => !b.proposalSent).toList();
+        final sent = bookings.where((b) => b.proposalSent).toList();
+        return [
+          if (answer.isNotEmpty)
+            SectionFrame(title: 'Por responder · ${answer.length}', children: [
+              for (final b in answer)
+                FrameTaskRow(
+                  lead: V2Avatar(b.clientName, size: 44, imageUrl: b.clientAvatarUrl),
+                  title: '${b.clientName} · ${b.eventType.label}',
+                  sub: [requestDateLabel(b.eventDate), if (b.people != null) '${b.people} pessoas'].join(' · '),
+                  action: 'Responder',
+                  urgent: b.eventDate.difference(DateTime.now()).inDays <= 3,
+                  onTap: () => _open(context, b),
+                ),
+            ]),
+          if (sent.isNotEmpty) SectionFrame(title: 'Proposta enviada · ${sent.length}', children: [_rows(context, sent)]),
+        ];
+      case _BookingSegment.confirmados:
+        final waiting = bookings.where((b) => b.status == BookingStatus.aceite).toList();
+        final done = bookings.where((b) => b.status == BookingStatus.confirmado).toList();
+        return [
+          if (waiting.isNotEmpty) SectionFrame(title: 'À espera do sinal · ${waiting.length}', children: [_rows(context, waiting)]),
+          if (done.isNotEmpty) SectionFrame(title: 'Confirmadas · ${done.length}', children: [_rows(context, done)]),
+        ];
+      case _BookingSegment.concluidos:
+        return [SectionFrame(title: 'Concluídos · ${bookings.length}', children: [_rows(context, bookings)])];
+    }
+  }
+
   late _BookingSegment _segment = switch (widget.initialSegment) {
     'confirmados' => _BookingSegment.confirmados,
     'concluidos' => _BookingSegment.concluidos,
@@ -115,17 +167,10 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                         ]),
                       ),
                     ),
-                    KitGroup(top: 16, [
-                      if (bookings.isEmpty)
-                        const KitRow(title: 'Sem pedidos aqui', sub: 'Muda o filtro em cima para ver os outros.')
-                      else
-                        for (final b in bookings)
-                          RequestRow(
-                            booking: b,
-                            flat: true,
-                            onTap: () => context.push('/partner-requests/${b.id}', extra: b),
-                          ),
-                    ]),
+                    // Molduras por estado (pedido 2026-11-25, mockup «Parceiro ·
+                    // Pedidos»): o que é para responder com a linha amarela
+                    // (vermelha a 3 dias ou menos do evento).
+                    ..._frames(context, bookings),
                   ];
                 },
               ),
