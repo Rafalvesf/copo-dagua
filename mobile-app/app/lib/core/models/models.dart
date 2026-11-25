@@ -1634,6 +1634,10 @@ class ChatMessage {
   /// Cartão de alteração / outro dia (`booking_change_requests`, 233/235).
   final String? changeRequestId;
 
+  /// Cartão automático (239): reminder, review, final_due, menus, cancelled.
+  final String? autoKind;
+  final String? bookingId;
+
   const ChatMessage({
     required this.id,
     this.partnerId,
@@ -1648,6 +1652,8 @@ class ChatMessage {
     this.proposalDepositAmount,
     this.isQuoteRequestNotice = false,
     this.changeRequestId,
+    this.autoKind,
+    this.bookingId,
     this.attachmentUrl,
     this.attachmentType,
     this.attachmentName,

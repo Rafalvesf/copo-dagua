@@ -315,6 +315,23 @@ ecrãs. O resto da app mantém a tabela acima.
   recebe «Recusar» + «Aceitar»). Os popups «Editar pedido», «Enviar /
   Editar proposta» e «Pedir alteração» (no «⋯» da conversa) estão em
   `shared/widgets/deal_sheets.dart`.
+- **Uma conversa por pessoa** (pedido 2026-11-25, pranchetas «Conversa única
+  com o parceiro», «Grupo sem «Ver evento»» e «Conversa entre pessoas»): as
+  conversas com o mesmo parceiro (ou cliente) de vários eventos mostram-se
+  juntas, e cada cartão leva a etiqueta do evento («Casamento · Sáb, 12 jun
+  2027»). **Sem a ilha «Ver evento»**: tocar no topo abre o resumo — do
+  parceiro (nota, trabalhos convosco, «Ver perfil do parceiro»), do cliente
+  (eventos contigo, «Ver perfil»), do grupo (capa, dias / no grupo / vão,
+  quem está, «Silenciar» + «Abrir o evento») ou da pessoa (eventos,
+  seguidores, eventos e amigos em comum, «Seguir» + «Ver perfil»)
+  (`chat_summary_sheets.dart`).
+- **Cartões automáticos** (migração 239, `AutoBookingCard`): lembrete na
+  véspera, «Como correu?» no dia a seguir, pagamento do resto (amarelo,
+  vermelho nos últimos 3 dias), menus e alergias prontos e reserva
+  cancelada.
+- **Hora do pedido:** «O que procuras?» pergunta «COMEÇA ÀS» e «ACABA ÀS»
+  e mostra a «HORA DO PEDIDO» com a duração; fica no pedido e muda-se em
+  «Editar pedido».
 - **Notificações:** um só popup em toda a app (`PartnerNotificationBell`,
   prancheta «Popup das notificações»): «Todas» / «Por ler», «Avisos no
   telemóvel» com «Ativar», grupos HOJE / ESTA SEMANA / ANTES e o botão
