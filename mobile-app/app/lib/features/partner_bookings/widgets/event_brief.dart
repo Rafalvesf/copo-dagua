@@ -59,7 +59,7 @@ class PartnerEventBrief extends ConsumerWidget {
         final children = (b['children'] as num?)?.toInt() ?? 0;
         final ages = [for (final a in ((b['child_ages'] as List?) ?? const [])) (a as num).toInt()];
         final highChairs = (b['high_chairs'] as num?)?.toInt() ?? 0;
-        final menus = ((b['menus'] as List?) ?? const []).cast<Map>();
+        final menus = ((b['menus'] as List?) ?? const []).cast<Map>().where((m) => m['menu'] != 'Sem escolha').toList();
         final dietary = ((b['dietary'] as List?) ?? const []).cast<Map>();
         final tables = ((b['tables'] as List?) ?? const []).cast<Map>();
 
