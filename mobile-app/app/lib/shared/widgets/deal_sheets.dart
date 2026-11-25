@@ -279,6 +279,35 @@ Widget _sheet(BuildContext context, {required Widget head, required List<Widget>
   );
 }
 
+/// Caixa de hora em pílula 52 («Início 14:00»).
+class _HourBox extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  const _HourBox(this.label, this.controller);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+      child: Row(children: [
+        Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.datetime,
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9:]'))],
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
+            decoration: const InputDecoration(isCollapsed: true, border: InputBorder.none, hintText: '00:00'),
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
 Widget _section(String caps, Widget child) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text(caps, style: _caps),
       const SizedBox(height: 8),
@@ -302,6 +331,8 @@ Future<bool> showEditRequestSheet(
   int? eventPeople,
   String? message,
   bool hasProposal = false,
+  String? startTime,
+  String? endTime,
 }) async {
   final r = await showIslandSheet<bool>(
     context: context,
@@ -315,6 +346,8 @@ Future<bool> showEditRequestSheet(
       eventPeople: eventPeople,
       message: message,
       hasProposal: hasProposal,
+      startTime: startTime,
+      endTime: endTime,
     ),
   );
   return r == true;
@@ -329,6 +362,8 @@ class _EditRequest extends StatefulWidget {
   final int? eventPeople;
   final String? message;
   final bool hasProposal;
+  final String? startTime;
+  final String? endTime;
   const _EditRequest({
     required this.id,
     required this.partnerName,
@@ -338,6 +373,8 @@ class _EditRequest extends StatefulWidget {
     this.eventPeople,
     this.message,
     required this.hasProposal,
+    this.startTime,
+    this.endTime,
   });
 
   @override
@@ -347,11 +384,15 @@ class _EditRequest extends StatefulWidget {
 class _EditRequestState extends State<_EditRequest> {
   late int _people = widget.people < 1 ? 1 : widget.people;
   late final _msg = TextEditingController(text: widget.message ?? '');
+  late final _start = TextEditingController(text: widget.startTime ?? '');
+  late final _end = TextEditingController(text: widget.endTime ?? '');
   bool _busy = false;
 
   @override
   void dispose() {
     _msg.dispose();
+    _start.dispose();
+    _end.dispose();
     super.dispose();
   }
 
@@ -366,7 +407,7 @@ class _EditRequestState extends State<_EditRequest> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);
-      _toast(context, 'Não foi possível guardar. Tenta novamente.');
+      _toast(context, 'Não foi possível guardar. Vê se as horas estão como 14:00.');
     }
   }
 
@@ -412,6 +453,14 @@ class _EditRequestState extends State<_EditRequest> {
           ),
         ),
         _section('PESSOAS', _Stepper(top: '', value: _people, note: peopleNote, onChanged: (v) => setState(() => _people = v))),
+        _section(
+          'HORA',
+          Row(children: [
+            Expanded(child: _HourBox('Início', _start)),
+            const SizedBox(width: 8),
+            Expanded(child: _HourBox('Fim', _end)),
+          ]),
+        ),
         _section('O QUE PROCURAS', _Box(_msg, lines: 4, hint: 'O que procuras')),
         const Text('O dia e o local vêm do evento: mudam-se nas Definições do evento.', style: _muted),
       ],
@@ -442,6 +491,8 @@ class _EditRequestState extends State<_EditRequest> {
                   'p_id': widget.id,
                   'p_people': _people,
                   'p_message': _msg.text.trim().isEmpty ? null : _msg.text.trim(),
+                  'p_start': _start.text.trim().isEmpty ? null : _start.text.trim(),
+                  'p_end': _end.text.trim().isEmpty ? null : _end.text.trim(),
                 }),
                 'Pedido atualizado.',
               ),
@@ -461,6 +512,16 @@ class ProposalLine {
 
   String encode() => '• $name${meta.isEmpty ? '' : ' ($meta)'} — ${euros(value)}';
 
+  Map<String, dynamic> toJson() => {'name': name, 'meta': meta, 'value': value};
+
+  static ProposalLine? fromJson(Object? j) {
+    if (j is! Map) return null;
+    final v = (j['value'] as num?)?.toDouble();
+    final n = (j['name'] as String?)?.trim() ?? '';
+    if (v == null || n.isEmpty) return null;
+    return ProposalLine(n, (j['meta'] as String?)?.trim() ?? '', v);
+  }
+
   static final _re = RegExp(r'^• (.+?)(?: \((.*)\))? — ([\d\s.,]+) ?€$');
   static ProposalLine? decode(String line) {
     final m = _re.firstMatch(line.trim());
@@ -479,7 +540,18 @@ class SentProposal {
   final double price;
   final double deposit;
   final DateTime? sentAt;
-  const SentProposal({required this.id, required this.title, this.description, required this.price, required this.deposit, this.sentAt});
+
+  /// `proposals.lines` (236).
+  final List<ProposalLine> lines;
+  const SentProposal({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.price,
+    required this.deposit,
+    this.sentAt,
+    this.lines = const [],
+  });
 }
 
 /// «Enviar proposta» / «Editar proposta» (prancheta «Enviar ou editar
@@ -552,10 +624,11 @@ class _ProposalSheetState extends State<_ProposalSheet> {
     final e = widget.existing;
     if (e != null) {
       final notes = <String>[];
+      _lines.addAll(e.lines);
       for (final l in (e.description ?? '').split('\n')) {
         final p = ProposalLine.decode(l);
         if (p != null) {
-          _lines.add(p);
+          if (e.lines.isEmpty) _lines.add(p);
         } else if (l.trim().isNotEmpty) {
           notes.add(l.trim());
         }
@@ -631,6 +704,7 @@ class _ProposalSheetState extends State<_ProposalSheet> {
           'p_price': _total,
           'p_deposit': _deposit,
           'p_expires_at': expires,
+          'p_lines': _lines.map((l) => l.toJson()).toList(),
         });
       } else {
         final id = await supabase.rpc('send_proposal', params: {
@@ -650,6 +724,7 @@ class _ProposalSheetState extends State<_ProposalSheet> {
             'p_price': _total,
             'p_deposit': _deposit,
             'p_expires_at': expires,
+            'p_lines': _lines.map((l) => l.toJson()).toList(),
           });
         } catch (_) {}
         try {
