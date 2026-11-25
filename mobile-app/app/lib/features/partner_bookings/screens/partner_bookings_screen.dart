@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/request_row.dart';
@@ -15,6 +16,21 @@ import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 enum _BookingSegment { recebidos, confirmados, concluidos }
+
+/// Alterações pedidas pelo cliente ainda por responder (233/235).
+final _openChangesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  try {
+    final rows = await supabase
+        .from('booking_change_requests')
+        .select('id, booking_id, quote_request_id, kind, from_value, to_value, created_at')
+        .eq('status', 'open')
+        .neq('requested_by_role', 'partner')
+        .order('created_at', ascending: false);
+    return [for (final r in rows as List) Map<String, dynamic>.from(r as Map)];
+  } catch (_) {
+    return const [];
+  }
+});
 
 class PartnerBookingsScreen extends ConsumerStatefulWidget {
   /// Separador inicial — 'confirmados' quando aberto a partir do tile
@@ -37,8 +53,43 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
         for (final b in list) RequestRow(booking: b, flat: true, onTap: () => _open(context, b)),
       ]);
 
+  /// «Alterações · N» (mockup «Parceiro · Pedidos», 2026-11-25): pedidos de
+  /// alteração e de outro dia do cliente ainda por responder, em qualquer
+  /// reserva ou pedido.
+  Widget? _changesFrame(BuildContext context) {
+    final changes = ref.watch(_openChangesProvider).value ?? const <Map<String, dynamic>>[];
+    final all = ref.watch(partnerBookingsProvider(null)).value ?? const <Booking>[];
+    final rows = <Widget>[];
+    for (final c in changes) {
+      final key = (c['booking_id'] ?? c['quote_request_id']) as String?;
+      final b = all.where((b) => b.id == key).firstOrNull;
+      if (b == null) continue;
+      final kind = switch (c['kind']) {
+        'people' => 'Pessoas',
+        'time' => 'Hora',
+        'scope' => 'O que inclui',
+        'date' => 'Outro dia',
+        _ => 'Outra coisa',
+      };
+      final from = (c['from_value'] as String?)?.trim() ?? '';
+      final to = (c['to_value'] as String?)?.trim() ?? '';
+      rows.add(FrameTaskRow(
+        lead: V2Avatar(b.clientName, size: 44, imageUrl: b.clientAvatarUrl),
+        title: '${b.clientName} · ${b.eventType.label}',
+        sub: from.isEmpty ? '$kind: $to' : '$kind: $from → $to',
+        action: 'Ver',
+        urgent: b.eventDate.difference(DateTime.now()).inDays <= 3,
+        onTap: () => _open(context, b),
+      ));
+    }
+    if (rows.isEmpty) return null;
+    return SectionFrame(title: 'Alterações · ${rows.length}', children: rows);
+  }
+
   List<Widget> _frames(BuildContext context, List<Booking> bookings) {
+    final changes = _segment == _BookingSegment.recebidos ? _changesFrame(context) : null;
     if (bookings.isEmpty) {
+      if (changes != null) return [changes];
       return [
         SectionFrame(title: _segmentLabel(_segment), children: [
           FrameEmpty(
@@ -73,6 +124,7 @@ class _PartnerBookingsScreenState extends ConsumerState<PartnerBookingsScreen> {
                   onTap: () => _open(context, b),
                 ),
             ]),
+          ?changes,
           if (sent.isNotEmpty) SectionFrame(title: 'Proposta enviada · ${sent.length}', children: [_rows(context, sent)]),
         ];
       case _BookingSegment.confirmados:

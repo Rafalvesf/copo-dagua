@@ -1,3 +1,5 @@
+import '../../../shared/widgets/section_frame.dart';
+import '../../../shared/widgets/page_kit.dart' show KitTag, KitTagKind;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
@@ -108,6 +110,15 @@ final partnerContractsProvider = FutureProvider<List<PartnerContract>>((ref) asy
       _ => ('Em análise', AppTheme.surface, AppTheme.inkMuted),
     };
 
+/// Contratos por estado (mockup «Parceiro · Contratos»).
+List<(String, List<PartnerContract>)> _groups(List<PartnerContract> list) => [
+      ('Aguardam o sinal', list.where((c) => c.status == 'awaiting_deposit').toList()),
+      ('Em vigor', list.where((c) => c.status == 'confirmed' || (c.status == 'completed' && c.paid + 0.009 < c.total)).toList()),
+      ('Concluídos', list.where((c) => c.status == 'completed' && c.paid + 0.009 >= c.total).toList()),
+      ('Cancelados', list.where((c) => c.status.startsWith('cancelled') || c.status == 'expired').toList()),
+      ('Outros', list.where((c) => !const ['awaiting_deposit', 'confirmed', 'completed', 'expired'].contains(c.status) && !c.status.startsWith('cancelled')).toList()),
+    ];
+
 class PartnerContractsScreen extends ConsumerWidget {
   const PartnerContractsScreen({super.key});
 
@@ -131,26 +142,39 @@ class PartnerContractsScreen extends ConsumerWidget {
                         child: ListView(
                           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
                           children: [
-                            // Cartão verde com o total contratado (redesign
-                            // 2026-10-19, estilo do "Menu · Casamento").
+                            // Mockup «Parceiro · Contratos» (2026-11-25): resumo
+                            // branco e os contratos por estado em molduras.
                             Builder(builder: (_) {
                               final total = list.fold<double>(0, (a, c) => a + c.total);
                               final paid = list.fold<double>(0, (a, c) => a + c.paid);
-                              return GreenHero(
-                                label: 'CONTRATADO',
-                                value: euros(total),
-                                suffix: '${list.length} ${list.length == 1 ? 'contrato' : 'contratos'}',
-                                progress: total <= 0 ? 0 : paid / total,
-                                doodles: const [Hi.documentText, Hi.heartOutline, Hi.sparkles],
-                                footer: Wrap(spacing: 8, runSpacing: 8, children: [
-                                  HeroPill('Recebido ${euros(paid)}', solid: true),
-                                  HeroPill('Falta ${euros((total - paid).clamp(0, double.infinity))}'),
+                              return Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  const Text('CONTRATADO',
+                                      style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                                  Text(euros(total), style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                  Text('${list.length} ${list.length == 1 ? 'contrato' : 'contratos'}',
+                                      style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                                  const SizedBox(height: 10),
+                                  AppProgressBar(value: total <= 0 ? 0 : paid / total, height: 10),
+                                  const SizedBox(height: 10),
+                                  Wrap(spacing: 6, runSpacing: 6, children: [
+                                    KitTag('Recebido ${euros(paid)}'),
+                                    KitTag('Falta ${euros((total - paid).clamp(0, double.infinity))}', kind: KitTagKind.neutral),
+                                  ]),
                                 ]),
                               );
                             }),
-                            const SizedBox(height: 16),
-                            for (final c in list)
-                              Padding(padding: const EdgeInsets.only(bottom: 12), child: _ContractCard(contract: c)),
+                            for (final (title, group) in _groups(list))
+                              if (group.isNotEmpty)
+                                SectionFrame(title: '$title · ${group.length}', children: [
+                                  for (final (i, c) in group.indexed) ...[
+                                    if (i > 0) const Divider(height: 20, color: AppTheme.line),
+                                    _ContractCard(contract: c),
+                                  ],
+                                ]),
+                            const FrameNote('Toca num contrato para ver o valor, o sinal, as condições e falar com o cliente.', top: 16),
                           ],
                         ),
                       ),
@@ -173,8 +197,7 @@ class _ContractCard extends StatelessWidget {
     return SnappyTap(
       onTap: () => _showDetails(context, c),
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: softCard(),
+        color: Colors.transparent,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

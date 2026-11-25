@@ -1037,6 +1037,18 @@ peças dos organizadores (§6).
 - **Perfil:** cabeça do §6.2, «O TEU LINK E QR» e «MODO PRO».
 - **Pagamentos e Resultados:** resumo branco sem sombra; o resto em
   molduras.
+- **Pedidos · Alterações:** os pedidos de alteração e de outro dia do
+  cliente por responder, com a linha amarela e «Ver».
+- **Calendário:** resumo «ESTE MÊS» (eventos), o mês numa moldura, o dia
+  escolhido e «A SEGUIR · N».
+- **Avaliações:** resumo com a nota e as barras; «POR RESPONDER» e
+  «RESPONDIDAS» em molduras; vazio com a estrela a dormir.
+- **Contratos:** resumo «CONTRATADO» (valor, barra, recebido / falta) e os
+  contratos por estado (Aguardam o sinal, Em vigor, Concluídos,
+  Cancelados) em molduras.
+- **Serviços e preços:** pílulas Pacotes / Só orçamento; «PACOTES · N» com
+  «+ Adicionar pacote» (contorno 44), «EXTRAS · N» com «+ Adicionar extra»;
+  em só orçamento, «QUANTO PODE CUSTAR».
 
 ## 7. Alertas
 
