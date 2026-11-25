@@ -1619,36 +1619,8 @@ class _EventSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        SafeArea(top: false, 
-          bottom: false,
-          child: ListView(
-            physics: const NeverScrollableScrollPhysics(),
-            padding: ( const EdgeInsets.fromLTRB(
-              AppTheme.screenMargin,
-              16,
-              AppTheme.screenMargin,
-              140,
-            )).add(EdgeInsets.only(top: MediaQuery.paddingOf(context).top)),
-            children: [
-              SkeletonBox(
-                height: 380,
-                radius: AppRadius.xxl,
-                color: AppTheme.accentTint,
-              ),
-              const SizedBox(height: 16),
-              for (var row = 0; row < 2; row++) ...[
-                const Row(
-                  children: [
-                    Expanded(child: SkeletonBox(height: 104)),
-                    SizedBox(width: 12),
-                    Expanded(child: SkeletonBox(height: 104)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-              ],
-            ],
-          ),
-        ),
+        // O painel novo a carregar: capa, resumo e molduras (2026-11-25).
+        const SkeletonEventPanel(),
         const Positioned(
           left: 0,
           right: 0,

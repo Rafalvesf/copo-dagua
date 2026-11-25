@@ -387,12 +387,10 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
     super.dispose();
   }
 
-  Future<DateTime?> _pickDate(DateTime? initial) => showDatePicker(
-        context: context,
-        initialDate: initial ?? DateTime.now().add(const Duration(days: 30)),
-        firstDate: DateTime.now().subtract(const Duration(days: 1)),
-        lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
-      );
+  Future<DateTime?> _pickDate(DateTime? initial) => pickDateWheel(context,
+        initial: initial ?? DateTime.now().add(const Duration(days: 30)),
+        first: DateTime.now().subtract(const Duration(days: 1)),
+        last: DateTime.now().add(const Duration(days: 365 * 3)));
 
   Future<void> _save() async {
     final capacity = int.tryParse(_capacity.text.trim());

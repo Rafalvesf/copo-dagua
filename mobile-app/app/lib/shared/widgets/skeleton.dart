@@ -11,7 +11,6 @@ import '../../core/theme/app_theme.dart';
 /// Os blocos pulsam com um pequeno atraso entre si (`delay` 0, 1 ou 2): lê-se
 /// como uma onda em vez de piscar tudo ao mesmo tempo.
 
-const _pulse = Duration(milliseconds: 900);
 
 /// Cores do esqueleto (2026-11-24, «não vejo a animação do load»): antes o
 /// bloco era `AppTheme.surface` (#F2F2F2), a mesma cor do fundo da página,
@@ -46,9 +45,14 @@ class SkeletonBox extends StatefulWidget {
 }
 
 class _SkeletonBoxState extends State<SkeletonBox> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(vsync: this, duration: _pulse)
-    ..value = (widget.delay % 3) * 150 / _pulse.inMilliseconds
-    ..repeat(reverse: true);
+  // Animação «fantasma» (pedido 2026-11-25): uma faixa clara passa pelo
+  // bloco da esquerda para a direita, com um pequeno atraso entre blocos
+  // (lê-se como uma onda), em vez de só pulsar a cor.
+  late final AnimationController _controller = AnimationController(vsync: this, duration: _sweep)
+    ..value = (widget.delay % 3) * 0.12
+    ..repeat();
+
+  static const _sweep = Duration(milliseconds: 1400);
 
   @override
   void dispose() {
@@ -58,23 +62,35 @@ class _SkeletonBoxState extends State<SkeletonBox> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    // Pulsa a cor (não a transparência): com transparência, um bloco
-    // claro sobre um fundo claro quase não mudava.
-    final peak = widget.color == skeletonBase
-        ? skeletonPeak
-        : Color.lerp(widget.color, const Color(0xFF000000), 0.08)!;
-    final curve = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    final base = widget.color;
+    final light = Color.lerp(base, Colors.white, 0.55)!;
+    final shape = BorderRadius.circular(widget.radius);
+    // Reduzir movimento: o bloco fica parado.
+    if (MediaQuery.of(context).disableAnimations) {
+      return ExcludeSemantics(
+        child: Container(width: widget.width, height: widget.height, decoration: BoxDecoration(color: base, borderRadius: shape)),
+      );
+    }
     return ExcludeSemantics(
       child: AnimatedBuilder(
-        animation: curve,
-        builder: (context, _) => Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            color: Color.lerp(widget.color, peak, curve.value),
-            borderRadius: BorderRadius.circular(widget.radius),
-          ),
-        ),
+        animation: _controller,
+        builder: (context, _) {
+          // A faixa anda de fora (à esquerda) até fora (à direita).
+          final t = Curves.easeInOut.transform(_controller.value) * 3 - 1.5;
+          return Container(
+            width: widget.width,
+            height: widget.height,
+            decoration: BoxDecoration(
+              borderRadius: shape,
+              gradient: LinearGradient(
+                begin: Alignment(t - 1, -0.3),
+                end: Alignment(t + 1, 0.3),
+                colors: [base, light, base],
+                stops: const [0.25, 0.5, 0.75],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -683,5 +699,49 @@ class SkeletonPhotoCardList extends StatelessWidget {
             SkeletonPhotoCard(height: cardHeight, avatar: avatar, delay: i),
           ],
         ]),
+      );
+}
+
+/// Painel do evento a carregar (pedido 2026-11-25: «falta para os
+/// eventos»): a capa a toda a largura, o resumo e duas molduras com linhas,
+/// como o painel novo (§6.5). Organizador, convidado e eventos reais.
+class SkeletonEventPanel extends StatelessWidget {
+  final double cover;
+  const SkeletonEventPanel({super.key, this.cover = 260});
+
+  Widget _frame(int seed) => Container(
+        margin: const EdgeInsets.only(top: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFCFCFCF), width: 1.5),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          SkeletonLine(widthFactor: 0.35, height: 10, delay: seed),
+          const SizedBox(height: 8),
+          SkeletonListRow(delay: seed, avatar: 44),
+          SkeletonListRow(delay: seed + 1, avatar: 44),
+        ]),
+      );
+
+  @override
+  Widget build(BuildContext context) => SizedBox.expand(
+        child: Material(
+          color: AppTheme.background,
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              SkeletonBox(height: cover + MediaQuery.paddingOf(context).top, radius: 0),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 120),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  const SkeletonBox(height: 120, radius: 22, delay: 1),
+                  _frame(0),
+                  _frame(1),
+                ]),
+              ),
+            ]),
+          ),
+        ),
       );
 }
