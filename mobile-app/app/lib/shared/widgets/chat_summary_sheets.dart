@@ -566,8 +566,16 @@ class _GroupSummaryState extends ConsumerState<_GroupSummary> {
       Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Text('QUEM ESTÁ NO GRUPO · ${people.length}', style: _caps),
         const SizedBox(height: 8),
+        // Tocar numa pessoa abre o perfil dela (pedido 2026-11-25).
         for (final p in shown)
-          Container(
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              final router = GoRouter.of(context);
+              Navigator.of(context).pop();
+              router.push('/u/${p.id}');
+            },
+            child: Container(
             constraints: const BoxConstraints(minHeight: 60),
             decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.line))),
             child: Row(children: [
@@ -585,7 +593,10 @@ class _GroupSummaryState extends ConsumerState<_GroupSummary> {
                   decoration: BoxDecoration(color: _greenBg, borderRadius: BorderRadius.circular(999)),
                   child: const Text('Anfitrião', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _greenFg)),
                 ),
+              const SizedBox(width: 8),
+              const Icon(Hi.chevronRight, size: 16, color: AppTheme.inkMuted),
             ]),
+          ),
           ),
         if (rest.isNotEmpty)
           Padding(
