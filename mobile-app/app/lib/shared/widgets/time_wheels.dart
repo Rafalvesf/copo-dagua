@@ -167,3 +167,68 @@ Future<TimeOfDay?> pickTimeWheel(BuildContext context, {TimeOfDay? initial, Stri
     ),
   );
 }
+
+const _monthsPt = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+/// Escolher um dia (pedido 2026-11-25: «falta o scroll para escolher os
+/// dias»): a mesma roda das horas, com DIA · MÊS · ANO, num popup. Substitui
+/// o `showDatePicker` do Material. O dia é acertado ao fim do mês (31 → 30).
+Future<DateTime?> pickDateWheel(
+  BuildContext context, {
+  DateTime? initial,
+  required DateTime first,
+  required DateTime last,
+  String title = 'Escolhe o dia',
+}) {
+  final init = initial == null || initial.isBefore(first) ? first : (initial.isAfter(last) ? last : initial);
+  var day = '${init.day}';
+  var month = _monthsPt[init.month - 1];
+  var year = '${init.year}';
+  final years = [for (var y = first.year; y <= last.year; y++) '$y'];
+  return showIslandSheet<DateTime>(
+    context: context,
+    builder: (c) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            GestureDetector(
+              onTap: () => Navigator.of(c).pop(),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                child: const Icon(Hi.xMark, size: 20, color: Colors.white),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          TimeWheels(columns: [
+            WheelColumn(label: 'DIA', options: [for (var d = 1; d <= 31; d++) '$d'], value: day, onChanged: (v) => day = v),
+            WheelColumn(label: 'MÊS', options: _monthsPt, value: month, onChanged: (v) => month = v),
+            WheelColumn(label: 'ANO', options: years, value: year, onChanged: (v) => year = v),
+          ]),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 52,
+            child: FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+              onPressed: () {
+                final y = int.parse(year);
+                final m = _monthsPt.indexOf(month) + 1;
+                final maxDay = DateTime(y, m + 1, 0).day;
+                var d = DateTime(y, m, int.parse(day).clamp(1, maxDay));
+                if (d.isBefore(first)) d = first;
+                if (d.isAfter(last)) d = last;
+                Navigator.of(c).pop(d);
+              },
+              child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+          ),
+        ]),
+      ),
+    ),
+  );
+}

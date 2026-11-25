@@ -432,12 +432,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final initial = DateTime.tryParse(_date) ?? now;
-    final d = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 5),
-    );
+    final d = await pickDateWheel(context, initial: initial, first: DateTime(now.year - 1), last: DateTime(now.year + 5, 12, 31), title: 'Dia do momento');
     if (d != null) {
       setState(() => _date = '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}');
     }

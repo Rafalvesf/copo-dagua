@@ -342,6 +342,17 @@ ecrãs. O resto da app mantém a tabela acima.
   «Sem fim» no topo de «Acaba às»). Pedir orçamento, «Editar pedido»,
   «Pedir alteração · Hora», programa, ofertas e momentos. **Nunca** caixas
   «Início» / «Fim» para escrever nem o `showTimePicker`.
+- **Datas — também na roda** (pedido 2026-11-25; `pickDateWheel`,
+  `time_wheels.dart`): DIA · MÊS · ANO no mesmo popup das horas (data de um
+  pagamento, dia de um momento do programa, ofertas, prazos das tarefas,
+  campos de data). **Nunca** o `showDatePicker` do Material. O dia do
+  evento no onboarding continua no calendário do mês (vê-se o dia da
+  semana).
+- **Esqueleto «fantasma»** (pedido 2026-11-25; `SkeletonBox`): os blocos a
+  carregar têm uma faixa clara que passa da esquerda para a direita, com um
+  pequeno atraso entre blocos; com «reduzir movimento» ficam parados. Os
+  painéis dos eventos (organizador, convidado, eventos reais) carregam com
+  `SkeletonEventPanel` (capa, resumo e molduras).
 - **Número de pessoas — também se escreve** (pedido 2026-11-25;
   `TypeCount`, `shared/widgets/type_count.dart`): nos contadores «−» / «+»
   de pessoas o número é uma caixa que se toca e se escreve (teclado de

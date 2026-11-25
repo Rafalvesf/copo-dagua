@@ -1,3 +1,4 @@
+import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -111,6 +112,7 @@ class ExternalEventScreen extends ConsumerWidget {
     final top = MediaQuery.paddingOf(context).top;
     final bottom = MediaQuery.paddingOf(context).bottom;
 
+    if (e == null && async.isLoading) return const SkeletonEventPanel(cover: 200);
     if (e == null) {
       return GradientScaffold(
         background: AppBackground.subtle,

@@ -1,3 +1,4 @@
+import 'time_wheels.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
@@ -103,12 +104,8 @@ class DatePickerField extends StatelessWidget {
               ? null
               : () async {
                   final now = DateTime.now();
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: value ?? now.add(const Duration(days: 180)),
-                    firstDate: now,
-                    lastDate: now.add(const Duration(days: 365 * 5)),
-                  );
+                  final picked = await pickDateWheel(context,
+                      initial: value ?? now.add(const Duration(days: 180)), first: now, last: now.add(const Duration(days: 365 * 5)));
                   if (picked != null) onChanged(picked);
                 },
           child: InputDecorator(

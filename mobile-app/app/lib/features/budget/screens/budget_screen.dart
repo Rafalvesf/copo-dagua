@@ -1,3 +1,4 @@
+import '../../../shared/widgets/time_wheels.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/booked_partner_badge.dart';
@@ -794,12 +795,8 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
                         behavior: HitTestBehavior.opaque,
                         onTap: () async {
                           final now = DateTime.now();
-                          final d = await showDatePicker(
-                            context: context,
-                            initialDate: _dueDate ?? now,
-                            firstDate: DateTime(now.year - 1),
-                            lastDate: DateTime(now.year + 5),
-                          );
+                          final d = await pickDateWheel(context,
+                              initial: _dueDate ?? now, first: DateTime(now.year - 1), last: DateTime(now.year + 5, 12, 31), title: 'Data do pagamento');
                           if (d != null && mounted) setState(() => _dueDate = d);
                         },
                         child: SizedBox(

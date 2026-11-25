@@ -87,7 +87,7 @@ class GuestHomeScreen extends ConsumerWidget {
             top: false,
             bottom: false,
             child: eventsAsync.when(
-              loading: () => const SkeletonList(),
+              loading: () => const SkeletonEventPanel(),
               error: (err, st) => AsyncErrorView(message: 'Não foi possível carregar o teu casamento.', onRetry: () => ref.invalidate(guestEventsProvider)),
               data: (events) {
                 if (events.isEmpty) {
