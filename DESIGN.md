@@ -1043,9 +1043,11 @@ peças dos organizadores (§6).
   publicado, o perfil de sempre com o estado da verificação.
 - **Horário de funcionamento** (migração 241, 2026-11-25; `OpeningHours`,
   `shared/widgets/opening_hours.dart`): pede-se no onboarding («Quando estão
-  abertos?», uma linha por dia com as horas numa pílula — abre a roda
-  «ABRE ÀS / FECHA ÀS» — e o interruptor aberto / fechado), muda-se em
-  Início › A tua página › Horário e aparece na página do parceiro em
+  abertos?», em cima «Todos os dias» com «Aplicar a todos» — as mesmas
+  horas em todos os dias abertos —, e uma linha por dia com as horas numa
+  pílula — abre a roda «ABRE ÀS / FECHA ÀS» — e o interruptor aberto /
+  fechado), muda-se em **Disponibilidade** (Início › A tua página ›
+  Horário e disponibilidade, «HORÁRIO DE FUNCIONAMENTO» em cima) e aparece na página do parceiro em
   «HORÁRIO» (hoje a negrito e a etiqueta «Aberto agora · fecha às …»).
 - **Pagamentos e Resultados:** resumo branco sem sombra; o resto em
   molduras.

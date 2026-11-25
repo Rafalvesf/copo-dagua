@@ -1,3 +1,4 @@
+import '../../../shared/widgets/opening_hours.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +25,17 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
   late final _distance = TextEditingController(text: _initial.maxTravelDistanceKm?.toString() ?? '');
   bool _saving = false;
 
+  /// Horário de funcionamento (241), na Disponibilidade (pedido 2026-11-25).
+  OpeningHours? _hours;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(partnerOpeningHoursProvider(_initial.id).future).then((h) {
+      if (mounted && _hours == null) setState(() => _hours = h ?? OpeningHours.standard);
+    });
+  }
+
   @override
   void dispose() {
     _distance.dispose();
@@ -35,6 +47,10 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
     final km = int.tryParse(_distance.text.replaceAll(RegExp(r'[^0-9]'), ''));
     var msg = 'Disponibilidade guardada.';
     try {
+      if (_hours != null) {
+        await saveMyOpeningHours(_hours!);
+        ref.invalidate(partnerOpeningHoursProvider(_initial.id));
+      }
       await ref.read(partnerProfileControllerProvider.notifier).updateBusinessInfo(
             acceptingRequests: _accepting,
             travelsForEvents: _travels,
@@ -84,6 +100,28 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Horário de funcionamento: todos os dias de uma vez ou
+                  // cada dia à parte (pedido 2026-11-25).
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text('HORÁRIO DE FUNCIONAMENTO',
+                        style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  ),
+                  if (_hours == null)
+                    const SizedBox(height: 120, child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)))
+                  else
+                    OpeningHoursEditor(value: _hours!, onChanged: (h) => setState(() => _hours = h)),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
+                    child: Text('Aparece na tua página. Toca nas horas para mudar um dia; «Aplicar a todos» muda todos de uma vez.',
+                        style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  ),
+                  const SizedBox(height: 24),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text('PEDIDOS E DESLOCAÇÕES',
+                        style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),

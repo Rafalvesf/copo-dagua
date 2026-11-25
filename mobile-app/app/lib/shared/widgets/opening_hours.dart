@@ -106,8 +106,34 @@ class OpeningHoursEditor extends StatelessWidget {
   final Color fill;
   const OpeningHoursEditor({super.key, required this.value, required this.onChanged, this.fill = Colors.white});
 
+  /// As horas mais usadas nos dias abertos (para «Todos os dias»).
+  (String, String) get _common {
+    final counts = <(String, String), int>{};
+    for (final h in value.days.values) {
+      counts[h] = (counts[h] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return ('10:00', '19:00');
+    return (counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).first.key;
+  }
+
+  bool get _allSame => value.days.values.toSet().length <= 1;
+
+  /// «Todos os dias» (pedido 2026-11-25: «aplicar a todas ou editar uma em
+  /// específico»): as mesmas horas em todos os dias abertos; sem nenhum
+  /// aberto, abre de segunda a sexta.
+  Future<void> _pickAll(BuildContext context) async {
+    final picked = await _wheel(context, 'Todos os dias', _common);
+    if (picked == null) return;
+    final open = value.days.isEmpty ? [1, 2, 3, 4, 5] : value.days.keys.toList();
+    onChanged(OpeningHours({for (final d in open) d: picked}));
+  }
+
   Future<void> _pick(BuildContext context, int day) async {
-    final cur = value.days[day] ?? ('10:00', '19:00');
+    final picked = await _wheel(context, weekdayNamesPt[day - 1], value.days[day] ?? ('10:00', '19:00'));
+    if (picked != null) onChanged(value.withDay(day, picked));
+  }
+
+  Future<(String, String)?> _wheel(BuildContext context, String title, (String, String) cur) async {
     var from = cur.$1;
     var to = cur.$2;
     final ok = await showIslandSheet<bool>(
@@ -119,8 +145,7 @@ class OpeningHoursEditor extends StatelessWidget {
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Row(children: [
               Expanded(
-                child: Text(weekdayNamesPt[day - 1],
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
               GestureDetector(
                 onTap: () => Navigator.of(c).pop(),
@@ -150,7 +175,7 @@ class OpeningHoursEditor extends StatelessWidget {
         ),
       ),
     );
-    if (ok == true) onChanged(value.withDay(day, (from, to)));
+    return ok == true ? (from, to) : null;
   }
 
   @override
@@ -159,6 +184,35 @@ class OpeningHoursEditor extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(22)),
       child: Column(children: [
+        // Todos os dias: as mesmas horas de uma vez.
+        Container(
+          constraints: const BoxConstraints(minHeight: 64),
+          decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFCFCFCF), width: 2))),
+          child: Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                const Text('Todos os dias', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                Text(
+                  value.days.isEmpty ? 'Escolhe as horas e aplica' : (_allSame ? 'Iguais em todos os dias abertos' : 'Há dias com horas diferentes'),
+                  style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
+                ),
+              ]),
+            ),
+            GestureDetector(
+              onTap: () => _pickAll(context),
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+                child: Text(
+                  value.days.isEmpty || !_allSame ? 'Aplicar a todos' : '${_common.$1} – ${_common.$2}',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+              ),
+            ),
+          ]),
+        ),
         for (var d = 1; d <= 7; d++)
           Container(
             constraints: const BoxConstraints(minHeight: 56),
