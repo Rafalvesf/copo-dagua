@@ -62,7 +62,14 @@ class ReserveFlowResult {
   /// «Nós pagamos por» (216): as pessoas cuja comida os organizadores
   /// pagam quando cada convite paga o seu (chave → nome).
   final Map<String, String> paidFor;
+
+  /// Pedido de orçamento: a hora (prancheta «Pedir orçamento · O que
+  /// procuras? com a hora», 2026-11-25) — «14:00» e «00:00» (ou nulo).
+  final String? startTime;
+  final String? endTime;
   const ReserveFlowResult({
+    this.startTime,
+    this.endTime,
     required this.event,
     required this.adults,
     required this.children,
@@ -274,12 +281,16 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
         message: _message.text.trim().isEmpty ? null : _message.text.trim(),
         payNow: payNow,
         paidFor: _asksWhoPays && _eachPays ? Map.of(_paidFor) : const {},
+        startTime: widget.quote ? _time : null,
+        endTime: widget.quote ? _endTime : null,
       );
 
   ReserveFlowResult get _result => _resultWith(payNow: false);
 
   // ---------- o que foi respondido ----------
-  List<(String, String)> get _details => widget.quote ? [if (_time != null) ('Começa às', _time!)] : switch (widget.kind) {
+  List<(String, String)> get _details => widget.quote
+      ? [if (_time != null) ('Começa às', _time!), if (_endTime != null) ('Acaba às', _endTime!)]
+      : switch (widget.kind) {
         ReserveKind.mesa => [if (_time != null) ('Hora', _time!)],
         ReserveKind.atividade => [if (_time != null) ('Sessão', _time!)],
         ReserveKind.espaco => [
@@ -615,12 +626,51 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
     }
   }
 
+  /// «10 h» entre o início e o fim (o fim pode passar da meia-noite).
+  String _duration2() {
+    if (_time == null || _endTime == null) return 'Só o início';
+    int m(String t) => int.parse(t.split(':')[0]) * 60 + int.parse(t.split(':')[1]);
+    var d = m(_endTime!) - m(_time!);
+    if (d <= 0) d += 24 * 60;
+    final h = d ~/ 60, r = d % 60;
+    return r == 0 ? '$h h' : '$h h $r';
+  }
+
   List<Widget> _whenStep() {
     const gap = SizedBox(height: 16);
     if (widget.quote) {
       return [
         _caps('COMEÇA ÀS'),
         _pills(_times(9, 22), _time, (v) => setState(() => _time = _time == v ? null : v)),
+        gap,
+        // «ACABA ÀS» e a hora do pedido (prancheta de 2026-11-25).
+        _caps('ACABA ÀS'),
+        _pills(['Sem fim', ..._times(12, 28)], _endTime ?? 'Sem fim',
+            (v) => setState(() => _endTime = v == 'Sem fim' ? null : v)),
+        if (_time != null) ...[
+          gap,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+            child: Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('HORA DO PEDIDO',
+                      style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                  const SizedBox(height: 2),
+                  Text(_endTime == null ? 'A partir das ${_time!}' : '${_time!} – ${_endTime!}',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ]),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
+                child: Text(_duration2(),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
+              ),
+            ]),
+          ),
+        ],
         gap,
         _caps('MENSAGEM'),
         TextField(

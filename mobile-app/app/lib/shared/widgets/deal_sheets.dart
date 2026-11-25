@@ -872,6 +872,253 @@ class _ProposalSheetState extends State<_ProposalSheet> {
   }
 }
 
+// ───────────────────────────── Editar outro dia ─────────────────────────────
+
+/// «Editar outro dia» (prancheta «Propor outro dia», modo «Já enviado»;
+/// 2026-11-25): o aviso «Enviado · por responder», o dia pedido (ocupado),
+/// os dias livres na agenda, o preço, a mensagem e «Cancelar» + «Guardar».
+/// `true` se guardou ou cancelou.
+Future<bool> showEditOtherDaySheet(
+  BuildContext context, {
+  required String changeId,
+  required String otherName,
+  required String subtitle,
+  required DateTime fromDate,
+  required DateTime toDate,
+  String? message,
+  double? newPrice,
+  double? currentPrice,
+}) async {
+  final r = await showIslandSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => _EditOtherDay(
+      changeId: changeId,
+      otherName: otherName,
+      subtitle: subtitle,
+      fromDate: fromDate,
+      toDate: toDate,
+      message: message,
+      newPrice: newPrice,
+      currentPrice: currentPrice,
+    ),
+  );
+  return r == true;
+}
+
+class _EditOtherDay extends StatefulWidget {
+  final String changeId;
+  final String otherName;
+  final String subtitle;
+  final DateTime fromDate;
+  final DateTime toDate;
+  final String? message;
+  final double? newPrice;
+  final double? currentPrice;
+  const _EditOtherDay({
+    required this.changeId,
+    required this.otherName,
+    required this.subtitle,
+    required this.fromDate,
+    required this.toDate,
+    this.message,
+    this.newPrice,
+    this.currentPrice,
+  });
+
+  @override
+  State<_EditOtherDay> createState() => _EditOtherDayState();
+}
+
+class _EditOtherDayState extends State<_EditOtherDay> {
+  static const _wd = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  static const _mo = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  String _d(DateTime d) => '${_wd[d.weekday - 1]}, ${d.day} ${_mo[d.month - 1]}';
+  bool _same(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
+
+  List<(DateTime, String)> _days = const [];
+  late DateTime _picked = widget.toDate;
+  late bool _other = widget.newPrice != null;
+  late final _total = TextEditingController(text: widget.newPrice == null ? '' : widget.newPrice!.toStringAsFixed(0));
+  late final _msg = TextEditingController(text: widget.message ?? '');
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDays();
+  }
+
+  /// Dia antes, dia a seguir, uma e duas semanas depois — sem os dias com
+  /// reservas — e o dia já proposto.
+  Future<void> _loadDays() async {
+    final busy = <DateTime>[];
+    try {
+      final me = supabase.auth.currentUser?.id;
+      final rows = await supabase
+          .from('bookings')
+          .select('event_date')
+          .eq('partner_id', me ?? '')
+          .inFilter('status', ['awaiting_deposit', 'confirmed']);
+      for (final r in rows as List) {
+        final d = DateTime.tryParse('${r['event_date'] ?? ''}');
+        if (d != null) busy.add(d);
+      }
+    } catch (_) {}
+    final f = widget.fromDate;
+    final now = DateTime.now();
+    final opts = <(DateTime, String)>[
+      (DateTime(f.year, f.month, f.day - 1), 'Dia antes'),
+      (DateTime(f.year, f.month, f.day + 1), 'Dia a seguir'),
+      (DateTime(f.year, f.month, f.day + 7), 'Uma semana depois'),
+      (DateTime(f.year, f.month, f.day + 14), 'Duas semanas depois'),
+    ].where((e) => e.$1.isAfter(now) && !busy.any((b) => _same(b, e.$1))).toList();
+    if (!opts.any((e) => _same(e.$1, widget.toDate))) opts.insert(0, (widget.toDate, 'O dia que propuseste'));
+    if (mounted) setState(() => _days = opts);
+  }
+
+  @override
+  void dispose() {
+    _total.dispose();
+    _msg.dispose();
+    super.dispose();
+  }
+
+  Future<void> _run(Future<void> Function() f, String ok) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await f();
+      if (!mounted) return;
+      _toast(context, ok);
+      Navigator.of(context).pop(true);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      _toast(context, 'Não foi possível guardar. Tenta novamente.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final price = double.tryParse(_total.text.trim().replaceAll(' ', '').replaceAll(',', '.'));
+    final first = widget.otherName.split(' ').first;
+    return _sheet(
+      context,
+      head: _Head('Editar outro dia', widget.subtitle),
+      body: [
+        _Alert('Enviado · por responder', 'Enquanto $first não responder, podes mudar o dia ou cancelar.'),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+          child: Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('DIA PEDIDO', style: _caps),
+                const SizedBox(height: 2),
+                Text(_d(widget.fromDate), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              ]),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(color: const Color(0xFFE6E6E6), borderRadius: BorderRadius.circular(999)),
+              child: const Text('Ocupado', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
+            ),
+          ]),
+        ),
+        _section(
+          'DIAS LIVRES NA TUA AGENDA',
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+            child: Column(children: [
+              for (var i = 0; i < _days.length; i++)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() => _picked = _days[i].$1),
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 56),
+                    decoration: BoxDecoration(
+                      border: i == _days.length - 1 ? null : const Border(bottom: BorderSide(color: Color(0xFFD9D9D9))),
+                    ),
+                    child: Row(children: [
+                      Expanded(
+                        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(_d(_days[i].$1), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          Text(_days[i].$2, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                        ]),
+                      ),
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _same(_days[i].$1, _picked) ? AppTheme.brandGreen : Colors.transparent,
+                          border: _same(_days[i].$1, _picked) ? null : Border.all(color: const Color(0xFFC9C3B8), width: 1.5),
+                        ),
+                        child: _same(_days[i].$1, _picked) ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
+                      ),
+                    ]),
+                  ),
+                ),
+            ]),
+          ),
+        ),
+        _section(
+          'PREÇO',
+          Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            _Pills(
+              labels: [widget.currentPrice == null ? 'Mesmo preço' : 'Mesmo preço · ${euros(widget.currentPrice!)}', 'Outro preço'],
+              selected: _other ? 1 : 0,
+              onPick: (i) => setState(() => _other = i == 1),
+            ),
+            if (_other) ...[
+              const SizedBox(height: 8),
+              Container(
+                height: 52,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+                child: Row(children: [
+                  const Text('Novo total', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _total,
+                      onChanged: (_) => setState(() {}),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                      decoration: const InputDecoration(isCollapsed: true, border: InputBorder.none, hintText: '0'),
+                    ),
+                  ),
+                  const Text('€', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ]),
+              ),
+            ],
+          ]),
+        ),
+        _section('MENSAGEM PARA ${first.toUpperCase()}', _Box(_msg, lines: 2)),
+        Text('Se $first aceitar, o dia do pedido muda para este. O dia do evento não muda sozinho.', style: _muted),
+      ],
+      buttons: _Buttons(
+        outline: 'Cancelar',
+        onOutline: _busy ? null : () => _run(() => supabase.rpc('cancel_booking_change', params: {'p_id': widget.changeId}), 'Cancelado.'),
+        main: 'Guardar',
+        onMain: _busy || (_other && (price == null || price <= 0))
+            ? null
+            : () => _run(
+                  () => supabase.rpc('update_booking_change', params: {
+                    'p_id': widget.changeId,
+                    'p_to': '${_picked.year}-${_picked.month.toString().padLeft(2, '0')}-${_picked.day.toString().padLeft(2, '0')}',
+                    'p_message': _msg.text.trim().isEmpty ? null : _msg.text.trim(),
+                    'p_price': _other ? price : 0,
+                  }),
+                  'Outro dia atualizado.',
+                ),
+      ),
+    );
+  }
+}
+
 // ───────────────────────────── Pedir alteração ─────────────────────────────
 
 /// Alteração já enviada (para editar).

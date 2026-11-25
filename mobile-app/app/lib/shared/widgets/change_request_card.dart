@@ -17,7 +17,10 @@ class ChangeRequestCard extends StatefulWidget {
   final bool mine;
   final String? imageUrl;
 
-  const ChangeRequestCard({super.key, required this.changeRequestId, required this.mine, this.imageUrl, this.eventLabel});
+  const ChangeRequestCard({super.key, required this.changeRequestId, required this.mine, this.imageUrl, this.eventLabel, this.otherName});
+
+  /// Nome da outra parte (para «Editar outro dia»).
+  final String? otherName;
 
   /// Etiqueta do evento no cartão (conversas juntas, 2026-11-25).
   final String? eventLabel;
@@ -53,7 +56,7 @@ class _ChangeRequestCardState extends State<ChangeRequestCard> {
     try {
       final r = await supabase
           .from('booking_change_requests')
-          .select('kind, from_value, to_value, message, status, booking_id, new_price')
+          .select('kind, from_value, to_value, message, status, booking_id, quote_request_id, new_price')
           .eq('id', widget.changeRequestId)
           .maybeSingle();
       if (mounted) setState(() => _row = r);
@@ -83,18 +86,42 @@ class _ChangeRequestCardState extends State<ChangeRequestCard> {
   Future<void> _edit(Map<String, dynamic> r) async {
     final kind = r['kind'] as String? ?? 'other';
     if (kind == 'date') {
-      final cur = DateTime.tryParse('${r['to_value'] ?? ''}') ?? DateTime.now();
-      final now = DateTime.now();
-      final picked = await showDatePicker(
-        context: context,
-        initialDate: cur.isBefore(now) ? now : cur,
-        firstDate: now,
-        lastDate: DateTime(now.year + 3),
-        locale: const Locale('pt', 'PT'),
+      // O popup completo «Editar outro dia» (prancheta «Propor outro dia»).
+      final from = DateTime.tryParse('${r['from_value'] ?? ''}');
+      final to = DateTime.tryParse('${r['to_value'] ?? ''}');
+      if (from == null || to == null) return;
+      double? current;
+      try {
+        final qid = r['quote_request_id'] as String?;
+        final bid = r['booking_id'] as String?;
+        if (qid != null) {
+          final p = await supabase
+              .from('proposals')
+              .select('price')
+              .eq('quote_request_id', qid)
+              .eq('status', 'sent')
+              .order('created_at', ascending: false)
+              .limit(1)
+              .maybeSingle();
+          current = (p?['price'] as num?)?.toDouble();
+        } else if (bid != null) {
+          final b = await supabase.from('bookings').select('total_amount').eq('id', bid).maybeSingle();
+          current = (b?['total_amount'] as num?)?.toDouble();
+        }
+      } catch (_) {}
+      if (!mounted) return;
+      final changed = await showEditOtherDaySheet(
+        context,
+        changeId: widget.changeRequestId,
+        otherName: widget.otherName ?? 'o cliente',
+        subtitle: widget.eventLabel ?? 'Proposta de outro dia',
+        fromDate: from,
+        toDate: to,
+        message: r['message'] as String?,
+        newPrice: (r['new_price'] as num?)?.toDouble(),
+        currentPrice: current,
       );
-      if (picked == null || !mounted) return;
-      final v = '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
-      await _act('update_booking_change', {'p_id': widget.changeRequestId, 'p_to': v}, 'Dia mudado.');
+      if (changed) await _load();
       return;
     }
     final bookingId = r['booking_id'] as String?;
