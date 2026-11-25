@@ -1,3 +1,4 @@
+import '../../../shared/widgets/section_frame.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,9 +12,7 @@ import '../../../shared/widgets/charts.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/page_header.dart';
-import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
-import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
@@ -141,197 +140,87 @@ class _Dashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GreenHero(
-            label: 'RECEITA · RESERVAS CONFIRMADAS',
-            value: _eur(a.revenue),
-            doodles: const [Hi.arrowTrendingUp, Hi.currencyEuro, Hi.sparkles],
-            footer: Wrap(spacing: 8, runSpacing: 8, children: [
-              if (revenueDelta != null) HeroPill(_pctText(revenueDelta) ?? '', solid: true),
-              HeroPill('vs. ${_eur(a.previousRevenue)} antes'),
-            ]),
-          ),
-          const SizedBox(height: 14),
+          // Mockup «Parceiro · Resultados» (2026-11-25): resumo branco e
+          // cada secção numa moldura; números em caixas.
           Container(
-            padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              LineAreaChart(
-                values: [for (final p in a.revenueSeries) p.value],
-                previous: [for (final p in a.previousRevenueSeries) p.value],
-                xLabels: _xLabels(),
-                formatValue: _compactEur,
-                describePoint: (i) => _bucketLabel(a.revenueSeries[i].start),
-              ),
-              const SizedBox(height: 6),
-              const Row(
-                children: [
-                  _LegendKey(dashed: false, label: 'Este período'),
-                  SizedBox(width: 16),
-                  _LegendKey(dashed: true, label: 'Período anterior'),
-                ],
-              ),
+              const Text('RECEITA · RESERVAS CONFIRMADAS',
+                  style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              const SizedBox(height: 4),
+              Text(_eur(a.revenue), style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 10),
+              Wrap(spacing: 6, runSpacing: 6, children: [
+                if (revenueDelta != null && _pctText(revenueDelta) != null)
+                  KitTag('${revenueDelta >= 0 ? '+' : '−'}${_pctText(revenueDelta)}',
+                      kind: revenueDelta >= 0 ? KitTagKind.green : KitTagKind.neutral),
+                KitTag('vs. ${_eur(a.previousRevenue)} antes', kind: KitTagKind.neutral),
+              ]),
             ]),
           ),
-          if (noData) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: kInfoNoteColor,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: const Text(
-                'Ainda sem pedidos nem reservas neste período.',
-                style: TextStyle(fontSize: 13, color: AppTheme.ink, height: 1.4),
-              ),
+          SectionFrame(title: 'Receita', children: [
+            LineAreaChart(
+              values: [for (final p in a.revenueSeries) p.value],
+              previous: [for (final p in a.previousRevenueSeries) p.value],
+              xLabels: _xLabels(),
+              formatValue: _compactEur,
+              describePoint: (i) => _bucketLabel(a.revenueSeries[i].start),
             ),
-          ],
-          const SizedBox(height: 22),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: 1.2,
-            children: [
-              _KpiTile(
-                label: 'Reservas',
-                value: '${a.bookings}',
-                deltaText: _countDelta(a.bookings, a.previousBookings),
-                up: a.bookings >= a.previousBookings,
-                spark: [for (final p in a.bookingsSeries) p.value],
-              ),
-              _KpiTile(
-                label: 'Pedidos recebidos',
-                value: '${a.requests}',
-                deltaText: _countDelta(a.requests, a.previousRequests),
-                up: a.requests >= a.previousRequests,
-                spark: [for (final p in a.requestsSeries) p.value],
-              ),
-              _KpiTile(
-                label: 'Conversão',
-                value: '${(a.conversion * 100).round()}%',
-                deltaText: null,
-                up: true,
-                spark: null,
-                caption: '${a.accepted} de ${a.requests} pedidos',
-              ),
-              _KpiTile(
-                label: 'Valor médio',
-                value: _eur(a.averageValue),
-                deltaText: _pctText(_deltaPct(a.averageValue, a.previousAverageValue)),
-                up: a.averageValue >= a.previousAverageValue,
-                spark: null,
-                caption: 'por reserva',
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          const Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
+            const SizedBox(height: 6),
+            const Row(children: [
+              _LegendKey(dashed: false, label: 'Este período'),
+              SizedBox(width: 16),
+              _LegendKey(dashed: true, label: 'Período anterior'),
+            ]),
+            if (noData) const FrameNote('Ainda sem pedidos nem reservas neste período.', top: 10),
+          ]),
+          SectionFrame(title: 'Números', children: [
+            FrameNumbers([
+              FrameNumber('Reservas', '${a.bookings}', _countDelta(a.bookings, a.previousBookings) ?? ''),
+              FrameNumber('Pedidos', '${a.requests}', _countDelta(a.requests, a.previousRequests) ?? ''),
+              FrameNumber('Conversão', '${(a.conversion * 100).round()} %', '${a.accepted} de ${a.requests} pedidos'),
+              FrameNumber('Valor médio', _eur(a.averageValue), 'por reserva'),
+            ]),
+          ]),
+          SectionFrame(title: 'Pedidos por semana', children: [
+            SimpleBarChart(
+              values: [for (final p in a.requestsByWeek) p.value],
+              labels: [for (final p in a.requestsByWeek) '${p.start.day}/${p.start.month}'],
+              describe: (i) => 'Semana de ${_bucketLabel(a.requestsByWeek[i].start)}: ${a.requestsByWeek[i].value.round()} pedidos',
+            ),
+            const FrameNote('Últimas 8 semanas.', top: 8),
+          ]),
+          SectionFrame(title: 'Do pedido à reserva', children: [
+            _FunnelRow(label: 'Pedidos recebidos', value: a.requests, total: a.requests),
+            const SizedBox(height: 14),
+            _FunnelRow(label: 'Propostas enviadas', value: a.proposals, total: a.requests),
+            const SizedBox(height: 14),
+            _FunnelRow(label: 'Reservas', value: a.accepted, total: a.requests),
+          ]),
+          SectionFrame(title: 'Avaliações', children: [
+            Row(children: [
+              Text(a.averageRating == null ? '—' : a.averageRating!.toStringAsFixed(1).replaceAll('.', ','),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(width: 14),
               Expanded(
-                child: Text(
-                  'Pedidos por semana',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.ink,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    for (var i = 1; i <= 5; i++)
+                      Icon((a.averageRating ?? 0) >= i - 0.25 ? Hi.star : Hi.starOutline, size: 18, color: AppTheme.ink),
+                  ]),
+                  const SizedBox(height: 2),
+                  Text(
+                    a.reviewCount == 0
+                        ? 'Ainda sem avaliações'
+                        : '${a.reviewCount} ${a.reviewCount == 1 ? 'avaliação' : 'avaliações'}',
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                   ),
-                ),
+                ]),
               ),
-              Text(
-                'últimas 8 semanas',
-                style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 16, 14, 10),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-            child: SimpleBarChart(
-            values: [for (final p in a.requestsByWeek) p.value],
-            labels: [
-              for (final p in a.requestsByWeek) '${p.start.day}/${p.start.month}',
-            ],
-            describe: (i) =>
-                'Semana de ${_bucketLabel(a.requestsByWeek[i].start)}: ${a.requestsByWeek[i].value.round()} pedidos',
-          ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Do pedido à reserva',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.ink,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-            child: Column(children: [
-              _FunnelRow(label: 'Pedidos recebidos', value: a.requests, total: a.requests),
-              const SizedBox(height: 14),
-              _FunnelRow(label: 'Propostas enviadas', value: a.proposals, total: a.requests),
-              const SizedBox(height: 14),
-              _FunnelRow(label: 'Reservas', value: a.accepted, total: a.requests),
             ]),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-            child: Row(
-              children: [
-                const StickerIcon(Hi.starOutline),
-                const SizedBox(width: 12),
-                Text(
-                  a.averageRating == null
-                      ? '—'
-                      : a.averageRating!.toStringAsFixed(1).replaceAll('.', ','),
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.ink,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          for (var i = 1; i <= 5; i++)
-                            Icon(
-                              (a.averageRating ?? 0) >= i - 0.25
-                                  ? Hi.star
-                                  : Hi.starOutline,
-                              size: 18,
-                              color: AppTheme.ink,
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        a.reviewCount == 0
-                            ? 'Ainda sem avaliações'
-                            : 'Avaliação média · ${a.reviewCount} ${a.reviewCount == 1 ? 'avaliação' : 'avaliações'}',
-                        style: TextStyle(
-                          fontSize: AppFontSize.sm,
-                          color: AppTheme.accentOliveDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ]),
         ],
       ),
     );
@@ -346,51 +235,6 @@ class _Dashboard extends StatelessWidget {
   static String? _pctText(double? pct) {
     if (pct == null || pct.round() == 0) return null;
     return '${pct.abs().round()}%';
-  }
-}
-
-class _Delta extends StatelessWidget {
-  final double? pct;
-
-  const _Delta({required this.pct});
-
-  @override
-  Widget build(BuildContext context) {
-    final p = pct;
-    if (p == null || p.round() == 0) return const SizedBox.shrink();
-    final up = p > 0;
-    return _DeltaLabel(up: up, text: '${p.abs().round()}%', fontSize: AppFontSize.md);
-  }
-}
-
-/// Seta + variação. A seta é um ícone e não o carácter "↑": a Louis
-/// George Café não tem setas e o carácter dependia de uma letra de
-/// reserva.
-class _DeltaLabel extends StatelessWidget {
-  final bool up;
-  final String text;
-  final double fontSize;
-
-  const _DeltaLabel({required this.up, required this.text, required this.fontSize});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = up ? const Color(0xFF2F6B45) : const Color(0xFFA3412E);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          up ? Hi.arrowUp : Hi.arrowDown,
-          size: fontSize,
-          color: color,
-        ),
-        const SizedBox(width: 2),
-        Text(
-          text,
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w700, color: color),
-        ),
-      ],
-    );
   }
 }
 
@@ -425,51 +269,6 @@ class _LegendKey extends StatelessWidget {
           style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted),
         ),
       ],
-    );
-  }
-}
-
-class _KpiTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final String? deltaText;
-  final bool up;
-  final List<double>? spark;
-  final String? caption;
-
-  const _KpiTile({
-    required this.label,
-    required this.value,
-    required this.deltaText,
-    required this.up,
-    required this.spark,
-    this.caption,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Mockup: rótulo 13, número 28 e uma linha 13 por baixo («+2 que antes»).
-    final sub = caption ?? deltaText;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          ),
-          if (sub != null) ...[
-            const SizedBox(height: 4),
-            Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-          ],
-        ],
-      ),
     );
   }
 }

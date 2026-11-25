@@ -1013,6 +1013,31 @@ tratado» —, título 16, frase 13 e a ação), `FrameNote`, `FrameButton36`,
   0 com a barra vazia; nada de avisos para o que falta escrever (diz-se no
   valor da linha, p. ex. «Por escrever»).
 
+## 6.8 Painéis do parceiro (pedido do Rafael, 2026-11-25; mockups «Parceiro · painéis»)
+
+O mesmo desenho do painel do organizador (§6.5, §6.7): resumo branco em
+cima, cada secção numa moldura (`SectionFrame`), «Para fazer» com a linha
+amarela/vermelha (`FrameTaskRow`) e os três estados do §4, números em
+caixas (`FrameNumbers`). Notificações, mensagens e conversas são as mesmas
+peças dos organizadores (§6).
+
+- **Início:** topo (logótipo + nome, QR, sino, ⋯) · «Olá, Nome!» 28 ·
+  resumo «ESTE MÊS» (receita 40, linha preta 1,5) · PARA FAZER (pedidos e
+  avaliações por responder) · ESTA SEMANA (7 dias, hoje a preto, ponto
+  verde nos dias com eventos, e os próximos) · NÚMEROS · O TEU NEGÓCIO
+  (calendário, pagamentos, resultados, avaliações, contratos) · **A TUA
+  PÁGINA** (ver como os clientes, preços, portefólio, disponibilidade,
+  localização, dados do negócio, cancelamento, loja) · convidar.
+- **Pedidos:** pílulas Recebidos / Confirmados / Concluídos, resumo e
+  molduras por estado (Por responder, Proposta enviada, À espera do sinal,
+  Confirmadas, Concluídos).
+- **Pedido / Reserva:** título 28 + «tipo · dia · cidade», aviso «Por
+  responder» ou o resumo «Faltam N dias», e O pedido, Mensagem, a
+  informação do evento por categoria (§6.2) e Documentos em molduras.
+- **Perfil:** cabeça do §6.2, «O TEU LINK E QR» e «MODO PRO».
+- **Pagamentos e Resultados:** resumo branco sem sombra; o resto em
+  molduras.
+
 ## 7. Alertas
 
 - **Nunca** fundo amarelo. Todos os alertas, avisos e etiquetas de estado
