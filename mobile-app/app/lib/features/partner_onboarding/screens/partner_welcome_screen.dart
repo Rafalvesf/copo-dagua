@@ -27,6 +27,7 @@ import '../../../shared/widgets/pronto_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
 import '../../../shared/widgets/onboarding_exit.dart';
+import '../../../shared/widgets/opening_hours.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
@@ -88,6 +89,7 @@ enum _Step {
   portfolio,
   description,
   serviceAreas,
+  hours,
   taxId,
   services,
   yearsExperience,
@@ -136,6 +138,9 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
   int _localSeq = 0;
   bool get _deferred => ref.read(authControllerProvider.notifier).hasPendingSignup;
   bool _nationwide = false;
+
+  /// Horário de funcionamento (241, pedido 2026-11-25).
+  OpeningHours _hours = OpeningHours.standard;
   final _otherArea = TextEditingController();
 
   // Serviços/preços: ao contrário dos outros passos, escreve
@@ -216,6 +221,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
           _minPortfolioImages,
     _Step.description => _description.text.trim().length >= 50,
     _Step.serviceAreas => _areas.isNotEmpty || _nationwide,
+    _Step.hours => true,
     _Step.taxId => _taxIdRegex.hasMatch(_taxId.text.trim()),
     _Step.services => _pricingMode == 'quote_only' || _packages.isNotEmpty,
     // Opcionais — pedido explícito do utilizador ("anos de experiência e
@@ -407,6 +413,13 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
 
   Future<void> _continue() async {
     if (!_canContinue) return;
+    // Horário: guarda logo (sem a 241 só não fica guardado).
+    if (_step == _Step.hours) {
+      try {
+        await saveMyOpeningHours(_hours);
+      } catch (_) {}
+      if (!mounted) return;
+    }
     if (_stepIndex < _steps.length - 1) {
       setState(() => _stepIndex++);
       return;
@@ -922,6 +935,12 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
               ),
             ],
           ),
+        );
+      case _Step.hours:
+        return _StepScaffold(
+          question: 'Quando estão abertos?',
+          subtitle: 'O horário aparece na vossa página. Toca nas horas para as mudar.',
+          child: OpeningHoursEditor(value: _hours, onChanged: (h) => setState(() => _hours = h)),
         );
       case _Step.taxId:
         return _StepScaffold(

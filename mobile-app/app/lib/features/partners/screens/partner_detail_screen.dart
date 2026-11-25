@@ -1,3 +1,4 @@
+import '../../../shared/widgets/opening_hours.dart' show OpeningHoursSection;
 import 'dart:math' as math;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -110,11 +111,24 @@ class PartnerDetailScreen extends ConsumerStatefulWidget {
   /// pedir orçamento pedem para entrar e voltam aqui.
   final bool publicView;
 
+  /// O próprio parceiro (aba Perfil, pedido 2026-11-25: «deve aparecer
+  /// semelhante ao que os organizadores veem»): sem voltar, favorito,
+  /// seguir nem reservar; [ownerButtons] no lugar de Seguir + Mensagem,
+  /// [ownerActions] no topo e [ownerFooter] no fim.
+  final bool ownerView;
+  final Widget? ownerButtons;
+  final List<Widget> ownerActions;
+  final List<Widget> ownerFooter;
+
   const PartnerDetailScreen({
     super.key,
     required this.partner,
     this.selectionMode = false,
     this.publicView = false,
+    this.ownerView = false,
+    this.ownerButtons,
+    this.ownerActions = const [],
+    this.ownerFooter = const [],
   });
 
   /// Abre o parceiro numa folha que sobe de baixo (canvas "Parceiro —
@@ -912,7 +926,9 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                       ('${stats?.followers ?? 0}', 'Seguidores'),
                       ('${stats?.eventsDone ?? 0}', 'Eventos'),
                     ],
-                    buttons: widget.selectionMode
+                    buttons: widget.ownerView
+                        ? widget.ownerButtons
+                        : widget.selectionMode
                         ? null
                         : _PartnerFollow(
                             partnerId: partner.id,
@@ -960,7 +976,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                         first: i == 0,
                         selected: !_eachChooses && _selectedPackage == i,
                         viewOnly: menusOnly,
-                        onTap: widget.selectionMode || menusOnly
+                        onTap: widget.selectionMode || menusOnly || widget.ownerView
                             ? null
                             : pub
                                 ? _needAccount
@@ -1041,6 +1057,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     ]),
                   ),
                 ],
+                // Horário de funcionamento (241, 2026-11-25).
+                OpeningHoursSection(partnerId: partner.id, titleBuilder: (t) => sectionTitle(t)),
                 KeyedSubtree(key: _reviewsKey, child: const SizedBox.shrink()),
                 _ReviewsSection(
                   partnerId: partner.id,
@@ -1056,6 +1074,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
                     ),
+                  ),
+                if (widget.ownerFooter.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: widget.ownerFooter),
                   ),
               ],
             ),
@@ -1076,6 +1099,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
               ].join(' · '),
               favorited: favorited,
               publicView: pub,
+              ownerActions: widget.ownerView ? widget.ownerActions : null,
               onBack: () => Navigator.of(context).canPop() ? Navigator.of(context).pop() : context.go('/partners'),
               onShare: () => _share(partner),
               onFavorite: () {
@@ -1091,12 +1115,13 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           // Sem os atalhos para as secções por baixo do topo reduzido
           // (pedido 2026-11-23).
           // Barra fixa: a largura das caixas de conteúdo e os cantos da navbar.
-          Positioned(
-            left: AppTheme.screenMargin,
-            right: AppTheme.screenMargin,
-            bottom: (bottomPad > 20 ? bottomPad : 20),
-            child: _BottomBar(box: barBox, label: barLabel, onTap: barAction),
-          ),
+          if (!widget.ownerView)
+            Positioned(
+              left: AppTheme.screenMargin,
+              right: AppTheme.screenMargin,
+              bottom: (bottomPad > 20 ? bottomPad : 20),
+              child: _BottomBar(box: barBox, label: barLabel, onTap: barAction),
+            ),
         ],
       ),
     );
@@ -1752,6 +1777,9 @@ class _PartnerHero extends StatelessWidget {
   final String metaLine;
   final bool favorited;
   final bool publicView;
+
+  /// Modo dono: estes botões no lugar de voltar, partilhar e favorito.
+  final List<Widget>? ownerActions;
   final VoidCallback onBack;
   final VoidCallback onShare;
   final VoidCallback onFavorite;
@@ -1764,6 +1792,7 @@ class _PartnerHero extends StatelessWidget {
     required this.metaLine,
     required this.favorited,
     required this.publicView,
+    this.ownerActions,
     required this.onBack,
     required this.onShare,
     required this.onFavorite,
@@ -1836,7 +1865,9 @@ class _PartnerHero extends StatelessWidget {
                 right: AppTheme.screenMargin,
                 top: topPad + 8,
                 child: Row(children: [
-                  if (publicView)
+                  if (ownerActions != null)
+                    const SizedBox.shrink()
+                  else if (publicView)
                     Container(
                       height: 44,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1891,7 +1922,9 @@ class _PartnerHero extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (publicView) ...[
+                  if (ownerActions != null) ...[
+                    for (final a in ownerActions!) ...[const SizedBox(width: 8), a],
+                  ] else if (publicView) ...[
                     if (kIsWeb)
                       SnappyTap(
                         onTap: () {

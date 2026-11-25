@@ -1034,7 +1034,21 @@ peças dos organizadores (§6).
 - **Pedido / Reserva:** título 28 + «tipo · dia · cidade», aviso «Por
   responder» ou o resumo «Faltam N dias», e O pedido, Mensagem, a
   informação do evento por categoria (§6.2) e Documentos em molduras.
-- **Perfil:** cabeça do §6.2, «O TEU LINK E QR» e «MODO PRO».
+- **Perfil** (pedido 2026-11-25, mockup «Perfil igual ao que os
+  organizadores veem»): com o perfil publicado, é **a mesma página do
+  parceiro** que os organizadores abrem (§6.2) — no topo o sino e as
+  Definições (pretos 44 com aro branco) em vez de voltar / favorito;
+  «Editar perfil» + «Partilhar perfil» em vez de Seguir + Mensagem; sem a
+  barra de reservar; no fim «O TEU LINK E QR» e «MODO PRO». Antes de
+  publicado, o perfil de sempre com o estado da verificação.
+- **Horário de funcionamento** (migração 241, 2026-11-25; `OpeningHours`,
+  `shared/widgets/opening_hours.dart`): pede-se no onboarding («Quando estão
+  abertos?», em cima «Todos os dias» com «Aplicar a todos» — as mesmas
+  horas em todos os dias abertos —, e uma linha por dia com as horas numa
+  pílula — abre a roda «ABRE ÀS / FECHA ÀS» — e o interruptor aberto /
+  fechado), muda-se em **Disponibilidade** (Início › A tua página ›
+  Horário e disponibilidade, «HORÁRIO DE FUNCIONAMENTO» em cima) e aparece na página do parceiro em
+  «HORÁRIO» numa **linha curta que abre** (pedido 2026-11-25): o ponto (verde aberto, cinzento fechado), «Aberto agora · fecha às 19:00» / «Fechado agora · abre amanhã às 10:00» 16 negrito e a seta; tocar abre o popup «Horário» com os 7 dias (hoje a negrito).
 - **Pagamentos e Resultados:** resumo branco sem sombra; o resto em
   molduras.
 - **Pedidos · Alterações:** os pedidos de alteração e de outro dia do

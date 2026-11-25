@@ -1,3 +1,4 @@
+import '../features/partner_profile/screens/partner_hours_screen.dart';
 import 'package:flutter/material.dart';
 import 'pending_deep_link.dart';
 import 'invite/public_invite.dart' show PendingInvite;
@@ -521,6 +522,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/partner-profile',
         builder: (context, state) =>lazyPage([l51.loadLibrary], () =>  l51.PartnerProfileScreen()),
       ),
+      // Horário de funcionamento (241, 2026-11-25).
+      GoRoute(path: '/partner-hours', builder: (context, state) => const PartnerHoursScreen()),
       GoRoute(
         path: '/partner-availability',
         builder: (context, state) =>lazyPage([l48.loadLibrary], () =>  l48.PartnerAvailabilityScreen()),

@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
+import '../../../core/partners/partner_providers.dart' show partnerByIdProvider;
+import '../../partners/screens/partner_detail_screen.dart' show PartnerDetailScreen;
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/models/models.dart';
@@ -53,6 +55,55 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(authControllerProvider).profile;
+
+    // Perfil publicado: a mesma página que os organizadores veem (pedido
+    // 2026-11-25, mockup «Perfil igual ao que os organizadores veem»), com
+    // Editar / Partilhar, o sino e as Definições, e no fim o link e QR e o
+    // Modo Pro. Antes de publicado, o perfil de sempre (com o estado).
+    final mine = profile == null ? null : ref.watch(partnerByIdProvider(profile.id)).value;
+    if (profile != null && mine != null && profile.partnerProfileStatus == 'published') {
+      final name = (profile.businessName?.isEmpty ?? true) ? (profile.fullName ?? '') : profile.businessName!;
+      return Stack(children: [
+        PartnerDetailScreen(
+          partner: mine,
+          ownerView: true,
+          ownerButtons: Row(children: [
+            Expanded(child: ProfileButton('Editar perfil', onTap: () => showPartnerEditProfileSheet(context))),
+            const SizedBox(width: 8),
+            Expanded(child: ProfileButton('Partilhar perfil', dark: true, onTap: () => sharePartnerProfile(context, profile.id, name))),
+          ]),
+          ownerActions: [
+            const PartnerNotificationBell(round: true),
+            Tooltip(
+              message: 'Definições',
+              child: SnappyTap(
+                onTap: () => context.push('/settings'),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppTheme.ink,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Hi.cog6Tooth, size: 20, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+          ownerFooter: [
+            _MyLinkCard(partnerId: profile.id),
+            SectionFrame(title: 'Modo Pro', children: [
+              const FrameNote('Vê o que o Modo Pro inclui e quanto custa.'),
+              FrameButton44('Ver o Modo Pro', onTap: () => context.push('/partner-pro')),
+            ]),
+            const FrameNote('É assim que os organizadores te veem. Muda cada parte em «A tua página», no Início.', top: 16),
+          ],
+        ),
+        const Positioned(left: 0, right: 0, bottom: 0, child: PartnerBottomNav(current: PartnerTab.profile)),
+      ]);
+    }
 
     return GradientScaffold(
       background: AppBackground.cream,
