@@ -16,6 +16,8 @@ import 'core/auth/auth_controller.dart';
 import 'core/monitoring/error_reporting.dart';
 import 'core/notifications/push.dart';
 import 'core/partners/partner_referrals.dart';
+import 'core/invites/invites.dart' show myInviteStatsProvider;
+import 'shared/public_link.dart' show shareRefCode;
 import 'core/models/models.dart';
 import 'core/event/menu_style.dart';
 import 'core/supabase/supabase_config.dart';
@@ -47,6 +49,8 @@ Future<void> main() async {
   await SupabaseConfig.initialize();
   await PendingDeepLink.load();
   await PendingInvite.load();
+  // Link partilhado com o código de quem partilhou (2026-11-25).
+  captureShareRef();
   Funnel.track('app_open');
   await PushNotifications.init();
   installBrowserBackDetection();
@@ -69,10 +73,13 @@ class CopoDaguaApp extends ConsumerWidget {
         PushNotifications.resync();
         // Convite de parceiro aberto antes de ter conta (migração 151).
         claimPendingPartnerReferral();
+        // O meu código vai em todos os links que partilho (2026-11-25).
+        ref.read(myInviteStatsProvider.future).then((s) => shareRefCode = s?.code).catchError((_) => null);
         Funnel.linkAccount();
         // Respostas do início da app (país, idade, interesses) → perfil.
         IntroAnswers.flushToProfile(next);
       }
+      if (next == null) shareRefCode = null;
       if (next != prev) setErrorReportingUser(next);
     });
     // Presença "online" (mensagens): enquanto a app está aberta e há sessão.

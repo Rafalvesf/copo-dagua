@@ -65,6 +65,19 @@ Future<void> savePendingPartnerReferral(String code) async {
   } catch (_) {}
 }
 
+/// Link aberto com `?ref=CODIGO` (qualquer partilha, 2026-11-25): guarda o
+/// código como se fosse um `/p/CODIGO`; com sessão, regista logo.
+Future<void> captureShareRef() async {
+  try {
+    final frag = Uri.base.fragment;
+    final q = frag.contains('?') ? Uri.splitQueryString(frag.substring(frag.indexOf('?') + 1)) : const <String, String>{};
+    final code = q['ref'] ?? Uri.base.queryParameters['ref'];
+    if (code == null || code.trim().isEmpty) return;
+    await savePendingPartnerReferral(code);
+    if (supabase.auth.currentUser != null) await claimPendingPartnerReferral();
+  } catch (_) {}
+}
+
 /// Chamado quando entra uma conta (main.dart).
 Future<void> claimPendingPartnerReferral() async {
   try {
