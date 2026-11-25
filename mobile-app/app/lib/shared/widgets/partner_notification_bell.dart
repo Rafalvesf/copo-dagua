@@ -8,7 +8,7 @@ import '../../core/theme/app_theme.dart';
 import 'count_badge.dart';
 import 'feedback.dart';
 import 'island_sheet.dart';
-import 'push_opt_in.dart';
+import '../../core/notifications/push.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Sino de notificações do parceiro e do convidado — versão simples do sino do casal
@@ -182,7 +182,7 @@ class _PartnerNotificationsSheetState extends ConsumerState<_PartnerNotification
                   : ListView(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                       children: [
-                        const PushOptInCard(),
+                        const _PushCard(),
                         if (shown.isEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 32),
@@ -206,12 +206,27 @@ class _PartnerNotificationsSheetState extends ConsumerState<_PartnerNotification
   }
 
   Widget _row(PartnerNotification n, bool last) {
-    final icon = switch (n.type) {
-      'new_message' => Hi.chatBubbleOvalLeft,
-      'support_reply' => Hi.lifebuoy,
-      'admin_message' => Hi.megaphone,
-      _ => Hi.bell,
-    };
+    // Ícone do tipo num círculo 44 #E6E6E6 (prancheta «Popup das
+    // notificações»): mensagem, pagamento, pessoa, reserva, equipa.
+    final t = n.type;
+    final link = n.link ?? '';
+    final icon = t.contains('message') || t == 'group_message'
+        ? Hi.chatBubbleOvalLeft
+        : (t.contains('pay') || t.contains('deposit') || link.contains('/pay'))
+            ? Hi.creditCard
+            : (t.contains('join') || t.contains('guest') || t.contains('rsvp'))
+                ? Hi.user
+                : (t.contains('support') || t.contains('admin'))
+                    ? Hi.star
+                    : (t.contains('booking') || t.contains('proposal') || t.contains('quote'))
+                        ? Hi.calendarDays
+                        : Hi.bell;
+    // O botão diz o que faz: «Pagar», «Ver proposta» ou «Ver».
+    final action = (t.contains('pay') || t.contains('deposit') || link.contains('/pay'))
+        ? 'Pagar'
+        : t.contains('proposal')
+            ? 'Ver proposta'
+            : 'Ver';
     return Semantics(
       button: true,
       child: GestureDetector(
@@ -255,7 +270,7 @@ class _PartnerNotificationsSheetState extends ConsumerState<_PartnerNotification
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
                     alignment: Alignment.center,
-                    child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+                    child: Text(action, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ],
               ]),
@@ -263,6 +278,80 @@ class _PartnerNotificationsSheetState extends ConsumerState<_PartnerNotification
           ]),
         ),
       ),
+    );
+  }
+}
+
+/// «Avisos no telemóvel» (prancheta «Popup das notificações»): caixa
+/// #F2F2F2, cantos 22, o sino branco num círculo preto 44, título 16, frase
+/// 13 e «Ativar» preto 36. Some quando os avisos já estão ligados.
+class _PushCard extends StatefulWidget {
+  const _PushCard();
+
+  @override
+  State<_PushCard> createState() => _PushCardState();
+}
+
+class _PushCardState extends State<_PushCard> {
+  PushStatus _status = PushNotifications.status();
+  bool _busy = false;
+
+  Future<void> _enable() async {
+    setState(() => _busy = true);
+    PushStatus s;
+    try {
+      s = await PushNotifications.enable();
+    } catch (_) {
+      s = PushNotifications.status();
+    }
+    if (!mounted) return;
+    setState(() {
+      _status = s;
+      _busy = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (String title, String text, bool action) = switch (_status) {
+      PushStatus.notAsked => ('Avisos no telemóvel', 'Sabe na hora quando um parceiro responde.', true),
+      PushStatus.denied => ('Avisos bloqueados', 'Para os receber, permite-os nas definições do telemóvel.', false),
+      PushStatus.iosInstall => ('Avisos no telemóvel', 'No iPhone, junta a app ao ecrã principal para os receber.', false),
+      _ => ('', '', false),
+    };
+    if (title.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+      child: Row(children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+          child: const Icon(Hi.bell, size: 20, color: Colors.white),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 2),
+            Text(text, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ]),
+        ),
+        if (action) ...[
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: _busy ? null : _enable,
+            child: Container(
+              height: 36,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+              child: const Text('Ativar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+          ),
+        ],
+      ]),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/hero_icons.dart';
 
 import '../../../core/chat/chat_delete.dart';
 import '../../../core/moderation/moderation.dart';
@@ -21,7 +22,6 @@ import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
-import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
@@ -31,6 +31,8 @@ import '../../payments/booking_extras_sheet.dart';
 import '../../bookings/widgets/reject_proposal.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import '../../../shared/widgets/change_request_card.dart';
+import '../../../shared/widgets/request_card.dart';
+import '../../../shared/widgets/deal_sheets.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -181,6 +183,40 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     );
   }
 
+  /// «Pedir alteração» (prancheta «Pedir ou editar alteração»): só com uma
+  /// reserva aceite ou confirmada com esta conversa.
+  Future<void> _requestChange() async {
+    final ev = widget.conversation.eventId;
+    final pid = widget.conversation.partnerId;
+    if (ev == null || pid == null) return;
+    Map<String, dynamic>? b;
+    try {
+      b = await supabase
+          .from('bookings')
+          .select('id, people')
+          .eq('wedding_id', ev)
+          .eq('partner_id', pid)
+          .inFilter('status', ['awaiting_deposit', 'confirmed'])
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+    } catch (_) {}
+    if (!mounted) return;
+    if (b == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ainda não há uma reserva aceite nesta conversa.')),
+      );
+      return;
+    }
+    await showChangeSheet(
+      context,
+      bookingId: b['id'] as String,
+      otherName: widget.conversation.name,
+      subtitle: 'Reserva · ${widget.conversation.name}',
+      currentPeople: (b['people'] as num?)?.toInt() ?? 1,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chat = ref.watch(chatThreadControllerProvider(_conversationKey));
@@ -193,10 +229,16 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     final events = ref.watch(eventControllerProvider).events;
     final ev = events.where((w) => w.id == widget.conversation.eventId).firstOrNull;
     final evDate = ev?.eventDate;
-    final eventTitle = ev == null
+    // Ilha do evento (prancheta «Conversa», 2026-11-24): «Casamento · Sáb,
+    // 12 jun · Quinta do Freixo».
+    const weekdays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    final eventTitle = ev?.eventType.label;
+    final eventLine = ev == null
         ? null
-        : [ev.displayNames, if (evDate != null) '${evDate.day} ${months[evDate.month - 1]} ${evDate.year}'].join(' · ');
-    final hasProposal = chat.messages.any((m) => m.isProposal);
+        : [
+            if (evDate != null) '${weekdays[evDate.weekday - 1]}, ${evDate.day} ${months[evDate.month - 1]}',
+            if ((ev.venue ?? '').trim().isNotEmpty) ev.venue!.trim() else if ((ev.location ?? '').trim().isNotEmpty) ev.location!.trim(),
+          ].join(' · ');
     final partnerId = widget.conversation.partnerId;
     final online = partnerId != null && ref.watch(isOnlineProvider(partnerId));
     final responds = partnerId == null ? null : responseLabel(ref.watch(partnerPublicStatsProvider(partnerId)).value?.responseMinutes);
@@ -223,16 +265,18 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               name: widget.conversation.name,
               avatarUrl: widget.conversation.avatarUrl,
               // Online agora (presença) e "responde em ~1 h" (184).
-              subtitle: online
-                  ? ['Online', ?respondsLower].join(' · ')
-                  : partner == null
-                      ? null
-                      : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
-                          .join(' · '),
-              subtitleOnline: online,
+              // Pílula verde por baixo do nome (prancheta «Conversa»):
+              // «Online» ou «Responde em ~1 h».
+              pill: online ? (respondsLower == null ? 'Online' : 'Online · $respondsLower') : responds,
+              verified: partner != null,
+              subtitle: partner == null
+                  ? null
+                  : [if (partner.categoryLabels.isNotEmpty) partner.categoryLabels.first, if ((partner.location ?? '').isNotEmpty) partner.location!]
+                      .join(' · '),
               onOpenProfile: widget.conversation.partnerId == null
                   ? null
                   : _openPartnerProfile,
+              menu: widget.conversation.partnerId == null ? const [] : [('Pedir alteração', _requestChange)],
               onReport: () => showReportPicker(context, ref,
                   kind: ReportKind.message,
                   allowBlock: false,
@@ -253,9 +297,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 // reportado 2026-10-18).
                 : ChatEventIsland(
                     title: eventTitle,
-                    subtitle: hasProposal ? 'Proposta recebida' : (partner?.categoryLabels.firstOrNull),
-                    action: widget.conversation.partnerId == null ? null : 'Ver perfil',
-                    onAction: widget.conversation.partnerId == null ? null : _openPartnerProfile,
+                    subtitle: (eventLine ?? '').isEmpty ? null : eventLine,
+                    action: 'Ver evento',
+                    onAction: () => context.go('/home'),
                     child: JumpToLatest(
                     controller: _scrollController,
                     messageCount: chat.messages.length,
@@ -279,6 +323,19 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                           ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, imageUrl: widget.conversation.avatarUrl)
                           : message.isProposal
                           ? _ProposalCard(message: message, partnerId: widget.conversation.partnerId, partnerName: widget.conversation.name, conversationId: widget.conversation.id, imageUrl: widget.conversation.avatarUrl, onRequestNew: _openPartnerProfile)
+                          // Cartão do pedido (prancheta «Todos os cartões»).
+                          : message.isQuoteRequestNotice &&
+                                  (message.text ?? '').startsWith('Pediu um orçamento') &&
+                                  widget.conversation.eventId != null &&
+                                  widget.conversation.partnerId != null
+                          ? RequestCard(
+                              eventId: widget.conversation.eventId!,
+                              partnerId: widget.conversation.partnerId!,
+                              partnerSide: false,
+                              otherName: widget.conversation.name,
+                              eventTitle: eventTitle,
+                              eventLine: eventLine,
+                            )
                           : message.isQuoteRequestNotice
                           ? GestureDetector(
                               onTap: _openPartnerProfile,
@@ -300,25 +357,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
           ),
           ColoredBox(color: const Color(0xFFF2F2F2), child: _pendingTray(chat.messages)),
           ColoredBox(color: const Color(0xFFF2F2F2), child: ChatTypingLine(typing)),
-          if (widget.conversation.partnerId != null)
-            ColoredBox(
-              color: const Color(0xFFF2F2F2),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Row(children: [
-                  for (final q in const ['Posso visitar?', 'Pedir outra proposta', 'Obrigado!']) ...[
-                    _QuickReply(q, () => _quick(q)),
-                    const SizedBox(width: 8),
-                  ],
-                ]),
-              ),
-            ),
           ChatComposer(
             controller: _messageController,
             onSend: _send,
             onAttach: _attach,
             onChanged: (_) => ref.read(typingNowProvider('c:${widget.conversation.id}').notifier).typing(_myName()),
+            quickReplies: widget.conversation.partnerId == null ? const [] : const ['Posso visitar?', 'Obrigado!', 'Qual é o prazo?'],
+            onQuickReply: _quick,
           ),
         ],
       ),
@@ -391,14 +436,6 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
   String? _bookingState;
 
   /// Texto do botão depois de aceite, conforme o pagamento da reserva.
-  String get _acceptedLabel => switch (_bookingState) {
-        'deposit_paid' => 'Sinal pago',
-        'final_due' => 'Pagar restante',
-        'paid' => 'Tudo pago',
-        'completed' => 'Concluído',
-        'cancelled' => 'Reserva cancelada',
-        _ => 'Aceite · pagar sinal',
-      };
 
   void _acceptedFeedback() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -631,45 +668,100 @@ class _ProposalCardState extends ConsumerState<_ProposalCard> {
                 'cancelled' => ('Reserva cancelada', ChatCardTone.neutral),
                 _ => ('Aceite · falta o sinal', ChatCardTone.pending),
               };
+    // Cada estado como na prancheta «Todos os cartões» (2026-11-24/25).
+    final title = (message.proposalTitle ?? '').trim().isEmpty ? 'Proposta' : message.proposalTitle!.trim();
+    final total = message.proposalPrice == null
+        ? null
+        : totalWithCommission(message.proposalPrice!, message.proposalDepositAmount, pct);
+    final sinal = message.proposalDepositAmount == null ? null : withFee(message.proposalDepositAmount!);
+    final booked = _accepted && (_bookingState == 'deposit_paid' || _bookingState == 'paid' || _bookingState == 'completed');
+    final payDue = _accepted && (_bookingState == null || _bookingState == 'deposit_due');
+    if (_unavailable && !_accepted) {
+      // Recusada ou expirada.
+      return ChatProposalCard(
+        icon: Hi.xCircle,
+        imageUrl: widget.imageUrl,
+        status: 'Recusada ou expirada',
+        tone: ChatCardTone.neutral,
+        title: title,
+        subtitle: total == null ? null : euros(total),
+        price: null,
+        deposit: null,
+        actions: [ChatCardAction('Nova proposta', widget.onRequestNew)],
+      );
+    }
+    if (booked) {
+      return ChatProposalCard(
+        icon: Hi.checkCircle,
+        eyebrow: 'Reserva confirmada',
+        imageUrl: widget.imageUrl,
+        status: _bookingState == 'completed' ? 'Concluído' : (_bookingState == 'paid' ? 'Tudo pago' : 'Reservado'),
+        tone: _bookingState == 'completed' ? ChatCardTone.done : ChatCardTone.doneLine,
+        title: '${widget.partnerName} · ${event?.eventType.label ?? 'Evento'}',
+        subtitle: date == null ? null : '${date.day} ${months[date.month - 1]} ${date.year}',
+        price: null,
+        deposit: null,
+        rows: [if (sinal != null) ('Sinal', '${euros(sinal)} pago')],
+        note: 'Cancelamento com devolução até 48 h depois de pagar.',
+        actions: [ChatCardAction('Ver reserva', _openDetail)],
+      );
+    }
+    if (_accepted && _bookingState == 'cancelled') {
+      return ChatProposalCard(
+        icon: Hi.xCircle,
+        eyebrow: 'Reserva cancelada',
+        imageUrl: widget.imageUrl,
+        status: 'Cancelada',
+        tone: ChatCardTone.neutral,
+        title: '${widget.partnerName} · ${event?.eventType.label ?? 'Evento'}',
+        price: null,
+        deposit: null,
+        actions: [ChatCardAction('Nova proposta', widget.onRequestNew)],
+      );
+    }
+    if (_accepted) {
+      // Aceite: falta o sinal (ou o resto).
+      return ChatProposalCard(
+        imageUrl: widget.imageUrl,
+        status: status,
+        tone: tone,
+        title: title,
+        subtitle: heading == null ? null : 'Para o $heading',
+        price: null,
+        deposit: null,
+        rows: [
+          if (payDue && sinal != null) ('Sinal', euros(sinal)),
+          if (!payDue && total != null) ('A pagar', euros(total - (sinal ?? 0))),
+        ],
+        note: payDue ? 'Sem o sinal, o parceiro pode aceitar outro pedido.' : 'Sem o pagamento, a reserva é cancelada.',
+        actions: [
+          ChatCardAction(
+            payDue ? (sinal == null ? 'Pagar' : 'Pagar sinal · ${euros(sinal)}') : 'Pagar',
+            () => _openPay(pct),
+            primary: true,
+          ),
+        ],
+      );
+    }
     return ChatProposalCard(
       imageUrl: widget.imageUrl,
       status: status,
       tone: tone,
-      title: (message.proposalTitle ?? '').trim().isEmpty ? 'Proposta' : message.proposalTitle!.trim(),
+      title: title,
       subtitle: heading == null ? null : 'Para o $heading',
       // O cliente vê logo o que vai pagar: valor do parceiro + comissão
       // (mesma conta do checkout). Pedido 2026-10-17.
-      price: message.proposalPrice == null
-          ? null
-          : totalWithCommission(message.proposalPrice!, message.proposalDepositAmount, pct),
-      deposit: message.proposalDepositAmount == null ? null : withFee(message.proposalDepositAmount!),
-      note: pct > 0 ? 'Valores já com a taxa de serviço' : null,
+      price: total,
+      deposit: sinal,
+      note: pct > 0 ? 'Valores já com a taxa de serviço.' : null,
       actions: [
         // Por responder: «Recusar» + «Aceitar» (mockup 2026-11-21).
-        if (!_accepted && !_unavailable)
-          ChatCardAction('Recusar', _accepting ? null : _reject)
-        else
-          ChatCardAction('Ver detalhe', _openDetail),
-        if (_accepted && _bookingState == 'cancelled')
-          // Reserva cancelada: pode pedir uma proposta nova (2026-10-21).
-          ChatCardAction('Nova proposta', widget.onRequestNew, primary: true)
-        else if (_accepted)
-          // Já aceite: o passo seguinte é pagar o sinal nas Reservas.
-          ChatCardAction(
-            _acceptedLabel,
-            () => (_bookingState == null || _bookingState == 'deposit_due' || _bookingState == 'final_due')
-                ? _openPay(pct)
-                : _openDetail(),
-            primary: true,
-          )
-        else if (_unavailable)
-          const ChatCardAction('Indisponível', null, primary: true)
-        else
-          ChatCardAction(
-            _accepting ? 'A aceitar…' : 'Aceitar',
-            _accepting ? null : _accept,
-            primary: true,
-          ),
+        ChatCardAction('Recusar', _accepting ? null : _reject),
+        ChatCardAction(
+          _accepting ? 'A aceitar…' : 'Aceitar',
+          _accepting ? null : _accept,
+          primary: true,
+        ),
       ],
     );
   }
@@ -685,28 +777,6 @@ final _partnerReadProvider = FutureProvider.autoDispose.family<DateTime?, String
     return null;
   }
 });
-
-class _QuickReply extends StatelessWidget {
-  final String text;
-  final VoidCallback onTap;
-  const _QuickReply(this.text, this.onTap);
-
-  @override
-  Widget build(BuildContext context) => SnappyTap(
-        onTap: onTap,
-        child: Container(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          alignment: Alignment.center,
-          // Sem fundo, só o contorno (pedido 2026-11-12).
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(17),
-            border: Border.all(color: const Color(0xFFD6D0C2), width: 1.5),
-          ),
-          child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        ),
-      );
-}
 
 /// Folha "pagar ou pagar depois" a seguir a aceitar uma proposta
 /// (mockup «Parceiro — Reservar», artboard Reservar-pagar, 2026-11-17).

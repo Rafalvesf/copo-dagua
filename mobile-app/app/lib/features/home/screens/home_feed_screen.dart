@@ -8,7 +8,6 @@ import '../../../shared/public_link.dart';
 import '../../events/screens/eventos_screen.dart' show MyEventsCarousel;
 import '../../profile/profile_widgets.dart';
 import 'package:copo_dagua_app/shared/widgets/partner_notification_bell.dart';
-import 'package:copo_dagua_app/shared/widgets/count_badge.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/features/guest_home/widgets/guest_events_pill.dart';
 import '../../../shared/widgets/feedback.dart';
@@ -30,7 +29,6 @@ import '../../../shared/widgets/fading_scroll.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/push_opt_in.dart';
 import '../../../shared/widgets/first_run_tour.dart' show TourAnchor;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
@@ -70,15 +68,6 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     });
   }
 
-  void _openNotifications(BuildContext context) {
-    showIslandSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const _NotificationsSheet(),
-    );
-  }
-
   Future<void> _pickProfilePhoto() async {
     final picker = ImagePicker();
     final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
@@ -108,9 +97,6 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
     final guestMode = widget.guestMode || !organizer;
     final invited = guestMode ? (ref.watch(guestEventsProvider).value ?? const <GuestEvent>[]) : const <GuestEvent>[];
     final presenceId = widget.guestEventId ?? invited.firstOrNull?.eventId;
-    final unreadNotifications = ref.watch(
-      taskEngineControllerProvider.select((s) => s.unreadNotificationCount),
-    );
 
     return GradientScaffold(
       background: AppBackground.cream,
@@ -148,18 +134,10 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                               child: Text('Perfil',
                                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                             ),
+                            // O mesmo sino e popup em toda a app (prancheta
+                            // «Popup das notificações», 2026-11-25).
                             if (event != null)
-                              WithCount(
-                                count: unreadNotifications,
-                                child: TourAnchor(
-                                  id: 'bell',
-                                  child: _RoundIcon(
-                                    icon: const Icon(Hi.bell, size: 20, color: Colors.white),
-                                    tip: 'Notificações',
-                                    onTap: () => _openNotifications(context),
-                                  ),
-                                ),
-                              )
+                              const TourAnchor(id: 'bell', child: PartnerNotificationBell(round: true))
                             else
                               const PartnerNotificationBell(round: true),
                             const SizedBox(width: 10),

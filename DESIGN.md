@@ -288,7 +288,12 @@ ecrãs. O resto da app mantém a tabela acima.
   Mensagens, Conversa, Definições, Parceiro) os ícones de traço dos mockups
   (`LineIcon`) — menos dentro dos botões redondos, que levam sempre o ícone
   branco sólido (§2). Sem emojis (exceção: o "Parabéns! 🎉" do criar evento).
-- **Conversa:** bolha minha preta / dele branca, cantos 18 com o canto do lado
+- **Conversa** (prancheta «Conversa», 2026-11-24: cabeçalho branco com
+  cantos 35 em baixo, foto 40, nome 16 com o visto e a pílula verde
+  «Responde em ~1 h»; ilha do evento 52 numa linha com o calendário e «Ver
+  evento» preto 36; a hora 12 por baixo de **cada** mensagem; caixa de
+  escrever numa folha branca com cantos 35 em cima, as respostas rápidas
+  34 lá dentro, «+», caixa 48 e enviar):** bolha minha preta / dele branca, cantos 18 com o canto do lado
   a 6; dia numa pílula `#E6E6E6`; por baixo das minhas mensagens «hh:mm» e
   o ícone do estado (pedido 2026-11-24): **um visto cinzento** = enviada,
   **dois vistos verdes** `#4F6B4A` = vista (nos grupos, «Visto por N» em
@@ -299,12 +304,28 @@ ecrãs. O resto da app mantém a tabela acima.
   contador (§2) das mensagens que chegaram entretanto; leva à mais recente
   e desaparece lá em baixo. Em todas as conversas (parceiros, convidados e
   grupos).
+- **Cartões nas mensagens** (prancheta «Todos os cartões», 2026-11-25;
+  `ChatProposalCard`, `RequestCard`, `ChangeRequestCard`): branco, cantos 22,
+  ícone do tipo num círculo 28, título de grupo, pílula do estado, título 16,
+  meta 13, linhas rótulo/valor, nota 12 e botões 36. Cada lado vê o seu:
+  pedido (organizador «Editar pedido»; parceiro «Recusar» + «Enviar
+  proposta»), proposta (parceiro «Editar proposta»; organizador «Recusar» +
+  «Aceitar», depois «Pagar sinal · X»), reserva confirmada («Ver reserva»,
+  linha verde), alteração e outro dia (quem pede «Cancelar» + «Editar»; quem
+  recebe «Recusar» + «Aceitar»). Os popups «Editar pedido», «Enviar /
+  Editar proposta» e «Pedir alteração» (no «⋯» da conversa) estão em
+  `shared/widgets/deal_sheets.dart`.
+- **Notificações:** um só popup em toda a app (`PartnerNotificationBell`,
+  prancheta «Popup das notificações»): «Todas» / «Por ler», «Avisos no
+  telemóvel» com «Ativar», grupos HOJE / ESTA SEMANA / ANTES e o botão
+  «Pagar», «Ver proposta» ou «Ver».
 - **Teclado — regra** (pedido 2026-11-24): tudo o que tem uma caixa de
   escrever em baixo — a caixa da conversa, as barras fixas com campos e os
   popups (§6.1) — **sobe por cima do teclado**, para se ver sempre o que se
   escreve. Nunca `resizeToAvoidBottomInset: false` num ecrã com campos em
-  baixo; na web, o `#app-host` encolhe até ao topo do teclado
-  (`web/index.html`).
+  baixo; na web, o `#app-host` ocupa só a área visível acima do teclado
+  — topo e altura (`visualViewport`), porque no iPhone a área visível
+  também se desloca (`web/index.html`, 2026-11-24).
 - **Onboarding** (`shared/widgets/onb_kit.dart`, mockup "Onboarding"
   2026-11-12): barra de progresso (§6) de **10** com a percentagem (12
   negrito) à direita — começa sempre em 20%; botão de voltar redondo

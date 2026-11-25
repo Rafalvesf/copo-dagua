@@ -62,7 +62,7 @@ List<Widget> chatTimeline({
               decoration: BoxDecoration(color: const Color(0xFFE6E6E6), borderRadius: BorderRadius.circular(999)),
               child: Text(
                 _dayLabel(local),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733)),
               ),
             ),
           ),
@@ -70,25 +70,22 @@ List<Widget> chatTimeline({
       );
     }
     final me = isMine(m);
-    final next = i + 1 < messages.length ? messages[i + 1] : null;
-    final lastOfGroup = next == null ||
-        isMine(next) != me ||
-        next.sentAt.toLocal().difference(local).inMinutes > 10;
+    // Prancheta «Conversa» (2026-11-24): a hora por baixo de cada mensagem.
     out.add(
       Align(
         alignment: me ? Alignment.centerRight : Alignment.centerLeft,
         child: content(m, me),
       ),
     );
-    if (lastOfGroup) {
+    {
       // Grupos: «Visto por 4» em texto. Conversas a dois: o ícone (pedido
       // 2026-11-24) — um visto cinzento «enviada», dois verdes «vista».
       final groupSeen = me && seenLabel != null ? seenLabel(m) : '';
       final seenByOther = me && seenLabel == null && seenUntil != null && !seenUntil.isBefore(m.sentAt);
-      const meta = TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.inkMuted);
+      const meta = TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: AppTheme.inkMuted);
       out.add(
         Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          padding: const EdgeInsets.fromLTRB(4, 3, 4, 8),
           child: Align(
             alignment: me ? Alignment.centerRight : Alignment.centerLeft,
             child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -107,8 +104,6 @@ List<Widget> chatTimeline({
           ),
         ),
       );
-    } else {
-      out.add(const SizedBox(height: 8));
     }
   }
   return out;
@@ -205,7 +200,17 @@ class ChatProposalCard extends StatelessWidget {
     this.imageUrl,
     this.status,
     this.tone = ChatCardTone.neutral,
+    this.icon = Hi.tag,
+    this.rows = const [],
   });
+
+  /// Ícone do tipo no círculo 28 (prancheta «Todos os cartões»): pedido,
+  /// reserva, proposta, confirmada, recusada, pagamento, alteração, dia.
+  final IconData icon;
+
+  /// Linhas rótulo / valor (além de Total e Sinal): «Pessoas · 122»,
+  /// «Hora · 14:00 – 00:00», «Diferença · + 0 €».
+  final List<(String, String)> rows;
 
   /// Linha pequena por baixo dos valores (ex.: "Inclui a comissão …").
   final String? note;
@@ -251,7 +256,7 @@ class ChatProposalCard extends StatelessWidget {
               height: 28,
               decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
               alignment: Alignment.center,
-              child: const LineIcon('M3 3h8l10 10-8 8L3 11V3zM7 6.5a1 1 0 1 0 0 .01', size: 14, color: Color(0xFF3A3733), stroke: 2),
+              child: Icon(icon, size: 16, color: const Color(0xFF3A3733)),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -285,6 +290,7 @@ class ChatProposalCard extends StatelessWidget {
               child: Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ),
           const SizedBox(height: 10),
+          for (final r in rows) valueRow(r.$1, r.$2),
           if (price != null) valueRow('Total', euros(price!)),
           if (deposit != null) valueRow('Sinal para confirmar', euros(deposit!)),
           if (note != null) ...[
@@ -358,6 +364,11 @@ class ChatComposer extends StatelessWidget {
   /// A cada tecla (para o "está a escrever…").
   final ValueChanged<String>? onChanged;
 
+  /// Respostas rápidas por cima da caixa (pílulas 34 com contorno,
+  /// prancheta «Conversa»): tocar envia o texto.
+  final List<String> quickReplies;
+  final ValueChanged<String>? onQuickReply;
+
   /// Palavras bloqueadas (186): avisa e não envia.
   void _send(BuildContext context) {
     if (!WordFilter.allowed(controller.text)) {
@@ -374,76 +385,115 @@ class ChatComposer extends StatelessWidget {
     this.onAttach,
     this.hint = 'Escreve uma mensagem',
     this.onChanged,
+    this.quickReplies = const [],
+    this.onQuickReply,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Prancheta «Conversa» (2026-11-24): folha branca colada ao fundo,
+    // cantos 35 em cima, sombra da navbar; respostas rápidas, «+», caixa 48
+    // e enviar.
+    final input = Row(
+      children: [
+        if (onAttach != null) ...[
+          SnappyTap(
+            onTap: onAttach!,
+            child: Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+              child: const Icon(Hi.plus, size: 20, color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+        Expanded(
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            alignment: Alignment.centerLeft,
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              onSubmitted: (_) => _send(context),
+              textInputAction: TextInputAction.send,
+              style: const TextStyle(fontSize: 15, color: AppTheme.ink),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
+                isDense: true,
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Semantics(
+          button: true,
+          label: 'Enviar',
+          child: SnappyTap(
+            onTap: () => _send(context),
+            child: Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+              child: const Icon(Hi.paperAirplane, size: 20, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
     return Container(
-      // Sem linha por cima (pedido 2026-10-17).
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(35)),
+        boxShadow: [BoxShadow(color: AppTheme.ink.withValues(alpha: 0.12), blurRadius: 24, offset: const Offset(0, 8))],
+      ),
       child: SafeArea(
         top: false,
-        minimum: const EdgeInsets.only(bottom: 20),
+        minimum: const EdgeInsets.only(bottom: 24),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-          child: Row(
-            children: [
-              if (onAttach != null) ...[
-                SnappyTap(
-                  onTap: onAttach!,
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                    child: const Icon(Hi.plus, size: 20, color: Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  alignment: Alignment.centerLeft,
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                  ),
-                  child: TextField(
-                    controller: controller,
-                    onChanged: onChanged,
-                    onSubmitted: (_) => _send(context),
-                    textInputAction: TextInputAction.send,
-                    style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-                    decoration: InputDecoration(
-                      hintText: hint,
-                      isDense: true,
-                      filled: false,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            if (quickReplies.isNotEmpty && onQuickReply != null) ...[
+              SizedBox(
+                height: 34,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: quickReplies.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) => SnappyTap(
+                    onTap: () => onQuickReply!(quickReplies[i]),
+                    child: Container(
+                      height: 34,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(17),
+                        border: Border.all(color: AppTheme.ink, width: 1.5),
+                      ),
+                      child: Text(quickReplies[i],
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              SnappyTap(
-                onTap: () => _send(context),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.ink,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const LineIcon(LineIcon.sendUp, size: 18, color: Colors.white, stroke: 2.4),
-                ),
-              ),
+              const SizedBox(height: 10),
             ],
-          ),
+            input,
+          ]),
         ),
       ),
     );
