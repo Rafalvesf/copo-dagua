@@ -24,9 +24,9 @@ import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 /// Folha para comprar bilhetes de um evento pago (migração 149). Num evento
 /// privado vai com o [code] ou o [inviteToken] com que a pessoa entrou (153).
 Future<void> showBuyTicketSheet(BuildContext context, PublicEvent e, {String? code, String? inviteToken}) {
+  prewarmPayments();
   return showIslandSheet<void>(
-    // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
-    confirmExit: true,
+    // Bilhetes: sair não pergunta (pedido 2026-11-25).
     context: context,
     isScrollControlled: true,
     builder: (_) => _BuyTicketSheet(event: e, code: code, inviteToken: inviteToken),

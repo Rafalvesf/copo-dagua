@@ -498,7 +498,7 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 - **Sair pergunta só na reserva e no pagamento** (pedido do Rafael,
   2026-11-20; só nestes fluxos desde 2026-11-22): nos popups de **reservar
   / pedir orçamento** (escolher o evento, o fluxo de reserva, os extras) e
-  de **pagar** (pagamento em falta, bilhetes), tocar no «×», tocar fora ou
+  de **pagar** (pagamento em falta; nos bilhetes não pergunta, pedido 2026-11-25), tocar no «×», tocar fora ou
   puxar para baixo abre «Tens a certeza que queres sair?» («O que
   preencheste neste popup não fica guardado.») com «Sair» (contorno) e
   «Continuar» (preto, volta ao popup como estava). Esta pergunta não tem
