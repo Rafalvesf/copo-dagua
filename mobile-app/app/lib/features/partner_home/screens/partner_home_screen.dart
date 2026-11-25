@@ -15,6 +15,10 @@ import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_bookings/widgets/request_row.dart';
 import '../widgets/partner_promotion_card.dart';
+import '../widgets/partner_invite_card.dart';
+import '../../../shared/widgets/section_frame.dart';
+import '../../../shared/widgets/page_kit.dart';
+import '../../../shared/widgets/estrela.dart' show Estrela;
 import '../../../shared/money.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../core/partners/partner_pro.dart';
@@ -48,10 +52,6 @@ class PartnerHomeScreen extends ConsumerWidget {
     // do negócio, saudação, cartão verde com as vendas do mês, mosaicos de
     // cor com autocolantes e os pedidos novos em cartões brancos.
     final stats = ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.month)).value;
-    final pending = bookingsAsync.maybeWhen(
-      data: (list) => list.where((b) => b.status == BookingStatus.aceite || b.status == BookingStatus.emAnalise).length,
-      orElse: () => 0,
-    );
     final upcoming = bookingsAsync.maybeWhen(
       data: (list) {
         final now = DateTime.now();
@@ -74,14 +74,9 @@ class PartnerHomeScreen extends ConsumerWidget {
       },
       orElse: () => const <Booking>[],
     );
+    final toReply = (ref.watch(partnerReviewsProvider).value ?? const <Review>[]).where((r) => r.response == null).toList();
     final pro = ref.watch(myPartnerProProvider).value;
     final isPro = pro?.active ?? false;
-    // Canvas "Parceiros · Início Normal e Pro" (2026-11-07).
-    final yearStats = isPro ? ref.watch(partnerAnalyticsProvider(AnalyticsPeriod.year)).value : null;
-    // Pedido logo (não espera por saber se é Pro): sem Pro devolve vazio.
-    final proStatsAll = ref.watch(partnerProStatsProvider).value;
-    final proStats = isPro ? proStatsAll : null;
-    // Poupança da comissão −N% sobre as vendas do mês (estimativa).
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Stack(
@@ -98,13 +93,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                         child: Container(
                           height: 44,
                           padding: const EdgeInsets.fromLTRB(6, 0, 16, 0),
-                          decoration: isPro
-                              ? BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(color: _proInk, width: 1.5),
-                                )
-                              : BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -117,10 +106,6 @@ class PartnerHomeScreen extends ConsumerWidget {
                                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink),
                                 ),
                               ),
-                              if (isPro) ...[
-                                const SizedBox(width: 6),
-                                const _ProBadge(),
-                              ],
                             ],
                           ),
                         ),
@@ -163,83 +148,88 @@ class PartnerHomeScreen extends ConsumerWidget {
                       : 'Tens ${newRequests.length} ${newRequests.length == 1 ? 'pedido' : 'pedidos'} à espera de resposta.',
                   style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
                 ),
-                const SizedBox(height: 20),
-                // Rearranjo 2026-11-07 ("tem muitos botões"): o que precisa de
-                // resposta primeiro; depois vendas, a semana, o negócio (4
-                // mosaicos) e a montra numa lista. Canvas "Parceiros · Início".
-                // Responder primeiro sempre no topo, no Normal e no
-                // Premium (pedido 2026-11-08: "igual nos dois").
-                if (newRequests.isNotEmpty) ...[
-                  _RespondFirstCard(requests: newRequests),
-                  const SizedBox(height: 18),
-                ],
-                if (isPro && pro != null) ...[
-                  SnappyTap(
-                    onTap: () => context.push('/partner-stats'),
-                    child: _ProHero(stats: stats, year: yearStats, pending: pending),
-                  ),
-                  const SizedBox(height: 14),
-                  _ProStatsRow(stats: stats, pro: proStats),
-                ] else
-                SnappyTap(
-                  onTap: () => context.push('/partner-stats'),
-                  child: GreenHero(
-                    label: 'VENDAS ESTE MÊS',
-                    value: stats == null ? '—' : euros(stats.revenue),
-                    suffix: stats == null ? null : '${stats.bookings} ${stats.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'}',
-                    doodles: const [Hi.buildingStorefront, Hi.sparkles, Hi.heartOutline],
-                    footer: Wrap(spacing: 8, runSpacing: 8, children: [
-                      HeroPill('${newRequests.length} ${newRequests.length == 1 ? 'pedido novo' : 'pedidos novos'}'),
-                      HeroPill('$pending ${pending == 1 ? 'reserva pendente' : 'reservas pendentes'}', pending: true),
-                    ]),
-                  ),
-                ),
-                const SectionTitle('Esta semana'),
-                _WeekStrip(bookings: thisWeek),
-                const SectionTitle('O teu negócio'),
-                _BizGrid(items: [
-                  (Hi.calendarDays, 'Reservas',
-                      profile?.onboardingComplete == false
-                          ? 'Cria o perfil do negócio'
-                          : pending == 0 ? 'Tudo em dia' : '$pending ${pending == 1 ? 'pendente' : 'pendentes'}',
-                      '/partner-requests', newRequests.length),
-                  (
-                    Hi.calendarDays,
-                    'Calendário',
-                    thisWeek.isNotEmpty
-                        ? '${thisWeek.length} ${thisWeek.length == 1 ? 'evento' : 'eventos'} esta semana'
-                        : upcoming == null
-                            ? 'Sem eventos marcados'
-                            : 'Próximo: ${requestDateLabel(upcoming.eventDate)}',
-                    '/partner-calendar',
-                    0,
-                  ),
-                  (Hi.banknotes, 'Pagamentos', 'Saldo e levantamentos', '/partner-payments', 0),
-                  (Hi.documentText, 'Contratos', 'Reservas assinadas', '/partner-contracts', 0),
+                const SizedBox(height: 16),
+                // Painel com molduras (pedido 2026-11-25, mockup «Parceiro ·
+                // Início»): resumo do mês, Para fazer, Esta semana, Números,
+                // O teu negócio, A tua página e Convida e paga menos.
+                _MonthSummary(stats: stats, newRequests: newRequests.length, thisWeek: thisWeek.length),
+                _TodoFrame(requests: newRequests, reviews: toReply),
+                SectionFrame(title: 'Esta semana', children: [
+                  _WeekStrip(bookings: thisWeek),
+                  if (thisWeek.isEmpty)
+                    const FrameNote('Sem eventos nos próximos 7 dias.', top: 10)
+                  else
+                    KitGroup([
+                      for (final b in thisWeek.take(4))
+                        KitRow(
+                          lead: V2Avatar(b.clientName, size: 44, imageUrl: b.clientAvatarUrl),
+                          title: '${b.clientName} · ${b.eventType.label}',
+                          sub: [requestDateLabel(b.eventDate), if (b.people != null) '${b.people} pessoas'].join(' · '),
+                          trailing: FrameButton36('Ver', outlined: true, onTap: () => context.push('/partner-requests/${b.id}', extra: b)),
+                          onTap: () => context.push('/partner-requests/${b.id}', extra: b),
+                        ),
+                    ], top: 6),
                 ]),
-                const SectionTitle('A tua montra'),
-                _ValueList(items: [
-                  ('Serviços e preços', 'Pacotes', false, '/partner-pricing'),
-                  ('Portefólio', 'Fotos', false, '/partner-portfolio'),
-                  (
-                    'Loja',
-                    pro == null
-                        ? 'Produtos'
-                        : isPro
-                            ? '${pro.products} ${pro.products == 1 ? 'produto' : 'produtos'} · sem limite'
-                            : '${pro.products} de ${pro.freeShopProducts} produtos',
-                    !isPro && pro != null && pro.products >= pro.freeShopProducts - 1,
-                    '/partner-shop',
-                  ),
-                  (
-                    'Avaliações',
-                    stats?.averageRating == null ? 'Ainda sem' : '${stats!.averageRating!.toStringAsFixed(1).replaceAll('.', ',')} de 5',
-                    false,
-                    '/partner-reviews',
-                  ),
-                  ('Resultados', 'Pedidos e conversão', false, '/partner-stats'),
+                SectionFrame(title: 'Números', children: [
+                  FrameNumbers([
+                    FrameNumber('Pedidos', '${stats?.requests ?? 0}', _vs(stats?.requests, stats?.previousRequests),
+                        onTap: () => context.push('/partner-stats')),
+                    FrameNumber('Reservas', '${stats?.bookings ?? 0}', _vs(stats?.bookings, stats?.previousBookings),
+                        onTap: () => context.push('/partner-stats')),
+                    FrameNumber(
+                        'Nota',
+                        stats?.averageRating == null ? '—' : stats!.averageRating!.toStringAsFixed(1).replaceAll('.', ','),
+                        stats == null || stats.reviewCount == 0
+                            ? 'ainda sem avaliações'
+                            : '${stats.reviewCount} ${stats.reviewCount == 1 ? 'avaliação' : 'avaliações'}',
+                        onTap: () => context.push('/partner-reviews')),
+                    FrameNumber(
+                        'Conversão',
+                        stats == null || stats.requests == 0 ? '—' : '${(stats.accepted / stats.requests * 100).round()} %',
+                        'pedidos › reservas',
+                        onTap: () => context.push('/partner-stats')),
+                  ]),
                 ]),
-                const SizedBox(height: 18),
+                SectionFrame(title: 'O teu negócio', children: [
+                  KitGroup([
+                    KitSetRow(
+                        label: 'Calendário',
+                        value: upcoming == null ? 'Sem eventos' : 'Próx.: ${requestDateLabel(upcoming.eventDate)}',
+                        onTap: () => context.push('/partner-calendar')),
+                    KitSetRow(label: 'Pagamentos', value: 'Saldo', onTap: () => context.push('/partner-payments')),
+                    KitSetRow(label: 'Resultados', value: '30 dias', onTap: () => context.push('/partner-stats')),
+                    KitSetRow(
+                        label: 'Avaliações',
+                        value: toReply.isEmpty ? 'Em dia' : '${toReply.length} por responder',
+                        onTap: () => context.push('/partner-reviews')),
+                    KitSetRow(label: 'Contratos', value: 'Assinados', onTap: () => context.push('/partner-contracts')),
+                  ]),
+                ]),
+                // «A tua página» no Início (pedido 2026-11-25): o que os
+                // clientes veem e onde se muda.
+                SectionFrame(title: 'A tua página', children: [
+                  KitGroup([
+                    if (profile != null)
+                      KitSetRow(label: 'Ver como os clientes', onTap: () => context.push('/parceiro/${profile.id}')),
+                    KitSetRow(label: 'Serviços e preços', value: 'Pacotes', onTap: () => context.push('/partner-pricing')),
+                    KitSetRow(label: 'Portefólio', value: 'Fotos', onTap: () => context.push('/partner-portfolio')),
+                    KitSetRow(label: 'Disponibilidade', onTap: () => context.push('/partner-availability')),
+                    KitSetRow(label: 'Localização', onTap: () => context.push('/partner-location')),
+                    KitSetRow(label: 'Dados do negócio', onTap: () => context.push('/partner-business-info')),
+                    KitSetRow(label: 'Cancelamento', onTap: () => context.push('/partner-cancellation')),
+                    KitSetRow(
+                        label: 'Loja',
+                        value: pro == null
+                            ? 'Produtos'
+                            : isPro
+                                ? '${pro.products} ${pro.products == 1 ? 'produto' : 'produtos'}'
+                                : '${pro.products} de ${pro.freeShopProducts}',
+                        onTap: () => context.push('/partner-shop')),
+                  ]),
+                ]),
+                const SizedBox(height: 16),
+                const PartnerInviteCard(),
+                const SizedBox(height: 16),
                 // Mensalidade do Pro e convites passaram para as Definições
                 // (pedido 2026-11-16).
                 // Destaque pago (migração 155).
@@ -261,103 +251,108 @@ class PartnerHomeScreen extends ConsumerWidget {
 
 
 
-/// Responder primeiro (canvas "Parceiros · Início"): um cartão com os
-/// pedidos novos; o primeiro com Recusar / Enviar orçamento (ambos abrem
-/// o pedido, onde se confirma).
-class _RespondFirstCard extends StatelessWidget {
-  final List<Booking> requests;
-  const _RespondFirstCard({required this.requests});
+/// «+4 que no mês passado» a partir do número e do período anterior.
+String _vs(int? now, int? before) {
+  if (now == null) return '30 dias';
+  final d = now - (before ?? 0);
+  if (d == 0) return 'igual ao mês passado';
+  return '${d > 0 ? '+' : '−'}${d.abs()} que no mês passado';
+}
+
+/// Resumo do mês (destaque, linha preta 1,5 — DESIGN §4).
+class _MonthSummary extends StatelessWidget {
+  final PartnerAnalytics? stats;
+  final int newRequests;
+  final int thisWeek;
+  const _MonthSummary({required this.stats, required this.newRequests, required this.thisWeek});
 
   @override
   Widget build(BuildContext context) {
-    void open(Booking b) => context.push('/partner-requests/${b.id}', extra: b);
-    final shown = requests.take(2).toList();
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      decoration: softCard(),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(children: [
-          const Expanded(
-            child: Text('RESPONDER PRIMEIRO',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: Color(0xFFC2553D))),
-          ),
-          GestureDetector(
-            onTap: () => context.push('/partner-requests'),
-            child: Text('Ver todos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark)),
-          ),
-        ]),
-        for (final (i, b) in shown.indexed) ...[
-          if (i > 0) const Divider(height: 24, color: AppTheme.borderMuted),
-          if (i == 0) const SizedBox(height: 12),
-          SnappyTap(
-            onTap: () => open(b),
-            child: Row(children: [
-              V2Avatar(b.clientName, size: 40, imageUrl: b.clientAvatarUrl),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('${b.clientName} · ${b.eventType.label}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text([requestDateLabel(b.eventDate), if (b.city.isNotEmpty) b.city].join(' · '),
-                      style: const TextStyle(fontSize: 12.5, color: AppTheme.inkMuted)),
-                ]),
+    final s = stats;
+    return SnappyTap(
+      onTap: () => context.push('/partner-stats'),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppTheme.ink, width: 1.5),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('ESTE MÊS', style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          const SizedBox(height: 4),
+          Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+            Text(s == null ? '—' : euros(s.revenue),
+                style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(width: 8),
+            if (s != null)
+              Flexible(
+                child: Text('em ${s.bookings} ${s.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'}',
+                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFFFBEFD3), borderRadius: BorderRadius.circular(999)),
-                child: const Text('Novo', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF8A5A00))),
-              ),
-            ]),
-          ),
-          if (i == 0) ...[
-            const SizedBox(height: 12),
-            Row(children: [
-              Expanded(
-                flex: 2,
-                child: OutlinedButton(
-                  onPressed: () => open(b),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(44),
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    foregroundColor: AppTheme.ink,
-                    side: const BorderSide(color: AppTheme.ink, width: 1.5),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: const Text('Recusar', style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 3,
-                child: FilledButton(
-                  onPressed: () => open(b),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(44),
-                    backgroundColor: AppTheme.ink,
-                    foregroundColor: Colors.white,
-                    shape: const StadiumBorder(),
-                  ),
-                  child: const Text('Enviar orçamento', style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
-              ),
-            ]),
-          ],
-        ],
-        if (requests.length > 1) ...[
+          ]),
           const SizedBox(height: 10),
-          const Text('Responder em menos de 24 h ajuda-te a aparecer mais acima.',
-              style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-        ],
-      ]),
+          Wrap(spacing: 6, runSpacing: 6, children: [
+            KitTag('$newRequests ${newRequests == 1 ? 'pedido novo' : 'pedidos novos'}',
+                kind: newRequests > 0 ? KitTagKind.pending : KitTagKind.neutral),
+            KitTag('$thisWeek ${thisWeek == 1 ? 'evento' : 'eventos'} esta semana', kind: KitTagKind.neutral),
+          ]),
+        ]),
+      ),
+    );
+  }
+}
+
+/// Para fazer (os três estados do §4): pedidos por responder (vermelhos
+/// a 3 dias ou menos do evento) e avaliações por responder.
+class _TodoFrame extends StatelessWidget {
+  final List<Booking> requests;
+  final List<Review> reviews;
+  const _TodoFrame({required this.requests, required this.reviews});
+
+  @override
+  Widget build(BuildContext context) {
+    final n = requests.length + reviews.length;
+    return SectionFrame(
+      title: n == 0 ? 'Para fazer' : 'Para fazer · $n',
+      children: [
+        if (n == 0)
+          const FrameEmpty(
+            title: 'Está tudo tratado',
+            text: 'Pedidos respondidos e avaliações em dia.',
+            reaction: Estrela.piscar,
+          ),
+        for (final b in requests.take(4))
+          FrameTaskRow(
+            lead: V2Avatar(b.clientName, size: 44, imageUrl: b.clientAvatarUrl),
+            title: '${b.clientName} · ${b.eventType.label}',
+            sub: 'Pedido · ${requestDateLabel(b.eventDate)}',
+            action: 'Responder',
+            urgent: b.eventDate.difference(DateTime.now()).inDays <= 3,
+            onTap: () => context.push('/partner-requests/${b.id}', extra: b),
+          ),
+        if (requests.length > 4)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: FrameButton44('Ver os ${requests.length} pedidos', outlined: true, onTap: () => context.push('/partner-requests')),
+          ),
+        for (final r in reviews.take(2))
+          FrameTaskRow(
+            lead: V2Avatar(r.coupleDisplayName, size: 44),
+            title: r.coupleDisplayName,
+            sub: 'Avaliação de ${r.rating} ★ por responder',
+            action: 'Responder',
+            onTap: () => context.push('/partner-reviews'),
+          ),
+      ],
     );
   }
 }
 
 const _wd = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
 
-/// Esta semana: 3 dias em cartões; dias sem nada aparecem como "Livre".
+/// Esta semana: os 7 dias a partir de hoje; hoje a preto, com um ponto
+/// verde nos dias com eventos (mockup «Parceiro · Início»).
 class _WeekStrip extends StatelessWidget {
   final List<Booking> bookings;
   const _WeekStrip({required this.bookings});
@@ -365,309 +360,32 @@ class _WeekStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-    final cells = <(DateTime, Booking?)>[for (final b in bookings.take(3)) (b.eventDate, b)];
-    for (var d = 0; cells.length < 3 && d < 7; d++) {
-      final day = today.add(Duration(days: d));
-      final taken = bookings.any((b) => b.eventDate.year == day.year && b.eventDate.month == day.month && b.eventDate.day == day.day);
-      if (!taken && !cells.any((c) => c.$1 == day)) cells.add((day, null));
-    }
-    cells.sort((a, b) => a.$1.compareTo(b.$1));
     return Row(children: [
-      for (final (i, (day, b)) in cells.indexed) ...[
-        if (i > 0) const SizedBox(width: 8),
-        Expanded(
-          child: SnappyTap(
-            onTap: () => b == null ? context.push('/partner-calendar') : context.push('/partner-requests/${b.id}', extra: b),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: b == null
-                  ? BoxDecoration(color: const Color(0xFFEDEBE5), borderRadius: BorderRadius.circular(16))
-                  : softCard(radius: 16),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('${_wd[day.weekday - 1]} ${day.day}',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: b == null ? AppTheme.inkMuted : AppTheme.ink)),
-                const SizedBox(height: 3),
-                Text(b == null ? 'Livre' : b.eventType.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: b == null ? FontWeight.w700 : FontWeight.w700,
-                      color: b == null ? AppTheme.inkMuted : AppTheme.ink,
-                    )),
-                if (b != null)
-                  Text(b.city.isEmpty ? b.clientName : b.city,
-                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-              ]),
-            ),
-          ),
-        ),
+      for (var i = 0; i < 7; i++) ...[
+        if (i > 0) const SizedBox(width: 6),
+        Expanded(child: _day(context, today.add(Duration(days: i)), i == 0)),
       ],
     ]);
   }
-}
 
-/// O teu negócio: 4 cartões brancos com ícone de linha.
-class _BizGrid extends StatelessWidget {
-  final List<(IconData, String, String, String, int)> items;
-  const _BizGrid({required this.items});
-
-  @override
-  Widget build(BuildContext context) => GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.75,
-        children: [
-          for (final (icon, title, sub, route, badge) in items)
-            SnappyTap(
-              onTap: () => context.push(route),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: softCard(radius: 18),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Icon(icon, size: 22, color: AppTheme.accentOliveDark),
-                    const Spacer(),
-                    if (badge > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(color: AppTheme.accentOliveDark, borderRadius: BorderRadius.circular(999)),
-                        child: Text('$badge', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
-                      ),
-                  ]),
-                  const Spacer(),
-                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                ]),
-              ),
-            ),
-        ],
-      );
-}
-
-/// A tua montra: linhas com o nome à esquerda e o valor à direita.
-class _ValueList extends StatelessWidget {
-  final List<(String, String, bool, String)> items;
-  const _ValueList({required this.items});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        decoration: softCard(),
-        child: Column(children: [
-          for (final (i, (title, value, warn, route)) in items.indexed) ...[
-            if (i > 0) const Divider(height: 1, indent: 16, endIndent: 16, color: AppTheme.borderMuted),
-            Material(
-              type: MaterialType.transparency,
-              child: InkWell(
-                onTap: () => context.push(route),
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                  child: Row(children: [
-                    Expanded(child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-                    warn
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                            decoration: BoxDecoration(color: const Color(0xFFFBEFD3), borderRadius: BorderRadius.circular(999)),
-                            child: Text(value, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF8A5A00))),
-                          )
-                        : Text(value, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                  ]),
-                ),
-              ),
-            ),
-          ],
+  Widget _day(BuildContext context, DateTime day, bool on) {
+    final busy = bookings.any((b) => b.eventDate.year == day.year && b.eventDate.month == day.month && b.eventDate.day == day.day);
+    return SnappyTap(
+      onTap: () => context.push('/partner-calendar'),
+      child: Container(
+        height: 64,
+        decoration: BoxDecoration(color: on ? AppTheme.ink : Colors.white, borderRadius: BorderRadius.circular(16)),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Text(_wd[day.weekday - 1], style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.inkMuted)),
+          Text('${day.day}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+          const SizedBox(height: 2),
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: busy ? AppTheme.accentOliveDark : Colors.transparent, shape: BoxShape.circle),
+          ),
         ]),
-      );
-}
-
-// ---------- Pro (canvas "Parceiros · Início Normal e Pro") ----------
-
-// Premium com o estilo da app (pedido 2026-11-08): cartão verde da
-// app em vez de preto e dourado; destaques a branco.
-const _gold = Colors.white;
-const _goldInk = Color(0xFF4F6B4A);
-const _proInk = Color(0xFF4F6B4A);
-const _proMuted = Color(0xFFDDE5D3);
-const _proText = Color(0xFF171713);
-const _months = ['jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
-
-
-String _num(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1).replaceAll('.', ',');
-
-class _ProBadge extends StatelessWidget {
-  /// Em cima do cartão verde: selo branco com letras verdes.
-  final bool onGreen;
-  const _ProBadge({this.onGreen = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = onGreen ? Colors.white : _proInk;
-    final fg = onGreen ? _proInk : Colors.white;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(5, 3, 8, 3),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Hi.trophy, size: 12, color: fg),
-          const SizedBox(width: 3),
-          Text('PREMIUM', style: TextStyle(fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700, color: fg)),
-        ],
       ),
     );
   }
 }
-
-/// Vendas do mês em escuro, com a comparação ao período anterior e os
-/// últimos 7 meses.
-class _ProHero extends StatelessWidget {
-  final PartnerAnalytics? stats;
-  final PartnerAnalytics? year;
-  final int pending;
-  const _ProHero({required this.stats, required this.year, required this.pending});
-
-  @override
-  Widget build(BuildContext context) {
-    final s = stats;
-    final change = s == null || s.previousRevenue <= 0 ? null : (s.revenue - s.previousRevenue) / s.previousRevenue * 100;
-    final series = (year?.revenueSeries ?? const <AnalyticsPoint>[]);
-    final last = series.length > 7 ? series.sublist(series.length - 7) : series;
-    final maxV = last.fold<double>(0, (m, p) => p.value > m ? p.value : m);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: _proInk, borderRadius: BorderRadius.circular(28)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text('VENDAS ESTE MÊS',
-                    style: TextStyle(fontSize: 12, letterSpacing: 1.4, fontWeight: FontWeight.w700, color: _gold)),
-              ),
-              if (change != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: change >= 0 ? const Color(0xFFCFE3C2) : const Color(0xFFF3DEE0),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '${change >= 0 ? '+' : '−'}${_num(change.abs().roundToDouble())}% que o mês passado',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _proText),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(s == null ? '—' : euros(s.revenue),
-              style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
-          const SizedBox(height: 8),
-          Text(
-            s == null
-                ? ''
-                : '${s.bookings} ${s.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'} · $pending ${pending == 1 ? 'pendente' : 'pendentes'}',
-            style: const TextStyle(fontSize: 14, color: _proMuted),
-          ),
-          if (last.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 56,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  for (final (i, p) in last.indexed) ...[
-                    if (i > 0) const SizedBox(width: 10),
-                    Expanded(
-                      child: Container(
-                        height: maxV <= 0 ? 6 : 6 + 50 * (p.value / maxV),
-                        decoration: BoxDecoration(
-                          color: i == last.length - 1 ? _gold : const Color(0x40FFFFFF),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                for (final (i, p) in last.indexed) ...[
-                  if (i > 0) const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      _months[p.start.month - 1],
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: i == last.length - 1 ? FontWeight.w700 : FontWeight.w600,
-                        color: i == last.length - 1 ? _gold : _proMuted,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Visitas ao perfil, pedidos e conversão (últimos 30 dias).
-class _ProStatsRow extends StatelessWidget {
-  final PartnerAnalytics? stats;
-  final ProStats? pro;
-  const _ProStatsRow({required this.stats, required this.pro});
-
-  @override
-  Widget build(BuildContext context) {
-    final views = pro?.views30d;
-    final prev = pro?.viewsPrev30d ?? 0;
-    final viewsChange = views == null || prev <= 0 ? null : (views - prev) / prev * 100;
-    final requests = stats?.requests ?? pro?.requests30d;
-    final conversion = stats == null || stats!.requests == 0 ? null : stats!.accepted / stats!.requests * 100;
-    Widget cell(String label, String value, String? sub, {Color? subColor}) => Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: softCard(radius: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(fontSize: 11, letterSpacing: 0.6, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-                const SizedBox(height: 4),
-                Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                if (sub != null) Text(sub, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
-              ],
-            ),
-          ),
-        );
-    return GestureDetector(
-      onTap: () => context.push('/partner-stats'),
-      child: Row(
-        children: [
-          cell(
-            'VISITAS',
-            views == null ? '—' : '$views',
-            viewsChange == null ? '30 dias' : '${viewsChange >= 0 ? '+' : '−'}${_num(viewsChange.abs().roundToDouble())}%',
-            subColor: viewsChange == null ? null : (viewsChange >= 0 ? const Color(0xFF3F7A50) : const Color(0xFFB3261E)),
-          ),
-          const SizedBox(width: 8),
-          cell('PEDIDOS', requests == null ? '—' : '$requests', '30 dias'),
-          const SizedBox(width: 8),
-          cell('CONVERSÃO', conversion == null ? '—' : '${_num(conversion.roundToDouble())}%', 'pedidos › reservas'),
-        ],
-      ),
-    );
-  }
-}
-
