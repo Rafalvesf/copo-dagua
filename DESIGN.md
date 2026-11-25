@@ -371,6 +371,22 @@ ecrãs. O resto da app mantém a tabela acima.
   pequeno atraso entre blocos; com «reduzir movimento» ficam parados. Os
   painéis dos eventos (organizador, convidado, eventos reais) carregam com
   `SkeletonEventPanel` (capa, resumo e molduras).
+- **Animações da skill `animacoes`** (pedido 2026-11-25), todas paradas com
+  «reduzir movimento»:
+  - **Cartão que cresce até à página** (`ExpandOrigin` / `ExpandTransition`,
+    `core/page_transitions.dart`): tocar num cartão com foto (`PhotoCard`)
+    abre a página a crescer do sítio do cartão (caixa branca, cantos 22 → 0,
+    a página aparece dentro); ao voltar, encolhe para o mesmo sítio. As
+    outras páginas continuam a descer de cima.
+  - **Passos a deslizar** (`StepSlide`, `shared/widgets/step_slide.dart`):
+    onboarding (`OnbStep`), onboarding do parceiro, assistente do convidado
+    e popups de reservar — o passo novo entra do lado para onde se vai.
+  - **Palavra-passe errada abana** (`Shake`, `shared/widgets/shake.dart`) e
+    fica com a linha vermelha até se voltar a escrever.
+  - **Popups seguem o dedo** ao puxar para baixo e, se não fecharem, voltam
+    com uma mola que mantém a velocidade do dedo; **carrosséis e filas
+    horizontais** resistem nas pontas e voltam com mola
+    (`BouncingScrollPhysics`).
 - **Algarismos tabulares** (pedido 2026-11-25): os números que mudam ou
   se alinham — contadores (`CountBadge`), números 40 e 28 dos resumos e
   caixas, rodas, «−/+» e a percentagem do onboarding — usam

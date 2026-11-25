@@ -198,6 +198,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                               action: '${p.upcoming.length} ${p.upcoming.length == 1 ? 'evento' : 'eventos'}',
                             ),
                             SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
                               scrollDirection: Axis.horizontal,
                               clipBehavior: Clip.none,
                               padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),

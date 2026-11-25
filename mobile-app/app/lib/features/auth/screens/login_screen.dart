@@ -10,6 +10,7 @@ import '../../../core/auth/google_web_button.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/shake.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// "Início 5 · Entrar" — igual ao canvas.
@@ -24,6 +25,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _keep = true;
+  // Palavra-passe errada (skill `animacoes`, 2026-11-25): o campo abana e
+  // fica com a linha vermelha até se voltar a escrever.
+  int _shake = 0;
+  bool _wrong = false;
 
   @override
   void dispose() {
@@ -36,6 +41,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final loading = auth.status == AuthStatus.authenticating;
+    ref.listen(authControllerProvider.select((a) => a.status), (prev, next) {
+      if (next == AuthStatus.error && prev != AuthStatus.error) {
+        setState(() {
+          _shake++;
+          _wrong = true;
+        });
+      }
+    });
 
     return AuthPage(
       children: [
@@ -56,12 +69,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 topGap: 24,
                 autofillHints: const [AutofillHints.email, AutofillHints.username],
               ),
-              AuthField(
-                label: 'Password',
-                controller: _password,
-                hint: '••••••••',
-                password: true,
-                autofillHints: const [AutofillHints.password],
+              Shake(
+                trigger: _shake,
+                child: AuthField(
+                  label: 'Password',
+                  controller: _password,
+                  hint: '••••••••',
+                  password: true,
+                  errorText: _wrong ? '' : null,
+                  onChanged: (_) {
+                    if (_wrong) setState(() => _wrong = false);
+                  },
+                  autofillHints: const [AutofillHints.password],
+                ),
               ),
             ],
           ),

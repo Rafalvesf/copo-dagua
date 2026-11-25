@@ -496,6 +496,7 @@ class ChatComposer extends StatelessWidget {
               SizedBox(
                 height: 34,
                 child: ListView.separated(
+                  physics: const BouncingScrollPhysics(),
                   scrollDirection: Axis.horizontal,
                   itemCount: quickReplies.length,
                   separatorBuilder: (_, _) => const SizedBox(width: 8),

@@ -12,6 +12,7 @@ import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, Island
 import '../../../shared/widgets/snappy_tap.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/step_slide.dart';
 
 /// Pedido de reserva em passos (mockups «Reservar por categoria»,
 /// 2026-11-20/21) — o mesmo fluxo em todas as categorias: Para que evento?
@@ -1026,7 +1027,12 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
           const IslandCloseButton(),
         ]),
         const SizedBox(height: 16),
-        ...body,
+        // Passos a deslizar (skill `animacoes`, 2026-11-25).
+        StepSlide(
+          id: st,
+          order: _step,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: body),
+        ),
         const SizedBox(height: 20),
         // Em baixo só ações (o voltar está em cima, DESIGN.md §6.1).
         Row(children: [

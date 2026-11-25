@@ -377,6 +377,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, 0, 0),
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           scrollDirection: Axis.horizontal,
           child: Row(children: [
             _filterChip('Todas', _Filter.all),

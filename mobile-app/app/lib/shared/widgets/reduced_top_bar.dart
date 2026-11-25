@@ -140,6 +140,7 @@ class ReducedTopBar extends StatelessWidget {
                   color: AppTheme.background,
                   padding: const EdgeInsets.only(top: 10, bottom: 8),
                   child: ListView.separated(
+                    physics: const BouncingScrollPhysics(),
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
                     itemCount: present.length,

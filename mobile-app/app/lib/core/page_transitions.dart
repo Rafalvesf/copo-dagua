@@ -84,7 +84,7 @@ GoRoute tabRoute({
           key: state.pageKey,
           transitionDuration: _pushDuration,
           reverseTransitionDuration: _pushDuration,
-          transitionsBuilder: (context, a, s, c) => TopDownTransition(animation: a, child: c),
+          transitionsBuilder: (context, a, s, c) => PushTransition(animation: a, child: c),
           child: child,
         );
       }
@@ -263,8 +263,148 @@ class TopDownPageTransitionsBuilder extends PageTransitionsBuilder {
     // passa logo a ser a primeira da pilha, e a animação nunca aparecia.
     // A página inicial da app já não anima por si (o Navigator começa-a
     // completa).
-    return TopDownTransition(animation: animation, child: child);
+    return PushTransition(animation: animation, child: child);
   }
+}
+
+/// Cartão que cresce até à página (pedido 2026-11-25, vídeo do Rafael):
+/// ao tocar num cartão, guarda-se onde ele está ([capture]); a página que
+/// abre a seguir cresce desse retângulo até ao ecrã todo e, ao voltar,
+/// encolhe para o mesmo sítio. Só vale para a página aberta logo a seguir
+/// ao toque (até 0,8 s).
+class ExpandOrigin {
+  static Rect? _pending;
+  static DateTime? _at;
+
+  static void capture(BuildContext context) {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return;
+    _pending = box.localToGlobal(Offset.zero) & box.size;
+    _at = DateTime.now();
+  }
+
+  static Rect? _take() {
+    final fresh = _at != null && DateTime.now().difference(_at!) < const Duration(milliseconds: 800);
+    final r = fresh ? _pending : null;
+    _pending = null;
+    _at = null;
+    return r;
+  }
+}
+
+final Expando<Rect> _routeOrigin = Expando('origem');
+final Expando<bool> _routeDecided = Expando('decidida');
+
+Rect? _originFor(Route<dynamic>? route) {
+  if (route == null) return null;
+  if (_routeDecided[route] != true) {
+    _routeDecided[route] = true;
+    final r = ExpandOrigin._take();
+    if (r != null) _routeOrigin[route] = r;
+  }
+  return _routeOrigin[route];
+}
+
+/// Escolhe a animação de uma página aberta por um botão: a do cartão que
+/// cresce (se veio de um cartão) ou a de cima para baixo.
+class PushTransition extends StatelessWidget {
+  final Animation<double> animation;
+  final Widget child;
+  const PushTransition({super.key, required this.animation, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final origin = _originFor(ModalRoute.of(context));
+    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (origin == null || still || _fromBrowserBack) {
+      return TopDownTransition(animation: animation, child: child);
+    }
+    return ExpandTransition(animation: animation, origin: origin, child: child);
+  }
+}
+
+/// A caixa branca cresce do cartão até ao ecrã todo (cantos 22 → 0, com a
+/// sombra das barras) e a página aparece dentro dela; ao voltar, faz o
+/// caminho ao contrário. Só pinta (recorte e caixa), não muda o layout.
+class ExpandTransition extends StatefulWidget {
+  final Animation<double> animation;
+  final Rect origin;
+  final Widget child;
+  const ExpandTransition({super.key, required this.animation, required this.origin, required this.child});
+
+  @override
+  State<ExpandTransition> createState() => _ExpandTransitionState();
+}
+
+class _ExpandTransitionState extends State<ExpandTransition> {
+  Offset _at = Offset.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final b = context.findRenderObject();
+      if (!mounted || b is! RenderBox || !b.attached) return;
+      final o = b.localToGlobal(Offset.zero);
+      if (o != _at) setState(() => _at = o);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: widget.animation,
+      child: widget.child,
+      builder: (context, child) {
+        final v = widget.animation.value;
+        if (v >= 1) return child!;
+        final t = Curves.fastOutSlowIn.transform(v);
+        final fade = ((v - 0.2) / 0.45).clamp(0.0, 1.0);
+        return LayoutBuilder(builder: (context, c) {
+          final full = Offset.zero & c.biggest;
+          final rect = Rect.lerp(widget.origin.shift(-_at), full, t)!;
+          final rrect = RRect.fromRectAndRadius(rect, Radius.circular(22 * (1 - t)));
+          return CustomPaint(
+            painter: _GrowingBox(rrect),
+            child: ClipPath(
+              clipper: _RRectClip(rrect),
+              child: Opacity(opacity: fade, child: child),
+            ),
+          );
+        });
+      },
+    );
+  }
+}
+
+class _GrowingBox extends CustomPainter {
+  final RRect rrect;
+  _GrowingBox(this.rrect);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRRect(
+      rrect.shift(const Offset(0, 8)),
+      Paint()
+        ..color = const Color(0x1F171713)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+    );
+    canvas.drawRRect(rrect, Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(_GrowingBox old) => old.rrect != rrect;
+}
+
+class _RRectClip extends CustomClipper<Path> {
+  final RRect rrect;
+  _RRectClip(this.rrect);
+
+  @override
+  Path getClip(Size size) => Path()..addRRect(rrect);
+
+  @override
+  bool shouldReclip(_RRectClip old) => old.rrect != rrect;
 }
 
 const topDownPageTransitions = PageTransitionsTheme(

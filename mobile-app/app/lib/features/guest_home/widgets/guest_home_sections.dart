@@ -267,6 +267,7 @@ class GuestDayStrip extends StatelessWidget {
       SizedBox(
         height: 104,
         child: ListView.separated(
+          physics: const BouncingScrollPhysics(),
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.none,
           itemCount: items.length,
