@@ -62,6 +62,15 @@ final partnerByIdProvider = FutureProvider.family<Partner?, String>((
   return _partnerFromRow(rows.first);
 });
 
+/// O meu perfil de parceiro como os clientes o veem, mesmo antes de
+/// publicado (pedido 2026-11-25: o Perfil do parceiro é a mesma página que
+/// os organizadores veem). O próprio pode ler o seu perfil em qualquer estado.
+final myPartnerPageProvider = FutureProvider.family<Partner?, String>((ref, partnerId) async {
+  final rows = await _selectPartners((q) => q.eq('id', partnerId));
+  if (rows.isEmpty) return null;
+  return _partnerFromRow(rows.first);
+});
+
 Partner _partnerFromRow(Map<String, dynamic> row) {
   final categoryLinks =
       (row['partner_profile_categories'] as List?) ?? const [];

@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
-import '../../../core/partners/partner_providers.dart' show partnerByIdProvider;
+import '../../../core/partners/partner_providers.dart' show myPartnerPageProvider;
 import '../../partners/screens/partner_detail_screen.dart' show PartnerDetailScreen;
 
 import '../../../core/auth/auth_controller.dart';
@@ -60,8 +60,8 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
     // 2026-11-25, mockup «Perfil igual ao que os organizadores veem»), com
     // Editar / Partilhar, o sino e as Definições, e no fim o link e QR e o
     // Modo Pro. Antes de publicado, o perfil de sempre (com o estado).
-    final mine = profile == null ? null : ref.watch(partnerByIdProvider(profile.id)).value;
-    if (profile != null && mine != null && profile.partnerProfileStatus == 'published') {
+    final mine = profile == null ? null : ref.watch(myPartnerPageProvider(profile.id)).value;
+    if (profile != null && mine != null) {
       final name = (profile.businessName?.isEmpty ?? true) ? (profile.fullName ?? '') : profile.businessName!;
       return Stack(children: [
         PartnerDetailScreen(
@@ -93,6 +93,12 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
             ),
           ],
           ownerFooter: [
+            // Ainda não publicado: o estado da verificação e o que falta.
+            if (profile.partnerProfileStatus != null && profile.partnerProfileStatus != 'published') ...[
+              const _PaymentsRequiredCard(),
+              const SizedBox(height: 16),
+              _ReviewStatusCard(status: profile.partnerProfileStatus!, rejectionReason: profile.rejectionReason),
+            ],
             _MyLinkCard(partnerId: profile.id),
             SectionFrame(title: 'Modo Pro', children: [
               const FrameNote('Vê o que o Modo Pro inclui e quanto custa.'),

@@ -1,4 +1,4 @@
-import '../../../shared/widgets/opening_hours.dart' show OpeningHoursSection;
+import '../../../shared/widgets/opening_hours.dart' show OpeningHoursSection, OpeningHoursInline;
 import 'dart:math' as math;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -941,6 +941,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                           ),
                   ),
                 ),
+                // Horário resumido perto da bio (pedido 2026-11-25).
+                OpeningHoursInline(partnerId: partner.id),
                 if (onlyMessage || (alreadyRelated && canReserve && relationshipStatus != null))
                   Padding(
                     padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 0),
@@ -1038,6 +1040,8 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     ),
                   ),
                 ],
+                // Horário de funcionamento (241): antes de «Onde fica».
+                OpeningHoursSection(partnerId: partner.id, titleBuilder: (t) => sectionTitle(t)),
                 if (partner.location.isNotEmpty) ...[
                   KeyedSubtree(key: _mapKey, child: sectionTitle('Onde fica')),
                   // Sem caixa branca (B, 2026-11-22); o mapa é o do Google.
@@ -1057,8 +1061,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     ]),
                   ),
                 ],
-                // Horário de funcionamento (241, 2026-11-25).
-                OpeningHoursSection(partnerId: partner.id, titleBuilder: (t) => sectionTitle(t)),
                 KeyedSubtree(key: _reviewsKey, child: const SizedBox.shrink()),
                 _ReviewsSection(
                   partnerId: partner.id,
