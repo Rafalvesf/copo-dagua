@@ -131,12 +131,25 @@ jobs:
           # Ecrãs das últimas versões (para quem tem a app aberta numa
           # versão anterior): guarda as 20 mais recentes (2026-11-24: com várias
           # publicações por dia, 8 não chegavam para uma app aberta desde a véspera).
+          # 2026-11-25 («Não foi possível abrir» ainda aparece às vezes): no
+          # iPhone, a app no ecrã principal fica em pausa dias seguidos com a
+          # versão que tinha; com 20 versões guardadas, uma app aberta na
+          # véspera já não encontrava os seus ecrãs. Agora guarda os ecrãs
+          # (as partes, ~0,5 MB por versão) das últimas 100 versões e o
+          # main.dart.js (~5 MB) só das últimas 20 — uma app já aberta já
+          # tem o main.dart.js em memória, só lhe faltam os ecrãs.
           if [ -f "$OLD/v/list.txt" ]; then cp "$OLD/v/list.txt" build/web/v/list.txt; fi
           echo "$(git rev-parse --short HEAD)" >> build/web/v/list.txt
-          tail -n 20 build/web/v/list.txt > build/web/v/list.tmp && mv build/web/v/list.tmp build/web/v/list.txt
+          tail -n 100 build/web/v/list.txt > build/web/v/list.tmp && mv build/web/v/list.tmp build/web/v/list.txt
+          tail -n 20 build/web/v/list.txt > build/web/v/full.txt
           while read -r ver; do
-            if [ -n "$ver" ] && [ -d "$OLD/v/$ver" ] && [ ! -d "build/web/v/$ver" ]; then cp -a "$OLD/v/$ver" build/web/v/; fi
+            if [ -n "$ver" ] && [ -d "$OLD/v/$ver" ] && [ ! -d "build/web/v/$ver" ]; then
+              cp -a "$OLD/v/$ver" build/web/v/
+              if ! grep -qx "$ver" build/web/v/full.txt; then rm -f "build/web/v/$ver/main.dart.js"; fi
+            fi
           done < build/web/v/list.txt
+          rm -f build/web/v/full.txt
+          du -sh build/web/v || true
                     cat "$DEST/version.txt" 2>/dev/null || echo "backup sem version.txt (anterior a esta mudança)"
 
       # Site de apresentação, separado da app (pedido 2026-11):
