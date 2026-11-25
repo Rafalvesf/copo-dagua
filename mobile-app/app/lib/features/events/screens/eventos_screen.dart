@@ -63,7 +63,9 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   // Descobrir: procurar por nome ou zona e filtrar por data (2026-11).
   final _search = TextEditingController();
   _When _when = _When.any;
-  bool _free = false;
+
+  /// «Pago» ou «Grátis» (pedido 2026-11-25); nulo = os dois.
+  String? _price;
 
   @override
   void initState() {
@@ -78,7 +80,8 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   }
 
   bool _matches(PublicEvent e) {
-    if (_free && e.isPaid) return false;
+    if (_price == 'free' && e.isPaid) return false;
+    if (_price == 'paid' && !e.isPaid) return false;
     final q = _search.text.trim().toLowerCase();
     if (q.isNotEmpty) {
       final hay = [e.displayNames, e.venue ?? '', e.location ?? '', e.eventType.label].join(' ').toLowerCase();
@@ -90,14 +93,10 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     switch (_when) {
       case _When.any:
         return true;
-      case _When.week:
-        // Até ao próximo domingo (inclusive).
-        final end = today.add(Duration(days: 7 - today.weekday));
-        return d != null && !d.isBefore(today) && !d.isAfter(end);
+      case _When.today:
+        return d != null && d.year == today.year && d.month == today.month && d.day == today.day;
       case _When.month:
         return d != null && d.year == now.year && d.month == now.month && !d.isBefore(today);
-      case _When.next30:
-        return d != null && !d.isBefore(today) && d.isBefore(today.add(const Duration(days: 30)));
     }
   }
 
@@ -105,7 +104,8 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   /// Eventos reais (migração 222): os mesmos filtros do Descobrir. Um
   /// evento de vários dias conta enquanto não acabar.
   bool _matchesReal(ExternalEvent e) {
-    if (_free && !e.isFree) return false;
+    if (_price == 'free' && !e.isFree) return false;
+    if (_price == 'paid' && e.isFree) return false;
     final q = _search.text.trim().toLowerCase();
     if (q.isNotEmpty) {
       final hay = [e.title, e.venue ?? '', e.city, e.district ?? '', e.categoryLabel].join(' ').toLowerCase();
@@ -119,12 +119,10 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     switch (_when) {
       case _When.any:
         return true;
-      case _When.week:
-        return overlaps(today, today.add(Duration(days: 7 - today.weekday)));
+      case _When.today:
+        return overlaps(today, today);
       case _When.month:
         return overlaps(today, DateTime(now.year, now.month + 1, 0));
-      case _When.next30:
-        return overlaps(today, today.add(const Duration(days: 29)));
     }
   }
 
@@ -162,7 +160,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         final c = a.startsOn.compareTo(b.startsOn);
         return c != 0 ? c : (a.isFree == b.isFree ? 0 : (a.isFree ? -1 : 1));
       });
-    final filtering = _search.text.trim().isNotEmpty || _when != _When.any || _free;
+    final filtering = _search.text.trim().isNotEmpty || _when != _When.any || _price != null;
     final hasMine = myEvents.isNotEmpty || invited.isNotEmpty;
 
     // Os meus eventos por data: os próximos primeiro, os passados no fim.
@@ -232,15 +230,29 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
           children: [
+            // Só «Todos», «Hoje» e «Este mês» (pedido 2026-11-25).
             for (final w in _When.values) ...[
               _FilterChip(
-                label: w == _When.any ? 'Todos' : w.label,
+                label: w.label,
                 on: _when == w,
                 onTap: () => setState(() => _when = w),
               ),
               const SizedBox(width: 8),
             ],
-            _FilterChip(label: 'Grátis', on: _free, onTap: () => setState(() => _free = !_free)),
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+      // Por baixo, «Pago» ou «Grátis» (tocar outra vez tira o filtro).
+      SizedBox(
+        height: 40,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+          children: [
+            _FilterChip(label: 'Pago', on: _price == 'paid', onTap: () => setState(() => _price = _price == 'paid' ? null : 'paid')),
+            const SizedBox(width: 8),
+            _FilterChip(label: 'Grátis', on: _price == 'free', onTap: () => setState(() => _price = _price == 'free' ? null : 'free')),
           ],
         ),
       ),
@@ -628,17 +640,17 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) => SnappyTap(
         onTap: onTap,
         child: Container(
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            // Filtros iguais aos de Parceiros: verde quando escolhido.
+            // Filtros iguais aos de Parceiros (DESIGN §6): verde quando
+            // escolhido, branco sem contorno quando não.
             color: on ? AppTheme.accentOliveDark : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: on ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8)),
+            borderRadius: BorderRadius.circular(19),
           ),
           child: Text(label,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: on ? Colors.white : AppTheme.ink)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
         ),
       );
 }
@@ -1107,10 +1119,9 @@ class _InvitedEventCard extends ConsumerWidget {
 
 
 enum _When {
-  any('Qualquer data', 'Data'),
-  week('Esta semana', 'Esta semana'),
-  month('Este mês', 'Este mês'),
-  next30('Próximos 30 dias', '30 dias');
+  any('Todos', 'Todos'),
+  today('Hoje', 'Hoje'),
+  month('Este mês', 'Este mês');
 
   const _When(this.label, this.short);
   final String label;
