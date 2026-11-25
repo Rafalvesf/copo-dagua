@@ -1,3 +1,4 @@
+import '../../../shared/widgets/time_wheels.dart';
 import '../../../shared/widgets/opening_hours.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
@@ -135,14 +136,20 @@ class _PartnerAvailabilityScreenState extends ConsumerState<PartnerAvailabilityS
                       ],
                     ),
                   ),
-                  if (_travels)
-                    AuthField(
-                      label: 'Distância máxima de deslocação (km)',
-                      controller: _distance,
-                      hint: 'Ex.: 100',
-                      keyboardType: TextInputType.number,
-                      topGap: 20,
+                  if (_travels) ...[
+                    const SizedBox(height: 20),
+                    // Roda de números (pedido 2026-11-25).
+                    WheelNumberField(
+                      label: 'Até',
+                      value: int.tryParse(_distance.text.replaceAll(RegExp(r'[^0-9]'), '')),
+                      min: 5,
+                      max: 500,
+                      step: 5,
+                      unit: 'km',
+                      hint: 'Escolher a distância',
+                      onChanged: (v) => setState(() => _distance.text = '$v'),
                     ),
+                  ],
                   const SizedBox(height: 28),
                   AuthPrimaryButton(label: 'Guardar', loading: _saving, onPressed: _save),
                 ],

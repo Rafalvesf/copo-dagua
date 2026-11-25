@@ -232,3 +232,108 @@ Future<DateTime?> pickDateWheel(
     ),
   );
 }
+
+/// Escolher um número numa roda (idade, km, anos — pedido 2026-11-25):
+/// uma coluna com [unit] em cima. Devolve `null` se fechar sem escolher.
+Future<int?> pickNumberWheel(
+  BuildContext context, {
+  required String title,
+  required int min,
+  required int max,
+  int step = 1,
+  int? initial,
+  String unit = '',
+}) {
+  final options = [for (var v = min; v <= max; v += step) '$v'];
+  var value = '${initial == null ? min : ((initial - min) ~/ step * step + min).clamp(min, max)}';
+  return showIslandSheet<int>(
+    context: context,
+    builder: (c) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            GestureDetector(
+              onTap: () => Navigator.of(c).pop(),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                child: const Icon(Hi.xMark, size: 20, color: Colors.white),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          TimeWheels(columns: [
+            WheelColumn(label: unit.toUpperCase(), options: options, value: value, onChanged: (v) => value = v),
+          ]),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 52,
+            child: FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+              onPressed: () => Navigator.of(c).pop(int.parse(value)),
+              child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+            ),
+          ),
+        ]),
+      ),
+    ),
+  );
+}
+
+/// Campo com a roda de números: pílula 52 com o rótulo 13, o valor 15
+/// negrito («6 anos», «50 km») e a seta; tocar abre [pickNumberWheel].
+class WheelNumberField extends StatelessWidget {
+  final String label;
+  final int? value;
+  final int min;
+  final int max;
+  final int step;
+  final String unit;
+  final String? hint;
+  final ValueChanged<int> onChanged;
+  final Color fill;
+  const WheelNumberField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.min = 0,
+    this.max = 100,
+    this.step = 1,
+    this.unit = '',
+    this.hint,
+    this.fill = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: '$label: ${value == null ? 'por escolher' : '$value $unit'}',
+        child: GestureDetector(
+          onTap: () async {
+            final v = await pickNumberWheel(context, title: label, min: min, max: max, step: step, initial: value, unit: unit);
+            if (v != null) onChanged(v);
+          },
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(26)),
+            child: Row(children: [
+              Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  value == null ? (hint ?? 'Escolher') : '$value${unit.isEmpty ? '' : ' $unit'}',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: value == null ? AppTheme.inkMuted : AppTheme.ink),
+                ),
+              ),
+              const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
+            ]),
+          ),
+        ),
+      );
+}

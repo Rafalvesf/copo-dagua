@@ -1,3 +1,4 @@
+import '../../../shared/widgets/category_chips.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -369,17 +370,19 @@ class CategoryPickerDialogState extends State<CategoryPickerDialog> {
       title: const Text('Categorias'),
       content: SizedBox(
         width: double.maxFinite,
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        // 2 por linha, a dividir o espaço por igual (pedido 2026-11-25).
+        child: CategoryPillGrid(
           children: widget.options.map((option) {
             final selected = _selected.contains(option.id);
-            return FilterChip(
-              label: Text(option.label),
+            // Desenho fixo das categorias (2026-11-25): pílulas #F2F2F2 no popup.
+            return CategoryPill(
+              label: option.label,
               selected: selected,
-              onSelected: (value) {
+              fill: AppTheme.background,
+              expand: true,
+              onTap: () {
                 setState(() {
-                  if (value) {
+                  if (!selected) {
                     if (_selected.length < _maxCategories) _selected.add(option.id);
                   } else {
                     _selected.remove(option.id);

@@ -228,6 +228,18 @@ ecrãs. O resto da app mantém a tabela acima.
   **Exceção — Descobrir** (pedido 2026-11-25): «Todos / Hoje / Este mês»
   e, por baixo, «Pago / Grátis» têm a **altura da pesquisa (48, cantos
   24)** e **dividem a largura da pesquisa** pelas pílulas da mesma linha.
+- **Categorias — um só desenho** (pedido 2026-11-25, prancheta «Categorias
+  · desenho fixo»; `CategoryPill`, `CategoryTile`,
+  `shared/widgets/category_chips.dart`): **pílula** 38 / cantos 19 / 14
+  negrito com o texto ao centro (filtrar nos Parceiros, «Todos» fixo à
+  esquerda e a fila a deslizar); **mosaico** 3 colunas / 82 / cantos 22 /
+  ícone 24 + nome 12 negrito ao centro (onboarding do parceiro); **no
+  popup** as pílulas a #F2F2F2, **2 por linha a dividir o espaço por
+  igual**. Escolhida: verde com texto branco. Nunca `FilterChip`.
+- **Números na roda** (pedido 2026-11-25; `WheelNumberField`): idade das
+  crianças (0–17 anos), distância de deslocação (5–500 km) e anos de
+  experiência (0–60) — pílula 52 com o rótulo, o valor e a seta; abre a
+  roda.
 - **Etiquetas:** pílula, interior 10×5, 12 negrito, **sem contorno**; a
   neutra é `#E6E6E6` com texto `#3A3733` (nunca a cor do fundo da página).
 - **Fotos de perfil:** redondas, **planas** (sem aro nem sombra) — `V2Avatar`

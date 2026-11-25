@@ -1,3 +1,4 @@
+import '../../../shared/widgets/time_wheels.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../core/events/event_pass.dart' show myEventPassProvider, GuestSections;
@@ -668,6 +669,19 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                     };
                     if (p.menu != null && !(p.isChild ? _childMenus : _adultMenus).contains(p.menu)) p.menu = null;
                   }),
+                ),
+              // Idade de cada criança numa roda (pedido 2026-11-25).
+              for (final p in _people.where((p) => p.isChild))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: WheelNumberField(
+                    label: 'Idade de ${p == _me ? 'ti' : p.name.split(' ').first}',
+                    value: p.age,
+                    min: 0,
+                    max: 17,
+                    unit: 'anos',
+                    onChanged: (v) => setState(() => p.age = v),
+                  ),
                 ),
             ],
           ),

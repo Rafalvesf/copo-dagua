@@ -1,3 +1,4 @@
+import '../../../shared/widgets/time_wheels.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
@@ -758,7 +759,16 @@ class _CompanionFormState extends State<_CompanionForm> {
           ]),
           if (_group == 'child') ...[
             const SizedBox(height: 12),
-            TextField(controller: _age, keyboardType: TextInputType.number, decoration: _dec('Idade')),
+            // Roda de números (pedido 2026-11-25).
+            WheelNumberField(
+              label: 'Idade',
+              value: int.tryParse(_age.text.trim()),
+              min: 0,
+              max: 17,
+              unit: 'anos',
+              fill: AppTheme.background,
+              onChanged: (v) => setState(() => _age.text = '$v'),
+            ),
             const SizedBox(height: 4),
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
