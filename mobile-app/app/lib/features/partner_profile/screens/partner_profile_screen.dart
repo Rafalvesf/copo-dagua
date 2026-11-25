@@ -85,7 +85,7 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                   decoration: BoxDecoration(
                     color: AppTheme.ink,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    // Sem aro nos botões de navegação (pedido 2026-11-25).
                   ),
                   child: const Icon(Hi.cog6Tooth, size: 20, color: Colors.white),
                 ),

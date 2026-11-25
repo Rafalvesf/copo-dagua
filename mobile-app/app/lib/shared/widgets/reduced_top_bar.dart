@@ -220,7 +220,7 @@ class ReducedTopAction extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppTheme.ink,
               shape: BoxShape.circle,
-              border: _DarkScope.of(context) ? Border.all(color: Colors.white, width: 2) : null,
+              // Sem aro nos botões de navegação (pedido 2026-11-25).
             ),
             child: Icon(icon, size: 20, color: Colors.white),
           ),

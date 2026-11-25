@@ -64,7 +64,7 @@ class _Close extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppTheme.ink,
               shape: BoxShape.circle,
-              border: ring ? Border.all(color: Colors.white, width: 2) : null,
+              // Sem aro nos botões de navegação (pedido 2026-11-25).
             ),
             child: const Icon(Hi.xMark, size: 20, color: Colors.white),
           ),

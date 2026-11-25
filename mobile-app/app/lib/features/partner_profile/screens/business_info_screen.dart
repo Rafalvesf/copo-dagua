@@ -374,11 +374,10 @@ class CategoryPickerDialogState extends State<CategoryPickerDialog> {
         child: CategoryPillGrid(
           children: widget.options.map((option) {
             final selected = _selected.contains(option.id);
-            // Desenho fixo das categorias (2026-11-25): pílulas #F2F2F2 no popup.
+            // Desenho fixo das categorias (2026-11-25): preto e branco.
             return CategoryPill(
               label: option.label,
               selected: selected,
-              fill: AppTheme.background,
               expand: true,
               onTap: () {
                 setState(() {
