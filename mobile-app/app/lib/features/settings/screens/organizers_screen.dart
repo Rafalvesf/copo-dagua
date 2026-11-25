@@ -470,11 +470,17 @@ class _PermRow extends StatelessWidget {
 class PermissionGate extends ConsumerWidget {
   final OrganizerPerm perm;
   final Widget child;
-  const PermissionGate({super.key, required this.perm, required this.child});
+
+  /// O evento a que o ecrã pertence; sem ele, o evento aberto. Ecrãs com
+  /// vários eventos (Mensagens, Orçamento «Todos») não levam portão.
+  final String? eventId;
+  const PermissionGate({super.key, required this.perm, required this.child, this.eventId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
+    final id = eventId;
+    final perms = (id == null || id.isEmpty ? ref.watch(myEventPermsProvider) : ref.watch(eventPermsProvider(id))).value ??
+        OrganizerPerms.all;
     if (perms.can(perm)) return child;
     return GradientScaffold(
       background: AppBackground.subtle,
