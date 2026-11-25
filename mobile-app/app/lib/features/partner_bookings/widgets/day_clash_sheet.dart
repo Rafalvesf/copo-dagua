@@ -320,6 +320,18 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
       final r = widget.request;
       final picked = _days[_picked].$1;
       final text = _msg.text.trim();
+      if (!r.fromQuoteRequest) {
+        // Reserva já feita (vindo de «Cancelar reserva» → «O QUE PODES
+        // FAZER», 2026-11-25): o mesmo cartão, pela 233.
+        await supabase.rpc('request_booking_change', params: {
+          'p_booking': r.id,
+          'p_kind': 'date',
+          'p_to': '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}',
+          'p_message': text.isEmpty ? null : text,
+        });
+        if (mounted) Navigator.of(context).pop(true);
+        return;
+      }
       try {
         // Cartão «Proposta de outro dia» na conversa (migração 235):
         // aceite, o dia do pedido muda sozinho.
@@ -422,34 +434,36 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
                         ),
                       ),
                   ]),
-                const SizedBox(height: 16),
-                const Text('PREÇO', style: _caps),
-                const SizedBox(height: 8),
-                Wrap(spacing: 8, runSpacing: 8, children: [
-                  _pricePill(_current == null ? 'Mesmo preço' : 'Mesmo preço · ${euros(_current!)}', !_otherPrice,
-                      () => setState(() => _otherPrice = false)),
-                  _pricePill('Outro preço', _otherPrice, () => setState(() => _otherPrice = true)),
-                ]),
-                if (_otherPrice) ...[
+                if (r.fromQuoteRequest) ...[
+                  const SizedBox(height: 16),
+                  const Text('PREÇO', style: _caps),
                   const SizedBox(height: 8),
-                  Container(
-                    height: 52,
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
-                    child: Row(children: [
-                      const Text('Novo total', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextField(
-                          controller: _newTotal,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                          decoration: const InputDecoration(isCollapsed: true, border: InputBorder.none, hintText: '0'),
+                  Wrap(spacing: 8, runSpacing: 8, children: [
+                    _pricePill(_current == null ? 'Mesmo preço' : 'Mesmo preço · ${euros(_current!)}', !_otherPrice,
+                        () => setState(() => _otherPrice = false)),
+                    _pricePill('Outro preço', _otherPrice, () => setState(() => _otherPrice = true)),
+                  ]),
+                  if (_otherPrice) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 52,
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+                      child: Row(children: [
+                        const Text('Novo total', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: _newTotal,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                            decoration: const InputDecoration(isCollapsed: true, border: InputBorder.none, hintText: '0'),
+                          ),
                         ),
-                      ),
-                      const Text('€', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    ]),
-                  ),
+                        const Text('€', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                      ]),
+                    ),
+                  ],
                 ],
                 const SizedBox(height: 16),
                 Text('MENSAGEM PARA ${firstName.toUpperCase()}', style: _caps),
