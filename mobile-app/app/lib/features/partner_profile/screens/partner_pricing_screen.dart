@@ -1,3 +1,4 @@
+import '../../../shared/widgets/section_frame.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/page_kit.dart';
@@ -169,11 +170,14 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                         KitPill(label: 'Só orçamento', selected: !isPackages, onTap: _busy ? null : () => _setMode('quote_only')),
                       ]),
                       const SizedBox(height: 16),
+                      // Mockup «Parceiro · Serviços e preços» (2026-11-25):
+                      // cada parte numa moldura.
                       if (!isPackages)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                          child: Column(
+                        SectionFrame(
+                          title: 'Quanto pode custar',
+                          top: 0,
+                          children: [
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
@@ -189,100 +193,104 @@ class _PartnerPricingScreenState extends ConsumerState<PartnerPricingScreen> {
                               ),
                             ],
                           ),
-                        )
+                        ])
                       else ...[
-                        if (packages.isNotEmpty)
-                          KitGroup([
-                            for (final pkg in packages)
-                              KitRow(
-                                title: pkg.name,
-                                sub: [
-                                  '${pkg.isStartingPrice ? 'Desde ' : ''}${euros(pkg.price)}${priceUnitSuffix(pkg.priceUnit)}',
-                                  if (pkg.includes.isNotEmpty) '${pkg.includes.length} ${pkg.includes.length == 1 ? 'coisa incluída' : 'coisas incluídas'}',
-                                  if (pkg.description.trim().isNotEmpty) pkg.description.trim(),
-                                ].join(' · '),
-                                onTap: _busy ? null : () => _editPackage(pkg),
-                                trailing: IslandMenuButton<String>(
-                                  tooltip: 'Mais opções',
-                                  padding: EdgeInsets.zero,
-                                  icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
-                                  onSelected: (v) {
-                                    if (_busy) return;
-                                    if (v == 'edit') _editPackage(pkg);
-                                    if (v == 'delete') _removePackage(pkg);
-                                  },
-                                  itemBuilder: (_) => const [
-                                    PopupMenuItem(value: 'edit', child: Text('Editar')),
-                                    PopupMenuItem(value: 'delete', child: Text('Remover')),
-                                  ],
-                                ),
-                              ),
-                          ]),
-                        const SizedBox(height: 16),
-                        if (packages.length < _maxPackages)
-                          SnappyTap(
-                            onTap: _busy ? () {} : () => _addPackage(packages.length),
-                            child: Container(
-                              height: 52,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(color: AppTheme.ink, width: 1.5),
-                                borderRadius: BorderRadius.circular(AppRadius.pill),
-                              ),
-                              child: const Text(
-                                '+ Adicionar pacote',
-                                style: TextStyle(
-                                  color: AppTheme.ink,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                          ),
-                        // Extras (188): só aparecem ao cliente depois de ele
-                        // escolher um dos pacotes marcados.
-                        if (packages.isNotEmpty) ...[
-                          KitSection('Extras', action: '+ Adicionar', onAction: _busy ? null : () => _editExtra(packages, ref.read(partnerOwnExtrasProvider).value ?? const [])),
-                          const Text(
-                            'Aparecem ao cliente só depois de escolher um dos pacotes que marcares.',
-                            style: TextStyle(fontSize: 13, color: AppTheme.inkMuted),
-                          ),
-                          const SizedBox(height: 10),
-                          Builder(builder: (context) {
-                            final extras = ref.watch(partnerOwnExtrasProvider).value ?? const <ServiceExtra>[];
-                            if (extras.isEmpty) return const SizedBox.shrink();
-                            String where(ServiceExtra e) => e.packageIds.isEmpty
-                                ? 'Em todos os pacotes'
-                                : packages.where((p) => e.packageIds.contains(p.id)).map((p) => p.name).join(', ');
-                            return KitGroup([
-                              for (final e in extras)
-                                KitRow(
-                                  title: e.name,
-                                  sub: where(e),
-                                  onTap: _busy ? null : () => _editExtra(packages, extras, e),
-                                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                                    Text('${euros(e.price)}${priceUnitSuffix(e.priceUnit)}',
-                                        style: const TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
-                                    IslandMenuButton<String>(
+                        SectionFrame(
+                          title: packages.isEmpty ? 'Pacotes' : 'Pacotes · ${packages.length}',
+                          top: 0,
+                          children: [
+                            if (packages.isEmpty)
+                              const FrameNote('Ainda sem pacotes. Junta o primeiro para os clientes poderem reservar.'),
+                            if (packages.isNotEmpty)
+                              KitGroup([
+                                for (final pkg in packages)
+                                  KitRow(
+                                    title: pkg.name,
+                                    sub: [
+                                      '${pkg.isStartingPrice ? 'Desde ' : ''}${euros(pkg.price)}${priceUnitSuffix(pkg.priceUnit)}',
+                                      if (pkg.includes.isNotEmpty) '${pkg.includes.length} ${pkg.includes.length == 1 ? 'coisa incluída' : 'coisas incluídas'}',
+                                      if (pkg.description.trim().isNotEmpty) pkg.description.trim(),
+                                    ].join(' · '),
+                                    onTap: _busy ? null : () => _editPackage(pkg),
+                                    trailing: IslandMenuButton<String>(
                                       tooltip: 'Mais opções',
                                       padding: EdgeInsets.zero,
                                       icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
                                       onSelected: (v) {
                                         if (_busy) return;
-                                        if (v == 'edit') _editExtra(packages, extras, e);
-                                        if (v == 'delete') _removeExtra(e);
+                                        if (v == 'edit') _editPackage(pkg);
+                                        if (v == 'delete') _removePackage(pkg);
                                       },
                                       itemBuilder: (_) => const [
                                         PopupMenuItem(value: 'edit', child: Text('Editar')),
                                         PopupMenuItem(value: 'delete', child: Text('Remover')),
                                       ],
                                     ),
-                                  ]),
+                                  ),
+                              ]),
+                            if (packages.length < _maxPackages)
+                              SnappyTap(
+                                onTap: _busy ? () {} : () => _addPackage(packages.length),
+                                child: Container(
+                                  height: 44,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppTheme.ink, width: 1.5),
+                                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                                  ),
+                                  child: const Text(
+                                    '+ Adicionar pacote',
+                                    style: TextStyle(
+                                      color: AppTheme.ink,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                    ),
+                                  ),
                                 ),
+                              ),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                        // Extras (188): só aparecem ao cliente depois de ele
+                        // escolher um dos pacotes marcados.
+                        if (packages.isNotEmpty)
+                          Builder(builder: (context) {
+                            final extras = ref.watch(partnerOwnExtrasProvider).value ?? const <ServiceExtra>[];
+                            String where(ServiceExtra e) => e.packageIds.isEmpty
+                                ? 'Em todos os pacotes'
+                                : packages.where((p) => e.packageIds.contains(p.id)).map((p) => p.name).join(', ');
+                            return SectionFrame(title: extras.isEmpty ? 'Extras' : 'Extras · ${extras.length}', children: [
+                              const FrameNote('Aparecem ao cliente só depois de escolher um dos pacotes que marcares.'),
+                              if (extras.isNotEmpty)
+                                KitGroup([
+                                  for (final e in extras)
+                                    KitRow(
+                                      title: e.name,
+                                      sub: where(e),
+                                      onTap: _busy ? null : () => _editExtra(packages, extras, e),
+                                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                                        Text('${euros(e.price)}${priceUnitSuffix(e.priceUnit)}',
+                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                                        IslandMenuButton<String>(
+                                          tooltip: 'Mais opções',
+                                          padding: EdgeInsets.zero,
+                                          icon: const Icon(Hi.ellipsisHorizontal, size: 18, color: AppTheme.inkMuted),
+                                          onSelected: (v) {
+                                            if (_busy) return;
+                                            if (v == 'edit') _editExtra(packages, extras, e);
+                                            if (v == 'delete') _removeExtra(e);
+                                          },
+                                          itemBuilder: (_) => const [
+                                            PopupMenuItem(value: 'edit', child: Text('Editar')),
+                                            PopupMenuItem(value: 'delete', child: Text('Remover')),
+                                          ],
+                                        ),
+                                      ]),
+                                    ),
+                                ]),
+                              FrameButton44('+ Adicionar extra', outlined: true, onTap: _busy ? () {} : () => _editExtra(packages, extras)),
                             ]);
                           }),
-                        ],
                       ],
                       const SizedBox(height: 16),
                       const _FinalPaymentDaysCard(),

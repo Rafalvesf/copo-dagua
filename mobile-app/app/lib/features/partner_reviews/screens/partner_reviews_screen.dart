@@ -1,4 +1,4 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
+import '../../../shared/widgets/section_frame.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/gradient_mark.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/review_tile.dart';
@@ -113,28 +112,34 @@ class PartnerReviewsScreen extends ConsumerWidget {
                     // com a foto do casal e a resposta em conversa.
                     ReviewSummaryCard(reviews: reviews),
                     const SizedBox(height: 16),
+                    // Mockup «Parceiro · Avaliações» (2026-11-25): por
+                    // responder e respondidas, cada uma numa moldura.
                     if (reviews.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(24),
-                        child: InfoNote(
-                          'Ainda não tens avaliações.',
-                          icon: Hi.starOutline,
+                      const SectionFrame(title: 'Avaliações', children: [
+                        FrameEmpty(
+                          title: 'Ainda sem avaliações',
+                          text: 'Depois de cada evento, o cliente pode deixar a avaliação. Aparece aqui.',
                         ),
-                      )
+                      ])
                     else ...[
-                      if (reviews.any((r) => r.response == null))
-                        KitCaps('Por responder · ${reviews.where((r) => r.response == null).length}', top: 8),
-                      for (final r in reviews) ...[
-                        ReviewTile(
-                          review: r,
-                          partnerName: partnerName,
-                          partnerAvatarUrl: partnerAvatar,
-                          partnerSide: true,
-                          onRespond: () => _respond(context, ref, r),
-                          onReport: () => _report(context, ref, r),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
+                      for (final (label, list) in [
+                        ('Por responder', reviews.where((r) => r.response == null).toList()),
+                        ('Respondidas', reviews.where((r) => r.response != null).toList()),
+                      ])
+                        if (list.isNotEmpty)
+                          SectionFrame(title: '$label · ${list.length}', children: [
+                            for (final (i, r) in list.indexed) ...[
+                              if (i > 0) const SizedBox(height: 12),
+                              ReviewTile(
+                                review: r,
+                                partnerName: partnerName,
+                                partnerAvatarUrl: partnerAvatar,
+                                partnerSide: true,
+                                onRespond: () => _respond(context, ref, r),
+                                onReport: () => _report(context, ref, r),
+                              ),
+                            ],
+                          ]),
                     ],
                   ],
                 ),
