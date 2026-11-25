@@ -1,3 +1,4 @@
+import '../../settings/screens/organizers_screen.dart' show OrganizersBody;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,6 +34,9 @@ class InviteScreen extends ConsumerStatefulWidget {
 }
 
 class _InviteScreenState extends ConsumerState<InviteScreen> {
+  /// Pílula «Organizadores» escolhida.
+  bool _orgs = false;
+
   /// Quem sigo; null enquanto carrega ou se a migração 189 ainda não correu
   /// (aí não aparecem as pílulas).
   List<_Followed>? _followed;
@@ -196,9 +200,14 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
           // os organizadores convidam-se na página deles.
           if (event != null && event.ownerId == ref.watch(authControllerProvider).profile?.id)
             KitPills([
-              const KitPill(label: 'Convidados', selected: true),
-              KitPill(label: 'Organizadores', selected: false, onTap: () => context.push('/organizadores')),
+              KitPill(label: 'Convidados', selected: !_orgs, onTap: () => setState(() => _orgs = false)),
+              KitPill(label: 'Organizadores', selected: _orgs, onTap: () => setState(() => _orgs = true)),
             ]),
+          // Organizadores na mesma página: só muda o que está por baixo.
+          if (_orgs) ...[
+            const SizedBox(height: 12),
+            const OrganizersBody(),
+          ] else ...[
 
           // Por link — o link do evento, com o RSVP
           if (event != null)
@@ -258,6 +267,7 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
             const SizedBox(height: 24),
             const Text('Ainda não há convidados. Convida quem segues, ou partilha o link do evento.',
                 style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
+          ],
           ],
         ],
       ),
