@@ -1,3 +1,4 @@
+import '../../../shared/widgets/category_chips.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 
 import 'package:flutter/material.dart';
@@ -375,38 +376,22 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                 if (!widget.selectionMode)
                   categoryOptionsAsync.maybeWhen(
                     data: (options) {
-                      Widget pill(PartnerCategoryOption? o) {
-                        final on = o?.slug == _filter;
-                        return SnappyTap(
-                          onTap: () {
-                            setState(() => _filter = o?.slug);
-                            trackInterest(o?.slug, 'filter');
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            alignment: Alignment.center,
-                            // Sem sombra: a lista horizontal cortava-a e
-                            // ficava uma linha por baixo das pílulas.
-                            decoration: BoxDecoration(
-                              color: on ? AppTheme.accentOliveDark : Colors.white,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(o?.label ?? 'Todos',
-                                style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: on ? Colors.white : v2Muted)),
-                          ),
-                        );
-                      }
+                      // Desenho fixo das categorias (2026-11-25).
+                      Widget pill(PartnerCategoryOption? o) => CategoryPill(
+                            label: o?.label ?? 'Todos',
+                            selected: o?.slug == _filter,
+                            onTap: () {
+                              setState(() => _filter = o?.slug);
+                              trackInterest(o?.slug, 'filter');
+                            },
+                          );
 
                       // "Todos" fica preso à esquerda (pedido 2026-11) e as
                       // categorias deslizam e desaparecem por baixo dele.
                       const todosW = 72.0;
                       const fadeStart = AppTheme.screenMargin + todosW;
                       return SizedBox(
-                        height: 52,
+                        height: 56,
                         child: Padding(
                           padding: const EdgeInsets.only(top: 12, bottom: 6),
                           child: Stack(

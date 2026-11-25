@@ -1,3 +1,5 @@
+import '../../../shared/widgets/category_chips.dart';
+import '../../../shared/widgets/time_wheels.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:typed_data';
 
@@ -663,11 +665,11 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                     crossAxisCount: 3,
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
-                    mainAxisExtent: 80,
+                    mainAxisExtent: CategoryTile.height,
                   ),
                   children: [
                     for (final o in _categoryOptions)
-                      _CategoryTile(
+                      CategoryTile(
                         label: o.label,
                         icon: _categoryIcon(o.slug),
                         selected: _selectedCategoryIds.contains(o.id),
@@ -1015,11 +1017,14 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
         return _StepScaffold(
           question: 'Há quantos anos trabalhas nisto?',
           subtitle: 'Opcional, mas ajuda os clientes a confiar em ti.',
-          child: AuthTextField(
+          // Roda de números (pedido 2026-11-25).
+          child: WheelNumberField(
             label: 'Anos de experiência',
-            controller: _yearsExperience,
-            keyboardType: TextInputType.number,
-            onChanged: (_) => setState(() {}),
+            value: int.tryParse(_yearsExperience.text.trim()),
+            min: 0,
+            max: 60,
+            unit: 'anos',
+            onChanged: (v) => setState(() => _yearsExperience.text = '$v'),
           ),
         );
       case _Step.instagram:
@@ -1146,43 +1151,6 @@ IconData _categoryIcon(String slug) {
   if (s.contains('beleza') || s.contains('beauty')) return Hi.faceSmile;
   if (s.contains('convite') || s.contains('invit')) return Hi.envelope;
   return Hi.starOutline;
-}
-
-class _CategoryTile extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _CategoryTile({required this.label, required this.icon, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.accentOliveDark : AppTheme.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon, size: 20, color: selected ? Colors.white : AppTheme.accentOliveDark),
-            Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, height: 14 / 12, fontWeight: FontWeight.w700, color: selected ? Colors.white : AppTheme.ink),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _Pill extends StatelessWidget {
