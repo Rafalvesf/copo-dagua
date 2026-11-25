@@ -95,10 +95,15 @@
       // Listas de fontes e imagens por versão (2026-11-11: depois de
       // publicar os ícones novos, o telemóvel usava a lista antiga em cache
       // e os ícones não apareciam).
+      // 2026-11-25 (ícones reduzidos, «a app na web está muito lenta»): cada
+      // publicação leva só os ícones que a app usa, por isso o ficheiro de
+      // cada tipo de letra muda de versão para versão — todos os tipos de
+      // letra (.otf/.ttf) vão também com o ?v=, para nunca juntar a lista
+      // nova com um ficheiro antigo em cache (ícones a desaparecer).
       if (versioned && window.fetch) {
         var f0 = window.fetch.bind(window);
         window.fetch = function (input, init) {
-          if (typeof input === 'string' && /assets\/(FontManifest\.json|AssetManifest[^?/]*|fonts\/heroicons\/[^?]+)$/.test(input)) {
+          if (typeof input === 'string' && /assets\/(FontManifest\.json|AssetManifest[^?/]*|[^?]+\.(otf|ttf))$/.test(input)) {
             input = input + '?v=' + window.tchinBuild;
           }
           return f0(input, init);
