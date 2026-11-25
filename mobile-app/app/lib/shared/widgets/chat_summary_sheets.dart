@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/chat/group_chat.dart';
+import '../../core/event/event_controller.dart';
+import '../../core/guest_home/guest_home_providers.dart';
 import '../../core/models/models.dart';
 import '../../core/partners/partner_providers.dart';
 import '../../core/social/social.dart';
@@ -17,6 +19,30 @@ import 'v2_kit.dart';
 /// 2026-11-25; pranchetas «Conversa única com o parceiro · resumo dos
 /// trabalhos», «Grupo sem «Ver evento» · resumo do evento e quem está» e
 /// «Conversa entre pessoas · resumo»). Substituem a ilha «Ver evento».
+
+/// Abre um evento pelo id (pedido 2026-11-25: «os eventos no perfil das
+/// mensagens devem abrir o evento que se clicou»): quem organiza vai ao
+/// painel desse evento, o convidado à página de convidado, os outros à
+/// página pública.
+Future<void> openEventById(BuildContext context, WidgetRef ref, String eventId) async {
+  if (eventId.isEmpty) return;
+  final router = GoRouter.of(context);
+  final mine = ref.read(eventControllerProvider).events.any((e) => e.id == eventId);
+  if (mine) {
+    await ref.read(eventControllerProvider.notifier).select(eventId);
+    router.go('/evento');
+    return;
+  }
+  var guest = false;
+  try {
+    guest = (await ref.read(guestEventsProvider.future)).any((g) => g.eventId == eventId);
+  } catch (_) {}
+  if (guest) {
+    router.go('/guest-home/$eventId');
+  } else {
+    router.push('/evento/$eventId');
+  }
+}
 
 const _caps = TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted);
 
@@ -99,7 +125,10 @@ class _JobRow {
   final Color bg;
   final Color fg;
   final Color? line;
-  const _JobRow(this.title, this.meta, this.tag, this.bg, this.fg, [this.line]);
+  final String weddingId;
+  const _JobRow(this.title, this.meta, this.tag, this.bg, this.fg, [this.line, this.weddingId = '']);
+
+  _JobRow withWedding(String id) => _JobRow(title, meta, tag, bg, fg, line, id);
 }
 
 const _yellow = Color(0xFFF2A01B);
@@ -108,12 +137,15 @@ const _greenFg = Color(0xFF3F7A4F);
 const _neutralBg = Color(0xFFE6E6E6);
 const _neutralFg = Color(0xFF3A3733);
 
-Widget _jobGroup(List<_JobRow> rows) => Container(
+Widget _jobGroup(List<_JobRow> rows, {required void Function(_JobRow) onTap}) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
       child: Column(children: [
         for (var i = 0; i < rows.length; i++)
-          Container(
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => onTap(rows[i]),
+            child: Container(
             constraints: const BoxConstraints(minHeight: 64),
             padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
@@ -144,7 +176,10 @@ Widget _jobGroup(List<_JobRow> rows) => Container(
                 ),
                 child: Text(rows[i].tag, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: rows[i].fg)),
               ),
+              const SizedBox(width: 6),
+              const Icon(Hi.chevronRight, size: 16, color: AppTheme.inkMuted),
             ]),
+          ),
           ),
       ]),
     );
@@ -208,7 +243,7 @@ Future<_Jobs> _jobs({
     qByW.putIfAbsent(q['wedding_id'] as String, () => q);
   }
   final ws = {...bByW.keys, ...qByW.keys}.toList();
-  final rows = [for (final w in ws) _jobFrom(labels[w] ?? 'Evento', bByW[w], qByW[w])];
+  final rows = [for (final w in ws) _jobFrom(labels[w] ?? 'Evento', bByW[w], qByW[w]).withWedding(w)];
   var booked = 0.0;
   for (final b in bByW.values) {
     if (['confirmed', 'completed', 'awaiting_deposit'].contains(b['status'])) {
@@ -327,7 +362,10 @@ class _PartnerSummaryState extends ConsumerState<_PartnerSummary> {
         Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('TRABALHOS CONVOSCO · ${d.rows.length}', style: _caps),
           const SizedBox(height: 8),
-          _jobGroup(d.rows),
+          _jobGroup(d.rows, onTap: (r) {
+            Navigator.of(context).pop();
+            openEventById(context, ref, r.weddingId);
+          }),
         ]),
       _note('Todas as conversas com ${widget.name} ficam aqui, de todos os teus eventos.'),
       _btn('Ver perfil do parceiro', () {
@@ -408,7 +446,11 @@ class _ClientSummaryState extends ConsumerState<_ClientSummary> {
         Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('EVENTOS CONTIGO · ${d.rows.length}', style: _caps),
           const SizedBox(height: 8),
-          _jobGroup(d.rows),
+          _jobGroup(d.rows, onTap: (r) {
+            final router = GoRouter.of(context);
+            Navigator.of(context).pop();
+            router.push('/partner-requests');
+          }),
         ]),
       _note('Todas as conversas com $first ficam aqui, de todos os eventos.'),
       _btn('Ver perfil de $first', () {
@@ -762,9 +804,8 @@ class _PersonSummaryState extends ConsumerState<_PersonSummary> {
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    final router = GoRouter.of(context);
                     Navigator.of(context).pop();
-                    router.push('/group/${common[i].id}', extra: common[i]);
+                    openEventById(context, ref, common[i].eventId);
                   },
                   child: Container(
                     constraints: const BoxConstraints(minHeight: 64),
