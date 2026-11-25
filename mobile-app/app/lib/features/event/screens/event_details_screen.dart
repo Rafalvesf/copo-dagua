@@ -1,3 +1,5 @@
+import '../../../core/chat/group_chat.dart' show openEventGroup, eventGroupUnreadProvider;
+import '../../../shared/widgets/count_badge.dart' show WithCount;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'dart:async';
@@ -254,6 +256,10 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
               if (event.eventDate != null) formatShortDatePt(event.eventDate!),
             ].join(' · '),
             actions: [
+              ReducedTopAction(Hi.chatBubbleOvalLeft,
+                  label: 'Grupo do evento',
+                  onTap: () => _openEventGroup(context, ref, event.id),
+                  count: ref.watch(eventGroupUnreadProvider(event.id)).value ?? 0),
               ReducedTopAction(Hi.arrowUpOnSquare, label: 'Partilhar o convite', onTap: () => shareEventInvite(context, event)),
               ReducedTopAction(Hi.ellipsisHorizontal, label: 'Mais opções', onTap: () => showEventActionsSheet(context, ref,
                   eventId: event.id,
@@ -3366,6 +3372,11 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
             top: 12 + inset,
             child: Row(children: [
               const Spacer(),
+              WithCount(
+                count: ref.watch(eventGroupUnreadProvider(w.id)).value ?? 0,
+                child: _round(Hi.chatBubbleOvalLeft, 'Grupo do evento', () => _openEventGroup(context, ref, w.id)),
+              ),
+              const SizedBox(width: 8),
               _round(Hi.arrowUpOnSquare, 'Partilhar o convite', () => shareEventInvite(context, w)),
               const SizedBox(width: 8),
               // Arquivar ou apagar o evento (185).
@@ -4195,4 +4206,20 @@ class _OrgManage extends ConsumerWidget {
       ),
     ]);
   }
+}
+
+
+/// Grupo do evento no topo do painel do organizador, como no do convidado
+/// (pedido 2026-11-25): o balão com o número por ler; abre o grupo.
+Future<void> _openEventGroup(BuildContext context, WidgetRef ref, String eventId) async {
+  final g = await openEventGroup(eventId);
+  if (!context.mounted) return;
+  if (g != null) {
+    await context.push('/group/${g.id}', extra: g);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('O grupo do evento ainda não está disponível.')),
+    );
+  }
+  ref.invalidate(eventGroupUnreadProvider(eventId));
 }
