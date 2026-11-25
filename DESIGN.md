@@ -234,8 +234,10 @@ ecrãs. O resto da app mantém a tabela acima.
   negrito com o texto ao centro (filtrar nos Parceiros, «Todos» fixo à
   esquerda e a fila a deslizar); **mosaico** 3 colunas / 82 / cantos 22 /
   ícone 24 + nome 12 negrito ao centro (onboarding do parceiro); **no
-  popup** as pílulas a #F2F2F2, **2 por linha a dividir o espaço por
-  igual**. Escolhida: verde com texto branco. Nunca `FilterChip`.
+  popup** **2 por linha a dividir o espaço por igual**. **Preto e branco
+  com a linha preta 1,5** (pedido 2026-11-25, **só nas categorias**): não
+  escolhida branca com texto (e ícone) preto; escolhida preta com texto
+  (e ícone) branco. Nunca `FilterChip`.
 - **Números na roda** (pedido 2026-11-25; `WheelNumberField`): idade das
   crianças (0–17 anos), distância de deslocação (5–500 km) e anos de
   experiência (0–60) — pílula 52 com o rótulo, o valor e a seta; abre a
@@ -683,10 +685,9 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
 - **Sem foto** (pedido 2026-11-23, mockup «Perfis com contraste»): o topo do
   parceiro e o cartão de parceiro ficam **pretos** `#171713` com as
   **iniciais a branco**; o cartão de evento fica `#3A3733` com o símbolo do
-  tipo a branco. Sobre fundos escuros (fotos, topo preto) os botões redondos
-  pretos 44 levam um **aro branco 2** para se verem.
+  tipo a branco. Os botões redondos pretos 44 **não levam aro** (pedido 2026-11-25: «remove dos ícones de navegação»), nem sobre fotos ou o topo preto.
 - **Perfil do organizador:** faixa **preta** 200 no topo (botões
-  pretos 44 do §2 com aro branco 2 — voltar, partilhar, ⋯), a `ProfileCard_Users` por baixo
+  pretos 44 do §2, sem aro — voltar, partilhar, ⋯), a `ProfileCard_Users` por baixo
   dela (sem caixa branca, já não a sobrepõe), «Próximos eventos» em carrossel, «A seguir», e a barra fixa com
   «Mensagem» (contorno) e «Seguir» (preto) a 52.
 - **Moradas:** todos os campos de local (criar evento, local do evento,
@@ -835,7 +836,7 @@ Muito semelhante ao painel do convidado (§6.4), com as mesmas peças.
   **capa escurecida por trás** (`background`, véu `#171713` a 60 %; sem
   capa, `#3A3733`; pedido 2026-11-23 — também na página dos eventos reais)
   com a foto 32 (aro branco), o nome 16 e a meta 13 a branco, os botões 44
-  com aro branco 2 («Casamento · Sáb, 12 jun») e **os
+  sem aro («Casamento · Sáb, 12 jun») e **os
   mesmos botões do topo aberto** (pedido 2026-11-23) — organizador:
   partilhar e ⋯; convidado: o grupo do evento (com o contador) e «Como
   chegar»; perfil: partilhar e ⋯. Sem atalhos para as secções.
@@ -1060,7 +1061,7 @@ peças dos organizadores (§6).
 - **Perfil** (pedido 2026-11-25, mockup «Perfil igual ao que os
   organizadores veem»): com o perfil publicado, é **a mesma página do
   parceiro** que os organizadores abrem (§6.2) — no topo o sino e as
-  Definições (pretos 44 com aro branco) em vez de voltar / favorito;
+  Definições (pretos 44, sem aro) em vez de voltar / favorito;
   «Editar perfil» + «Partilhar perfil» em vez de Seguir + Mensagem; sem a
   barra de reservar; no fim «O TEU LINK E QR» e «MODO PRO». **Sempre esta
   página**, também antes de publicado (o estado da verificação vai no fim).

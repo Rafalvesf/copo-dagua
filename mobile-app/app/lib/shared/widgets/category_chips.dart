@@ -8,8 +8,9 @@ import 'snappy_tap.dart';
 /// «Categorias · desenho fixo»).
 
 /// Pílula de categoria (filtrar ou escolher): 38, cantos 19, texto 14
-/// negrito. Escolhida: verde #4F6B4A com texto branco. Não escolhida: [fill]
-/// (branca na página, #F2F2F2 dentro de popups), sem contorno.
+/// negrito, sempre com a linha preta 1,5 (pedido 2026-11-25: «preto e
+/// branco / branco e preto», só nas categorias). Não escolhida: branca com
+/// texto preto. Escolhida: preta com texto branco.
 class CategoryPill extends StatelessWidget {
   final String label;
   final bool selected;
@@ -43,8 +44,9 @@ class CategoryPill extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: selected ? AppTheme.accentOliveDark : fill,
+              color: selected ? AppTheme.ink : fill,
               borderRadius: BorderRadius.circular(19),
+              border: Border.all(color: AppTheme.ink, width: 1.5),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
               Flexible(
@@ -67,7 +69,7 @@ class CategoryPill extends StatelessWidget {
                   ),
                   child: Text('$count',
                       style: TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w700, color: selected ? AppTheme.accentOliveDark : Colors.white)),
+                          fontSize: 12, fontWeight: FontWeight.w700, color: selected ? AppTheme.ink : Colors.white)),
                 ),
               ],
             ]),
@@ -77,8 +79,9 @@ class CategoryPill extends StatelessWidget {
 }
 
 /// Mosaico de categoria (escolher, em grelha de 3 colunas): 82 de altura,
-/// cantos 22, ícone 24 e nome 12 negrito ao centro (até 2 linhas).
-/// Escolhido: verde com ícone e texto brancos.
+/// cantos 22, ícone 24 e nome 12 negrito ao centro (até 2 linhas), com a
+/// linha preta 1,5. Não escolhido: branco, ícone e texto pretos. Escolhido:
+/// preto com ícone e texto brancos.
 class CategoryTile extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -108,11 +111,12 @@ class CategoryTile extends StatelessWidget {
             height: height,
             padding: const EdgeInsets.symmetric(horizontal: 6),
             decoration: BoxDecoration(
-              color: selected ? AppTheme.accentOliveDark : fill,
+              color: selected ? AppTheme.ink : fill,
               borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppTheme.ink, width: 1.5),
             ),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Icon(icon, size: 24, color: selected ? Colors.white : AppTheme.accentOliveDark),
+              Icon(icon, size: 24, color: selected ? Colors.white : AppTheme.ink),
               const SizedBox(height: 6),
               Text(label,
                   maxLines: 2,

@@ -1757,7 +1757,7 @@ class _GlassButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppTheme.ink,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              // Sem aro nos botões de navegação (pedido 2026-11-25).
             ),
             child: icon,
           ),
