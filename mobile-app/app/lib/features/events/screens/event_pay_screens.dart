@@ -19,6 +19,7 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../payments/screens/pay_screen.dart' show PayScreen;
 import 'ticket_pass_screens.dart' show brandQr;
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 String _hhmm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
@@ -157,7 +158,7 @@ class _ScanScreenState extends State<ScanScreen> {
       Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, height: 1.4, color: AppTheme.ink)),
       if (r.result == 'error') ...[
         const SizedBox(height: 24),
-        FilledButton(onPressed: () => setState(() => _future = _scan()), child: const Text('Tentar outra vez')),
+        PressScale(child: FilledButton(onPressed: () => setState(() => _future = _scan()), child: const Text('Tentar outra vez'))),
       ],
     ];
   }
@@ -187,7 +188,7 @@ class _ScanScreenState extends State<ScanScreen> {
               alignment: Alignment.centerLeft,
               child: SizedBox(
                 height: 36,
-                child: OutlinedButton(
+                child: PressScale(child: OutlinedButton(
                   onPressed: () => context.push('/u/${r.profileId}'),
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -197,7 +198,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
                   child: const Text('Ver perfil', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                ),
+                )),
               ),
             ),
           ],
@@ -270,12 +271,12 @@ class _ScanScreenState extends State<ScanScreen> {
             Expanded(
               child: SizedBox(
                 height: 44,
-                child: FilledButton(
+                child: PressScale(child: FilledButton(
                   onPressed: _busy == null ? () => _confirm(r, i) : null,
                   child: _busy == key
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : Text(booking ? 'Registar chegada' : 'Registar entrada', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                ),
+                )),
               ),
             ),
           // Pagar no balcão (migração 229): o parceiro escreve o valor e
@@ -285,7 +286,7 @@ class _ScanScreenState extends State<ScanScreen> {
             Expanded(
               child: SizedBox(
                 height: 44,
-                child: OutlinedButton(
+                child: PressScale(child: OutlinedButton(
                   onPressed: () => context.push('/cobrar'),
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -294,7 +295,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     shape: const StadiumBorder(),
                   ),
                   child: const Text('Cobrar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                ),
+                )),
               ),
             ),
           ],
@@ -347,7 +348,7 @@ class _Button52 extends StatelessWidget {
       height: 52,
       width: double.infinity,
       child: outline
-          ? OutlinedButton(
+          ? PressScale(child: OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -356,8 +357,8 @@ class _Button52 extends StatelessWidget {
                 shape: const StadiumBorder(),
               ),
               child: child,
-            )
-          : FilledButton(
+            ))
+          : PressScale(child: FilledButton(
               onPressed: busy ? () {} : onTap,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -367,7 +368,7 @@ class _Button52 extends StatelessWidget {
                 shape: const StadiumBorder(),
               ),
               child: child,
-            ),
+            )),
     );
   }
 }
@@ -479,14 +480,14 @@ class _ChargeScreenState extends State<ChargeScreen> {
           content: const Text(
               'Para cobrar com QR tens de ativar os pagamentos na app (Stripe). É para lá que vai o dinheiro que recebes.'),
           actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Agora não')),
-            FilledButton(
+            PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Agora não'))),
+            PressScale(child: FilledButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
                 context.push('/partner-payments/setup');
               },
               child: const Text('Ativar pagamentos'),
-            ),
+            )),
           ],
         ),
       );
@@ -511,8 +512,8 @@ class _ChargeScreenState extends State<ChargeScreen> {
           title: const Text('Cancelar a cobrança?'),
           content: const Text('O QR deixa de funcionar e o cliente já não consegue pagar com ele.'),
           actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Continuar à espera')),
-            FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Cancelar cobrança')),
+            PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Continuar à espera'))),
+            PressScale(child: FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Cancelar cobrança'))),
           ],
         ),
       );

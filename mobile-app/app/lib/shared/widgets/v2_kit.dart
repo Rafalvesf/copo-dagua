@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
 import 'sticker_icon.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 export 'green_hero.dart' show GreenHero, HeroPill, SectionTitle;
 export 'sticker_icon.dart' show StickerIcon, DateSticker;
@@ -429,7 +430,7 @@ class V2BigButton extends StatelessWidget {
       height: 54,
       width: double.infinity,
       child: solid
-          ? FilledButton(
+          ? PressScale(child: FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -438,8 +439,8 @@ class V2BigButton extends StatelessWidget {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: _label(),
-            )
-          : OutlinedButton(
+            ))
+          : PressScale(child: OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
@@ -448,7 +449,7 @@ class V2BigButton extends StatelessWidget {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: _label(),
-            ),
+            )),
     );
   }
 

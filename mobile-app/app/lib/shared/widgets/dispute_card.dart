@@ -7,6 +7,7 @@ import '../../core/supabase/supabase_config.dart';
 import '../../core/theme/app_theme.dart';
 import 'island_sheet.dart';
 import 'v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Disputas (migração 109, 2026-10-20): o organizador ou o parceiro abrem
 /// uma disputa sobre uma reserva confirmada ou concluída; a equipa À Nossa!
@@ -93,7 +94,7 @@ class DisputeCard extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
       ],
-      TextButton.icon(
+      PressScale(child: TextButton.icon(
         onPressed: () async {
           final opened = await showIslandSheet<bool>(
             context: context,
@@ -105,7 +106,7 @@ class DisputeCard extends ConsumerWidget {
         icon: const Icon(Hi.flag, size: 18),
         label: const Text('Há um problema com esta reserva? Abrir disputa'),
         style: TextButton.styleFrom(foregroundColor: v2Muted),
-      ),
+      )),
     ]);
   }
 
@@ -219,7 +220,7 @@ class _OpenDisputeSheetState extends State<_OpenDisputeSheet> {
           Text(_error!, style: const TextStyle(color: Color(0xFFA3412E), fontSize: AppFontSize.sm)),
         ],
         const SizedBox(height: 16),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: _busy ? null : _submit,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(50),
@@ -227,7 +228,7 @@ class _OpenDisputeSheetState extends State<_OpenDisputeSheet> {
             shape: const StadiumBorder(),
           ),
           child: Text(_busy ? 'A enviar…' : 'Enviar disputa'),
-        ),
+        )),
       ]),
     );
   }

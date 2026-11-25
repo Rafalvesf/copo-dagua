@@ -42,6 +42,10 @@ de progresso, verde clarinho, §6). **Nunca** para botões.
 - **Principal:** fundo preto `#171713`, texto branco.
 - **Secundário:** fundo branco, contorno preto 1,5 px, texto preto.
 - Sempre em **pílula** (`StadiumBorder`).
+- **Ao carregar, encolhem para 0,97** e voltam em 150 ms (ease-out), sem
+  ressalto; parados com «reduzir movimento» (skill `animacoes`, pedido
+  2026-11-25). Os botões da app já o fazem (`SnappyTap`); os do Material vão
+  sempre dentro de `PressScale` (`shared/widgets/press_scale.dart`).
 - Altura: **52** a toda a largura; **44** dentro de cartões; **36** nas linhas
   de lista ("A seguir", "Ver evento"); **34** nas respostas rápidas.
 - Texto: 15 negrito (52), 14 negrito (44), 13 negrito (36/34).

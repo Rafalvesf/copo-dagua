@@ -23,6 +23,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/page_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// "O meu perfil" — pedido explícito do utilizador (mockup de
 /// referência): o próprio convidado a ver/editar a sua presença
@@ -140,11 +141,11 @@ class _GuestProfileBody extends ConsumerWidget {
         title: Text(title),
         content: TextField(controller: controller, autofocus: true),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-          FilledButton(
+          PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))),
+          PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text.trim()),
             child: const Text('Guardar'),
-          ),
+          )),
         ],
       ),
     );
@@ -544,10 +545,10 @@ class _ProfileRow extends StatelessWidget {
             ),
           ),
           if (onEdit != null)
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: onEdit,
               child: Text(actionLabel, style: TextStyle(color: AppTheme.accentOliveDark, fontWeight: FontWeight.w700)),
-            ),
+            )),
         ],
       ),
     );
@@ -802,11 +803,11 @@ class _CompanionFormState extends State<_CompanionForm> {
           const SizedBox(height: 18),
           V2BigButton(label: widget.existing == null ? 'Adicionar acompanhante' : 'Guardar', onTap: _save),
           if (widget.existing != null)
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: () => Navigator.of(context).pop(const GuestCompanion(name: '')),
               style: TextButton.styleFrom(foregroundColor: const Color(0xFFA3412E)),
               child: const Text('Remover acompanhante', style: TextStyle(fontWeight: FontWeight.w700)),
-            ),
+            )),
         ],
       ),
     );

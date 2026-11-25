@@ -25,6 +25,7 @@ import '../../guest_home/screens/guest_onboarding_wizard_screen.dart';
 import '../widgets/invite_envelope.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Convite do evento (`/invite/<código>`) — o mesmo para todos, na app e
 /// no browser (canvas "Envelope do convite", 2026-11-07):
@@ -414,7 +415,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           if (native) ...[
             PrimaryButton(label: 'Criar conta', onPressed: () => _createAccount(ev)),
             const SizedBox(height: 4),
-            TextButton(onPressed: () => context.push('/login'), child: const Text('Já tenho conta')),
+            PressScale(child: TextButton(onPressed: () => context.push('/login'), child: const Text('Já tenho conta'))),
           ] else ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -444,7 +445,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           const SizedBox(height: 14),
           SizedBox(
             height: 54,
-            child: FilledButton.tonal(
+            child: PressScale(child: FilledButton.tonal(
               onPressed: () => setState(() => _stage = _Stage.invite),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.blue,
@@ -453,7 +454,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 16, fontWeight: FontWeight.w700),
               ),
               child: const Text('Continuar aqui'),
-            ),
+            )),
           ),
         ]),
       ),
@@ -494,7 +495,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                 const SizedBox(height: 12),
                 SizedBox(
                   height: 48,
-                  child: FilledButton.icon(
+                  child: PressScale(child: FilledButton.icon(
                     onPressed: () => showNavigationSheet(
                       context,
                       label: ev.venue ?? ev.displayNames,
@@ -510,12 +511,12 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                       shape: const StadiumBorder(),
                       textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w700),
                     ),
-                  ),
+                  )),
                 ),
                 if ((ev.address ?? ev.location) != null) ...[
                   const SizedBox(height: 4),
                   Center(
-                    child: TextButton.icon(
+                    child: PressScale(child: TextButton.icon(
                       onPressed: () {
                         copyText(ev.address ?? ev.location!);
                         _snack('Morada copiada.');
@@ -526,7 +527,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                         foregroundColor: AppTheme.accentOliveDark,
                         textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 14, fontWeight: FontWeight.w700),
                       ),
-                    ),
+                    )),
                   ),
                 ],
               ],
@@ -617,7 +618,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: PressScale(child: OutlinedButton(
                   onPressed: _busy ? null : () => _respond(ev, attending: false),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 54),
@@ -626,12 +627,12 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     shape: const StadiumBorder(),
                   ),
                   child: const Text('Não vou poder'),
-                ),
+                )),
               ),
               const SizedBox(width: 10),
               Expanded(
                 flex: 7,
-                child: FilledButton(
+                child: PressScale(child: FilledButton(
                   onPressed: _busy ? null : () => _respond(ev, attending: true),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 54),
@@ -641,7 +642,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   child: _busy
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
                       : const Text('Confirmar presença'),
-                ),
+                )),
               ),
             ],
           ),
@@ -704,10 +705,10 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
               const SizedBox(height: 6),
               Align(
                 alignment: Alignment.centerLeft,
-                child: TextButton(
+                child: PressScale(child: TextButton(
                   onPressed: _busy ? null : () => _respond(ev, attending: true),
                   child: const Text('Alterar resposta'),
-                ),
+                )),
               ),
             ],
           ),
@@ -743,7 +744,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: FilledButton(
+                      child: PressScale(child: FilledButton(
                         onPressed: () => _createAccount(ev),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(0, 44),
@@ -751,12 +752,12 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                           shape: const StadiumBorder(),
                         ),
                         child: Text(kIsWeb && !widget.fromInstall ? 'Criar conta aqui' : 'Criar conta'),
-                      ),
+                      )),
                     ),
                     if (kIsWeb && !widget.fromInstall) ...[
                       const SizedBox(width: 8),
                       Expanded(
-                        child: OutlinedButton(
+                        child: PressScale(child: OutlinedButton(
                           onPressed: () => _downloadApp(ev),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(0, 44),
@@ -765,7 +766,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                             shape: const StadiumBorder(),
                           ),
                           child: const Text('Ter a app'),
-                        ),
+                        )),
                       ),
                     ],
                   ],
@@ -775,10 +776,10 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
           ),
         ],
         const SizedBox(height: 22),
-        TextButton(
+        PressScale(child: TextButton(
           onPressed: () => setState(() => _stage = _Stage.invite),
           child: const Text('Ver o convite'),
-        ),
+        )),
       ],
     );
   }
@@ -1060,7 +1061,7 @@ class _CodeBox extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
+            PressScale(child: IconButton(
               tooltip: 'Copiar código',
               onPressed: () {
                 copyText(code);
@@ -1068,7 +1069,7 @@ class _CodeBox extends StatelessWidget {
               },
               style: IconButton.styleFrom(backgroundColor: Colors.white, minimumSize: const Size(44, 44)),
               icon: const Icon(Hi.documentDuplicate, size: 20, color: AppTheme.ink),
-            ),
+            )),
           ],
         ),
       );

@@ -23,6 +23,7 @@ import '../../../shared/widgets/undo_toast.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Galeria como uma rede social (pedido 2026-10-17): grelha de
 /// quadrados (como no design) → toque abre as publicações com quem
@@ -325,12 +326,12 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                       ),
                     ),
                     if (widget.photo.uploadedBy != ref.watch(authControllerProvider).profile?.id)
-                      IconButton(
+                      PressScale(child: IconButton(
                         tooltip: 'Denunciar ou bloquear',
                         icon: const Icon(Hi.ellipsisHorizontal, color: AppTheme.inkMuted),
                         onPressed: () => showModerationSheet(context, ref,
                             kind: ReportKind.galleryPhoto, targetId: widget.photo.id, authorId: widget.photo.uploadedBy, authorName: name),
-                      ),
+                      )),
                   ],
                 ),
               ),
@@ -717,14 +718,14 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                                     ),
                                     // Visível (antes só com toque longo).
                                     if (c.profileId != me)
-                                      IconButton(
+                                      PressScale(child: IconButton(
                                         tooltip: 'Denunciar ou bloquear',
                                         visualDensity: VisualDensity.compact,
                                         iconSize: 18,
                                         icon: const Icon(Hi.ellipsisHorizontal, color: AppTheme.inkMuted),
                                         onPressed: () => showModerationSheet(context, ref,
                                             kind: ReportKind.galleryComment, targetId: c.id, authorId: c.profileId, authorName: c.authorName),
-                                      ),
+                                      )),
                                   ],
                                 ),
                               ),

@@ -19,6 +19,7 @@ import '../widgets/gallery_social_ui.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 enum _GalleryTab { all, mine, favorites }
 
@@ -299,22 +300,22 @@ class _PendingPhotoCard extends ConsumerWidget {
               style: const TextStyle(fontSize: AppFontSize.md),
             ),
           ),
-          IconButton(
+          PressScale(child: IconButton(
             tooltip: 'Aprovar foto',
             icon: const Icon(Hi.checkCircle, color: AppStatusColors.confirmed),
             onPressed: () async {
               await moderateGalleryPhoto(photo.id, true);
               ref.invalidate(eventGalleryPhotosProvider(eventId));
             },
-          ),
-          IconButton(
+          )),
+          PressScale(child: IconButton(
             tooltip: 'Recusar foto',
             icon: const Icon(Hi.xCircle, color: AppStatusColors.declined),
             onPressed: () async {
               await moderateGalleryPhoto(photo.id, false);
               ref.invalidate(eventGalleryPhotosProvider(eventId));
             },
-          ),
+          )),
         ],
       ),
     );

@@ -21,6 +21,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Grupos do evento — organizadores e convidados (pedido do utilizador,
 /// 2026-10-20).
@@ -53,11 +54,11 @@ class GroupLoaderScreen extends StatelessWidget {
                     const Text('Este grupo já não está disponível.',
                         textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                     const SizedBox(height: 16),
-                    FilledButton(
+                    PressScale(child: FilledButton(
                       onPressed: () => context.go('/chat'),
                       style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                       child: const Text('Ir para as Mensagens'),
-                    ),
+                    )),
                   ]),
                 ),
               ),
@@ -154,11 +155,11 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
             ),
           ),
           const SizedBox(height: 8),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: _saving || _name.text.trim().isEmpty || _picked.isEmpty ? null : _create,
             style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
             child: Text(_saving ? 'A criar…' : 'Criar grupo'),
-          ),
+          )),
         ]),
       ),
     );
@@ -243,25 +244,25 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                   ),
               ]),
             ),
-            TextButton.icon(
+            PressScale(child: TextButton.icon(
               onPressed: () => Navigator.of(context).pop('add'),
               icon: const Icon(Hi.userPlus),
               label: const Text('Adicionar pessoas'),
-            ),
+            )),
             // O grupo do evento não se apaga: vive enquanto o evento existir.
             if (widget.group.isMine && !widget.group.isEventAll)
-              TextButton.icon(
+              PressScale(child: TextButton.icon(
                 onPressed: () => Navigator.of(context).pop('delete'),
                 style: TextButton.styleFrom(foregroundColor: const Color(0xFFA3412E)),
                 icon: const Icon(Hi.trash),
                 label: const Text('Apagar grupo'),
-              ),
-            TextButton.icon(
+              )),
+            PressScale(child: TextButton.icon(
               onPressed: () => Navigator.of(context).pop('leave'),
               style: TextButton.styleFrom(foregroundColor: const Color(0xFFA3412E)),
               icon: const Icon(Hi.arrowRightStartOnRectangle),
               label: const Text('Sair do grupo'),
-            ),
+            )),
           ]),
         ),
       ),
@@ -583,7 +584,7 @@ class _RsvpCardState extends State<_RsvpCard> {
         if (!widget.mine && _following != null) ...[
           const SizedBox(width: 8),
           _following!
-              ? OutlinedButton(
+              ? PressScale(child: OutlinedButton(
                   onPressed: _busy ? null : _toggle,
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 36),
@@ -594,8 +595,8 @@ class _RsvpCardState extends State<_RsvpCard> {
                     textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('A seguir'),
-                )
-              : FilledButton(
+                ))
+              : PressScale(child: FilledButton(
                   onPressed: _busy ? null : _toggle,
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 36),
@@ -606,7 +607,7 @@ class _RsvpCardState extends State<_RsvpCard> {
                     textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Seguir'),
-                ),
+                )),
         ],
       ]),
     );
@@ -646,11 +647,11 @@ class _AddPeopleSheetState extends State<_AddPeopleSheet> {
                         ),
                     ]),
             ),
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: _picked.isEmpty ? null : () => Navigator.of(context).pop(_picked.toList()),
               style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
               child: const Text('Adicionar'),
-            ),
+            )),
           ]),
         ),
       );

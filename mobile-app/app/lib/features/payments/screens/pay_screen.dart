@@ -25,6 +25,7 @@ import '../../../shared/widgets/pay_later_sheet.dart';
 import '../../../shared/widgets/line_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 enum _Step { checking, select, loading, card, confirming, mbWayPhone, mbWayWaiting, multibanco, done }
 
@@ -339,8 +340,8 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         title: Text('Total: $total'),
         content: Text('Os cartões $where têm uma taxa de serviço mais alta. Com este cartão pagas $total.'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Usar outro cartão')),
-          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text('Pagar $total')),
+          PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Usar outro cartão'))),
+          PressScale(child: FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text('Pagar $total'))),
         ],
       ),
     );
@@ -1010,7 +1011,7 @@ class _SheetButton extends StatelessWidget {
     return SizedBox(
       height: 52,
       child: secondary
-          ? OutlinedButton(
+          ? PressScale(child: OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -1020,8 +1021,8 @@ class _SheetButton extends StatelessWidget {
                 textStyle: text,
               ),
               child: child,
-            )
-          : FilledButton(
+            ))
+          : PressScale(child: FilledButton(
               onPressed: busy ? () {} : onTap,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -1032,7 +1033,7 @@ class _SheetButton extends StatelessWidget {
                 textStyle: text,
               ),
               child: child,
-            ),
+            )),
     );
   }
 }
@@ -1137,7 +1138,7 @@ class _RefRow extends StatelessWidget {
         const Spacer(),
         Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.inkMuted, letterSpacing: 0.5)),
         if (copy != null)
-          IconButton(
+          PressScale(child: IconButton(
             tooltip: 'Copiar',
             visualDensity: VisualDensity.compact,
             icon: const Icon(Hi.documentDuplicate, size: 18, color: AppTheme.inkMuted),
@@ -1147,7 +1148,7 @@ class _RefRow extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Referência copiada')));
               }
             },
-          ),
+          )),
       ]),
     );
   }

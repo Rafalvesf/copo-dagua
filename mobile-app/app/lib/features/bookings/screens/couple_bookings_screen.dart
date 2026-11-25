@@ -39,6 +39,7 @@ import '../widgets/service_preferences_frame.dart';
 import '../../../shared/widgets/event_pills.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import '../../../shared/widgets/cancel_booking_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Reservas do lado do casal — lê `coupleBookingsProvider`
 /// (`core/home/home_providers.dart`), mesmos dados mock que alimentam
@@ -516,13 +517,13 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
+                child: PressScale(child: TextButton(
                   onPressed: _cancelling ? null : _cancel,
                   style: TextButton.styleFrom(
                     foregroundColor: AppStatusColors.declined,
                   ),
                   child: Text(_cancelling ? 'A cancelar...' : 'Cancelar reserva'),
-                ),
+                )),
               ),
             ],
             if (booking.status == BookingStatus.recusado && booking.partnerId != null) ...[
@@ -534,7 +535,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
-                child: OutlinedButton.icon(
+                child: PressScale(child: OutlinedButton.icon(
                   onPressed: _openPartnerForNewQuote,
                   icon: const Icon(Hi.arrowPath, size: 18),
                   label: const Text('Nova proposta'),
@@ -543,7 +544,7 @@ class _CoupleBookingRowState extends ConsumerState<_CoupleBookingRow> {
                     side: BorderSide(color: AppTheme.accentOliveDark),
                     shape: const StadiumBorder(),
                   ),
-                ),
+                )),
               ),
             ],
             if (booking.status == BookingStatus.concluido) ...[
@@ -736,7 +737,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
           // «Recusar» + «Aceitar» (mockup 2026-11-21).
           Row(children: [
             Expanded(
-              child: OutlinedButton(
+              child: PressScale(child: OutlinedButton(
                 onPressed: _accepting ? null : _reject,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.ink,
@@ -745,11 +746,11 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Recusar'),
-              ),
+              )),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 onPressed: _accepting ? null : _accept,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.ink,
@@ -758,7 +759,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
                   shape: const StadiumBorder(),
                 ),
                 child: Text(_accepting ? 'A aceitar...' : 'Aceitar'),
-              ),
+              )),
             ),
           ]),
         ],
@@ -808,7 +809,7 @@ class ReviewAction extends ConsumerWidget {
         }
         return SizedBox(
           width: double.infinity,
-          child: OutlinedButton(
+          child: PressScale(child: OutlinedButton(
             onPressed: () => _showReviewSheet(context, ref, booking, null),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.accentOliveDark,
@@ -817,7 +818,7 @@ class ReviewAction extends ConsumerWidget {
               shape: const StadiumBorder(),
             ),
             child: Text('Avaliar ${booking.partnerName}'),
-          ),
+          )),
         );
       },
     );
@@ -996,7 +997,7 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: _rating == 0 || _submitting ? null : _submit,
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.ink,
@@ -1011,7 +1012,7 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
                       ? 'Guardar alterações'
                       : 'Enviar avaliação',
             ),
-          ),
+          )),
         ],
       ),
     );

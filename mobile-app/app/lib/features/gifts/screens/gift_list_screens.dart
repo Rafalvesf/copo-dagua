@@ -22,6 +22,7 @@ import '../../../shared/widgets/v2_kit.dart' show softCard;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import '../../../shared/widgets/address_picker.dart' show AddressField;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Lista de presentes (migração 160).
 ///  • Organizador: desejos (bloco de notas do que precisa) e produtos da
@@ -177,8 +178,8 @@ class OrganizerGiftListScreen extends ConsumerWidget {
           decoration: const InputDecoration(hintText: 'PT50 …'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(d).pop(), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.of(d).pop(controller.text.trim()), child: const Text('Guardar')),
+          PressScale(child: TextButton(onPressed: () => Navigator.of(d).pop(), child: const Text('Cancelar'))),
+          PressScale(child: FilledButton(onPressed: () => Navigator.of(d).pop(controller.text.trim()), child: const Text('Guardar'))),
         ],
       ),
     );
@@ -319,7 +320,7 @@ class _DeliveryAddressCardState extends ConsumerState<_DeliveryAddressCard> {
         const SizedBox(height: 4),
         Align(
           alignment: Alignment.centerRight,
-          child: TextButton(
+          child: PressScale(child: TextButton(
             onPressed: _saving
                 ? null
                 : () async {
@@ -334,7 +335,7 @@ class _DeliveryAddressCardState extends ConsumerState<_DeliveryAddressCard> {
                     }
                   },
             child: const Text('Guardar'),
-          ),
+          )),
         ),
       ]),
     );
@@ -430,17 +431,17 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
           ),
           const SizedBox(width: 14),
           const Text('Quantidade', style: TextStyle(color: AppTheme.inkMuted)),
-          IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Hi.minusCircle), tooltip: 'Menos'),
+          PressScale(child: IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Hi.minusCircle), tooltip: 'Menos')),
           Text('$_qty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          IconButton(onPressed: _qty < 50 ? () => setState(() => _qty++) : null, icon: const Icon(Hi.plusCircle), tooltip: 'Mais'),
+          PressScale(child: IconButton(onPressed: _qty < 50 ? () => setState(() => _qty++) : null, icon: const Icon(Hi.plusCircle), tooltip: 'Mais')),
         ]),
         if (_error != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(_error!, style: const TextStyle(color: Color(0xFFB3261E)))),
         const SizedBox(height: 14),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: _saving ? null : _save,
           style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           child: Text(_saving ? 'A guardar…' : 'Guardar'),
-        ),
+        )),
       ]),
     );
   }
@@ -528,7 +529,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
             ]),
           ],
           const SizedBox(height: 16),
-          FilledButton.icon(
+          PressScale(child: FilledButton.icon(
             onPressed: eventId == null || added || !p.inStock
                 ? null
                 : () async {
@@ -538,7 +539,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
             icon: Icon(added ? Hi.check : Hi.plus),
             label: Text(added ? 'Já está na vossa lista' : (p.inStock ? 'Pôr na lista de presentes' : 'Esgotado')),
             style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
-          ),
+          )),
           const SizedBox(height: 6),
           const Text(
             'Os convidados pagam na app e a loja envia para a vossa morada.',
@@ -847,14 +848,14 @@ class _GuestItemCard extends ConsumerWidget {
         const SizedBox(height: 10),
         Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.end, children: [
           if (!i.isProduct && i.linkUrl != null)
-            OutlinedButton.icon(
+            PressScale(child: OutlinedButton.icon(
               onPressed: () => launchUrl(Uri.parse(i.linkUrl!), mode: LaunchMode.externalApplication),
               icon: const Icon(Hi.arrowTopRightOnSquare, size: 18),
               label: const Text('Ver na loja'),
               style: OutlinedButton.styleFrom(foregroundColor: AppTheme.ink, shape: const StadiumBorder()),
-            ),
+            )),
           if (!i.isProduct && i.myClaimId != null)
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: () async {
                 try {
                   await unclaimGift(i.myClaimId!);
@@ -862,9 +863,9 @@ class _GuestItemCard extends ConsumerWidget {
                 ref.invalidate(giftListProvider(eventId));
               },
               child: const Text('Já não vou oferecer'),
-            ),
+            )),
           if (canOffer)
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: () => showIslandSheet<void>(
                 context: context,
                 isScrollControlled: true,
@@ -872,7 +873,7 @@ class _GuestItemCard extends ConsumerWidget {
               ),
               style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
               child: Text(i.isProduct ? 'Oferecer · ${giftEuros(i.price ?? 0)}' : 'Vou oferecer'),
-            ),
+            )),
         ]),
       ]),
     );
@@ -971,9 +972,9 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
           const SizedBox(height: 10),
           Row(children: [
             const Expanded(child: Text('Quantidade', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Hi.minusCircle), tooltip: 'Menos'),
+            PressScale(child: IconButton(onPressed: _qty > 1 ? () => setState(() => _qty--) : null, icon: const Icon(Hi.minusCircle), tooltip: 'Menos')),
             Text('$_qty', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            IconButton(onPressed: _qty < max ? () => setState(() => _qty++) : null, icon: const Icon(Hi.plusCircle), tooltip: 'Mais'),
+            PressScale(child: IconButton(onPressed: _qty < max ? () => setState(() => _qty++) : null, icon: const Icon(Hi.plusCircle), tooltip: 'Mais')),
           ]),
         ],
         const SizedBox(height: 8),
@@ -985,13 +986,13 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
         ),
         if (_error != null) Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
         const SizedBox(height: 12),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: _busy ? null : _go,
           style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           child: _busy
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : Text(i.isProduct ? 'Pagar ${giftEuros((i.price ?? 0) * _qty)}' : 'Reservar'),
-        ),
+        )),
       ]),
     );
   }
@@ -1061,11 +1062,11 @@ class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
               ),
               const SizedBox(height: 24),
               if (_status != 'checking')
-                FilledButton(
+                PressScale(child: FilledButton(
                   onPressed: () => context.go(_eventId != null ? '/guest-gifts/$_eventId' : '/guest-gifts'),
                   style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                   child: const Text('Voltar aos presentes'),
-                ),
+                )),
             ]),
           ),
         ),

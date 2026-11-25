@@ -109,12 +109,12 @@ class _SnappyTapState extends State<SnappyTap> {
         onTapDown: (_) => _setPressed(true),
         onTapUp: (_) => _setPressed(false),
         onTapCancel: () => _setPressed(false),
-        // Redesign 2026-10 (painel "Movimento"): encolhe para 96% ao tocar
-        // e volta com um ligeiro ressalto.
+        // Skill `animacoes` (2026-11-25): encolhe para 97% ao carregar,
+        // 150 ms ease-out, e fica parado com «reduzir movimento».
         child: AnimatedScale(
-          scale: _pressed ? 0.96 : 1.0,
-          duration: Duration(milliseconds: _pressed ? 120 : 220),
-          curve: _pressed ? Curves.easeOut : Curves.easeOutBack,
+          scale: _pressed && !(MediaQuery.maybeDisableAnimationsOf(context) ?? false) ? 0.97 : 1.0,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOut,
           child: TweenAnimationBuilder<double>(
           tween: Tween(end: _amount),
           duration: const Duration(milliseconds: 100),

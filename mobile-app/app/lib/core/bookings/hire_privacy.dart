@@ -6,6 +6,7 @@ import '../../shared/widgets/island_sheet.dart';
 import '../home/home_providers.dart';
 import '../supabase/supabase_config.dart';
 import '../theme/app_theme.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Contratações em segredo (migração 116, 2026-10-21): quem contrata
 /// escolhe se os outros organizadores do evento ficam a saber (ex.: uma
@@ -47,14 +48,14 @@ Future<bool?> askHirePrivacy(BuildContext context, String? eventId, String partn
                 'a conversa, os pagamentos e as tarefas. Se for uma surpresa, guarda-a só para ti.',
       ),
       actions: [
-        TextButton(
+        PressScale(child: TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
           child: const Text('Só para mim'),
-        ),
-        FilledButton(
+        )),
+        PressScale(child: FilledButton(
           onPressed: () => Navigator.of(ctx).pop(false),
           child: const Text('Partilhar'),
-        ),
+        )),
       ],
     ),
   );

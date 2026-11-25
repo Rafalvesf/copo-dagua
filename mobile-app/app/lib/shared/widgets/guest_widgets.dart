@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
 import 'island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class GuestFormResult {
   final String name;
@@ -279,7 +280,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
               Expanded(
                 child: SizedBox(
                   height: 52,
-                  child: OutlinedButton(
+                  child: PressScale(child: OutlinedButton(
                     onPressed: () => _save(another: true),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -289,7 +290,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                     ),
                     child: const Text('Guardar e outro'),
-                  ),
+                  )),
                 ),
               ),
               const SizedBox(width: 8),
@@ -297,7 +298,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
             Expanded(
               child: SizedBox(
                 height: 52,
-                child: FilledButton(
+                child: PressScale(child: FilledButton(
                   onPressed: _save,
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF171713),
@@ -306,7 +307,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                     textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Guardar'),
-                ),
+                )),
               ),
             ),
           ]),

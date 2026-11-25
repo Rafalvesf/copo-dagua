@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/snap_carousel.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Categorias que o organizador dá a quem aceita (2026-11-14: «já não são
 /// os convidados a colocar isso»). Ficam em `guests.group_label` e são os
@@ -165,7 +166,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: PressScale(child: OutlinedButton(
                   onPressed: _busy ? null : () => _review(false),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.ink,
@@ -175,11 +176,11 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                     textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Recusar'),
-                ),
+                )),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: FilledButton(
+                child: PressScale(child: FilledButton(
                   onPressed: _busy ? null : () => _review(true),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.ink,
@@ -189,7 +190,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                     textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Aceitar'),
-                ),
+                )),
               ),
             ],
           ),

@@ -8,6 +8,7 @@ import '../../core/permissions/camera_stub.dart' if (dart.library.js_interop) '.
 import '../../core/theme/app_theme.dart';
 import 'first_run_tour.dart' show TourRole;
 import 'island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Último passo de todos os registos, antes do ecrã de sucesso
 /// (aprovado 2026-10-25, canvas "Permissões"): notificações, localização
@@ -215,7 +216,7 @@ class _PermissionsStepState extends State<PermissionsStep> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    FilledButton(
+                    PressScale(child: FilledButton(
                       onPressed: _all ? null : _allowAll,
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
@@ -223,13 +224,13 @@ class _PermissionsStepState extends State<PermissionsStep> {
                         shape: const StadiumBorder(),
                       ),
                       child: Text(_all ? 'A pedir…' : (_allAnswered ? 'Continuar' : 'Permitir tudo e continuar')),
-                    ),
+                    )),
                     const SizedBox(height: 4),
-                    TextButton(
+                    PressScale(child: TextButton(
                       onPressed: _all ? null : widget.onDone,
                       style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted, minimumSize: const Size.fromHeight(44)),
                       child: const Text('Agora não'),
-                    ),
+                    )),
                   ],
                 ),
               ),
@@ -299,7 +300,7 @@ class _PermRow extends StatelessWidget {
           ]),
         ),
         const SizedBox(width: 10),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: filled && !busy ? onTap : null,
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.ink,
@@ -311,7 +312,7 @@ class _PermRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14),
           ),
           child: Text(label),
-        ),
+        )),
       ]),
     );
   }
@@ -470,17 +471,17 @@ class _SinglePermissionSheetState extends State<_SinglePermissionSheet> {
           ),
           const SizedBox(height: 20),
           if (!_blocked)
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: _busy ? null : _allow,
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), backgroundColor: accent, shape: const StadiumBorder()),
               child: Text(_busy ? 'A pedir…' : 'Permitir'),
-            ),
+            )),
           const SizedBox(height: 6),
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted, minimumSize: const Size.fromHeight(44)),
             child: Text(_blocked ? 'Fechar' : 'Agora não'),
-          ),
+          )),
         ],
       ),
     );

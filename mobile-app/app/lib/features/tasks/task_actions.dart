@@ -12,6 +12,7 @@ import '../../core/tasks/task_models.dart';
 import '../../core/event/event_controller.dart';
 import '../../shared/widgets/island_sheet.dart';
 import '../payments/open_payment.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Abrir uma tarefa — o mesmo em "Tarefas" e em "Próximas tarefas" no
 /// início (2026-11-01: algumas tarefas não faziam nada ao tocar).
@@ -116,17 +117,17 @@ Future<void> openTask(BuildContext context, WidgetRef ref, EventTask task) async
               Text(task.description!.trim(), style: const TextStyle(fontSize: 14, height: 1.45)),
             ],
             const SizedBox(height: 18),
-            FilledButton.icon(
+            PressScale(child: FilledButton.icon(
               onPressed: () => Navigator.of(ctx).pop('done'),
               icon: const Icon(Hi.check),
               label: const Text('Marcar como feita'),
-            ),
+            )),
             if (route != null) ...[
               const SizedBox(height: 8),
-              OutlinedButton(onPressed: () => Navigator.of(ctx).pop('open'), child: const Text('Abrir')),
+              PressScale(child: OutlinedButton(onPressed: () => Navigator.of(ctx).pop('open'), child: const Text('Abrir'))),
             ],
             const SizedBox(height: 4),
-            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Agora não')),
+            PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Agora não'))),
           ]),
         ),
       ),

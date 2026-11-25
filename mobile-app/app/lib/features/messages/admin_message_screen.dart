@@ -9,6 +9,7 @@ import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/sized_network_image.dart';
 import '../../shared/widgets/sticker_icon.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Mensagem da equipa À Nossa! (migrações 133/134): abre ao tocar na
 /// notificação. Mostra a mensagem completa e deixa responder — a resposta
@@ -128,7 +129,7 @@ class _AdminMessageScreenState extends State<AdminMessageScreen> {
                                   style: const TextStyle(fontSize: AppFontSize.base, height: 1.5, color: AppTheme.ink)),
                               if (link != null && link.isNotEmpty) ...[
                                 const SizedBox(height: 16),
-                                OutlinedButton(onPressed: () => context.push(link), child: const Text('Abrir')),
+                                PressScale(child: OutlinedButton(onPressed: () => context.push(link), child: const Text('Abrir'))),
                               ],
                             ]),
                           ),

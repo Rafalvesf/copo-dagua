@@ -14,6 +14,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// "Falar com a equipa" — pedidos de suporte reais
 /// (`support_tickets`, 047_support_tickets.sql). Inclui a categoria
@@ -80,7 +81,7 @@ class SupportScreen extends ConsumerWidget {
             minimum: const EdgeInsets.only(bottom: 20),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 onPressed: () => _showNewTicketSheet(context, ref),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.ink,
@@ -90,7 +91,7 @@ class SupportScreen extends ConsumerWidget {
                   textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Novo pedido de suporte'),
-              ),
+              )),
             ),
           ),
         ],

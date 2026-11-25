@@ -18,6 +18,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'ticket_pass_screens.dart' show TicketPassCard;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 // ───────────────────────── Comprar ─────────────────────────
 
@@ -158,13 +159,13 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
               Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
             ],
             const SizedBox(height: 16),
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: _busy || unit <= 0 ? null : _pay,
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), backgroundColor: AppTheme.ink),
               child: _busy
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : Text('Pagar ${euroLabel(unit * _qty)}'),
-            ),
+            )),
           ],
         ),
       ),
@@ -255,13 +256,13 @@ class _TicketReturnScreenState extends ConsumerState<TicketReturnScreen> {
               ],
               const SizedBox(height: 24),
               if (_status != 'checking')
-                FilledButton(
+                PressScale(child: FilledButton(
                   onPressed: () => paid && _eventId != null
                       ? context.go('/guest-home/$_eventId')
                       : context.go('/eventos'),
                   style: FilledButton.styleFrom(minimumSize: const Size(220, 50), backgroundColor: AppTheme.ink),
                   child: Text(paid ? 'Ver o evento' : 'Voltar aos eventos'),
-                ),
+                )),
             ]),
           ),
         ),
@@ -334,8 +335,8 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
           ),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Voltar')),
-          FilledButton(onPressed: () => Navigator.of(ctx).pop(reason.text.trim()), child: Text(action)),
+          PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Voltar'))),
+          PressScale(child: FilledButton(onPressed: () => Navigator.of(ctx).pop(reason.text.trim()), child: Text(action))),
         ],
       ),
     );
@@ -433,11 +434,11 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                     Text('IBAN terminado em ${s!.bankLast4}', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   const SizedBox(height: 12),
                   if (s == null || !s.active)
-                    FilledButton(
+                    PressScale(child: FilledButton(
                       onPressed: () => context.push('/bilhetes/ativar'),
                       style: FilledButton.styleFrom(backgroundColor: AppTheme.ink),
                       child: Text(s == null || !s.hasAccount ? 'Ativar venda de bilhetes' : 'Completar dados'),
-                    ),
+                    )),
                 ],
               ]),
             ),
@@ -474,13 +475,13 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                   _line('Disponível', euroLabel(s.availableCents / 100), strong: true),
                   _line('A caminho (ainda em processamento)', euroLabel(s.pendingCents / 100)),
                   const SizedBox(height: 10),
-                  FilledButton(
+                  PressScale(child: FilledButton(
                     onPressed: s.payoutsEnabled && s.availableCents > 0 && !_paying ? _payout : null,
                     style: FilledButton.styleFrom(backgroundColor: AppTheme.ink),
                     child: _paying
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : const Text('Levantar para o IBAN'),
-                  ),
+                  )),
                 ]),
               ),
             const SizedBox(height: 16),
@@ -492,7 +493,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
             // Visível também depois de cancelar, enquanto houver bilhetes por reembolsar (repetir falhas).
             if (event != null && summary != null && ((ref.watch(eventIsPublicProvider(event.id)).value ?? false) || summary.sold > 0)) ...[
               const SizedBox(height: 18),
-              OutlinedButton.icon(
+              PressScale(child: OutlinedButton.icon(
                 onPressed: _cancelling ? null : () => _cancelEvent(event.id, summary),
                 icon: _cancelling
                     ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
@@ -504,7 +505,7 @@ class _OrganizerTicketsScreenState extends ConsumerState<OrganizerTicketsScreen>
                   minimumSize: const Size.fromHeight(48),
                   shape: const StadiumBorder(),
                 ),
-              ),
+              )),
             ],
           ],
         ),
@@ -549,7 +550,7 @@ class _TicketList extends ConsumerWidget {
                 ]),
               ),
               if (!t.refunded)
-                TextButton(onPressed: () => onRefund(t), child: const Text('Reembolsar')),
+                PressScale(child: TextButton(onPressed: () => onRefund(t), child: const Text('Reembolsar'))),
             ]),
           ),
       ]),

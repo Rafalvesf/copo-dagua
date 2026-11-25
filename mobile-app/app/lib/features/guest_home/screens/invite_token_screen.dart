@@ -15,6 +15,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/install_app_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// `/i/:token` — link de convite individual (`guests.rsvp_token`
 /// reaproveitado como token de conta, ver
@@ -109,13 +110,13 @@ class _InviteTokenScreenState extends ConsumerState<InviteTokenScreen> {
                     message: 'Este convite é só para ti. Instala a app e cria conta com o mesmo email ou telemóvel — o convite fica logo ligado a ti.',
                     actions: [
                       if (kIsWeb) PrimaryButton(label: 'Instalar a app', onPressed: () => showInstallAppSheet(context)),
-                      TextButton(
+                      PressScale(child: TextButton(
                         onPressed: () {
                           ref.read(pendingInviteTokenProvider.notifier).set(widget.token);
                           context.push('/register?role=guest');
                         },
                         child: const Text('Não consigo instalar — continuar aqui'),
-                      ),
+                      )),
                     ],
                   ),
           ),

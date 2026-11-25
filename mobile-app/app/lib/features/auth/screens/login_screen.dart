@@ -10,6 +10,7 @@ import '../../../core/auth/google_web_button.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/auth_ui.dart';
 import '../../../shared/widgets/feedback.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// "Início 5 · Entrar" — igual ao canvas.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -98,7 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
             ),
-            TextButton(
+            PressScale(child: TextButton(
             onPressed: () => context.push('/forgot-password'),
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.accentOliveDark,
@@ -106,7 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
             ),
             child: const Text('Esqueci-me da password'),
-          ),
+          )),
           ],
         ),
       ],

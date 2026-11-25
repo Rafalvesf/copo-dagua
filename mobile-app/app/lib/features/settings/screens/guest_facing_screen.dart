@@ -34,6 +34,7 @@ import '../../guest_home/screens/guest_event_details_screen.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// "Para os convidados" — tudo o que os convidados veem, num só sítio:
 /// código, quem pode entrar, boas-vindas, programa (linha do tempo),
@@ -133,7 +134,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             ...body(),
             const SizedBox(height: 18),
             // Só "Feito" (2026-11-08: sem "Ver como convidado" nas partes).
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: () => Navigator.of(sheet).pop(),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -142,7 +143,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                 shape: const StadiumBorder(),
               ),
               child: const Text('Feito', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-            ),
+            )),
           ]),
         ),
       ),
@@ -692,10 +693,10 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
                         padding: EdgeInsets.only(left: 6),
                         child: Icon(Hi.checkCircle, size: 20, color: _olive),
                       )
-                    : TextButton(
+                    : PressScale(child: TextButton(
                         onPressed: () => setState(() => _useVenue(venue, markDirty: true)),
                         child: const Text('Usar'),
-                      ),
+                      )),
             ],
           ),
         ),
@@ -725,13 +726,13 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       const SizedBox(height: 8),
       Align(
         alignment: Alignment.centerLeft,
-        child: TextButton.icon(
+        child: PressScale(child: TextButton.icon(
           onPressed: _address.text.trim().isEmpty && _lat == null
               ? null
               : () => showNavigationSheet(context, label: placeName, address: _address.text.trim(), latitude: _lat, longitude: _lng),
           icon: const Icon(Hi.paperAirplane, size: 18),
           label: const Text('Experimentar o "Como chegar"'),
-        ),
+        )),
       ),
     ];
   }
@@ -771,13 +772,13 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
           ),
           const Spacer(),
           if (_colors.isNotEmpty)
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: () => setState(() {
                 _colors = [];
                 _dirty = true;
               }),
               child: const Text('Limpar'),
-            ),
+            )),
         ],
       ),
       const SizedBox(height: 8),
@@ -971,7 +972,7 @@ class _InviteLinkCard extends ConsumerWidget {
         const SizedBox(height: 12),
         Row(children: [
           Expanded(
-            child: TextButton.icon(
+            child: PressScale(child: TextButton.icon(
               onPressed: () async {
                 await copyText(link);
                 if (context.mounted) {
@@ -986,11 +987,11 @@ class _InviteLinkCard extends ConsumerWidget {
                 minimumSize: const Size.fromHeight(44),
                 shape: const StadiumBorder(),
               ),
-            ),
+            )),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: FilledButton.icon(
+            child: PressScale(child: FilledButton.icon(
               onPressed: onShare,
               icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const Text('Partilhar'),
@@ -1000,7 +1001,7 @@ class _InviteLinkCard extends ConsumerWidget {
                 minimumSize: const Size.fromHeight(44),
                 shape: const StadiumBorder(),
               ),
-            ),
+            )),
           ),
         ]),
       ]),
@@ -1392,7 +1393,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
             const SizedBox(height: 14),
             ..._sheetBody(() => setSheet(() {})),
             const SizedBox(height: 18),
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: () => Navigator.of(sheet).pop(),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -1401,7 +1402,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
                 shape: const StadiumBorder(),
               ),
               child: const Text('Feito', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-            ),
+            )),
           ]),
         ),
       ),
@@ -1801,7 +1802,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
           const SizedBox(height: 12),
           SizedBox(
             height: 50,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               onPressed: _savingPrice ? null : _savePrice,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -1811,16 +1812,16 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
               child: _savingPrice
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Text('Guardar preço', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-            ),
+            )),
           ),
           if (entry.paid) ...[
             const SizedBox(height: 6),
             Center(
-              child: TextButton(
+              child: PressScale(child: TextButton(
                 onPressed: () => context.push('/bilhetes'),
                 style: TextButton.styleFrom(foregroundColor: AppTheme.accentOliveDark),
                 child: const Text('Bilhetes vendidos e revendas ›', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-              ),
+              )),
             ),
           ],
         ],
@@ -1969,7 +1970,7 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
         const SizedBox(height: 12),
         SizedBox(
           height: 50,
-          child: FilledButton(
+          child: PressScale(child: FilledButton(
             onPressed: _saving || _value == null ? null : () => _save(_value),
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.ink,
@@ -1979,7 +1980,7 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
             child: _saving
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Text('Guardar limite', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-          ),
+          )),
         ),
       ],
     ]);
@@ -2134,7 +2135,7 @@ class _CodeHero extends ConsumerWidget {
         const SizedBox(height: 14),
         Row(children: [
           Expanded(
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               onPressed: onShare,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -2145,11 +2146,11 @@ class _CodeHero extends ConsumerWidget {
                 textStyle: btnText,
               ),
               child: const FittedBox(child: Text('Partilhar convite')),
-            ),
+            )),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: OutlinedButton(
+            child: PressScale(child: OutlinedButton(
               onPressed: onPreview,
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -2161,7 +2162,7 @@ class _CodeHero extends ConsumerWidget {
                 textStyle: btnText,
               ),
               child: const FittedBox(child: Text('Ver como convidado')),
-            ),
+            )),
           ),
         ]),
       ]),
@@ -2283,10 +2284,10 @@ class _PartsListState extends ConsumerState<_PartsList> {
       ...[
         const SizedBox(height: 6),
         Center(
-          child: TextButton(
+          child: PressScale(child: TextButton(
             onPressed: () => _set(sections.onlyTicket ? sections.all(true) : sections.all(false)),
             child: Text(sections.onlyTicket ? 'Mostrar tudo outra vez' : 'Esconder tudo (só o bilhete)'),
-          ),
+          )),
         ),
       ],
     ]);

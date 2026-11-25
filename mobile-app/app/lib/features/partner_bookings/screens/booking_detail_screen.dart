@@ -27,6 +27,7 @@ import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
 import '../../../shared/widgets/dispute_card.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   final Booking booking;
@@ -205,7 +206,7 @@ Expanded(child: ScrollingHeader(
                   if (booking.canAcceptPackage && !booking.proposalSent) ...[
                     SizedBox(
                       height: 52,
-                      child: FilledButton(
+                      child: PressScale(child: FilledButton(
                         onPressed: _busy
                             ? null
                             : () => _run(() async {
@@ -228,7 +229,7 @@ Expanded(child: ScrollingHeader(
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
                         ),
                         child: const Text('Aceitar pacote'),
-                      ),
+                      )),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 8, bottom: 10),
@@ -243,7 +244,7 @@ Expanded(child: ScrollingHeader(
                     // Mesa «cada um escolhe» (190): aceitar reserva já, sem sinal.
                     SizedBox(
                       height: 52,
-                      child: FilledButton(
+                      child: PressScale(child: FilledButton(
                         onPressed: _busy
                             ? null
                             : () => _run(() async {
@@ -263,7 +264,7 @@ Expanded(child: ScrollingHeader(
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
                         ),
                         child: const Text('Aceitar pedido'),
-                      ),
+                      )),
                     ),
                     const Padding(
                       padding: EdgeInsets.only(top: 8, bottom: 10),
@@ -273,7 +274,7 @@ Expanded(child: ScrollingHeader(
                   ] else if (booking.fromQuoteRequest && !booking.proposalSent) ...[
                     SizedBox(
                       height: 52,
-                      child: FilledButton(
+                      child: PressScale(child: FilledButton(
                         onPressed: () async {
                           if (!await _dayOk() || !context.mounted) return;
                           // Popup «Enviar proposta» (prancheta, 2026-11-25).
@@ -307,14 +308,14 @@ Expanded(child: ScrollingHeader(
                           ),
                         ),
                         child: const Text('Enviar proposta'),
-                      ),
+                      )),
                     ),
                     const SizedBox(height: 10),
                   ],
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
+                        child: PressScale(child: OutlinedButton(
                           onPressed: _busy
                               ? null
                               : () => _run(() async {
@@ -361,11 +362,11 @@ Expanded(child: ScrollingHeader(
                             ),
                           ),
                           child: const Text('Conversar'),
-                        ),
+                        )),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: OutlinedButton(
+                        child: PressScale(child: OutlinedButton(
                           // Recusar só existe do lado `quote_requests`.
                           // Uma reserva já confirmada (tabela `bookings`)
                           // agora tem cancelamento real (`cancel_booking_by_partner()`,
@@ -428,10 +429,10 @@ Expanded(child: ScrollingHeader(
                                             title: const Text('Não foi possível devolver'),
                                             content: Text(problem),
                                             actions: [
-                                              FilledButton(
+                                              PressScale(child: FilledButton(
                                                 onPressed: () => Navigator.of(context).pop(),
                                                 child: const Text('Ok'),
-                                              ),
+                                              )),
                                             ],
                                           ),
                                         );
@@ -465,7 +466,7 @@ Expanded(child: ScrollingHeader(
                           child: Text(
                             booking.fromQuoteRequest ? 'Recusar' : 'Cancelar reserva',
                           ),
-                        ),
+                        )),
                       ),
                     ],
                   ),

@@ -26,6 +26,7 @@ import '../../../core/partners/partner_achievements.dart';
 import '../../../shared/widgets/partner_achievements.dart';
 import '../../../shared/widgets/section_frame.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class PartnerProfileScreen extends ConsumerStatefulWidget {
   const PartnerProfileScreen({super.key});
@@ -389,11 +390,11 @@ class _PaymentsRequiredCard extends ConsumerWidget {
             ]),
           ),
           const SizedBox(width: 8),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: () => context.push('/partner-payments'),
             style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: const Text('Ativar'),
-          ),
+          )),
         ]),
       ),
     );

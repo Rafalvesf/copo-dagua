@@ -12,6 +12,7 @@ import '../../shared/widgets/gradient_scaffold.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Mensagens da Equipa À Nossa! (migração 146): banners de novidade e a
 /// conversa "Equipa À Nossa!" com as mensagens diretas.
@@ -126,11 +127,11 @@ class TeamBannerCard extends ConsumerWidget {
                 ],
               ),
             ),
-            IconButton(
+            PressScale(child: IconButton(
               tooltip: 'Fechar',
               onPressed: () => _dismiss(ref, b.id),
               icon: const Icon(Hi.xMark, color: Colors.white70, size: 20),
-            ),
+            )),
           ],
         ),
             ),
@@ -379,11 +380,11 @@ class _TeamThreadScreenState extends ConsumerState<TeamThreadScreen> {
                                       Text(m.body,
                                           style: TextStyle(fontSize: 14, height: 1.4, color: team ? AppTheme.ink : Colors.white)),
                                       if (m.link != null)
-                                        TextButton(
+                                        PressScale(child: TextButton(
                                           onPressed: () => context.push(m.link!),
                                           style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 32)),
                                           child: const Text('Abrir ›'),
-                                        ),
+                                        )),
                                       const SizedBox(height: 2),
                                       Text(_time(m.at),
                                           style: TextStyle(fontSize: 11, color: team ? AppTheme.inkMuted : Colors.white70)),
@@ -410,13 +411,13 @@ class _TeamThreadScreenState extends ConsumerState<TeamThreadScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton.filled(
+                  PressScale(child: IconButton.filled(
                     tooltip: 'Enviar',
                     onPressed: _sending ? null : () => _send(items),
                     icon: _sending
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Hi.paperAirplane),
-                  ),
+                  )),
                 ]),
               ),
           ],

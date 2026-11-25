@@ -6,6 +6,7 @@ import '../../../core/partners/promotions.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Destaque pago (migração 155, pedido 2026-11-03): sem mensalidade; as
 /// reservas que vêm do destaque pagam +6% de taxa de serviço. Liga e desliga
@@ -76,8 +77,8 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
             ]),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Ligar destaque')),
+            PressScale(child: TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar'))),
+            PressScale(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Ligar destaque'))),
           ],
         ),
       ),
@@ -107,8 +108,8 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
         title: const Text('Desligar o destaque?'),
         content: const Text('Deixas de aparecer em "Em destaque". As reservas que já vieram do destaque continuam com a taxa de serviço do destaque.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Voltar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Desligar')),
+          PressScale(child: TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Voltar'))),
+          PressScale(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Desligar'))),
         ],
       ),
     );
@@ -167,12 +168,12 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
         ],
         const SizedBox(height: 12),
         p.on
-            ? OutlinedButton(
+            ? PressScale(child: OutlinedButton(
                 onPressed: _busy ? null : _stop,
                 style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46), shape: const StadiumBorder()),
                 child: const Text('Desligar destaque'),
-              )
-            : FilledButton.icon(
+              ))
+            : PressScale(child: FilledButton.icon(
                 onPressed: _busy ? null : () => _start(p),
                 icon: const Icon(Hi.sparkles, size: 18),
                 label: const Text('Pôr em destaque'),
@@ -182,7 +183,7 @@ class _PartnerPromotionCardState extends ConsumerState<PartnerPromotionCard> {
                   minimumSize: const Size.fromHeight(46),
                   shape: const StadiumBorder(),
                 ),
-              ),
+              )),
       ]),
     );
   }

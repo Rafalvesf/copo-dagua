@@ -35,6 +35,7 @@ import '../../../shared/widgets/request_card.dart';
 import '../../../shared/widgets/auto_booking_card.dart';
 import '../../../shared/widgets/chat_summary_sheets.dart';
 import '../../../shared/widgets/deal_sheets.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Fio de conversa genérico do separador Chat — parceiros contratados
 /// e contactos do cortejo partilham este mesmo ecrã (ver
@@ -896,7 +897,7 @@ class _PayOrLaterSheet extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             height: 52,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               onPressed: canPayNow ? onPay : onLater,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -905,10 +906,10 @@ class _PayOrLaterSheet extends StatelessWidget {
                 textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
               ),
               child: Text(canPayNow ? 'Pagar ${euros(payAmount)}' : 'OK'),
-            ),
+            )),
           ),
           const SizedBox(height: 10),
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: onLater,
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.ink,
@@ -916,7 +917,7 @@ class _PayOrLaterSheet extends StatelessWidget {
               textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
             ),
             child: const Text('Pagar depois'),
-          ),
+          )),
           if (!canPayNow) ...[
             const SizedBox(height: 6),
             const Text('Avisamos-te 3 dias antes do prazo para pagares!',

@@ -7,6 +7,7 @@ import 'scroll_aware_back_button.dart';
 import 'snappy_tap.dart';
 import 'v2_kit.dart';
 import 'app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 // Peças das páginas redesenhadas (canvas «Páginas do evento», «Páginas do
 // parceiro», «Páginas do convidado», 2026-11-14), iguais em todas: um só
@@ -816,7 +817,7 @@ class KitAlert extends StatelessWidget {
         ),
         if (action != null) ...[
           const SizedBox(width: 10),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: onAction,
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.ink,
@@ -828,7 +829,7 @@ class KitAlert extends StatelessWidget {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(action!),
-          ),
+          )),
         ],
       ]),
     );

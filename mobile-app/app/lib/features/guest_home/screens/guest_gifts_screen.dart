@@ -19,6 +19,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// "Presentes" — pedido explícito do utilizador (mockup de referência).
 /// Ligado em 2026-10-16 aos campos `events.gift_*`
@@ -85,14 +86,14 @@ class GuestGiftsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ElevatedButton.icon(
+            PressScale(child: ElevatedButton.icon(
               onPressed: () async {
                 await copyText(iban.replaceAll(' ', ''));
                 if (context.mounted) Navigator.of(context).pop();
               },
               icon: const Icon(Hi.documentDuplicate, size: 18),
               label: const Text('Copiar IBAN'),
-            ),
+            )),
           ],
         ),
       ),
@@ -196,7 +197,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                             // Envelope digital (migração 156): valor + mensagem,
                             // transferência direta e confirmação para os anfitriões.
                             if (iban?.isNotEmpty == true && event != null) ...[
-                              FilledButton.icon(
+                              PressScale(child: FilledButton.icon(
                                 onPressed: () => showEnvelopeSheet(context, event!),
                                 icon: const Icon(Hi.envelope, size: 18),
                                 label: const Text('Oferecer um envelope'),
@@ -206,7 +207,7 @@ class GuestGiftsScreen extends ConsumerWidget {
                                   minimumSize: const Size.fromHeight(48),
                                   shape: const StadiumBorder(),
                                 ),
-                              ),
+                              )),
                               const SizedBox(height: 10),
                             ],
                             if (iban?.isNotEmpty == true)

@@ -20,6 +20,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../../core/exports/exports.dart' show bookingRef;
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Um contrato = uma reserva com a proposta que o casal aceitou: o que
 /// foi combinado (título, descrição, condições), o valor e o estado dos
@@ -270,14 +271,14 @@ class _ContractCard extends StatelessWidget {
                 if (c.description?.isNotEmpty == true) row('Descrição', c.description!),
                 if (c.terms?.isNotEmpty == true) row('Condições', c.terms!),
                 const SizedBox(height: 14),
-                OutlinedButton.icon(
+                PressScale(child: OutlinedButton.icon(
                   onPressed: () {
                     Navigator.of(sheet).pop();
                     context.go('/partner-messages');
                   },
                   icon: const Icon(Hi.chatBubbleOvalLeft, size: 18),
                   label: const Text('Falar com o cliente'),
-                ),
+                )),
               ],
             ),
           ),

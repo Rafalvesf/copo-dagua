@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'mascot.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class ErrorBanner extends StatelessWidget {
   final String message;
@@ -56,7 +57,7 @@ class PersistentWarningBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: Text(message, style: TextStyle(color: colorScheme.onTertiaryContainer))),
           if (actionLabel != null)
-            TextButton(onPressed: onAction, child: Text(actionLabel!)),
+            PressScale(child: TextButton(onPressed: onAction, child: Text(actionLabel!))),
         ],
       ),
     );
@@ -99,14 +100,14 @@ class AsyncErrorView extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 8),
-              TextButton.icon(
+              PressScale(child: TextButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Hi.arrowPath, size: 18),
                 label: const Text('Tentar de novo'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.accentOliveDark,
                 ),
-              ),
+              )),
             ],
           ],
         ),
@@ -299,20 +300,20 @@ class IllustratedEmptyState extends StatelessWidget {
             const SizedBox(height: 28),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 onPressed: onPrimary,
                 child: Text(primaryLabel!),
-              ),
+              )),
             ),
           ],
           if (secondaryLabel != null) ...[
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton(
+              child: PressScale(child: OutlinedButton(
                 onPressed: onSecondary,
                 child: Text(secondaryLabel!),
-              ),
+              )),
             ),
           ],
         ],

@@ -20,6 +20,7 @@ import '../../../shared/money.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/onb_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 const _maxPackages = 3;
 
@@ -405,7 +406,7 @@ class _AverageQuoteFieldState extends State<_AverageQuoteField> {
         const SizedBox(width: 12),
         Padding(
           padding: const EdgeInsets.only(top: 6),
-          child: FilledButton(
+          child: PressScale(child: FilledButton(
             onPressed: widget.busy
                 ? null
                 : () async {
@@ -415,7 +416,7 @@ class _AverageQuoteFieldState extends State<_AverageQuoteField> {
                     widget.onSave(v, _note.text);
                   },
             child: const Text('Guardar'),
-          ),
+          )),
         ),
       ],
       ),
@@ -623,8 +624,8 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
           title: const Text('Algumas linhas não dizem quantidades'),
           content: const Text('Os clientes escolhem melhor quando sabem quantos, quantas horas ou para quantas pessoas. Guardar mesmo assim?'),
           actions: [
-            TextButton(onPressed: () => Navigator.of(d).pop(false), child: const Text('Corrigir')),
-            FilledButton(onPressed: () => Navigator.of(d).pop(true), child: const Text('Guardar')),
+            PressScale(child: TextButton(onPressed: () => Navigator.of(d).pop(false), child: const Text('Corrigir'))),
+            PressScale(child: FilledButton(onPressed: () => Navigator.of(d).pop(true), child: const Text('Guardar'))),
           ],
         ),
       );
@@ -700,7 +701,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
                   padding: EdgeInsets.only(bottom: 8),
                   child: Text('Escreve pelo menos uma coisa que o pacote inclui.', style: TextStyle(fontSize: 13, color: red)),
                 ),
-              OutlinedButton(
+              PressScale(child: OutlinedButton(
                 onPressed: _lines.length >= 12 ? null : () => setState(() => _lines.add(TextEditingController())),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.ink,
@@ -710,7 +711,7 @@ class _EditPackageSheetState extends State<_EditPackageSheet> {
                   textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Juntar linha'),
-              ),
+              )),
               const SizedBox(height: 18),
               OnbField(controller: _excludes, label: 'Não inclui', hint: 'Ex.: bolo, bar depois do jantar'),
               const SizedBox(height: 4),
@@ -818,7 +819,7 @@ class _EditExtraSheetState extends State<_EditExtraSheet> {
               ),
               const SizedBox(height: 8),
             ],
-            OutlinedButton(
+            PressScale(child: OutlinedButton(
               onPressed: _lines.length >= 6 ? null : () => setState(() => _lines.add(TextEditingController())),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
@@ -828,7 +829,7 @@ class _EditExtraSheetState extends State<_EditExtraSheet> {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
               ),
               child: const Text('Juntar linha'),
-            ),
+            )),
             const SizedBox(height: 14),
             OnbField(controller: _price, label: 'Preço (€)', keyboardType: TextInputType.number,
                 error: _tried && double.tryParse(_price.text.trim().replaceAll(',', '.')) == null ? 'Indica o preço.' : null),

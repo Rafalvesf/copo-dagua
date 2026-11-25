@@ -16,6 +16,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../core/partners/category_figure.dart';
 import '../../../core/partner_profile/partner_location.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class BusinessInfoScreen extends ConsumerStatefulWidget {
   const BusinessInfoScreen({super.key});
@@ -41,14 +42,14 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
         title: Text(label),
         content: TextField(controller: controller, autofocus: true),
         actions: [
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancelar'),
-          ),
-          FilledButton(
+          )),
+          PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
             child: const Text('Guardar'),
-          ),
+          )),
         ],
       ),
     );
@@ -73,14 +74,14 @@ class _BusinessInfoScreenState extends ConsumerState<BusinessInfoScreen> {
           minLines: 3,
         ),
         actions: [
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancelar'),
-          ),
-          FilledButton(
+          )),
+          PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
             child: const Text('Guardar'),
-          ),
+          )),
         ],
       ),
     );
@@ -393,14 +394,14 @@ class CategoryPickerDialogState extends State<CategoryPickerDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        PressScale(child: TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
-        ),
-        FilledButton(
+        )),
+        PressScale(child: FilledButton(
           onPressed: () => Navigator.of(context).pop(_selected),
           child: const Text('Guardar'),
-        ),
+        )),
       ],
     );
   }

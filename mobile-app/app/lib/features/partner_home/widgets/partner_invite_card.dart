@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/partners/partner_referrals.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Painel do parceiro (migração 151): selo "Parceiro Fundador" e o link
 /// para convidar os próprios clientes — a cada 5 que pagam a 1.ª reserva,
@@ -98,15 +99,15 @@ class PartnerInviteCard extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: AppFontSize.sm + 1, fontWeight: FontWeight.w600, color: AppTheme.ink)),
             ),
-            IconButton(
+            PressScale(child: IconButton(
               tooltip: 'Copiar link',
               onPressed: copy,
               icon: Icon(Hi.documentDuplicate, size: 18, color: green),
-            ),
+            )),
           ]),
         ),
         const SizedBox(height: 12),
-        FilledButton.icon(
+        PressScale(child: FilledButton.icon(
           onPressed: share,
           icon: const Icon(Hi.arrowUpOnSquare, size: 18),
           label: const Text('Partilhar convite'),
@@ -116,7 +117,7 @@ class PartnerInviteCard extends ConsumerWidget {
             minimumSize: const Size.fromHeight(46),
             shape: const StadiumBorder(),
           ),
-        ),
+        )),
         const SizedBox(height: 10),
         Text(
           [

@@ -54,6 +54,7 @@ import '../../../shared/text_case.dart';
 import '../../../core/partners/partner_achievements.dart' show partnerAchievementsProvider;
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 
 /// Eventos onde ainda dá para reservar este parceiro: elegíveis (sou dono, ou
@@ -2239,7 +2240,7 @@ class _BottomBar extends StatelessWidget {
           Expanded(
             child: SizedBox(
               height: 52,
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 onPressed: onTap,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.ink,
@@ -2252,7 +2253,7 @@ class _BottomBar extends StatelessWidget {
                       fontWeight: FontWeight.w700),
                 ),
                 child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-              ),
+              )),
             ),
           ),
         ]),

@@ -14,6 +14,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/onb_kit.dart' show OnbField;
 import '../../../shared/widgets/page_kit.dart';
 import '../../partners/screens/partner_detail_screen.dart' show PackageChoiceCard, ExtraChoiceRow;
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «O teu menu» (190): a mesa foi reservada e cada convidado escolhe o seu
 /// menu e extras na app, antes de pagar (mockup «Restaurante · perfil»,
@@ -165,7 +166,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
               Text(euros(amount), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             ]),
           ),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: pkg == null || _saving ? null : () => _save(pkg, amount),
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.ink,
@@ -179,7 +180,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
               : t.eachPays
                   ? 'Escolher e pagar · ${euros(amount)}'
                   : 'Guardar escolha'),
-        ),
+        )),
         const SizedBox(height: 8),
         Text(
           t.eachPays

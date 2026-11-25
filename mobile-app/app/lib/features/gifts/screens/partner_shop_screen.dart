@@ -13,6 +13,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Loja do parceiro (migração 160): produtos que os organizadores põem na
 /// lista de presentes; os convidados pagam na app e o parceiro envia.
@@ -84,12 +85,12 @@ class _PartnerShopScreenState extends ConsumerState<PartnerShopScreen> {
                               ),
                             );
                           }),
-                          FilledButton.icon(
+                          PressScale(child: FilledButton.icon(
                             onPressed: () => _edit(context, null),
                             icon: const Icon(Hi.plus),
                             label: const Text('Novo produto'),
                             style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(48), shape: const StadiumBorder()),
-                          ),
+                          )),
                           const SizedBox(height: 12),
                           if (list.isEmpty)
                             const _Info('Ainda não tens produtos.')
@@ -185,7 +186,7 @@ class _Orders extends ConsumerWidget {
                     Text('Enviado', style: TextStyle(fontWeight: FontWeight.w700, color: green)),
                   ])
                 else
-                  FilledButton.icon(
+                  PressScale(child: FilledButton.icon(
                     onPressed: () async {
                       try {
                         await markGiftOrderShipped(o.id);
@@ -199,7 +200,7 @@ class _Orders extends ConsumerWidget {
                     icon: const Icon(Hi.truck, size: 18),
                     label: const Text('Marcar como enviado'),
                     style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
-                  ),
+                  )),
               ]),
             ),
         ],
@@ -366,13 +367,13 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
         ),
         if (_error != null) Text(_error!, style: const TextStyle(color: Color(0xFFB3261E))),
         const SizedBox(height: 10),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: _busy ? null : _save,
           style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           child: Text(_busy ? 'A guardar…' : 'Guardar'),
-        ),
+        )),
         if (widget.existing != null)
-          TextButton(onPressed: _busy ? null : _delete, child: const Text('Apagar produto')),
+          PressScale(child: TextButton(onPressed: _busy ? null : _delete, child: const Text('Apagar produto'))),
       ]),
     );
   }

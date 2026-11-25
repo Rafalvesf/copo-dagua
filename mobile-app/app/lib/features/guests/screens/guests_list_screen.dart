@@ -28,6 +28,7 @@ import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/floating_filter_bar.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class GuestsListScreen extends ConsumerStatefulWidget {
   const GuestsListScreen({super.key});
@@ -269,8 +270,8 @@ class _GuestsListScreenState extends ConsumerState<GuestsListScreen> {
           decoration: const InputDecoration(suffixText: 'convidados'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(d).pop(), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.of(d).pop(int.tryParse(controller.text.trim())), child: const Text('Guardar')),
+          PressScale(child: TextButton(onPressed: () => Navigator.of(d).pop(), child: const Text('Cancelar'))),
+          PressScale(child: FilledButton(onPressed: () => Navigator.of(d).pop(int.tryParse(controller.text.trim())), child: const Text('Guardar'))),
         ],
       ),
     );
@@ -381,11 +382,11 @@ class InviteShareSheetState extends State<InviteShareSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          ElevatedButton.icon(
+          PressScale(child: ElevatedButton.icon(
             onPressed: _copyLink,
             icon: Icon(_linkCopied ? Hi.check : Hi.documentDuplicate, size: 18),
             label: Text(_linkCopied ? 'Copiado!' : 'Copiar link'),
-          ),
+          )),
           ],
           if (guestCode != null) ...[
             const SizedBox(height: 24),
@@ -422,11 +423,11 @@ class InviteShareSheetState extends State<InviteShareSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            ElevatedButton.icon(
+            PressScale(child: ElevatedButton.icon(
               onPressed: () => _copyCode(guestCode),
               icon: Icon(_codeCopied ? Hi.check : Hi.documentDuplicate, size: 18),
               label: Text(_codeCopied ? 'Copiado!' : 'Copiar código'),
-            ),
+            )),
           ],
         ],
       ),

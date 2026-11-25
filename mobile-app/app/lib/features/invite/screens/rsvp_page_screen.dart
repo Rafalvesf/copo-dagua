@@ -14,6 +14,7 @@ import '../../../core/models/models.dart';
 import '../../../core/guest_home/guest_home_providers.dart';
 import '../../guest_home/screens/guest_onboarding_wizard_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Página pública de RSVP — acessível sem sessão nenhuma, para um
 /// convidado específico abrir o link partilhado pelos noivos
@@ -183,7 +184,7 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                     : 'Os anfitriões já sabem a tua resposta. Instala a app para veres o programa, a tua mesa e as fotos.',
                 actions: [
                   if (!_declined && kIsWeb) PrimaryButton(label: 'Instalar a app', onPressed: () => showInstallAppSheet(context)),
-                  TextButton(onPressed: () => setState(() => _submitted = false), child: const Text('Ver o convite')),
+                  PressScale(child: TextButton(onPressed: () => setState(() => _submitted = false), child: const Text('Ver o convite'))),
                 ],
               );
             }
@@ -309,11 +310,11 @@ class _RsvpPageScreenState extends State<RsvpPageScreen> {
                         onPressed: () => _answer(data),
                       ),
                       if (kIsWeb) const SizedBox(height: 10),
-                      if (kIsWeb) OutlinedButton.icon(
+                      if (kIsWeb) PressScale(child: OutlinedButton.icon(
                         onPressed: () => showInstallAppSheet(context),
                         icon: const Icon(Hi.arrowDownTray, size: 18),
                         label: const Text('Instalar a app'),
-                      ),
+                      )),
                     ],
                   ),
                 ),

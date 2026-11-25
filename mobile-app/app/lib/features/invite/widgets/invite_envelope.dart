@@ -9,6 +9,7 @@ import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/theme_color/theme_color.dart';
 import '../../../shared/widgets/buttons.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Envelope do convite (canvas "Envelope do convite", 2026-11-07): o
 /// convidado abre o link e vê primeiro o envelope fechado; ao tocar no
@@ -248,7 +249,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                 SizedBox(
                   width: double.infinity,
                   height: 54,
-                  child: FilledButton(
+                  child: PressScale(child: FilledButton(
                     onPressed: _open,
                     style: FilledButton.styleFrom(
                       backgroundColor: _paper,
@@ -257,7 +258,7 @@ class _InviteEnvelopeScreenState extends State<InviteEnvelopeScreen> with Single
                       textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),
                     ),
                     child: const Text('Abrir convite'),
-                  ),
+                  )),
                 ),
                 const SizedBox(height: 10),
                 const Text('ou toca no selo', style: TextStyle(fontSize: 13, color: _muted)),

@@ -12,6 +12,7 @@ import '../../core/notifications/push.dart';
 import '../../core/supabase/supabase_config.dart';
 import '../../core/theme/app_theme.dart';
 import 'brinde_gate.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Guia da primeira entrada (aprovado 2026-10-25, canvas "Guia de
 /// primeira entrada"): boas-vindas, 4 passos com foco num separador da
@@ -376,17 +377,17 @@ class _TourOverlayState extends State<_TourOverlay> {
               ),
             ),
           const Spacer(),
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () => setState(() => _step = 5),
             style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
             child: const Text('Saltar'),
-          ),
+          )),
           const SizedBox(width: 4),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: () => setState(() => _step++),
             style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: const Text('Seguinte'),
-          ),
+          )),
         ]),
       ],
     ));
@@ -420,7 +421,7 @@ class _TourOverlayState extends State<_TourOverlay> {
           const SizedBox(height: 18),
           Row(children: [
             Expanded(
-              child: TextButton(
+              child: PressScale(child: TextButton(
                 onPressed: _close,
                 style: TextButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
@@ -429,11 +430,11 @@ class _TourOverlayState extends State<_TourOverlay> {
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Saltar'),
-              ),
+              )),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 onPressed: () => setState(() => _step = 1),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
@@ -441,7 +442,7 @@ class _TourOverlayState extends State<_TourOverlay> {
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Começar'),
-              ),
+              )),
             ),
           ]),
         ],
@@ -487,7 +488,7 @@ class _TourOverlayState extends State<_TourOverlay> {
           onTap: _second,
         ),
         const SizedBox(height: 16),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: _close,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(50),
@@ -495,7 +496,7 @@ class _TourOverlayState extends State<_TourOverlay> {
             shape: const StadiumBorder(),
           ),
           child: Text(_c.finalCta),
-        ),
+        )),
       ],
     );
   }
@@ -527,7 +528,7 @@ class _TourOverlayState extends State<_TourOverlay> {
           ]),
         ),
         const SizedBox(width: 8),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: onTap,
           style: FilledButton.styleFrom(
             backgroundColor: filled ? AppTheme.accentOliveDark : Colors.white,
@@ -539,7 +540,7 @@ class _TourOverlayState extends State<_TourOverlay> {
             minimumSize: const Size(0, 38),
           ),
           child: Text(cta),
-        ),
+        )),
       ]),
     );
   }

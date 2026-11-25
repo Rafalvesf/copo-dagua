@@ -24,6 +24,7 @@ import '../../guest_home/widgets/guest_dashboard.dart' show DashButton36;
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import '../../../core/partners/partner_providers.dart' show PartnerPickerArgs;
 import '../../guests/screens/guests_list_screen.dart' show shareEventInvite;
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// O que os convidados veem (programa, dress code, cores, presentes) — para
 /// o painel do organizador saber o que ainda falta.
@@ -109,8 +110,8 @@ Future<void> _revealTables(BuildContext context, WidgetRef ref, String eventId, 
       title: const Text('Revelar as mesas?'),
       content: const Text('Os convidados passam a ver já a mesa deles e quem lá está sentado.'),
       actions: [
-        OutlinedButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Agora não')),
-        FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Revelar')),
+        PressScale(child: OutlinedButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Agora não'))),
+        PressScale(child: FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Revelar'))),
       ],
     ),
   );

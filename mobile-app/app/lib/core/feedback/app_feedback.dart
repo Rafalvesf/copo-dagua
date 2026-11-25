@@ -15,6 +15,7 @@ import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../support/support_providers.dart';
 import '../theme/app_theme.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Reportar erros e classificar a app (2026-10-31, migração 136).
 /// - "Reportar um erro" (Definições → Ajuda) cria um pedido de suporte
@@ -212,12 +213,12 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
                   ],
                 ),
               if (_photos.length < _maxPhotos)
-                OutlinedButton.icon(
+                PressScale(child: OutlinedButton.icon(
                   onPressed: _sending ? null : _addPhotos,
                   icon: const Icon(Hi.photo, size: 20),
                   label: Text(_photos.isEmpty ? 'Anexar fotografias' : 'Mais uma'),
                   style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
-                ),
+                )),
             ],
           ),
           if (_photos.isEmpty)
@@ -231,12 +232,12 @@ class _BugReportFormState extends ConsumerState<_BugReportForm> {
             Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
           ],
           const SizedBox(height: 12),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: _sending ? null : _send,
             child: _sending
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Text('Enviar'),
-          ),
+          )),
         ]),
       ),
     );
@@ -309,8 +310,8 @@ class RatingPrompt {
           title: const Text('Obrigado pela sinceridade'),
           content: const Text('Encontraste algum erro? Conta-nos o que falhou e tratamos disso.'),
           actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Agora não')),
-            FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Reportar um erro')),
+            PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Agora não'))),
+            PressScale(child: FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Reportar um erro'))),
           ],
         ),
       );
@@ -359,13 +360,13 @@ class _RatingFormState extends State<_RatingForm> {
           const SizedBox(height: 14),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             for (var i = 1; i <= 5; i++)
-              IconButton(
+              PressScale(child: IconButton(
                 tooltip: '$i ${i == 1 ? 'estrela' : 'estrelas'}',
                 iconSize: 38,
                 onPressed: () => setState(() => _stars = i),
                 icon: Icon(i <= _stars ? Hi.star : Hi.starOutline,
                     color: i <= _stars ? const Color(0xFFE0B23A) : AppTheme.inkMuted),
-              ),
+              )),
           ]),
           SizedBox(
             height: 22,
@@ -388,14 +389,14 @@ class _RatingFormState extends State<_RatingForm> {
           const SizedBox(height: 10),
           Row(children: [
             Expanded(
-              child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Agora não')),
+              child: PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Agora não'))),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 onPressed: _stars == 0 ? null : () => Navigator.of(context).pop((_stars, _comment.text)),
                 child: const Text('Enviar'),
-              ),
+              )),
             ),
           ]),
         ]),

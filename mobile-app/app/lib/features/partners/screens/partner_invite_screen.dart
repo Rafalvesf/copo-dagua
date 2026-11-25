@@ -13,6 +13,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/install_app_sheet.dart';
 import '../../../shared/widgets/mascot.dart';
 import '../../../shared/widgets/public_state.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// `/p/:code` — link de convite de um parceiro para os seus clientes
 /// (migração 151). Público: sem sessão guarda o código e pede para criar
@@ -79,9 +80,9 @@ class _PartnerInviteScreenState extends ConsumerState<PartnerInviteScreen> {
             'Cria conta (ou entra) e o convite fica ligado a ti. Contas novas têm 50 % de desconto na taxa de serviço da primeira transação.',
         actions: [
           PrimaryButton(label: 'Criar conta', onPressed: () => context.push('/comecar')),
-          TextButton(onPressed: () => context.push('/login'), child: const Text('Já tenho conta')),
+          PressScale(child: TextButton(onPressed: () => context.push('/login'), child: const Text('Já tenho conta'))),
           if (kIsWeb)
-            TextButton(onPressed: () => showInstallAppSheet(context), child: const Text('Instalar a app')),
+            PressScale(child: TextButton(onPressed: () => showInstallAppSheet(context), child: const Text('Instalar a app'))),
         ],
       );
     } else if (_busy || (r == null && _error == null)) {

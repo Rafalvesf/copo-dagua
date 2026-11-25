@@ -10,6 +10,7 @@ import 'alert_outline.dart';
 import 'island_sheet.dart';
 import 'time_wheels.dart';
 import 'vat_confirm.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Popups das pranchetas das Mensagens (2026-11-24/25), iguais aos
 /// mockups: «Editar pedido» (organizador), «Enviar / Editar proposta»
@@ -280,7 +281,7 @@ class _Buttons extends StatelessWidget {
           Expanded(
             child: SizedBox(
               height: 52,
-              child: OutlinedButton(
+              child: PressScale(child: OutlinedButton(
                 onPressed: onOutline,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.ink,
@@ -290,7 +291,7 @@ class _Buttons extends StatelessWidget {
                   textStyle: style,
                 ),
                 child: Text(outline!),
-              ),
+              )),
             ),
           ),
           const SizedBox(width: 8),
@@ -299,7 +300,7 @@ class _Buttons extends StatelessWidget {
           flex: mainFlex,
           child: SizedBox(
             height: 52,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               onPressed: onMain,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -308,7 +309,7 @@ class _Buttons extends StatelessWidget {
                 textStyle: style,
               ),
               child: Text(main, maxLines: 1, overflow: TextOverflow.ellipsis),
-            ),
+            )),
           ),
         ),
       ]),
@@ -518,8 +519,8 @@ class _EditRequestState extends State<_EditRequest> {
                     title: const Text('Cancelar o pedido?'),
                     content: Text('${widget.partnerName} é avisado. Se havia sinal cativo, é libertado.'),
                     actions: [
-                      TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Voltar')),
-                      FilledButton(onPressed: () => Navigator.of(c).pop(true), child: const Text('Cancelar pedido')),
+                      PressScale(child: TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Voltar'))),
+                      PressScale(child: FilledButton(onPressed: () => Navigator.of(c).pop(true), child: const Text('Cancelar pedido'))),
                     ],
                   ),
                 );

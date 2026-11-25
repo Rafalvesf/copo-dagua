@@ -12,6 +12,7 @@ import '../../../core/event/partner_invite.dart';
 import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Página do link "Convidar o teu par" (`/juntar/<token>`, 079).
 /// Com sessão: junta logo a conta ao casamento. Sem sessão: mostra de
@@ -141,13 +142,13 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
                               context.push('/register?role=couple');
                             },
                           ),
-                          OutlinedButton(
+                          PressScale(child: OutlinedButton(
                             onPressed: () {
                               ref.read(pendingPartnerInviteProvider.notifier).set(widget.token);
                               context.push('/login');
                             },
                             child: const Text('Já tenho conta'),
-                          ),
+                          )),
                         ],
                       );
                     },

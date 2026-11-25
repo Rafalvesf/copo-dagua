@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../hero_icons.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Folhas e diálogos "ilha" (pedido 2026-10-18): um cartão branco a
 /// flutuar, cantos redondos em toda a volta e sombra — nunca encostado ao
@@ -307,7 +308,7 @@ Future<bool> askLeaveIsland(BuildContext context) async {
             Expanded(
               child: SizedBox(
                 height: 52,
-                child: OutlinedButton(
+                child: PressScale(child: OutlinedButton(
                   onPressed: () => Navigator.of(ctx).pop(true),
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),
@@ -316,14 +317,14 @@ Future<bool> askLeaveIsland(BuildContext context) async {
                     textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Sair'),
-                ),
+                )),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: SizedBox(
                 height: 52,
-                child: FilledButton(
+                child: PressScale(child: FilledButton(
                   onPressed: () => Navigator.of(ctx).pop(false),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.ink,
@@ -332,7 +333,7 @@ Future<bool> askLeaveIsland(BuildContext context) async {
                     textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   child: const Text('Continuar'),
-                ),
+                )),
               ),
             ),
           ]),
@@ -570,7 +571,7 @@ class IslandMenuButton<T> extends StatelessWidget {
             const SizedBox(height: 12),
             SizedBox(
               height: 52,
-              child: OutlinedButton(
+              child: PressScale(child: OutlinedButton(
                 onPressed: () => Navigator.of(ctx).pop(),
                 style: OutlinedButton.styleFrom(
                   shape: const StadiumBorder(),
@@ -579,7 +580,7 @@ class IslandMenuButton<T> extends StatelessWidget {
                   textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Cancelar'),
-              ),
+              )),
             ),
           ],
         ),
@@ -595,12 +596,12 @@ class IslandMenuButton<T> extends StatelessWidget {
       final tappable = GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => _open(context), child: c);
       return tooltip == null ? tappable : Tooltip(message: tooltip!, child: tappable);
     }
-    return IconButton(
+    return PressScale(child: IconButton(
       tooltip: tooltip,
       padding: padding ?? const EdgeInsets.all(8),
       icon: icon ?? const Icon(Hi.ellipsisHorizontal),
       onPressed: () => _open(context),
-    );
+    ));
   }
 }
 
