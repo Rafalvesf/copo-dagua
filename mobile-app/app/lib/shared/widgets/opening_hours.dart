@@ -65,9 +65,20 @@ class OpeningHours {
       var to = _min(today.$2);
       if (to <= from) to += 24 * 60; // fecha depois da meia-noite
       if (m >= from && m < to) return 'Aberto agora · fecha às ${today.$2}';
+      if (m < from) return 'Fechado agora · abre às ${today.$1}';
+    }
+    for (var i = 1; i <= 7; i++) {
+      final d = (now.weekday - 1 + i) % 7 + 1;
+      final h = days[d];
+      if (h != null) {
+        final when = i == 1 ? 'amanhã' : weekdayNamesPt[d - 1].toLowerCase();
+        return 'Fechado agora · abre $when às ${h.$1}';
+      }
     }
     return 'Fechado agora';
   }
+
+  bool isOpenNow([DateTime? at]) => nowLabel(at)?.startsWith('Aberto') ?? false;
 }
 
 const weekdayNamesPt = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -260,9 +271,10 @@ class OpeningHoursEditor extends StatelessWidget {
   }
 }
 
-/// «Horário» na página do parceiro (mockup «Perfil como os clientes veem»):
-/// título de grupo com a etiqueta «Aberto agora · fecha às …», e uma linha por
-/// dia — hoje a negrito. Sem horário, não aparece.
+/// «Horário» na página do parceiro (pedido 2026-11-25: «linha curta que
+/// abre»): uma linha com o ponto (verde aberto, cinzento fechado),
+/// «Aberto agora · fecha às 19:00» e a seta; tocar abre o popup com os 7
+/// dias (hoje a negrito). Sem horário, não aparece.
 class OpeningHoursSection extends ConsumerWidget {
   final String partnerId;
   final Widget Function(String title) titleBuilder;
@@ -272,40 +284,94 @@ class OpeningHoursSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final h = ref.watch(partnerOpeningHoursProvider(partnerId)).value;
     if (h == null) return const SizedBox.shrink();
-    final today = DateTime.now().weekday;
-    final now = h.nowLabel();
+    final open = h.isOpenNow();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       titleBuilder('Horário'),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (now != null)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: KitTag(now, kind: now.startsWith('Aberto') ? KitTagKind.green : KitTagKind.neutral),
-            ),
-          const SizedBox(height: 6),
-          for (var d = 1; d <= 7; d++)
-            Container(
-              height: 40,
-              decoration: BoxDecoration(border: d == 7 ? null : const Border(bottom: BorderSide(color: AppTheme.line))),
+        child: Semantics(
+          button: true,
+          label: 'Ver o horário da semana',
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => showOpeningHoursSheet(context, h),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
               child: Row(children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(color: open ? AppTheme.accentOliveDark : const Color(0xFFB8B2A6), shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text('${weekdayNamesPt[d - 1]}${d == today ? ' · hoje' : ''}',
-                      style: TextStyle(fontSize: 14, fontWeight: d == today ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
+                  child: Text(h.nowLabel() ?? '', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
-                Text(
-                  h.days[d] == null ? 'Fechado' : '${h.days[d]!.$1} – ${h.days[d]!.$2}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: d == today ? FontWeight.w700 : FontWeight.w600,
-                    color: h.days[d] == null ? AppTheme.inkMuted : AppTheme.ink,
-                  ),
-                ),
+                const Icon(Hi.chevronRight, size: 18, color: AppTheme.inkMuted),
               ]),
             ),
-        ]),
+          ),
+        ),
       ),
     ]);
   }
+}
+
+/// Popup «Horário»: os 7 dias, hoje a negrito, e o estado de agora.
+Future<void> showOpeningHoursSheet(BuildContext context, OpeningHours h) {
+  final today = DateTime.now().weekday;
+  final now = h.nowLabel();
+  return showIslandSheet<void>(
+    context: context,
+    builder: (c) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            const Expanded(child: Text('Horário', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
+            GestureDetector(
+              onTap: () => Navigator.of(c).pop(),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                child: const Icon(Hi.xMark, size: 20, color: Colors.white),
+              ),
+            ),
+          ]),
+          if (now != null) ...[
+            const SizedBox(height: 8),
+            Align(alignment: Alignment.centerLeft, child: KitTag(now, kind: h.isOpenNow() ? KitTagKind.green : KitTagKind.neutral)),
+          ],
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+            child: Column(children: [
+              for (var d = 1; d <= 7; d++)
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(border: d == 7 ? null : const Border(bottom: BorderSide(color: Color(0xFFD9D9D9)))),
+                  child: Row(children: [
+                    Expanded(
+                      child: Text('${weekdayNamesPt[d - 1]}${d == today ? ' · hoje' : ''}',
+                          style: TextStyle(fontSize: 14, fontWeight: d == today ? FontWeight.w700 : FontWeight.w600, color: AppTheme.ink)),
+                    ),
+                    Text(
+                      h.days[d] == null ? 'Fechado' : '${h.days[d]!.$1} – ${h.days[d]!.$2}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: d == today ? FontWeight.w700 : FontWeight.w600,
+                        color: h.days[d] == null ? AppTheme.inkMuted : AppTheme.ink,
+                      ),
+                    ),
+                  ]),
+                ),
+            ]),
+          ),
+        ]),
+      ),
+    ),
+  );
 }

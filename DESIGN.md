@@ -1048,7 +1048,7 @@ peças dos organizadores (§6).
   pílula — abre a roda «ABRE ÀS / FECHA ÀS» — e o interruptor aberto /
   fechado), muda-se em **Disponibilidade** (Início › A tua página ›
   Horário e disponibilidade, «HORÁRIO DE FUNCIONAMENTO» em cima) e aparece na página do parceiro em
-  «HORÁRIO» (hoje a negrito e a etiqueta «Aberto agora · fecha às …»).
+  «HORÁRIO» numa **linha curta que abre** (pedido 2026-11-25): o ponto (verde aberto, cinzento fechado), «Aberto agora · fecha às 19:00» / «Fechado agora · abre amanhã às 10:00» 16 negrito e a seta; tocar abre o popup «Horário» com os 7 dias (hoje a negrito).
 - **Pagamentos e Resultados:** resumo branco sem sombra; o resto em
   molduras.
 - **Pedidos · Alterações:** os pedidos de alteração e de outro dia do
