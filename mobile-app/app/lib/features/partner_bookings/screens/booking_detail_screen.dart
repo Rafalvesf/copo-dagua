@@ -1,4 +1,3 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +7,6 @@ import '../../../core/auth/auth_controller.dart';
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/guest_home/event_tables.dart' show bookingChoicesProvider, BookingChoice;
 import '../../../core/models/models.dart';
-import '../../../core/event/menu_style.dart' show EventDecor;
 import '../../../core/partner_app/partner_app_providers.dart';
 import '../../../core/payments/refunds.dart';
 import '../../../core/supabase/supabase_config.dart';
@@ -16,7 +14,8 @@ import '../../../shared/money.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/page_kit.dart';
-import '../../../shared/widgets/buttons.dart';
+import '../../../shared/widgets/alert_outline.dart';
+import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/event_brief.dart';
 import '../widgets/day_clash_sheet.dart';
@@ -24,7 +23,6 @@ import '../../../shared/widgets/deal_sheets.dart';
 import '../widgets/request_row.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/cancel_booking_sheet.dart';
-import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
 import '../../../shared/widgets/dispute_card.dart';
@@ -136,100 +134,65 @@ Expanded(child: ScrollingHeader(
                 children: [
                   // Mockup «Páginas do parceiro» → Pedido (2026-11-14).
                   const KitHeader(),
-                  Container(
-                    margin: const EdgeInsets.only(top: 20),
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                    child: Row(children: [
-                      V2Avatar(booking.clientName, size: 76, imageUrl: booking.clientAvatarUrl),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(booking.eventType.label.toUpperCase(),
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
-                          const SizedBox(height: 6),
-                          Text(booking.clientName,
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                          const SizedBox(height: 6),
-                          if (booking.proposalSent && booking.status != BookingStatus.confirmado && booking.status != BookingStatus.concluido)
-                            const KitTag('Proposta enviada', kind: KitTagKind.neutral)
-                          else
-                            switch (booking.status) {
-                              BookingStatus.novo => const KitTag('Por responder', kind: KitTagKind.pending),
-                              BookingStatus.emAnalise => const KitTag('Em análise', kind: KitTagKind.neutral),
-                              BookingStatus.aceite => const KitTag('À espera do pagamento', kind: KitTagKind.pending),
-                              BookingStatus.confirmado => const KitTag('Reserva confirmada'),
-                              BookingStatus.concluido => const KitTag('Concluído', kind: KitTagKind.neutral),
-                              BookingStatus.recusado => const KitTag('Recusado', kind: KitTagKind.neutral),
-                            },
-                        ]),
-                      ),
-                    ]),
-                  ),
+                  // Mockup «Parceiro · Pedido / Reserva» (2026-11-25): título 28,
+                  // o estado, o resumo «Faltam» e cada secção numa moldura.
+                  KitTitle(booking.clientName,
+                      subtitle: [booking.eventType.label, dateLabel, if (booking.city.isNotEmpty) booking.city].join(' · ')),
+                  const SizedBox(height: 12),
+                  _StatusLine(booking: booking),
                   // Pedido de um pacote (188): o que escolheram, tal como
                   // estava quando pediram.
-                  if (booking.isPackageRequest) ...[
-                    const KitCaps('O que escolheram', top: 20),
-                    _ChosenPackageCard(booking: booking),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(4, 8, 4, 0),
-                      child: Text('É o texto do teu pacote tal como estava quando pediram. Se o mudares depois, este pedido não muda.',
-                          style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                    ),
-                  ],
-                  const KitCaps('O pedido', top: 20),
-                  KitGroup([
-                    KitSetRow(label: 'Data', value: dateLabel),
-                    if (booking.people != null)
-                      KitSetRow(label: 'Pessoas', value: booking.eachChooses ? '${booking.people} reservadas' : '${booking.people}'),
-                    // 190: como escolhem e quem paga.
-                    if (booking.eachChooses || booking.eachPays) ...[
-                      KitSetRow(label: 'Como escolhem', value: booking.eachChooses ? 'Cada um escolhe' : 'Igual para todos'),
-                      KitSetRow(label: 'Quem paga', value: booking.eachPays ? 'Cada um paga o seu' : 'Os organizadores'),
-                    ],
-                    if (booking.city.isNotEmpty) KitSetRow(label: 'Local', value: booking.city),
-                    KitSetRow(
-                      label: 'Serviço',
-                      value: [booking.category ?? 'Serviço', if (booking.packageLabel.isNotEmpty) booking.packageLabel].join(' · '),
-                    ),
+                  if (booking.isPackageRequest)
+                    SectionFrame(title: 'O que escolheram', children: [
+                      _ChosenPackageCard(booking: booking),
+                      const FrameNote('É o texto do teu pacote tal como estava quando pediram. Se o mudares depois, este pedido não muda.',
+                          top: 8),
+                    ]),
+                  SectionFrame(title: 'O pedido', children: [
+                    KitGroup([
+                      KitSetRow(label: 'Dia', value: dateLabel),
+                      if (booking.people != null)
+                        KitSetRow(label: 'Pessoas', value: booking.eachChooses ? '${booking.people} reservadas' : '${booking.people}'),
+                      // 190: como escolhem e quem paga.
+                      if (booking.eachChooses || booking.eachPays) ...[
+                        KitSetRow(label: 'Como escolhem', value: booking.eachChooses ? 'Cada um escolhe' : 'Igual para todos'),
+                        KitSetRow(label: 'Quem paga', value: booking.eachPays ? 'Cada um paga o seu' : 'Os organizadores'),
+                      ],
+                      if (booking.city.isNotEmpty) KitSetRow(label: 'Local', value: booking.city),
+                      KitSetRow(
+                        label: 'Serviço',
+                        value: [booking.category ?? 'Serviço', if (booking.packageLabel.isNotEmpty) booking.packageLabel].join(' · '),
+                      ),
+                    ]),
                   ]),
                   // Mesa «cada um escolhe» ou cada um paga (190): o que já
                   // escolheram e quanto já está pago.
                   if (!booking.fromQuoteRequest && (booking.eachChooses || booking.eachPays))
                     BookingChoicesSummary(booking: booking),
-                  if (booking.messageFromCouple != null && booking.messageFromCouple!.trim().isNotEmpty) ...[
-                    const KitCaps('Mensagem do cliente', top: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-                      child: Text('«${booking.messageFromCouple!.trim()}»',
-                          style: const TextStyle(fontSize: 15, height: 1.45, color: AppTheme.ink)),
-                    ),
-                  ],
-                  // Convidados, menus, alergias e mesas do evento (migração 140).
+                  if (booking.messageFromCouple != null && booking.messageFromCouple!.trim().isNotEmpty)
+                    SectionFrame(title: 'Mensagem', children: [
+                      Text('«${booking.messageFromCouple!.trim()}»',
+                          textAlign: TextAlign.justify, style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.ink)),
+                    ]),
+                  // Quando e onde, programa, pessoas, menus, alergias e mesas
+                  // (226/227), só com a reserva feita.
                   if (!booking.fromQuoteRequest) ...[
-                    const SizedBox(height: 18),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 4, bottom: 8),
-                      child: Text('Informação do evento', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    ),
+                    const SizedBox(height: 16),
                     PartnerEventBrief(bookingId: booking.id),
-                  ],
+                  ] else
+                    const FrameNote('O dia, o local e as pessoas vêm do evento. A morada, o programa e o resto aparecem quando a reserva fica confirmada.',
+                        top: 16),
                   // Faturas/comprovativos e resumo desta reserva (2026-10-20).
-                  if (!booking.fromQuoteRequest) ...[
-                    const SizedBox(height: 18),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 4, bottom: 8),
-                      child: Text('Documentos', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                    ),
-                    ExportCard(
-                      reportLabel: 'Resumo da reserva',
-                      partnerSide: true,
-                      load: () => loadSingleBookingReport(booking.id, partnerSide: true),
-                    ),
-                    const SizedBox(height: 14),
-                    DisputeCard(bookingId: booking.id, partnerSide: true),
-                  ],
+                  if (!booking.fromQuoteRequest)
+                    SectionFrame(title: 'Documentos', children: [
+                      ExportCard(
+                        reportLabel: 'Resumo da reserva',
+                        partnerSide: true,
+                        load: () => loadSingleBookingReport(booking.id, partnerSide: true),
+                      ),
+                      const SizedBox(height: 14),
+                      DisputeCard(bookingId: booking.id, partnerSide: true),
+                    ]),
                 ],
               ),
 )),
@@ -691,5 +654,78 @@ class _ChosenPackageCard extends StatelessWidget {
         ],
       ]),
     );
+  }
+}
+
+
+/// O estado do pedido por baixo do título: por responder num aviso
+/// amarelo (vermelho a 3 dias ou menos do evento); com a reserva aceite ou
+/// confirmada, o resumo «Faltam N dias» (destaque, linha preta 1,5).
+class _StatusLine extends StatelessWidget {
+  final Booking booking;
+  const _StatusLine({required this.booking});
+
+  @override
+  Widget build(BuildContext context) {
+    final b = booking;
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final days = DateTime(b.eventDate.year, b.eventDate.month, b.eventDate.day).difference(today).inDays;
+    if (b.status == BookingStatus.novo && !b.proposalSent) {
+      final tone = days <= 3 ? AlertTone.urgent : AlertTone.pending;
+      return AlertOutline(
+        tone: tone,
+        radius: 16,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            margin: const EdgeInsets.only(top: 6),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: alertColor(tone), shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Por responder', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              SizedBox(height: 2),
+              Text('O cliente espera a tua proposta.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+        ]),
+      );
+    }
+    final tag = b.proposalSent && b.status != BookingStatus.confirmado && b.status != BookingStatus.concluido
+        ? const KitTag('Proposta enviada', kind: KitTagKind.neutral)
+        : switch (b.status) {
+            BookingStatus.novo => const KitTag('Por responder', kind: KitTagKind.pending),
+            BookingStatus.emAnalise => const KitTag('Em análise', kind: KitTagKind.neutral),
+            BookingStatus.aceite => const KitTag('À espera do pagamento', kind: KitTagKind.pending),
+            BookingStatus.confirmado => const KitTag('Confirmada'),
+            BookingStatus.concluido => const KitTag('Concluído', kind: KitTagKind.neutral),
+            BookingStatus.recusado => const KitTag('Recusado', kind: KitTagKind.neutral),
+          };
+    if ((b.status == BookingStatus.aceite || b.status == BookingStatus.confirmado) && days >= 0) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppTheme.ink, width: 1.5),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(days == 0 ? 'É HOJE' : 'FALTAM',
+              style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          if (days > 0)
+            Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+              Text('$days', style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(width: 8),
+              Text(days == 1 ? 'dia' : 'dias', style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          const SizedBox(height: 8),
+          Align(alignment: Alignment.centerLeft, child: tag),
+        ]),
+      );
+    }
+    return Align(alignment: Alignment.centerLeft, child: tag);
   }
 }
