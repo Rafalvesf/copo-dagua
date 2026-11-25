@@ -249,7 +249,21 @@ Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method
 
 /// Chave pública da Stripe (para preparar os campos do cartão e ver se há
 /// Apple Pay / Google Pay antes de criar o pagamento). `null` se falhar.
-Future<String?> stripePublishableKey() async {
+///
+/// Guardada em memória (2026-11-25: «demora bastante a aparecer o Apple
+/// Pay»): só o 1.º pedido vai ao servidor; [prewarmPayments] pede-a antes
+/// de se tocar em pagar.
+Future<String?>? _pkFuture;
+
+Future<String?> stripePublishableKey() {
+  final f = _pkFuture ??= _fetchPk();
+  return f.then((v) {
+    if (v == null) _pkFuture = null; // falhou: tenta outra vez da próxima
+    return v;
+  });
+}
+
+Future<String?> _fetchPk() async {
   try {
     final res = await supabase.functions.invoke('create-payment-intent', body: {'method': 'config'});
     final d = res.data;
@@ -257,6 +271,11 @@ Future<String?> stripePublishableKey() async {
   } catch (_) {
     return null;
   }
+}
+
+/// Antes de abrir um pagamento (bilhetes, reservas): a chave já fica pronta.
+void prewarmPayments() {
+  stripePublishableKey();
 }
 
 /// Estado real de um pagamento: pergunta à Stripe (`sync-checkout-payment`,
