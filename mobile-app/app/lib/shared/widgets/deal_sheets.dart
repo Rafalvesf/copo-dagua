@@ -154,7 +154,9 @@ class _Box extends StatelessWidget {
   }
 }
 
-class _Stepper extends StatelessWidget {
+/// Pessoas: «−» / «+» e o número também se escreve (pedido 2026-11-25:
+/// «quero poder editar o número de pessoas com texto»).
+class _Stepper extends StatefulWidget {
   final String top;
   final int value;
   final String note;
@@ -162,7 +164,42 @@ class _Stepper extends StatelessWidget {
   const _Stepper({required this.top, required this.value, required this.note, required this.onChanged});
 
   @override
+  State<_Stepper> createState() => _StepperState();
+}
+
+class _StepperState extends State<_Stepper> {
+  late final _ctrl = TextEditingController(text: '${widget.value}');
+  final _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() {
+      if (!_focus.hasFocus && (int.tryParse(_ctrl.text) ?? 0) < 1) _ctrl.text = '${widget.value}';
+    });
+  }
+
+  @override
+  void didUpdateWidget(_Stepper old) {
+    super.didUpdateWidget(old);
+    if (int.tryParse(_ctrl.text) != widget.value && !_focus.hasFocus) _ctrl.text = '${widget.value}';
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _set(int v) {
+    _ctrl.text = '$v';
+    widget.onChanged(v);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final value = widget.value;
     Widget btn(String t, bool dark, VoidCallback onTap) => GestureDetector(
           onTap: onTap,
           child: Container(
@@ -177,20 +214,44 @@ class _Stepper extends StatelessWidget {
             child: Text(t, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: dark ? Colors.white : AppTheme.ink)),
           ),
         );
+    const big = TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
       child: Row(children: [
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (top.isNotEmpty) Text(top, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            Text('$value pessoas', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            if (note.isNotEmpty) Text(note, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            if (widget.top.isNotEmpty) Text(widget.top, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            Row(children: [
+              Container(
+                width: 64,
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+                child: TextField(
+                  controller: _ctrl,
+                  focusNode: _focus,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  maxLength: 4,
+                  style: big,
+                  decoration: const InputDecoration(
+                      border: InputBorder.none, isCollapsed: true, counterText: '', contentPadding: EdgeInsets.symmetric(vertical: 9)),
+                  onChanged: (t) {
+                    final v = int.tryParse(t.replaceAll(RegExp(r'[^0-9]'), ''));
+                    if (v != null && v >= 1) widget.onChanged(v);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text('pessoas', style: big),
+            ]),
+            if (widget.note.isNotEmpty) Text(widget.note, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           ]),
         ),
-        btn('−', false, () => onChanged(value > 1 ? value - 1 : 1)),
+        btn('−', false, () => _set(value > 1 ? value - 1 : 1)),
         const SizedBox(width: 12),
-        btn('+', true, () => onChanged(value + 1)),
+        btn('+', true, () => _set(value + 1)),
       ]),
     );
   }
@@ -549,6 +610,18 @@ Future<bool> showProposalSheet(
   String? requestMessage,
   SentProposal? existing,
 }) async {
+  // Quem trabalha com sinal não pode tirar o sinal (pedido 2026-11-25:
+  // «não permitir colocar Sem sinal para aqueles que têm»). Sinal a 100 %
+  // (restaurantes) = paga-se tudo de uma vez, sem sinal.
+  var noDeposit = false;
+  try {
+    final me = supabase.auth.currentUser?.id;
+    if (me != null) {
+      final v = await supabase.rpc('partner_deposit_pct', params: {'p_partner_id': me});
+      if (v is num) noDeposit = v >= 100;
+    }
+  } catch (_) {}
+  if (!context.mounted) return false;
   final r = await showIslandSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -561,6 +634,7 @@ Future<bool> showProposalSheet(
       requestLine: requestLine,
       requestMessage: requestMessage,
       existing: existing,
+      noDeposit: noDeposit,
     ),
   );
   return r == true;
@@ -575,7 +649,9 @@ class _ProposalSheet extends StatefulWidget {
   final String requestLine;
   final String? requestMessage;
   final SentProposal? existing;
+  final bool noDeposit;
   const _ProposalSheet({
+    this.noDeposit = false,
     required this.quoteRequestId,
     required this.eventId,
     required this.clientName,
@@ -619,8 +695,9 @@ class _ProposalSheetState extends State<_ProposalSheet> {
       _note.text = notes.join('\n');
       final pct = e.price > 0 ? (e.deposit / e.price * 100).round() : 20;
       final i = _deps.indexOf(pct);
-      _dep = i < 0 ? 1 : i;
+      _dep = i < 1 ? 1 : i;
     }
+    if (widget.noDeposit) _dep = 0;
   }
 
   @override
@@ -827,8 +904,11 @@ class _ProposalSheetState extends State<_ProposalSheet> {
             ]),
           ),
         ),
-        _section('SINAL PARA CONFIRMAR',
-            _Pills(labels: const ['Sem sinal', '20 %', '30 %', '50 %'], selected: _dep, onPick: (i) => setState(() => _dep = i))),
+        if (widget.noDeposit)
+          const Text('Sem sinal: paga-se tudo de uma vez.', style: _muted)
+        else
+          _section('SINAL PARA CONFIRMAR',
+              _Pills(labels: const ['20 %', '30 %', '50 %'], selected: _dep - 1, onPick: (i) => setState(() => _dep = i + 1))),
         _section('VÁLIDA DURANTE',
             _Pills(labels: const ['3 dias', '7 dias', '14 dias'], selected: _valid, onPick: (i) => setState(() => _valid = i))),
         _section('NOTA PARA ${_first.toUpperCase()}', _Box(_note, lines: 3)),

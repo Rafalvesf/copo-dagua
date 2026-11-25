@@ -5,6 +5,7 @@ import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
+import '../../../shared/widgets/type_count.dart';
 import '../../../shared/widgets/time_wheels.dart';
 import '../../../shared/widgets/address_picker.dart' show AddressField;
 import '../../../shared/widgets/island_sheet.dart' show IslandBackButton, IslandCloseButton, showIslandSheet;
@@ -397,11 +398,14 @@ class _ReserveFlowSheetState extends State<ReserveFlowSheet> {
             ]),
           ),
           _Step(icon: Hi.minus, label: 'Menos', onTap: value > min ? () => onChange(value - 1) : null),
-          SizedBox(
-            width: 48,
-            child: Text(label?.call(value) ?? '$value',
-                textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          ),
+          if (label == null)
+            TypeCount(value: value, onChanged: onChange, min: min, max: max)
+          else
+            SizedBox(
+              width: 48,
+              child: Text(label(value),
+                  textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ),
           _Step(icon: Hi.plus, label: 'Mais', onTap: value < max ? () => onChange(value + 1) : null),
         ]),
       );
