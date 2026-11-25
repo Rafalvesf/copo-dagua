@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/notifications/push.dart';
 import '../../core/theme/app_theme.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Cartão "Receber notificações com a app fechada" (2026-10-21) — aparece
 /// no topo das notificações enquanto este dispositivo não estiver ativo.
@@ -73,11 +74,11 @@ class _PushOptInCardState extends State<PushOptInCard> {
             Text(text, style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.35)),
             if (action) ...[
               const SizedBox(height: 10),
-              FilledButton(
+              PressScale(child: FilledButton(
                 onPressed: _busy ? null : _enable,
                 style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                 child: Text(_busy ? 'A ativar…' : 'Ativar notificações'),
-              ),
+              )),
             ],
           ]),
         ),

@@ -13,6 +13,7 @@ import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Uma só sombra dos cartões em destaque (DESIGN.md §5).
 const _soft = [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))];
@@ -284,8 +285,8 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
         title: Text('Retirar ${widget.organizer.name}?'),
         content: const Text('Deixa de ver e de organizar este evento.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Retirar')),
+          PressScale(child: TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar'))),
+          PressScale(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Retirar'))),
         ],
       ),
     );
@@ -501,10 +502,10 @@ class PermissionGate extends ConsumerWidget {
                 style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted),
               ),
               const SizedBox(height: 20),
-              TextButton(
+              PressScale(child: TextButton(
                 onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
                 child: const Text('Voltar'),
-              ),
+              )),
             ]),
           ),
         ),
@@ -612,7 +613,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
         const SizedBox(height: 14),
         Row(children: [
           Expanded(
-            child: FilledButton.icon(
+            child: PressScale(child: FilledButton.icon(
               onPressed: _busy ? null : _share,
               icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
@@ -623,11 +624,11 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 shape: const StadiumBorder(),
               ),
-            ),
+            )),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: OutlinedButton(
+            child: PressScale(child: OutlinedButton(
               onPressed: _busy ? null : () => _copy(),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
@@ -637,7 +638,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
                 shape: const StadiumBorder(),
               ),
               child: const FittedBox(child: Text('Copiar link', maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
-            ),
+            )),
           ),
         ]),
       ]),
@@ -682,7 +683,7 @@ class _FriendInviteRow extends StatelessWidget {
         else
           SizedBox(
             height: 36,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               onPressed: onInvite,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -693,7 +694,7 @@ class _FriendInviteRow extends StatelessWidget {
                 textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),
               ),
               child: const Text('Convidar'),
-            ),
+            )),
           ),
       ]),
     );

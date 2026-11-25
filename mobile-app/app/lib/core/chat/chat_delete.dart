@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../shared/widgets/island_sheet.dart';
 import '../supabase/supabase_config.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Apagar mensagens, grupos e conversas (`179_chat_delete.sql`,
 /// pedido 2026-11-11).
@@ -28,11 +29,11 @@ Future<bool> confirmChatDelete(
       title: Text(title),
       content: Text(body),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
-        FilledButton(
+        PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar'))),
+        PressScale(child: FilledButton(
           onPressed: () => Navigator.of(ctx).pop(true),
           child: Text(cta),
-        ),
+        )),
       ],
     ),
   );

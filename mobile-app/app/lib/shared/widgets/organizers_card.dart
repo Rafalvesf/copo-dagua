@@ -8,6 +8,7 @@ import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import 'v2_kit.dart';
 import 'page_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «Quem organiza» no Início do convidado (2026-11-15: "um botão ver
 /// perfil para os organizadores o seguirem, e vice-versa"): cada
@@ -78,7 +79,7 @@ class RowPillButton extends StatelessWidget {
     const text = TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700);
     const pad = EdgeInsets.symmetric(horizontal: 16);
     if (secondary) {
-      return OutlinedButton(
+      return PressScale(child: OutlinedButton(
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
@@ -91,9 +92,9 @@ class RowPillButton extends StatelessWidget {
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         child: Text(label),
-      );
+      ));
     }
-    return FilledButton(
+    return PressScale(child: FilledButton(
       onPressed: onTap,
       style: FilledButton.styleFrom(
         backgroundColor: AppTheme.ink,
@@ -105,6 +106,6 @@ class RowPillButton extends StatelessWidget {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
       child: Text(label),
-    );
+    ));
   }
 }

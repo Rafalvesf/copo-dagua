@@ -8,6 +8,7 @@ import '../../../core/platform/maintenance_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Mostrado em vez do resto da app quando `MaintenanceController`
 /// (`core/platform/maintenance_controller.dart`) diz que o lado atual
@@ -33,10 +34,10 @@ class MaintenanceScreen extends ConsumerWidget {
               label: 'Tentar novamente',
               onPressed: () => ref.read(maintenanceControllerProvider.notifier).retry(),
             ),
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: () => ref.read(authControllerProvider.notifier).logout(),
               child: const Text('Sair'),
-            ),
+            )),
           ],
         ),
       ),

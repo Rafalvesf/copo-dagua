@@ -21,6 +21,7 @@ import '../../../shared/widgets/rsvp_status_badge.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/public_link.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 String _formatHistoryDate(DateTime dt) {
   final local = dt.toLocal();
@@ -84,7 +85,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
                 const SizedBox(height: 16),
                 CompanionLimitRow(title: 'Acompanhantes', value: value, onChanged: (v) => setSheet(() => value = v)),
                 const SizedBox(height: 16),
-                FilledButton(onPressed: () => Navigator.of(sheet).pop(value), child: const Text('Guardar')),
+                PressScale(child: FilledButton(onPressed: () => Navigator.of(sheet).pop(value), child: const Text('Guardar'))),
               ],
             ),
           ),
@@ -167,14 +168,14 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
           ),
         ),
         actions: [
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancelar'),
-          ),
-          FilledButton(
+          )),
+          PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text.trim()),
             child: const Text('Guardar'),
-          ),
+          )),
         ],
       ),
     );
@@ -191,15 +192,15 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
         title: const Text('Remover convidado'),
         content: Text('Remover ${guest.name} da lista de convidados? Esta ação não pode ser desfeita.'),
         actions: [
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancelar'),
-          ),
-          FilledButton(
+          )),
+          PressScale(child: FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppStatusColors.declined),
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Remover'),
-          ),
+          )),
         ],
       ),
     );
@@ -348,7 +349,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
         ],
         Padding(
           padding: const EdgeInsets.only(top: 24),
-          child: FilledButton(
+          child: PressScale(child: FilledButton(
             onPressed: _edit,
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.ink,
@@ -358,11 +359,11 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
               textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
             ),
             child: const Text('Editar convidado'),
-          ),
+          )),
         ),
         Padding(
           padding: const EdgeInsets.only(top: 10),
-          child: OutlinedButton(
+          child: PressScale(child: OutlinedButton(
             onPressed: _confirmRemove,
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,
@@ -373,7 +374,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
               textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
             ),
             child: const Text('Remover convidado'),
-          ),
+          )),
         ),
       ],
     );

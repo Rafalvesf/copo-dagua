@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../hero_icons.dart';
 import 'island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Uma coluna da roda: o título («COMEÇA ÀS»), as opções e a escolhida.
 class WheelColumn {
@@ -153,14 +154,14 @@ Future<TimeOfDay?> pickTimeWheel(BuildContext context, {TimeOfDay? initial, Stri
           const SizedBox(height: 16),
           SizedBox(
             height: 52,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
               onPressed: () {
                 final p = value.split(':');
                 Navigator.of(c).pop(TimeOfDay(hour: int.parse(p[0]), minute: int.parse(p[1])));
               },
               child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-            ),
+            )),
           ),
         ]),
       ),
@@ -213,7 +214,7 @@ Future<DateTime?> pickDateWheel(
           const SizedBox(height: 16),
           SizedBox(
             height: 52,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
               onPressed: () {
                 final y = int.parse(year);
@@ -225,7 +226,7 @@ Future<DateTime?> pickDateWheel(
                 Navigator.of(c).pop(d);
               },
               child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-            ),
+            )),
           ),
         ]),
       ),
@@ -272,11 +273,11 @@ Future<int?> pickNumberWheel(
           const SizedBox(height: 16),
           SizedBox(
             height: 52,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
               onPressed: () => Navigator.of(c).pop(int.parse(value)),
               child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-            ),
+            )),
           ),
         ]),
       ),

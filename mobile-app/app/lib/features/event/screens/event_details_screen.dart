@@ -63,6 +63,7 @@ import '../../../core/partners/partner_providers.dart' show partnerByIdProvider;
 import '../../partners/screens/partner_detail_screen.dart' show PartnerDetailScreen;
 import '../../partners/widgets/partner_cards.dart' show PartnerCarousel;
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 
 /// Cor escolhida pelo organizador (verde-eucalipto por defeito, 098) e
@@ -312,12 +313,12 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             child: Row(
               children: [
-                IconButton(
+                PressScale(child: IconButton(
                   tooltip: 'Cancelar',
                   onPressed: () => _finish(save: false),
                   style: IconButton.styleFrom(backgroundColor: AppTheme.surface, fixedSize: const Size(44, 44)),
                   icon: const Icon(Hi.xMark, color: AppTheme.ink),
-                ),
+                )),
                 Expanded(
                   child: Column(
                     children: [
@@ -329,7 +330,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
                     ],
                   ),
                 ),
-                IconButton(
+                PressScale(child: IconButton(
                   tooltip: 'Guardar',
                   onPressed: _saving ? null : () => _finish(save: true),
                   style: IconButton.styleFrom(
@@ -340,7 +341,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
                   icon: _saving
                       ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: color.on))
                       : Icon(Hi.check, color: color.on),
-                ),
+                )),
               ],
             ),
           ),
@@ -2584,7 +2585,7 @@ class _TodoNow extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      FilledButton(
+                      PressScale(child: FilledButton(
                         onPressed: () => it.onTap(context, ref),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.ink,
@@ -2595,7 +2596,7 @@ class _TodoNow extends ConsumerWidget {
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700),
                         ),
                         child: Text(it.action),
-                      ),
+                      )),
                     ],
                   ),
                 ),
@@ -3034,7 +3035,7 @@ class _InviteCodeCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: FilledButton(
+                  child: PressScale(child: FilledButton(
                     onPressed: () => shareEventInvite(context, event),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -3045,12 +3046,12 @@ class _InviteCodeCard extends StatelessWidget {
                       textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
                     ),
                     child: const Text('Enviar convite', maxLines: 1),
-                  ),
+                  )),
                 ),
                 if (code != null) ...[
                   const SizedBox(width: 8),
                   Expanded(
-                    child: OutlinedButton(
+                    child: PressScale(child: OutlinedButton(
                       onPressed: () => context.push('/invite/$code'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -3061,7 +3062,7 @@ class _InviteCodeCard extends StatelessWidget {
                         textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
                       ),
                       child: const FittedBox(child: Text('Ver como convidado', maxLines: 1)),
-                    ),
+                    )),
                   ),
                 ],
               ],
@@ -3181,19 +3182,19 @@ class _RemindSheetState extends State<_RemindSheet> {
                   : canRemind == 0
                       ? 'Já foram lembrados nas últimas 24 h. Podes voltar a lembrar amanhã.'
                       : '$canRemind ainda não foram lembrados hoje.',
-              action: FilledButton.icon(
+              action: PressScale(child: FilledButton.icon(
                 onPressed: _sending || canRemind == 0 ? null : _remind,
                 icon: const Icon(Hi.paperAirplane, size: 18),
                 label: Text(canRemind == 0 ? 'Lembrete enviado' : 'Enviar lembrete na app'),
                 style: filled(),
-              ),
+              )),
             ),
           const SizedBox(height: 12),
           block(
             icon: Hi.arrowUpOnSquare,
             title: _failed ? 'Enviar o convite outra vez' : '$withoutApp sem a app',
             sub: 'Envia-lhes o convite por WhatsApp ou mensagem. Respondem pelo link, sem conta.',
-            action: OutlinedButton.icon(
+            action: PressScale(child: OutlinedButton.icon(
               onPressed: () => shareEventInvite(context, widget.event),
               icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const Text('Enviar convite por mensagem'),
@@ -3204,16 +3205,16 @@ class _RemindSheetState extends State<_RemindSheet> {
                 shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
               ),
-            ),
+            )),
           ),
           const SizedBox(height: 8),
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               context.push('/guests');
             },
             child: const Text('Ver a lista de convidados'),
-          ),
+          )),
         ],
       ]),
     );
@@ -3537,7 +3538,7 @@ class _NextSteps extends ConsumerWidget {
                   ),
                 ]),
               ),
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: () => context.push('/tasks'),
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.ink,
@@ -3547,7 +3548,7 @@ class _NextSteps extends ConsumerWidget {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
               ),
               child: const Text('Ver todas as tarefas'),
-            ),
+            )),
           ],
         ),
       ),

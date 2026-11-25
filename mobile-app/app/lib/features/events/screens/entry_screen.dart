@@ -16,6 +16,7 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../widgets/qr_scan_box.dart';
 import 'ticket_pass_screens.dart' show brandQr;
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «Entrada» (pedido 2026-11-23: "faz a pagina entrada do codigo qr para
 /// todos os eventos, updates to all"). Um QR da conta (migração 228) e, por
@@ -340,7 +341,7 @@ class _Retry extends StatelessWidget {
         child: Column(children: [
           const Text('Sem ligação. Puxa para baixo para tentar outra vez.',
               textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppTheme.inkMuted)),
-          TextButton(onPressed: onTap, child: const Text('Tentar outra vez')),
+          PressScale(child: TextButton(onPressed: onTap, child: const Text('Tentar outra vez'))),
         ]),
       );
 }
@@ -557,7 +558,7 @@ class _AccountQrCardState extends ConsumerState<_AccountQrCard> with WidgetsBind
                           const Icon(Hi.signalSlash, size: 28, color: AppTheme.inkMuted),
                           const SizedBox(height: 6),
                           const Text('Sem ligação', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                          TextButton(onPressed: _load, child: const Text('Tentar outra vez')),
+                          PressScale(child: TextButton(onPressed: _load, child: const Text('Tentar outra vez'))),
                         ]),
                       ),
           ),

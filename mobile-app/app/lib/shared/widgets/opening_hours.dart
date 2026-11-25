@@ -8,6 +8,7 @@ import 'island_sheet.dart';
 import 'page_kit.dart' show KitTag, KitTagKind;
 import 'time_wheels.dart';
 import '../../core/riverpod_cache.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Horário de funcionamento do parceiro (migração 241, pedido do Rafael,
 /// 2026-11-25): os dias abertos de 1 (segunda) a 7 (domingo), cada um com a
@@ -178,11 +179,11 @@ class OpeningHoursEditor extends StatelessWidget {
             const SizedBox(height: 16),
             SizedBox(
               height: 52,
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                 onPressed: () => Navigator.of(c).pop(true),
                 child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-              ),
+              )),
             ),
           ]),
         ),

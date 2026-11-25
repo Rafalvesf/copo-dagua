@@ -6,6 +6,7 @@ import '../../core/partners/partner_achievements.dart';
 import '../../core/theme/app_theme.dart';
 import '../hero_icons.dart';
 import 'island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 // Conquistas dos parceiros (pedido do Rafael, 2026-11-22, mockup
 // «Conquistas dos parceiros», forma C; DESIGN.md §6 «Conquistas»):
@@ -174,7 +175,7 @@ Future<void> showAchievementsSheet(BuildContext context, String partnerName, Lis
             line(Icon(Hi.checkBadge, size: 22, color: AppTheme.accentOliveDark), const Color(0xFFE6EDE1), 'Verificado',
                 'Perfil aprovado pela equipa da À Nossa!'),
             const SizedBox(height: 16),
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: () => Navigator.of(ctx).pop(),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -185,7 +186,7 @@ Future<void> showAchievementsSheet(BuildContext context, String partnerName, Lis
                     fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
               ),
               child: const Text('OK'),
-            ),
+            )),
           ]),
         );
       },

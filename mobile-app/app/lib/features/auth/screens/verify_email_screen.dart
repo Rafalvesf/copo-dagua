@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
@@ -59,12 +60,12 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
               loading: loading,
               onPressed: () => ref.read(authControllerProvider.notifier).confirmEmailVerified(),
             ),
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: _resendCooldown == 0 ? () => setState(() => _resendCooldown = 60) : null,
               child: Text(
                 _resendCooldown == 0 ? 'Reenviar email' : 'Reenviar email (daqui a ${_resendCooldown}s)',
               ),
-            ),
+            )),
           ],
         ),
       ),

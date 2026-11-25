@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Peças dos ecrãs de início (canvas "Início 3–6"), copiadas do design:
 /// fundo branco, voltar redondo à esquerda, título 28/34, campos de 54 px
@@ -241,7 +242,7 @@ class AuthPrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 54,
-      child: FilledButton(
+      child: PressScale(child: FilledButton(
         onPressed: loading ? null : onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: AppTheme.ink,
@@ -258,7 +259,7 @@ class AuthPrimaryButton extends StatelessWidget {
         child: loading
             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
             : Text(label),
-      ),
+      )),
     );
   }
 }
@@ -276,7 +277,7 @@ class AuthSocialButton extends StatelessWidget {
       padding: const EdgeInsets.only(top: 10),
       child: SizedBox(
         height: 52,
-        child: OutlinedButton(
+        child: PressScale(child: OutlinedButton(
           onPressed: onPressed ?? () => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Em breve — por agora usa o email.')),
               ),
@@ -306,7 +307,7 @@ class AuthSocialButton extends StatelessWidget {
               Text(label),
             ],
           ),
-        ),
+        )),
       ),
     );
   }

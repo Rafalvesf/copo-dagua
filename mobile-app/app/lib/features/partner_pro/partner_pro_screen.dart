@@ -16,6 +16,7 @@ import '../../shared/widgets/page_kit.dart';
 import '../../shared/widgets/partner_badges.dart' show PremiumBadge;
 import '../../shared/widgets/premium_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Plano Pro do parceiro (migração 161).
 class PartnerProScreen extends ConsumerStatefulWidget {
@@ -96,8 +97,8 @@ class _PartnerProScreenState extends ConsumerState<PartnerProScreen> {
           title: const Text('Cancelar o Premium?'),
           content: const Text('Continuas Premium até ao fim do período que já pagaste. Depois não é renovado.'),
           actions: [
-            TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Voltar')),
-            FilledButton(onPressed: () => Navigator.of(c).pop(true), child: const Text('Cancelar subscrição')),
+            PressScale(child: TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Voltar'))),
+            PressScale(child: FilledButton(onPressed: () => Navigator.of(c).pop(true), child: const Text('Cancelar subscrição'))),
           ],
         ),
       );

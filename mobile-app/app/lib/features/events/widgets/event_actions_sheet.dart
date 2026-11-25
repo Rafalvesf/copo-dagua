@@ -7,6 +7,7 @@ import '../../../core/event/event_lifecycle.dart';
 import '../../../core/event/event_controller.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Arquivar ou apagar um evento (migração 185): na página do evento (⋯) e
 /// com um toque longo no cartão em "Os meus eventos". O apagar pede
@@ -99,7 +100,7 @@ class _EventActionsState extends State<_EventActions> {
           const SizedBox(height: 16),
           Row(children: [
             Expanded(
-              child: OutlinedButton(
+              child: PressScale(child: OutlinedButton(
                 onPressed: _busy ? null : () => setState(() => _confirmDelete = false),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
@@ -108,11 +109,11 @@ class _EventActionsState extends State<_EventActions> {
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Cancelar'),
-              ),
+              )),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 onPressed: _busy ? null : () => _run(() => deleteEvent(widget.eventId), 'deleted'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
@@ -123,7 +124,7 @@ class _EventActionsState extends State<_EventActions> {
                 child: _busy
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Text('Apagar'),
-              ),
+              )),
             ),
           ]),
         ],

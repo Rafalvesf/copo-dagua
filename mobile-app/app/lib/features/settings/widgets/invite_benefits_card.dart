@@ -8,6 +8,7 @@ import '../../../core/home/home_providers.dart' show organizerFeeConfigProvider,
 import '../../../core/invites/invites.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/page_kit.dart' show KitTag;
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «Convidar» nas Definições (pedido 2026-11-16, migração 193): o link de
 /// convite (parceiros e organizadores), o progresso «1 de 5», os
@@ -113,15 +114,15 @@ class InviteBenefitsCard extends ConsumerWidget {
             Expanded(
               child: Text(link, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: AppTheme.ink)),
             ),
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: copy,
               style: TextButton.styleFrom(foregroundColor: AppTheme.ink),
               child: const Text('Copiar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-            ),
+            )),
           ]),
         ),
         const SizedBox(height: 12),
-        FilledButton(
+        PressScale(child: FilledButton(
           onPressed: share,
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.ink,
@@ -132,7 +133,7 @@ class InviteBenefitsCard extends ConsumerWidget {
                 fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
           ),
           child: const Text('Partilhar convite'),
-        ),
+        )),
       ]),
     );
   }

@@ -9,6 +9,7 @@ import '../../../core/gifts/envelopes.dart';
 import '../../../core/models/models.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Envelope digital (migração 156): escolhe o valor e escreve uma mensagem;
 /// depois vê o IBAN, o valor e a descrição para copiar, faz a
@@ -186,11 +187,11 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
             decoration: const InputDecoration(labelText: 'Mensagem (opcional)', hintText: 'Muitas felicidades!'),
           ),
           const SizedBox(height: 8),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: valid ? () => setState(() => _step2 = true) : null,
             style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
             child: Text(valid ? 'Continuar · ${envelopeEuros(v)}' : 'Continuar'),
-          ),
+          )),
         ] else ...[
           _copyRow('IBAN', _iban, 'IBAN'),
           _copyRow('Valor', envelopeEuros(v ?? 0), 'Valor'),
@@ -205,13 +206,13 @@ class _EnvelopeSheetState extends ConsumerState<_EnvelopeSheet> {
             Text(_error!, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13)),
           ],
           const SizedBox(height: 12),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: _sending ? null : _confirm,
             style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
             child: _sending
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Text('Já fiz a transferência'),
-          ),
+          )),
         ],
       ]),
     );

@@ -37,6 +37,7 @@ import '../../../core/budget/all_budgets.dart';
 import '../../../shared/widgets/event_pills.dart';
 import '../../../shared/text_case.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 enum _BudgetFilter { all, paid, pending }
 
@@ -281,13 +282,13 @@ Future<double?> _askAmount(BuildContext context, String title, double current) a
         decoration: const InputDecoration(suffixText: '€'),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-        FilledButton(
+        PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))),
+        PressScale(child: FilledButton(
           onPressed: () => Navigator.of(context).pop(
             double.tryParse(controller.text.trim().replaceAll(' ', '').replaceAll(',', '.')),
           ),
           child: const Text('Guardar'),
-        ),
+        )),
       ],
     ),
   );
@@ -823,7 +824,7 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
           padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + MediaQuery.paddingOf(context).bottom),
           child: SizedBox(
             height: 52,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               onPressed: _save,
               style: FilledButton.styleFrom(
                 backgroundColor: ok ? AppTheme.ink : AppTheme.ink.withValues(alpha: 0.35),
@@ -832,7 +833,7 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
                 textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
               child: Text(ok ? 'Guardar · ${_eur(v)}' : 'Guardar'),
-            ),
+            )),
           ),
         ),
       ]),

@@ -23,6 +23,7 @@ import '../../../shared/widgets/export_card.dart';
 import '../../../core/exports/exports.dart';
 import '../../payments/screens/pay_done_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Pagamentos do parceiro, tudo dentro da app (2026-10-19): saldo real da
 /// Stripe, botão "Levantar" para o IBAN, histórico de levantamentos e o
@@ -56,8 +57,8 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           const _SheetRow(icon: Hi.banknotes, text: 'Sem custos de levantamento'),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Levantar')),
+          PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar'))),
+          PressScale(child: FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Levantar'))),
         ],
       ),
     );
@@ -437,7 +438,7 @@ class _PillButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SizedBox(
         height: 54,
-        child: FilledButton(
+        child: PressScale(child: FilledButton(
           onPressed: onPressed,
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.ink,
@@ -451,7 +452,7 @@ class _PillButton extends StatelessWidget {
             if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 8)],
             Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis)),
           ]),
-        ),
+        )),
       );
 }
 
@@ -479,7 +480,7 @@ class _ErrorCard extends StatelessWidget {
         decoration: whiteLineCard(),
         child: Column(children: [
           Text(text, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.inkMuted)),
-          TextButton(onPressed: onRetry, child: const Text('Tentar outra vez')),
+          PressScale(child: TextButton(onPressed: onRetry, child: const Text('Tentar outra vez'))),
         ]),
       );
 }
@@ -530,8 +531,8 @@ class _ModeSheetState extends State<_ModeSheet> {
         ],
       ]),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.of(context).pop(_sel), child: const Text('Guardar')),
+        PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))),
+        PressScale(child: FilledButton(onPressed: () => Navigator.of(context).pop(_sel), child: const Text('Guardar'))),
       ],
     );
   }

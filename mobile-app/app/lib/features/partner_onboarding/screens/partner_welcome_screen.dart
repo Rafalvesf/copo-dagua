@@ -32,6 +32,7 @@ import '../../../shared/widgets/onboarding_exit.dart';
 import '../../../shared/widgets/opening_hours.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Primeiro ecrã visto por uma conta de parceiro recém-registada.
 ///
@@ -581,7 +582,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
               const SizedBox(height: 12),
               SizedBox(
                 height: 52,
-                child: FilledButton(
+                child: PressScale(child: FilledButton(
                   onPressed: !_canContinue || _saving ? null : _continue,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.ink,
@@ -594,7 +595,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                   child: _saving
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
                       : Text(_stepIndex == total ? 'Concluir' : 'Continuar'),
-                ),
+                )),
               ),
             ],
           ),
@@ -926,7 +927,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  TextButton(onPressed: _addOtherArea, child: const Text('Juntar')),
+                  PressScale(child: TextButton(onPressed: _addOtherArea, child: const Text('Juntar'))),
                 ],
               ),
               const SizedBox(height: 24),
@@ -1402,11 +1403,11 @@ class _NumberStepper extends StatelessWidget {
           const SizedBox(height: 4),
           Row(
             children: [
-              IconButton(
+              PressScale(child: IconButton(
                 onPressed: v <= 0 ? null : () => onChanged(v - 1 <= 0 ? null : v - 1),
                 icon: const Icon(Hi.minus),
                 tooltip: 'Menos',
-              ),
+              )),
               Expanded(
                 child: Column(
                   children: [
@@ -1415,11 +1416,11 @@ class _NumberStepper extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
+              PressScale(child: IconButton(
                 onPressed: () => onChanged(v + (v >= 50 ? 10 : 1)),
                 icon: const Icon(Hi.plus),
                 tooltip: 'Mais',
-              ),
+              )),
             ],
           ),
         ],

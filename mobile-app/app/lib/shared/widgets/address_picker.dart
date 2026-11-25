@@ -11,6 +11,7 @@ import 'island_sheet.dart';
 import 'snappy_tap.dart';
 import 'venue_map.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Seletor de moradas com o Google (pedido do Rafael, 2026-11-20; mockups
 /// «Morada · pesquisa» e «Morada · confirmar»), para **todos** os campos de
@@ -319,14 +320,14 @@ class _AddressPickerState extends State<_AddressPicker> {
               prefixIcon: const Icon(Hi.magnifyingGlass, size: 18, color: AppTheme.inkMuted),
               suffixIcon: _query.text.isEmpty
                   ? null
-                  : IconButton(
+                  : PressScale(child: IconButton(
                       tooltip: 'Limpar',
                       icon: const Icon(Hi.xMark, size: 16, color: AppTheme.ink),
                       onPressed: () {
                         _query.clear();
                         setState(() => _results = const []);
                       },
-                    ),
+                    )),
               filled: true,
               fillColor: AppTheme.background,
               contentPadding: const EdgeInsets.symmetric(vertical: 16),
@@ -488,7 +489,7 @@ class _AddressPickerState extends State<_AddressPicker> {
         const SizedBox(height: 16),
         SizedBox(
           height: 52,
-          child: FilledButton(
+          child: PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(p),
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.ink,
@@ -498,7 +499,7 @@ class _AddressPickerState extends State<_AddressPicker> {
                   fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
             ),
             child: const Text('Usar este local'),
-          ),
+          )),
         ),
         const SizedBox(height: 8),
         Center(

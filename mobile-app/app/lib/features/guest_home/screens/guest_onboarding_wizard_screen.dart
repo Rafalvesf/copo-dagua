@@ -18,6 +18,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/form_fields.dart';
 import '../../../shared/widgets/pronto_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Onboarding do convidado — uma pergunta por ecrã (canvas "Convidado
 /// 1–8"). Pedido do utilizador (2026-10-17): não só casamentos, vários
@@ -433,7 +434,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                     const SizedBox(width: 12),
                     Expanded(child: OnbProgress(value: 0.2 + 0.8 * (_index + 1) / (steps.length + 1))),
                     if (step == _Step.allergies)
-                      TextButton(
+                      PressScale(child: TextButton(
                         onPressed: () {
                           setState(() {
                             for (final p in _people) {
@@ -447,7 +448,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                         },
                         style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
                         child: const Text('Ninguém tem', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                      ),
+                      )),
                   ],
                 ),
               ),
@@ -457,7 +458,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
               const SizedBox(height: 12),
               SizedBox(
                 height: 52,
-                child: FilledButton(
+                child: PressScale(child: FilledButton(
                   onPressed: _saving ? null : () => _continue(steps),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.ink,
@@ -468,7 +469,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                   child: _saving
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
                       : Text(_index == steps.length - 1 ? 'Concluir' : 'Continuar'),
-                ),
+                )),
               ),
             ],
           ),
@@ -1035,11 +1036,11 @@ class _CompanionPageState extends State<_CompanionPage> {
         if (widget.existing != null)
           Padding(
             padding: const EdgeInsets.only(top: 6),
-            child: TextButton(
+            child: PressScale(child: TextButton(
               onPressed: () => Navigator.of(context).pop(_Person(name: '')),
               style: TextButton.styleFrom(foregroundColor: AppStatusColors.declined),
               child: const Text('Remover acompanhante', style: TextStyle(fontWeight: FontWeight.w700)),
-            ),
+            )),
           ),
       ],
     );

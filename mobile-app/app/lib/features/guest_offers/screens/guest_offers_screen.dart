@@ -16,6 +16,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../widgets/guest_offer_widgets.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Lado do convidado: o alojamento e o transporte que o organizador
 /// preparou. Reserva e paga na app (Stripe), o valor vai para o parceiro.
@@ -155,7 +156,7 @@ class _OfferCard extends ConsumerWidget {
           Text(soldOut ? 'Esgotado' : '${o.kind.count(o.remaining)} livres',
               style: const TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
           const SizedBox(height: 12),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: soldOut || !o.payable
                 ? null
                 : () async {
@@ -178,7 +179,7 @@ class _OfferCard extends ConsumerWidget {
                 : o.payable
                     ? 'Reservar'
                     : 'Pagamentos ainda indisponíveis'),
-          ),
+          )),
         ],
       ),
     );
@@ -289,7 +290,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
             Text('Inclui a taxa de serviço. Pagas com cartão num ecrã seguro.',
                 style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted)),
             const SizedBox(height: 20),
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: _busy ? null : _pay,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -297,7 +298,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
                 shape: const StadiumBorder(),
               ),
               child: Text(_busy ? 'A abrir pagamento…' : 'Pagar ${euros(total, cents: true)}'),
-            ),
+            )),
           ],
         ),
       ),
@@ -315,7 +316,7 @@ class _Stepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget btn(IconData icon, String tip, int? next) => IconButton.filled(
+    Widget btn(IconData icon, String tip, int? next) => PressScale(child: IconButton.filled(
           tooltip: tip,
           style: IconButton.styleFrom(
             backgroundColor: AppTheme.ink,
@@ -324,7 +325,7 @@ class _Stepper extends StatelessWidget {
           ),
           onPressed: next == null ? null : () => onChanged(next),
           icon: Icon(icon),
-        );
+        ));
     return Row(
       children: [
         Expanded(child: Text(label, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
@@ -372,13 +373,13 @@ class _MyReservationCard extends StatelessWidget {
           if (paid)
             const StatusChip('Pago', strong: true)
           else
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: () async {
                 await cancelGuestReservation(r.id);
                 await onChanged();
               },
               child: const Text('Cancelar'),
-            ),
+            )),
         ],
       ),
     );

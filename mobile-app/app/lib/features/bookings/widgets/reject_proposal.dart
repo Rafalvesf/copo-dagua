@@ -4,6 +4,7 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «Recusar» uma proposta (mockups «Reservar por categoria» · Só orçamento,
 /// 2026-11-21): pergunta o motivo e uma mensagem opcional, grava-os
@@ -155,7 +156,7 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
         const SizedBox(height: 20),
         SizedBox(
           height: 52,
-          child: FilledButton(
+          child: PressScale(child: FilledButton(
             onPressed: _code == null
                 ? null
                 : () {
@@ -172,7 +173,7 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
               textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
             child: const Text('Recusar proposta'),
-          ),
+          )),
         ),
       ]),
     );

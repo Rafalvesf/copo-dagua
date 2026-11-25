@@ -12,6 +12,7 @@ import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/step_sheet_head.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «Já têm tratado?» dentro das Reservas (pedido 2026-11-23: antes era a
 /// página «Serviços tratados» à parte). Por categoria, o organizador diz se
@@ -275,7 +276,7 @@ class _PreferenceSheetState extends State<_PreferenceSheet> {
           const SizedBox(height: 20),
           SizedBox(
             height: 52,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
@@ -284,7 +285,7 @@ class _PreferenceSheetState extends State<_PreferenceSheet> {
               ),
               onPressed: () => Navigator.of(context).pop((_value, _name.text)),
               child: const Text('Guardar'),
-            ),
+            )),
           ),
         ]),
       ),

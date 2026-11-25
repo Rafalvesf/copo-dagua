@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/theme_color/theme_color.dart';
 import '../../../shared/widgets/steady_ticker.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class PayDoneArgs {
   final String partnerName;
@@ -78,11 +79,11 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
               children: [
                 Align(
                   alignment: Alignment.centerRight,
-                  child: IconButton(
+                  child: PressScale(child: IconButton(
                     tooltip: 'Fechar',
                     onPressed: () => context.go(a.primaryRoute),
                     icon: const Icon(Hi.xMark, color: Colors.white),
-                  ),
+                  )),
                 ),
                 const Spacer(flex: 2),
                 SizedBox(
@@ -162,7 +163,7 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                 SizedBox(
                   width: double.infinity,
                   height: 54,
-                  child: FilledButton(
+                  child: PressScale(child: FilledButton(
                     onPressed: () => context.go(a.primaryRoute),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -171,14 +172,14 @@ class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProvider
                       textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: AppFontSize.lg, fontWeight: FontWeight.w700),
                     ),
                     child: Text(a.primaryLabel),
-                  ),
+                  )),
                 ),
                 const SizedBox(height: 8),
-                TextButton(
+                PressScale(child: TextButton(
                   onPressed: () => context.go(a.secondaryRoute),
                   child: Text(a.secondaryLabel,
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                ),
+                )),
               ],
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'alert_outline.dart';
 import 'island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «Pagar mais tarde?» (mockups «Reservar por categoria», 2026-11-21): o
 /// aviso do que acontece sem pagamento — amarelo, vermelho nos últimos 3
@@ -55,7 +56,7 @@ Future<bool> askPayLater(
           Expanded(
             child: SizedBox(
               height: 52,
-              child: OutlinedButton(
+              child: PressScale(child: OutlinedButton(
                 onPressed: () => Navigator.of(ctx).pop(true),
                 style: OutlinedButton.styleFrom(
                   backgroundColor: Colors.white,
@@ -65,14 +66,14 @@ Future<bool> askPayLater(
                   textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Pagar mais tarde'),
-              ),
+              )),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: SizedBox(
               height: 52,
-              child: FilledButton(
+              child: PressScale(child: FilledButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.ink,
@@ -81,7 +82,7 @@ Future<bool> askPayLater(
                   textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
                 child: const Text('Pagar agora'),
-              ),
+              )),
             ),
           ),
         ]),

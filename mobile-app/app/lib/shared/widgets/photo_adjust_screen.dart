@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Deixa o casal posicionar/ampliar a foto antes de a guardar como capa
 /// — pedido explícito do utilizador: "faz com que eu consiga ajustar a
@@ -67,11 +68,11 @@ class _PhotoAdjustScreenState extends State<_PhotoAdjustScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Row(
                 children: [
-                  IconButton(
+                  PressScale(child: IconButton(
                     tooltip: 'Fechar',
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Hi.xMark, color: Colors.white),
-                  ),
+                  )),
                   const Spacer(),
                   const Text(
                     'Ajustar foto',
@@ -110,7 +111,7 @@ class _PhotoAdjustScreenState extends State<_PhotoAdjustScreen> {
               padding: const EdgeInsets.all(20),
               child: SizedBox(
                 width: double.infinity,
-                child: FilledButton(
+                child: PressScale(child: FilledButton(
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.ink,
                     minimumSize: const Size.fromHeight(52),
@@ -123,7 +124,7 @@ class _PhotoAdjustScreenState extends State<_PhotoAdjustScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                         )
                       : const Text('Guardar'),
-                ),
+                )),
               ),
             ),
           ],

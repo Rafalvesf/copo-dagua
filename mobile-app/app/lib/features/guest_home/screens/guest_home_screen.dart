@@ -30,6 +30,7 @@ import '../widgets/guest_dashboard.dart';
 import '../../../core/guest_home/event_tables.dart';
 import '../../../shared/widgets/page_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Home de quem se regista com `UserRole.guest` («Começar» → convidado) — pedido explícito do utilizador (mockup de
 /// referência): página de aterragem "O nosso casamento" (foto de capa,
@@ -170,11 +171,11 @@ class _EmptyState extends StatelessWidget {
           PrimaryButton(label: 'Ver eventos', onPressed: () => context.go('/eventos')),
           const SizedBox(height: 24),
           Center(
-            child: TextButton.icon(
+            child: PressScale(child: TextButton.icon(
               onPressed: () => ref.read(authControllerProvider.notifier).logout(),
               icon: const Icon(Hi.arrowRightStartOnRectangle),
               label: const Text('Sair'),
-            ),
+            )),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../money.dart';
 import 'island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Taxa de IVA normal em Portugal continental (23%). Usada para mostrar o
 /// detalhe do IVA nos comprovativos (`core/exports/exports.dart`).
@@ -24,8 +25,8 @@ Future<bool> confirmVatIncluded(BuildContext context, double amount) async {
         style: const TextStyle(color: AppTheme.inkMuted, fontSize: AppFontSize.md),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Não')),
-        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Sim, avançar')),
+        PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Não'))),
+        PressScale(child: FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Sim, avançar'))),
       ],
     ),
   );

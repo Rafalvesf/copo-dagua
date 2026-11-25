@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/event/date_format_pt.dart';
 import 'snappy_tap.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 DateTime dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
@@ -82,18 +83,18 @@ class MonthCalendarGrid extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
+              PressScale(child: IconButton(
                 onPressed: () => onMonthChanged(DateTime(visibleMonth.year, visibleMonth.month - 1)),
                 icon: const Icon(Hi.chevronLeft),
                 color: AppTheme.ink,
                 tooltip: 'Mês anterior',
-              ),
-              IconButton(
+              )),
+              PressScale(child: IconButton(
                 onPressed: () => onMonthChanged(DateTime(visibleMonth.year, visibleMonth.month + 1)),
                 icon: const Icon(Hi.chevronRight),
                 color: AppTheme.ink,
                 tooltip: 'Mês seguinte',
-              ),
+              )),
             ],
           ),
           const SizedBox(height: 4),

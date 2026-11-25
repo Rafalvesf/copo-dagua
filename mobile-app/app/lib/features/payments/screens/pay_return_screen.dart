@@ -13,6 +13,7 @@ import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/money.dart';
 import 'pay_done_screen.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Volta de um pagamento que precisou de sair da app (2026-10-21):
 /// confirma o estado e mostra logo o "Pagamento feito" — sem abertura,
@@ -101,11 +102,11 @@ class _PayReturnScreenState extends ConsumerState<PayReturnScreen> {
                       style: TextStyle(fontSize: AppFontSize.sm, color: AppTheme.inkMuted, height: 1.4),
                     ),
                     const SizedBox(height: 20),
-                    FilledButton(
+                    PressScale(child: FilledButton(
                       onPressed: () => context.go('/bookings'),
                       style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
                       child: const Text('Ver reservas'),
-                    ),
+                    )),
                   ])
                 : Column(mainAxisSize: MainAxisSize.min, children: [
                     CircularProgressIndicator(color: AppTheme.accentOliveDark),

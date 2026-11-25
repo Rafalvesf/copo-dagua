@@ -32,6 +32,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/photo_card.dart' show CardsDivider;
 import '../../../shared/widgets/address_picker.dart' show showAddressPicker;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class PartnersListScreen extends ConsumerStatefulWidget {
   final String? categorySlug;
@@ -892,21 +893,21 @@ class _FiltersSheetState extends State<_FiltersSheet> {
           child: Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: PressScale(child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(
                     const _AdvancedFilters(null, null, _PartnerSort.relevance),
                   ),
                   child: const Text('Limpar'),
-                ),
+                )),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton(
+                child: PressScale(child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(
                     _AdvancedFilters(_maxPrice, _minRating, _sort),
                   ),
                   child: const Text('Aplicar'),
-                ),
+                )),
               ),
             ],
           ),

@@ -14,6 +14,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class PartnerReviewsScreen extends ConsumerWidget {
   const PartnerReviewsScreen({super.key});
@@ -39,14 +40,14 @@ class PartnerReviewsScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancelar'),
-          ),
-          FilledButton(
+          )),
+          PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text),
             child: const Text('Guardar'),
-          ),
+          )),
         ],
       ),
     );
@@ -63,14 +64,14 @@ class PartnerReviewsScreen extends ConsumerWidget {
           'Denunciar esta avaliação para revisão da equipa À Nossa!? Deixa de aparecer no teu perfil público até a equipa decidir.',
         ),
         actions: [
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancelar'),
-          ),
-          FilledButton(
+          )),
+          PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Denunciar'),
-          ),
+          )),
         ],
       ),
     );

@@ -26,6 +26,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 enum _PlanView { plan, list }
 
@@ -1140,7 +1141,7 @@ class _TableConfigSheetState extends ConsumerState<_TableConfigSheet> {
                 ),
               ),
               if (widget.canRemove)
-                TextButton(
+                PressScale(child: TextButton(
                   onPressed: () => Navigator.of(
                     context,
                   ).pop(const _TableConfigResult.remove()),
@@ -1148,7 +1149,7 @@ class _TableConfigSheetState extends ConsumerState<_TableConfigSheet> {
                     'Remover',
                     style: TextStyle(color: AppStatusColors.declined),
                   ),
-                ),
+                )),
             ],
           ),
           const SizedBox(height: 10),
@@ -1291,12 +1292,12 @@ class _GuestPickRow extends StatelessWidget {
             ),
           ),
           if (onRename != null)
-            IconButton(
+            PressScale(child: IconButton(
               tooltip: 'Nome nos Lugares',
               visualDensity: VisualDensity.compact,
               onPressed: onRename,
               icon: const Icon(Hi.pencil, size: 18, color: AppTheme.inkMuted),
-            ),
+            )),
           Icon(
             selected ? Hi.checkCircle : Icons.circle_outlined,
             color: selected ? AppStatusColors.confirmed : AppTheme.inkMuted,
@@ -1399,8 +1400,8 @@ Future<void> _resetTables(BuildContext context, ProviderContainer container, Lis
       title: const Text('Recomeçar distribuição?'),
       content: const Text('Todas as mesas ficam vazias. Os convidados não são apagados.'),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Recomeçar')),
+        PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar'))),
+        PressScale(child: FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Recomeçar'))),
       ],
     ),
   );
@@ -1442,8 +1443,8 @@ Future<void> renameGuest(BuildContext context, WidgetRef ref, Guest guest) async
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-        FilledButton(onPressed: () => Navigator.of(context).pop(controller.text), child: const Text('Guardar')),
+        PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))),
+        PressScale(child: FilledButton(onPressed: () => Navigator.of(context).pop(controller.text), child: const Text('Guardar'))),
       ],
     ),
   );

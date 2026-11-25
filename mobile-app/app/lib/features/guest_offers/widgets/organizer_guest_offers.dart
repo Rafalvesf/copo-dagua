@@ -12,6 +12,7 @@ import 'guest_offer_widgets.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Separador "Convidados" das Reservas do organizador: alojamento e
 /// transporte combinados com parceiros, que os convidados reservam e
@@ -460,7 +461,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
               ? '${shortDate(value)} · ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}'
               : shortDate(value);
       return Expanded(
-        child: OutlinedButton.icon(
+        child: PressScale(child: OutlinedButton.icon(
           onPressed: () async {
             final d = await _pickDate(value);
             if (d == null || !mounted) return;
@@ -478,7 +479,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
             minimumSize: const Size(0, 48),
             shape: const StadiumBorder(),
           ),
-        ),
+        )),
       );
     }
 
@@ -584,7 +585,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
                 Text(_error!, style: const TextStyle(color: AppStatusColors.declined, fontSize: AppFontSize.md)),
               ],
               const SizedBox(height: 20),
-              FilledButton(
+              PressScale(child: FilledButton(
                 onPressed: _saving ? null : _save,
                 style: FilledButton.styleFrom(
                   backgroundColor: c,
@@ -592,7 +593,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
                   shape: const StadiumBorder(),
                 ),
                 child: Text(_saving ? 'A guardar…' : 'Guardar'),
-              ),
+              )),
             ],
           ),
         ),

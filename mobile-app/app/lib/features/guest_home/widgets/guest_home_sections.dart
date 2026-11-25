@@ -26,6 +26,7 @@ import '../../../shared/widgets/partner_notification_bell.dart';
 import '../../../shared/utils_clipboard.dart';
 import 'guest_events_pill.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 // Ecrãs do convidado redesenhados (canvas "Convidados · Ecrãs
 // melhorados", 2026-11-07): capa verde, atalhos coloridos, a tua resposta,
@@ -214,11 +215,11 @@ class GuestAnswerCard extends ConsumerWidget {
                   style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: edit,
             style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, foregroundColor: Colors.white, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: Text(declined ? 'Mudar' : 'Responder'),
-          ),
+          )),
         ]),
       );
     }
@@ -330,7 +331,7 @@ class GuestPlaceCard extends ConsumerWidget {
         const SizedBox(height: 12),
         Row(children: [
           Expanded(
-            child: OutlinedButton(
+            child: PressScale(child: OutlinedButton(
               onPressed: () async {
                 final messenger = ScaffoldMessenger.of(context);
                 await copyText(copyable);
@@ -345,11 +346,11 @@ class GuestPlaceCard extends ConsumerWidget {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
               ),
               child: const Text('Copiar morada', maxLines: 1),
-            ),
+            )),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               onPressed: () => showNavigationSheet(context, label: title, address: address, latitude: lat, longitude: lng),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -360,7 +361,7 @@ class GuestPlaceCard extends ConsumerWidget {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
               ),
               child: const Text('Abrir mapa', maxLines: 1),
-            ),
+            )),
           ),
         ]),
       ]),
@@ -612,7 +613,7 @@ class GuestPhotosCta extends StatelessWidget {
   final VoidCallback onTap;
   const GuestPhotosCta({super.key, required this.onTap});
   @override
-  Widget build(BuildContext context) => FilledButton.icon(
+  Widget build(BuildContext context) => PressScale(child: FilledButton.icon(
         onPressed: onTap,
         icon: const Icon(Hi.camera),
         label: const Text('Tirar e partilhar fotos'),
@@ -623,7 +624,7 @@ class GuestPhotosCta extends StatelessWidget {
           shape: const StadiumBorder(),
           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15.5, fontWeight: FontWeight.w700),
         ),
-      );
+      ));
 }
 
 /// O programa de hoje como linha do tempo, com o momento atual marcado.

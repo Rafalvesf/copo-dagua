@@ -3,6 +3,7 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 class AuthTextField extends StatelessWidget {
   final String label;
@@ -65,11 +66,11 @@ class _PasswordFieldState extends State<PasswordField> {
         labelText: widget.label,
         errorText: widget.errorText,
         helperText: widget.helperText,
-        suffixIcon: IconButton(
+        suffixIcon: PressScale(child: IconButton(
           tooltip: _obscure ? 'Mostrar palavra-passe' : 'Esconder palavra-passe',
           icon: Icon(_obscure ? Hi.eye : Hi.eyeSlash),
           onPressed: () => setState(() => _obscure = !_obscure),
-        ),
+        )),
       ),
     );
   }

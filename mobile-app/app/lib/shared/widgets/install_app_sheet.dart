@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'mascot.dart';
 import 'island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// "Instala a app" — pedido 2026-10-17: quem abre um link de convite é
 /// levado a instalar a app em vez de criar conta no browser. A app é
@@ -62,7 +63,7 @@ Future<void> showInstallAppSheet(BuildContext context, {String? code}) {
                 ? 'Abre a app e cria conta com o mesmo email ou telemóvel do convite — fica logo ligada a ti.'
                 : 'Abre a app: o convite abre sozinho. Se não abrir, usa o código $code (já está copiado).'),
             const SizedBox(height: 10),
-            FilledButton(onPressed: () => Navigator.of(sheet).pop(), child: const Text('Percebi')),
+            PressScale(child: FilledButton(onPressed: () => Navigator.of(sheet).pop(), child: const Text('Percebi'))),
           ],
         ),
       ),

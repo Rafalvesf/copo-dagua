@@ -43,6 +43,7 @@ import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Separador "Eventos" (pedido 2026-11): os eventos da conta — o que
 /// organizo e aqueles a que já tenho acesso — e os eventos públicos
@@ -408,8 +409,8 @@ class _PublicEventCardState extends ConsumerState<_PublicEventCard> {
           if (e.welcomeMessage?.isNotEmpty == true) '\n"${e.welcomeMessage}"',
         ].join()),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Agora não')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Entrar')),
+          PressScale(child: TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Agora não'))),
+          PressScale(child: FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Entrar'))),
         ],
       ),
     );
@@ -880,7 +881,7 @@ class _TaskPill extends StatelessWidget {
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
           ),
           const SizedBox(width: 8),
-          FilledButton(
+          PressScale(child: FilledButton(
             onPressed: onTap,
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.ink,
@@ -893,7 +894,7 @@ class _TaskPill extends StatelessWidget {
                   fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700),
             ),
             child: Text(action),
-          ),
+          )),
         ]),
       );
 }
@@ -1166,11 +1167,11 @@ class PublicEventScreen extends ConsumerWidget {
                 _Pad(Text(e.welcomeMessage!, style: const TextStyle(fontSize: 15, height: 1.5, color: AppTheme.ink))),
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 8, AppTheme.screenMargin, 0),
-                child: TextButton.icon(
+                child: PressScale(child: TextButton.icon(
                   onPressed: () => context.go('/eventos'),
                   icon: const Icon(Hi.globeEuropeAfrica),
                   label: const Text('Ver mais eventos'),
-                ),
+                )),
               ),
             ],
           ],

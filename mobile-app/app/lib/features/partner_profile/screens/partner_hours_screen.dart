@@ -6,6 +6,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/opening_hours.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/section_frame.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «Horário» do parceiro (migração 241, pedido do Rafael, 2026-11-25): os
 /// dias abertos e as horas, que aparecem na página do parceiro. Aberto em
@@ -71,11 +72,11 @@ class _PartnerHoursScreenState extends ConsumerState<PartnerHoursScreen> {
           const SizedBox(height: 20),
           SizedBox(
             height: 52,
-            child: FilledButton(
+            child: PressScale(child: FilledButton(
               onPressed: _saving || h == null ? null : _save,
               style: FilledButton.styleFrom(shape: const StadiumBorder()),
               child: Text(_saving ? 'A guardar…' : 'Guardar'),
-            ),
+            )),
           ),
         ],
       ),

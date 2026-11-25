@@ -26,6 +26,7 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Criar evento (mockup "Onboarding", 2026-11-12): uma ou duas perguntas
 /// por ecrã, sem repetir o que já sabemos (nome e telemóvel da conta,
@@ -425,8 +426,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
             title: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
             content: OnbField(controller: c, hint: hint, autofocus: true, keyboardType: keyboard, error: err, onChanged: (_) => setD(() {})),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-              TextButton(onPressed: err == null ? () => Navigator.pop(ctx, c.text.trim()) : null, child: const Text('Guardar')),
+              PressScale(child: TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar'))),
+              PressScale(child: TextButton(onPressed: err == null ? () => Navigator.pop(ctx, c.text.trim()) : null, child: const Text('Guardar'))),
             ],
           );
         },

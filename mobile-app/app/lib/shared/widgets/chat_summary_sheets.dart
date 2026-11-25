@@ -14,6 +14,7 @@ import '../hero_icons.dart';
 import '../money.dart';
 import 'island_sheet.dart';
 import 'v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Resumos que abrem ao tocar no topo de uma conversa (pedido do Rafael,
 /// 2026-11-25; pranchetas «Conversa única com o parceiro · resumo dos
@@ -95,7 +96,7 @@ Widget _stats(List<(String, String)> items) => Row(children: [
 Widget _btn(String label, VoidCallback? onTap, {bool outlined = false}) => SizedBox(
       height: 52,
       child: outlined
-          ? OutlinedButton(
+          ? PressScale(child: OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
@@ -104,8 +105,8 @@ Widget _btn(String label, VoidCallback? onTap, {bool outlined = false}) => Sized
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
               ),
               child: Text(label),
-            )
-          : FilledButton(
+            ))
+          : PressScale(child: FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -114,7 +115,7 @@ Widget _btn(String label, VoidCallback? onTap, {bool outlined = false}) => Sized
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
               ),
               child: Text(label),
-            ),
+            )),
     );
 
 /// Linha «Casamento / Sáb, 12 jun 2027» com a etiqueta à direita.

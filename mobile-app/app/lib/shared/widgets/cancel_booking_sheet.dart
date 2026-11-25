@@ -7,6 +7,7 @@ import '../hero_icons.dart';
 import '../money.dart';
 import 'alert_outline.dart';
 import 'island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Cancelar uma reserva — popups dos mockups «Cancelar reserva ·
 /// organizador» e «… · parceiro» (pedido do Rafael, 2026-11-24; migração
@@ -396,7 +397,7 @@ class _PillButton extends StatelessWidget {
     return SizedBox(
       height: 52,
       child: outlined
-          ? OutlinedButton(
+          ? PressScale(child: OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
@@ -407,8 +408,8 @@ class _PillButton extends StatelessWidget {
                 textStyle: style,
               ),
               child: Text(label, textAlign: TextAlign.center, maxLines: 2),
-            )
-          : FilledButton(
+            ))
+          : PressScale(child: FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -418,7 +419,7 @@ class _PillButton extends StatelessWidget {
                 textStyle: style,
               ),
               child: Text(label, textAlign: TextAlign.center, maxLines: 2),
-            ),
+            )),
     );
   }
 }

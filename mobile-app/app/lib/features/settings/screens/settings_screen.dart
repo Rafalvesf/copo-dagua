@@ -45,6 +45,7 @@ import '../../../shared/widgets/first_run_tour.dart' show FirstRunTour, TourRole
 import '../../../core/supabase/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Definições — uma por tipo de conta (organizadores, parceiros,
 /// convidados). Redesign 2026-10-17 (canvas "Organizadores · Definições",
@@ -528,7 +529,7 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
               onChanged: (_) => setSheet(() {}),
             ),
             const SizedBox(height: 16),
-            FilledButton(
+            PressScale(child: FilledButton(
               onPressed: () => Navigator.of(sheet).pop(true),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -538,7 +539,7 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
               ),
               child: const Text('Guardar'),
-            ),
+            )),
           ]),
         ),
       ),
@@ -871,11 +872,11 @@ class _AccountSection extends ConsumerWidget {
         title: const Text('O teu nome'),
         content: TextField(controller: controller, autofocus: true),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
-          FilledButton(
+          PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar'))),
+          PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(controller.text.trim()),
             child: const Text('Guardar'),
-          ),
+          )),
         ],
       ),
     );
@@ -982,8 +983,8 @@ class _AccountSection extends ConsumerWidget {
             TextField(controller: name, decoration: const InputDecoration(labelText: 'Nome na fatura (opcional)')),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar')),
-            FilledButton(
+            PressScale(child: TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancelar'))),
+            PressScale(child: FilledButton(
               onPressed: () {
                 final v = nif.text.trim();
                 if (v.isNotEmpty && !isValidNif(v)) {
@@ -993,7 +994,7 @@ class _AccountSection extends ConsumerWidget {
                 Navigator.of(ctx).pop(true);
               },
               child: const Text('Guardar'),
-            ),
+            )),
           ],
         ),
       ),
@@ -1035,10 +1036,10 @@ class _AccountSection extends ConsumerWidget {
               for (final id in current)
                 ListTile(
                   title: Text((names[id] ?? '').isEmpty ? 'Pessoa bloqueada' : names[id]!),
-                  trailing: TextButton(
+                  trailing: PressScale(child: TextButton(
                     onPressed: () => unblockProfile(ref, id),
                     child: const Text('Desbloquear'),
-                  ),
+                  )),
                 ),
             ]),
           ),
@@ -1073,12 +1074,12 @@ class _AccountSection extends ConsumerWidget {
             ),
           ]),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-            FilledButton(
+            PressScale(child: TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar'))),
+            PressScale(child: FilledButton(
               style: FilledButton.styleFrom(backgroundColor: const Color(0xFFA3412E)),
               onPressed: controller.text.trim().toUpperCase() == 'APAGAR' ? () => Navigator.of(context).pop(true) : null,
               child: const Text('Apagar conta'),
-            ),
+            )),
           ],
         ),
       ),

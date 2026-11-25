@@ -10,6 +10,7 @@ import '../../../shared/money.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// «Já tens uma marcação nesse dia / a essa hora» (pedido do Rafael,
 /// 2026-11-24, mockup «Já tens uma marcação nesse dia/hora»): antes de o
@@ -593,7 +594,7 @@ class _Pill extends StatelessWidget {
     return SizedBox(
       height: 52,
       child: outlined
-          ? OutlinedButton(
+          ? PressScale(child: OutlinedButton(
               onPressed: onTap,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.ink,
@@ -604,8 +605,8 @@ class _Pill extends StatelessWidget {
                 textStyle: style,
               ),
               child: Text(label, textAlign: TextAlign.center),
-            )
-          : FilledButton(
+            ))
+          : PressScale(child: FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -615,7 +616,7 @@ class _Pill extends StatelessWidget {
                 textStyle: style,
               ),
               child: Text(label, textAlign: TextAlign.center),
-            ),
+            )),
     );
   }
 }

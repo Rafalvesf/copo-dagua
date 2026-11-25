@@ -9,6 +9,7 @@ import '../hero_icons.dart';
 import 'line_icon.dart';
 import 'snappy_tap.dart';
 import 'app_progress.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Peças do onboarding (mockup "Onboarding", 2026-11-12), com os
 /// tamanhos do DESIGN.md: título 28, subtítulo 14, botões 52, filtros 38,
@@ -82,7 +83,7 @@ class OnbButton extends StatelessWidget {
       height: 56,
       width: double.infinity,
       child: secondary
-          ? OutlinedButton(
+          ? PressScale(child: OutlinedButton(
               onPressed: loading ? null : onPressed,
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -92,8 +93,8 @@ class OnbButton extends StatelessWidget {
                 textStyle: text,
               ),
               child: child,
-            )
-          : FilledButton(
+            ))
+          : PressScale(child: FilledButton(
               onPressed: loading ? null : onPressed,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
@@ -104,7 +105,7 @@ class OnbButton extends StatelessWidget {
                 textStyle: text,
               ),
               child: child,
-            ),
+            )),
     );
   }
 }

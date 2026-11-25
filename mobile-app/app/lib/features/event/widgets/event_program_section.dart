@@ -11,6 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/event/guest_facing.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Secção "Programa" do painel do evento (por baixo de "Esta semana").
 ///
@@ -552,11 +553,11 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
                     ],
                   ]),
                 ),
-                IconButton(
+                PressScale(child: IconButton(
                   onPressed: _removePartner,
                   icon: const Icon(Icons.close, size: 18, color: Color(0xFFC8553D)),
                   tooltip: 'Remover parceiro',
-                ),
+                )),
               ]),
             ),
           if (hasPartner && pending) ...[
@@ -582,7 +583,7 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
           const SizedBox(height: 20),
           SizedBox(
             height: 52,
-            child: ElevatedButton(
+            child: PressScale(child: ElevatedButton(
               onPressed: () => Navigator.of(context).pop(widget.item.copyWith(
                 title: _name.text,
                 date: _date,
@@ -592,14 +593,14 @@ class _EditSheetState extends ConsumerState<_EditSheet> {
                 partnerId: _partnerId,
               )),
               child: const Text('Guardar'),
-            ),
+            )),
           ),
           if (widget.allowDelete) ...[
             const SizedBox(height: 6),
-            TextButton(
+            PressScale(child: TextButton(
               onPressed: () => Navigator.of(context).pop(const ProgramItem()), // vazio = remover
               child: const Text('Remover etapa', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFC8553D))),
-            ),
+            )),
           ],
         ],
       ),
@@ -756,10 +757,10 @@ class _NoPartnersSheet extends StatelessWidget {
         const SizedBox(height: 18),
         SizedBox(
           height: 52,
-          child: ElevatedButton(
+          child: PressScale(child: ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Explorar parceiros'),
-          ),
+          )),
         ),
       ]),
     );

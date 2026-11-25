@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Pílula escura com um botão circular branco de seta encaixado no
 /// canto direito — o padrão de CTA usado nos cartões de destaque.
@@ -165,7 +166,7 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return PressScale(child: ElevatedButton(
       onPressed: loading ? null : onPressed,
       child: loading
           ? const SizedBox(
@@ -174,7 +175,7 @@ class PrimaryButton extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2.5),
             )
           : Text(label),
-    );
+    ));
   }
 }
 
@@ -218,11 +219,11 @@ class WizardFooter extends StatelessWidget {
           // (parceiro), entraria em conflito com um `continueButton`
           // [Expanded] a disputar o mesmo espaço livre.
           if (onSkip != null) ...[
-            TextButton(
+            PressScale(child: TextButton(
               style: TextButton.styleFrom(foregroundColor: AppTheme.inkMuted),
               onPressed: onSkip,
               child: const Text('Saltar'),
-            ),
+            )),
             const Spacer(),
           ],
           if (onBack != null) ...[
@@ -250,11 +251,11 @@ class SocialLoginButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return PressScale(child: OutlinedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon),
       label: Text(label),
       style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-    );
+    ));
   }
 }

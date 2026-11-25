@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Bilhete e QR da conta.
 ///
@@ -119,7 +120,7 @@ class MyQrScreen extends StatelessWidget {
           children: [
             Align(
               alignment: Alignment.centerLeft,
-              child: IconButton(onPressed: () => Navigator.of(context).maybePop(), icon: const Icon(Hi.arrowLeft), tooltip: 'Voltar'),
+              child: PressScale(child: IconButton(onPressed: () => Navigator.of(context).maybePop(), icon: const Icon(Hi.arrowLeft), tooltip: 'Voltar')),
             ),
             const SizedBox(height: 4),
             if (eyebrow != null)
@@ -230,7 +231,7 @@ class _MyQrPanelState extends State<MyQrPanel> with WidgetsBindingObserver {
                           const Text('Sem ligação. O QR aparece quando voltar a rede.',
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 14, height: 1.4, color: AppTheme.inkMuted)),
-                          TextButton(onPressed: _refresh, child: const Text('Tentar outra vez')),
+                          PressScale(child: TextButton(onPressed: _refresh, child: const Text('Tentar outra vez'))),
                         ]),
             ),
     );

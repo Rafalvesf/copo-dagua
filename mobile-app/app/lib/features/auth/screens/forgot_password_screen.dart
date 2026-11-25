@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/auth_ui.dart';
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// "Início 6 · Recuperar password". Desde 2026-10-25 tudo dentro da app:
 /// pede o email, envia um código de 6 dígitos e, no mesmo ecrã, escreve-se
@@ -131,11 +132,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           onPressed: _sent ? _reset : _send,
         ),
         if (_sent)
-          TextButton(
+          PressScale(child: TextButton(
             onPressed: _loading ? null : _send,
             style: TextButton.styleFrom(foregroundColor: AppTheme.accentOliveDark),
             child: const Text('Reenviar código'),
-          ),
+          )),
       ],
     );
   }

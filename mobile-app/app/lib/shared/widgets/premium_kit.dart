@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'estrela.dart';
 import 'page_kit.dart' show KitTag, KitTagKind;
+import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
 /// Blocos das páginas «chamativas» (mockups «Definições · Pagamentos e
 /// Premium», 2026-11-21; DESIGN.md §6.3). Usar estes em vez de refazer à
@@ -214,7 +215,7 @@ class PillButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = TextStyle(fontSize: height >= 52 ? 15 : 14, fontWeight: FontWeight.w700);
     if (outlined) {
-      return OutlinedButton(
+      return PressScale(child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           minimumSize: Size.fromHeight(height),
@@ -224,9 +225,9 @@ class PillButton extends StatelessWidget {
           textStyle: text,
         ),
         child: Text(label),
-      );
+      ));
     }
-    return FilledButton(
+    return PressScale(child: FilledButton(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
         minimumSize: Size.fromHeight(height),
@@ -236,6 +237,6 @@ class PillButton extends StatelessWidget {
         textStyle: text,
       ),
       child: Text(label),
-    );
+    ));
   }
 }
