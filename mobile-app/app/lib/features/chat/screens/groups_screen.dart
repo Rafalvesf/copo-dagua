@@ -337,7 +337,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                     final o = others.firstOrNull;
                     if (o != null) showPersonSummary(context, personId: o.id, name: o.name, avatarUrl: o.avatarUrl);
                   }
-                : () => showGroupSummary(context, group: widget.group, onOpenEvent: () => context.go('/home')),
+                : () => showGroupSummary(context, group: widget.group, onOpenEvent: () => openEventById(context, ref, widget.group.eventId)),
             menu: widget.group.isDirect ? const [] : [('Gerir o grupo', _menu)],
             leading: SizedBox(
               width: 46,
