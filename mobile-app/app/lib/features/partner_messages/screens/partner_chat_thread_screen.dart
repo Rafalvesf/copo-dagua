@@ -282,8 +282,8 @@ class _PartnerProposalCardState extends State<_PartnerProposalCard> {
     try {
       p = await supabase
           .from('proposals')
-          .select('id, title, description, price, deposit_amount, created_at, quote_request_id, '
-              'quote_requests(id, wedding_id, event_date, people, message, location)')
+          .select('id, title, description, price, deposit_amount, created_at, quote_request_id, lines, '
+              'quote_requests(id, wedding_id, event_date, people, message, location, start_time, end_time)')
           .eq('id', id)
           .maybeSingle();
     } catch (_) {}
@@ -294,6 +294,8 @@ class _PartnerProposalCardState extends State<_PartnerProposalCard> {
     const mo = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
     final line = [
       if (d != null) '${wd[d.weekday - 1]}, ${d.day} ${mo[d.month - 1]}',
+      if ((q?['start_time'] as String?)?.isNotEmpty ?? false)
+        [q!['start_time'], if ((q['end_time'] as String?)?.isNotEmpty ?? false) q['end_time']].join(' – '),
       if (q?['people'] != null) '${q!['people']} pessoas',
       if ((q?['location'] as String?)?.isNotEmpty ?? false) q!['location'] as String,
     ].join(' · ');
@@ -314,6 +316,10 @@ class _PartnerProposalCardState extends State<_PartnerProposalCard> {
               price: ((p['price'] as num?) ?? 0).toDouble(),
               deposit: ((p['deposit_amount'] as num?) ?? 0).toDouble(),
               sentAt: DateTime.tryParse('${p['created_at'] ?? ''}'),
+              lines: [
+                for (final j in (p['lines'] is List ? p['lines'] as List : const []))
+                  ?ProposalLine.fromJson(j),
+              ],
             )
           : null,
     );

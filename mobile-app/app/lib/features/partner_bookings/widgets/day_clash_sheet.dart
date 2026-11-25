@@ -6,6 +6,7 @@ import '../../../core/models/models.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/hero_icons.dart';
+import '../../../shared/money.dart';
 import '../../../shared/widgets/alert_outline.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
@@ -244,6 +245,45 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
       text: 'Nesse dia já tenho outra marcação.${_days.isEmpty ? '' : ' ${_day(_days[_picked].$1)} fica bem?'}');
   bool _busy = false;
 
+  /// «PREÇO» (prancheta «Propor outro dia», migração 236): o total da
+  /// proposta já enviada (se houver), «Mesmo preço» ou «Outro preço».
+  double? _current;
+  bool _otherPrice = false;
+  final _newTotal = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    supabase
+        .from('proposals')
+        .select('price')
+        .eq('quote_request_id', widget.request.id)
+        .eq('status', 'sent')
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle()
+        .then((p) {
+      if (mounted && p != null) setState(() => _current = (p['price'] as num?)?.toDouble());
+    }).catchError((_) {});
+  }
+
+  double? get _price => _otherPrice ? double.tryParse(_newTotal.text.trim().replaceAll(' ', '').replaceAll(',', '.')) : null;
+
+  Widget _pricePill(String label, bool on, VoidCallback onTap) => Semantics(
+        button: true,
+        selected: on,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: on ? AppTheme.brandGreen : AppTheme.background, borderRadius: BorderRadius.circular(19)),
+            child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+          ),
+        ),
+      );
+
   /// Dia antes, dia a seguir, uma e duas semanas depois — sem os dias com
   /// reservas.
   List<(DateTime, String)> _freeDays() {
@@ -265,11 +305,16 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
   @override
   void dispose() {
     _msg.dispose();
+    _newTotal.dispose();
     super.dispose();
   }
 
   Future<void> _send() async {
     if (_busy || _days.isEmpty) return;
+    if (_otherPrice && (_price == null || _price! <= 0)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Escreve o novo total.')));
+      return;
+    }
     setState(() => _busy = true);
     try {
       final r = widget.request;
@@ -282,6 +327,7 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
           'p_quote_request': r.id,
           'p_date': '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}',
           'p_message': text.isEmpty ? null : text,
+          if (_price != null) 'p_price': _price,
         });
       } on PostgrestException catch (e) {
         // Sem a 235: fica como mensagem na conversa.
@@ -376,6 +422,35 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
                         ),
                       ),
                   ]),
+                const SizedBox(height: 16),
+                const Text('PREÇO', style: _caps),
+                const SizedBox(height: 8),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  _pricePill(_current == null ? 'Mesmo preço' : 'Mesmo preço · ${euros(_current!)}', !_otherPrice,
+                      () => setState(() => _otherPrice = false)),
+                  _pricePill('Outro preço', _otherPrice, () => setState(() => _otherPrice = true)),
+                ]),
+                if (_otherPrice) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+                    child: Row(children: [
+                      const Text('Novo total', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: _newTotal,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
+                          decoration: const InputDecoration(isCollapsed: true, border: InputBorder.none, hintText: '0'),
+                        ),
+                      ),
+                      const Text('€', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ]),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Text('MENSAGEM PARA ${firstName.toUpperCase()}', style: _caps),
                 const SizedBox(height: 8),

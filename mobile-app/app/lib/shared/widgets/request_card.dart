@@ -59,7 +59,7 @@ class _RequestCardState extends State<RequestCard> {
     try {
       final r = await supabase
           .from('quote_requests')
-          .select('id, status, people, message, event_date, location, cancelled_at, package_snapshot')
+          .select('id, status, people, message, event_date, location, cancelled_at, package_snapshot, start_time, end_time')
           .eq('wedding_id', widget.eventId)
           .eq('partner_id', widget.partnerId)
           .order('created_at', ascending: false)
@@ -107,6 +107,10 @@ class _RequestCardState extends State<RequestCard> {
     final people = (q['people'] as num?)?.toInt();
     final msg = (q['message'] as String?)?.trim();
     final pkgName = (pkg?['name'] as String?)?.trim() ?? '';
+    // Hora do pedido (236): «14:00 – 00:00».
+    final start = (q['start_time'] as String?)?.trim();
+    final end = (q['end_time'] as String?)?.trim();
+    final hour = (start == null || start.isEmpty) ? null : (end == null || end.isEmpty ? start : '$start – $end');
     final title = pkgName.isEmpty ? 'Pedido de orçamento' : 'Pacote $pkgName';
 
     final (String label, ChatCardTone tone) = cancelled
@@ -134,7 +138,7 @@ class _RequestCardState extends State<RequestCard> {
             clientName: widget.otherName,
             eventLabel: _line(q).split(' · ').first,
             requestTitle: title,
-            requestLine: [_line(q), if (people != null) '$people pessoas'].where((x) => x.isNotEmpty).join(' · '),
+            requestLine: [_line(q), ?hour, if (people != null) '$people pessoas'].where((x) => x.isNotEmpty).join(' · '),
             requestMessage: msg,
           );
           if (sent) await _load();
@@ -155,6 +159,8 @@ class _RequestCardState extends State<RequestCard> {
           eventPeople: widget.eventPeople,
           message: msg,
           hasProposal: status == 'proposal_sent',
+          startTime: start,
+          endTime: end,
         );
         if (changed) await _load();
       }));
@@ -169,7 +175,10 @@ class _RequestCardState extends State<RequestCard> {
       subtitle: _line(q).isEmpty ? null : _line(q),
       price: null,
       deposit: null,
-      rows: [if (people != null) ('Pessoas', '$people')],
+      rows: [
+        if (people != null) ('Pessoas', '$people'),
+        if (hour != null) ('Hora', hour),
+      ],
       note: (msg == null || msg.isEmpty)
           ? (isPackage && waiting && !widget.partnerSide ? 'Se não aceitar em 48 h, o sinal é libertado.' : null)
           : '«$msg»',

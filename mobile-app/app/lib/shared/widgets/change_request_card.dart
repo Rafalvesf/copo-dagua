@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/supabase/supabase_config.dart';
 import '../hero_icons.dart';
+import '../money.dart';
 import 'chat_ui.dart';
 import 'deal_sheets.dart';
 
@@ -49,7 +50,7 @@ class _ChangeRequestCardState extends State<ChangeRequestCard> {
     try {
       final r = await supabase
           .from('booking_change_requests')
-          .select('kind, from_value, to_value, message, status, booking_id')
+          .select('kind, from_value, to_value, message, status, booking_id, new_price')
           .eq('id', widget.changeRequestId)
           .maybeSingle();
       if (mounted) setState(() => _row = r);
@@ -166,6 +167,10 @@ class _ChangeRequestCardState extends State<ChangeRequestCard> {
       imageUrl: widget.imageUrl,
       status: label,
       tone: tone,
+      // «Outro preço» de «Propor outro dia» (236).
+      rows: [
+        if (r['new_price'] != null) ('Novo total', euros((r['new_price'] as num).toDouble())),
+      ],
       note: (msg == null || msg.isEmpty) ? null : '«$msg»',
       actions: !open || _busy
           ? const []
