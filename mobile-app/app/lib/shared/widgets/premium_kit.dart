@@ -25,7 +25,7 @@ class BigNumber extends StatelessWidget {
         textBaseline: TextBaseline.alphabetic,
         children: [
           Text(number, softWrap: false,
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, height: 1.1, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, height: 1.1, color: AppTheme.ink, fontFeatures: [FontFeature.tabularFigures()])),
           const SizedBox(width: 6),
           Flexible(child: Text(unit, style: _meta)),
         ],

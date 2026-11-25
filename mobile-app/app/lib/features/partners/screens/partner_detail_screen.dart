@@ -10,6 +10,7 @@ import '../../../core/chat/presence.dart' show responseLabel;
 import '../../../core/pending_deep_link.dart';
 import '../../../shared/widgets/install_app_sheet.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/undo_toast.dart';
 import '../../../core/social/social.dart';
 import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
@@ -1110,7 +1111,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
                     trackInterest(slug, 'favorite', partnerId: partner.id);
                   }
                 }
-                ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
+                final fav = ref.read(favoritePartnersControllerProvider.notifier);
+                fav.toggle(partner.id);
+                if (favorited) {
+                  showUndoToast(context, 'Tirado dos favoritos', onUndo: () => fav.toggle(partner.id));
+                }
               },
             ),
           ),
@@ -1375,6 +1380,8 @@ class _PartnerFollow extends ConsumerStatefulWidget {
 
 class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
   bool _busy = false;
+  // Otimista (2026-11-25): o botão muda logo; volta atrás se falhar.
+  bool? _following;
 
   @override
   Widget build(BuildContext context) {
@@ -1411,16 +1418,21 @@ class _PartnerFollowState extends ConsumerState<_PartnerFollow> {
         Row(children: [
           Expanded(
             child: ProfileButton(
-              info.iFollow ? 'A seguir' : 'Seguir',
-              dark: !info.iFollow && !widget.outlined,
+              (_following ?? info.iFollow) ? 'A seguir' : 'Seguir',
+              dark: !(_following ?? info.iFollow) && !widget.outlined,
               onTap: _busy
                   ? null
                   : () async {
-                      setState(() => _busy = true);
+                      final next = !(_following ?? info.iFollow);
+                      setState(() {
+                        _busy = true;
+                        _following = next;
+                      });
                       try {
-                        await followPartner(widget.partnerId, !info.iFollow);
+                        await followPartner(widget.partnerId, next);
                         ref.invalidate(partnerFollowInfoProvider(widget.partnerId));
                       } catch (_) {
+                        if (mounted) setState(() => _following = !next);
                         if (mounted) {
                           ScaffoldMessenger.of(context)
                               .showSnackBar(const SnackBar(content: Text('Não foi possível. Tenta outra vez.')));

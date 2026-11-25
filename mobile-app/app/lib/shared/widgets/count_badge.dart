@@ -21,7 +21,7 @@ class CountBadge extends StatelessWidget {
             border: Border.all(color: AppTheme.ink, width: 2),
           ),
           child: Text(count > 99 ? '99+' : '$count',
-              style: const TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink, fontFeatures: [FontFeature.tabularFigures()])),
         ),
       );
 }

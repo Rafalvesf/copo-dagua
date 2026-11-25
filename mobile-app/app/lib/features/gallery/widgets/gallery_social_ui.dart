@@ -19,6 +19,7 @@ import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/undo_toast.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
@@ -621,23 +622,23 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
     }
   }
 
+  /// Comentários apagados à espera do «Desfazer» (pedido 2026-11-25).
+  final Set<String> _hidden = {};
+
   Future<void> _delete(GalleryComment c) async {
-    final ok = await showIslandDialog<bool>(
-      context: context,
-      builder: (context) => IslandAlert(
-        title: const Text('Apagar comentário?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Apagar')),
-        ],
-      ),
+    await deleteWithUndo(
+      context,
+      message: 'Comentário apagado',
+      hide: () => setState(() => _hidden.add(c.id)),
+      restore: () {
+        if (mounted) setState(() => _hidden.remove(c.id));
+      },
+      commit: () async {
+        await deleteGalleryComment(c.id);
+        ref.invalidate(galleryCommentsProvider(widget.photoId));
+        ref.invalidate(galleryFeedMetaProvider(widget.eventId));
+      },
     );
-    if (ok != true) return;
-    try {
-      await deleteGalleryComment(c.id);
-      ref.invalidate(galleryCommentsProvider(widget.photoId));
-      ref.invalidate(galleryFeedMetaProvider(widget.eventId));
-    } catch (_) {}
   }
 
   @override
@@ -679,7 +680,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                         shrinkWrap: true,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         children: [
-                          for (final c in list)
+                          for (final c in list.where((c) => !_hidden.contains(c.id)))
                             GestureDetector(
                               onLongPress: c.profileId == me
                                   ? () => _delete(c)

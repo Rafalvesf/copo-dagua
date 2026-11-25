@@ -18,6 +18,7 @@ import '../../../shared/widgets/partner_badges.dart';
 import '../../../shared/widgets/photo_card.dart';
 import '../../../shared/widgets/sized_network_image.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/undo_toast.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
 import '../partner_style.dart';
 
@@ -162,7 +163,11 @@ class FavoriteHeart extends ConsumerWidget {
               trackInterest(slug, 'favorite', partnerId: partner.id);
             }
           }
-          ref.read(favoritePartnersControllerProvider.notifier).toggle(partner.id);
+          final fav = ref.read(favoritePartnersControllerProvider.notifier);
+          fav.toggle(partner.id);
+          if (favorited) {
+            showUndoToast(context, 'Tirado dos favoritos', onUndo: () => fav.toggle(partner.id));
+          }
         },
         // Encostado à direita (a área de toque continua 32): alinha com o
         // preço por baixo, que já não tem caixa (2026-11-22).

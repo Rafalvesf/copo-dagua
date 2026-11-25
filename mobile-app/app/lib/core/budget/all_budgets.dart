@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../supabase/supabase_config.dart';
 import '../event/event_controller.dart';
+import '../riverpod_cache.dart';
 
 /// Orçamento de um evento no «Todos» do Orçamento (pedido 2026-11-23).
 typedef EventBudgetLine = ({String eventId, double total, double spentByHand, double unpaidByHand});
@@ -11,6 +12,7 @@ typedef EventBudgetLine = ({String eventId, double total, double spentByHand, do
 /// usa o evento aberto). As reservas entram no ecrã, a partir das reservas
 /// já carregadas.
 final allEventBudgetsProvider = FutureProvider.autoDispose<List<EventBudgetLine>>((ref) async {
+  ref.staleWhileRevalidate();
   final events = ref.watch(eventControllerProvider.select((s) => s.events));
   if (events.isEmpty) return const [];
   final ids = [for (final e in events) e.id];

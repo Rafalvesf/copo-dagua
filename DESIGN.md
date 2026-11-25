@@ -367,6 +367,20 @@ ecrãs. O resto da app mantém a tabela acima.
   pequeno atraso entre blocos; com «reduzir movimento» ficam parados. Os
   painéis dos eventos (organizador, convidado, eventos reais) carregam com
   `SkeletonEventPanel` (capa, resumo e molduras).
+- **Algarismos tabulares** (pedido 2026-11-25): os números que mudam ou
+  se alinham — contadores (`CountBadge`), números 40 e 28 dos resumos e
+  caixas, rodas, «−/+» e a percentagem do onboarding — usam
+  `FontFeature.tabularFigures()` (todos os algarismos com a mesma largura,
+  para não saltarem). A Louis George Café ganhou a funcionalidade `tnum`
+  (Regular e Negrito); no resto do texto os algarismos ficam normais.
+- **Desfazer em vez de «Tens a certeza?»** (pedido 2026-11-25;
+  `showUndoToast` / `deleteWithUndo`, `shared/widgets/undo_toast.dart`):
+  tirar dos favoritos e apagar um comentário fazem-se logo, com o aviso
+  «… · Desfazer» durante 5 s; só se apaga de vez quando o aviso fecha.
+- **Resposta imediata** (pedido 2026-11-25): o coração e «Seguir» mudam
+  logo ao tocar e voltam atrás se o servidor falhar; listas e perfis
+  guardados 5 min (`ref.staleWhileRevalidate()`, `core/riverpod_cache.dart`)
+  — ao voltar, mostra-se o que havia e atualiza por trás.
 - **Número de pessoas — também se escreve** (pedido 2026-11-25;
   `TypeCount`, `shared/widgets/type_count.dart`): nos contadores «−» / «+»
   de pessoas o número é uma caixa que se toca e se escreve (teclado de
