@@ -38,15 +38,17 @@ BoxDecoration _card() => BoxDecoration(color: Colors.white, borderRadius: Border
 /// Organizadores do evento (migração 159): o dono escolhe o que cada
 /// co-organizador pode fazer, ou retira-o. Os outros veem o que podem.
 /// Estilo do mockup «Organizadores» (2026-11-17).
-class OrganizersScreen extends ConsumerWidget {
-  const OrganizersScreen({super.key});
+/// O conteúdo da página «Organizadores» — também usado dentro de
+/// «Convidar», na pílula «Organizadores» (pedido 2026-11-25: «que fique
+/// dentro da mesma página e só mude o conteúdo por baixo da categoria»).
+class OrganizersBody extends ConsumerWidget {
+  const OrganizersBody({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final event = ref.watch(eventControllerProvider.select((s) => s.event));
     final listAsync = event == null ? null : ref.watch(eventOrganizersProvider(event.id));
     final mine = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
-    final topInset = MediaQuery.paddingOf(context).top;
 
     Widget content;
     if (listAsync == null) {
@@ -89,6 +91,17 @@ class OrganizersScreen extends ConsumerWidget {
       );
     }
 
+    return content;
+  }
+}
+
+class OrganizersScreen extends ConsumerWidget {
+  const OrganizersScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final topInset = MediaQuery.paddingOf(context).top;
+    const content = OrganizersBody();
     return GradientScaffold(
       background: AppBackground.subtle,
       body: ListView(
