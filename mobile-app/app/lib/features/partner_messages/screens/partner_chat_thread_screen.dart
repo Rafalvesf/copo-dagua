@@ -16,6 +16,7 @@ import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import '../../../shared/widgets/change_request_card.dart';
 import '../../../shared/widgets/deal_sheets.dart';
 import '../../../shared/widgets/request_card.dart';
+import '../../../shared/widgets/auto_booking_card.dart';
 import '../../../shared/widgets/chat_summary_sheets.dart';
 import '../../../core/social/social.dart' show publicProfileProvider;
 import '../../../shared/money.dart';
@@ -223,6 +224,9 @@ class _PartnerChatThreadScreenState
                               message,
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
+                          // Cartões automáticos (239).
+                          : message.autoKind != null && message.bookingId != null
+                          ? AutoBookingCard(bookingId: message.bookingId!, kind: message.autoKind!, partnerSide: true, otherName: widget.conversation.name, eventLabel: _labelOf(message))
                           : message.changeRequestId != null
                           ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, eventLabel: _labelOf(message), otherName: widget.conversation.name)
                           : message.isQuoteRequestNotice &&

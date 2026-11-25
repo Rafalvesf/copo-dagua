@@ -32,6 +32,7 @@ import '../../bookings/widgets/reject_proposal.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import '../../../shared/widgets/change_request_card.dart';
 import '../../../shared/widgets/request_card.dart';
+import '../../../shared/widgets/auto_booking_card.dart';
 import '../../../shared/widgets/chat_summary_sheets.dart';
 import '../../../shared/widgets/deal_sheets.dart';
 
@@ -357,6 +358,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                               message,
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
+                          // Cartões automáticos (239): lembrete, avaliar, resto, menus, cancelada.
+                          : message.autoKind != null && message.bookingId != null
+                          ? AutoBookingCard(bookingId: message.bookingId!, kind: message.autoKind!, partnerSide: false, otherName: widget.conversation.name, eventLabel: _labelOf(events, message))
                           : message.changeRequestId != null
                           ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, imageUrl: widget.conversation.avatarUrl, eventLabel: _labelOf(events, message))
                           : message.isProposal

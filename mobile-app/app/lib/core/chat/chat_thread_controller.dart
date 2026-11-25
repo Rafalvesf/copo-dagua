@@ -145,6 +145,8 @@ class ChatThreadController extends Notifier<ChatThreadState> {
           ?.toDouble(),
       isQuoteRequestNotice: row['is_quote_request_notice'] as bool? ?? false,
       changeRequestId: row['change_request_id'] as String?,
+      autoKind: row['auto_kind'] as String?,
+      bookingId: row['booking_id'] as String?,
     );
   }
 }

@@ -651,6 +651,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O pedido de orçamento guarda a hora (começa e acaba) logo ao ser criado; «Editar outro dia» pode mudar o preço. Corre depois da 237.",
     check: { kind: "marker", id: "238" },
   },
+  {
+    file: "239_cartoes_automaticos.sql",
+    date: "2026-11-25",
+    title: "Cartões automáticos nas conversas",
+    what: "A conversa da reserva recebe sozinha: o lembrete na véspera, «Como correu?» no dia a seguir, o pagamento do resto quando abre, os menus e alergias prontos e a reserva cancelada (uma vez cada). Corre a cada hora (pg_cron post-booking-cards). Corre depois da 238.",
+    check: { kind: "marker", id: "239" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
