@@ -217,6 +217,7 @@ class PartnerHomeScreen extends ConsumerWidget {
                       KitSetRow(label: 'Ver como os clientes', onTap: () => context.push('/parceiro/${profile.id}')),
                     KitSetRow(label: 'Serviços e preços', value: 'Pacotes', onTap: () => context.push('/partner-pricing')),
                     KitSetRow(label: 'Portefólio', value: 'Fotos', onTap: () => context.push('/partner-portfolio')),
+                    KitSetRow(label: 'Horário', onTap: () => context.push('/partner-hours')),
                     KitSetRow(label: 'Disponibilidade', onTap: () => context.push('/partner-availability')),
                     KitSetRow(label: 'Localização', onTap: () => context.push('/partner-location')),
                     KitSetRow(label: 'Dados do negócio', onTap: () => context.push('/partner-business-info')),

@@ -665,6 +665,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "As notificações das mensagens de grupo passam a abrir o próprio grupo (/group/<id>) em vez da lista de grupos, que saiu da app. Corre depois da 239.",
     check: { kind: "marker", id: "240" },
   },
+  {
+    file: "241_horario_parceiro.sql",
+    date: "2026-11-25",
+    title: "Horário de funcionamento do parceiro",
+    what: "Coluna partner_profiles.opening_hours: os dias abertos (1 = segunda … 7 = domingo) com a hora de abrir e de fechar. Pede-se no onboarding do parceiro, muda-se em «Horário» e aparece na página do parceiro.",
+    check: { kind: "marker", id: "241" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
