@@ -204,11 +204,19 @@ class _NavGrow extends StatelessWidget {
       curve: const Interval(0.45, 1, curve: Curves.easeOut),
       reverseCurve: const Interval(0.55, 1, curve: Curves.easeIn),
     );
+    // O conteúdo que chega depois (resumos, listas que carregam) muda a
+    // altura: o popup cresce até ao tamanho certo num só movimento, em
+    // vez de ficar a meio e depois saltar (pedido 2026-11-25).
     final content = FadeTransition(
       opacity: settle,
       child: SlideTransition(
         position: Tween(begin: const Offset(0, 0.03), end: Offset.zero).animate(settle),
-        child: child,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.bottomCenter,
+          child: child,
+        ),
       ),
     );
 
