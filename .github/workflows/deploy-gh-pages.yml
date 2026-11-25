@@ -149,6 +149,18 @@ jobs:
             fi
           done < build/web/v/list.txt
           rm -f build/web/v/full.txt
+          # 2026-11-25 («aconteceu novamente», iPhone): as versões de 23–24
+          # nov ainda mostravam «Não foi possível abrir» e não procuravam
+          # versões novas sozinhas. Os ficheiros delas passam a ser só um
+          # «recarrega com a versão nova»: uma app presa nessas versões (em
+          # pausa ou com o index.html antigo em cache) atualiza-se sozinha
+          # assim que tenta abrir um ecrã, em vez de mostrar o erro.
+          STUB='(function(){try{sessionStorage.setItem("tt-skip-opening","1")}catch(e){}location.replace(location.pathname+"?r="+Date.now()+location.hash);})();'
+          for ver in 6daa9a7 e4bf9b0 870d97b e45c7e4; do
+            mkdir -p "build/web/v/$ver"
+            echo "$STUB" > "build/web/v/$ver/main.dart.js"
+            for i in $(seq 1 200); do echo "$STUB" > "build/web/v/$ver/main.dart.js_$i.part.js"; done
+          done
           du -sh build/web/v || true
                     cat "$DEST/version.txt" 2>/dev/null || echo "backup sem version.txt (anterior a esta mudança)"
 
