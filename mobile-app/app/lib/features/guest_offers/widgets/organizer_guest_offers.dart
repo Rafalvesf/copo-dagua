@@ -1,3 +1,4 @@
+import '../../../shared/widgets/time_wheels.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -467,7 +468,7 @@ class _NewOfferSheetState extends ConsumerState<_NewOfferSheet> {
             if (d == null || !mounted) return;
             var picked = d;
             if (withTime) {
-              final t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 15, minute: 0));
+              final t = await pickTimeWheel(context, initial: const TimeOfDay(hour: 15, minute: 0));
               if (t == null) return;
               picked = DateTime(d.year, d.month, d.day, t.hour, t.minute);
             }

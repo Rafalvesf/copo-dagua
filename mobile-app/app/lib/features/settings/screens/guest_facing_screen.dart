@@ -1,3 +1,4 @@
+import '../../../shared/widgets/time_wheels.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -314,17 +315,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
       hour: int.tryParse(parts.first) ?? 16,
       minute: parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0,
     );
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-      helpText: 'Hora do momento',
-      cancelText: 'Cancelar',
-      confirmText: 'OK',
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-        child: child!,
-      ),
-    );
+    final picked = await pickTimeWheel(context, initial: initial, title: 'Hora do momento');
     if (picked == null) return;
     String two(int v) => v.toString().padLeft(2, '0');
     setState(() {
