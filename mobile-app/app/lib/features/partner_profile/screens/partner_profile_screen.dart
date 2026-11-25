@@ -22,6 +22,8 @@ import '../../profile/profile_widgets.dart';
 import '../../../core/profile/username.dart' show myUsernameProvider;
 import '../../../core/partners/partner_achievements.dart';
 import '../../../shared/widgets/partner_achievements.dart';
+import '../../../shared/widgets/section_frame.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class PartnerProfileScreen extends ConsumerStatefulWidget {
   const PartnerProfileScreen({super.key});
@@ -89,16 +91,12 @@ class _PartnerProfileScreenState extends ConsumerState<PartnerProfileScreen> {
                     const SizedBox(height: 18),
                     _BusinessHeader(profile: profile),
                     if (profile != null) ...[
-                      const SizedBox(height: 18),
                       _MyLinkCard(partnerId: profile.id),
-                      const SizedBox(height: 18),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          '"Partilhar perfil" abre a partilha do telemóvel com este link. Quem o abrir vê a tua página pública, mesmo sem a app.',
-                          style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w700, color: AppTheme.inkMuted),
-                        ),
-                      ),
+                      // Modo Pro (mockup «Parceiro · Perfil», 2026-11-25).
+                      SectionFrame(title: 'Modo Pro', children: [
+                        const FrameNote('Vê o que o Modo Pro inclui e quanto custa.'),
+                        FrameButton44('Ver o Modo Pro', onTap: () => context.push('/partner-pro')),
+                      ]),
                     ],
                     if (profile?.partnerProfileStatus != null &&
                         profile!.partnerProfileStatus != 'published') ...[
@@ -361,7 +359,9 @@ Future<void> sharePartnerProfile(BuildContext context, String partnerId, String 
   }
 }
 
-/// "O teu link" + Copiar (mockup "Parceiro · o meu perfil").
+/// «O teu link e QR» numa moldura (mockup «Parceiro · Perfil», 2026-11-25):
+/// o QR da página pública, o link e «Copiar». Quem entra por aqui conta
+/// para a taxa mais baixa (os links levam o código de convite, 2026-11-25).
 class _MyLinkCard extends StatelessWidget {
   final String partnerId;
   const _MyLinkCard({required this.partnerId});
@@ -369,42 +369,31 @@ class _MyLinkCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final link = partnerPublicLink(partnerId);
-    final shown = link.replaceFirst(RegExp(r'^https?://'), '');
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-      child: Row(children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            const Text('O teu link', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 2),
-            Text(shown,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-          ]),
+    final shown = link.replaceFirst(RegExp(r'^https?://'), '').split('?').first;
+    return SectionFrame(title: 'O teu link e QR', children: [
+      Row(children: [
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+          child: QrImageView(data: link, size: 64, padding: EdgeInsets.zero, semanticsLabel: 'QR da tua página'),
         ),
         const SizedBox(width: 12),
-        SnappyTap(
-          onTap: () async {
-            await Clipboard.setData(ClipboardData(text: link));
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
-            }
-          },
-          child: Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppTheme.ink, width: 1.5),
-            ),
-            child: const Text('Copiar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-          ),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(shown,
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            const SizedBox(height: 2),
+            const Text('Quem entra por aqui conta para a taxa mais baixa.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+          ]),
         ),
+        const SizedBox(width: 8),
+        FrameButton36('Copiar', outlined: true, onTap: () async {
+          await Clipboard.setData(ClipboardData(text: link));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link copiado.')));
+          }
+        }),
       ]),
-    );
+    ]);
   }
 }

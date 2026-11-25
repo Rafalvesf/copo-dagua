@@ -13,6 +13,8 @@ import '../../../shared/money.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/green_hero.dart' show SectionTitle;
+import '../../../shared/widgets/section_frame.dart';
+import '../../../shared/widgets/page_kit.dart' show KitTitle;
 import '../../../shared/widgets/line_icon.dart';
 import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/widgets/dense_card.dart' show AlertStrip;
@@ -158,7 +160,7 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
               ),
               const Padding(
                 padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 20),
-                child: Text('Pagamentos', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                child: KitTitle('Pagamentos', subtitle: 'O que recebeste e o que está para chegar.'),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
@@ -177,11 +179,9 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
               // Relatórios para descarregar (2026-10-20).
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                child: SectionTitle('Exportar'),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                child: ExportCard(reportLabel: 'Lucros e clientes', partnerSide: true, load: loadPartnerReport),
+                child: SectionFrame(title: 'Exportar', children: [
+                  ExportCard(reportLabel: 'Lucros e clientes', partnerSide: true, load: loadPartnerReport),
+                ]),
               ),
             ],
           ),
@@ -219,10 +219,6 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
 
   Widget _active(ConnectStatus s) {
     final canWithdraw = s.payoutsEnabled && s.availableCents > 0 && !_paying;
-    Widget group(String t) => Padding(
-          padding: const EdgeInsets.only(top: 20, bottom: 12),
-          child: OnbGroupLabel(t),
-        );
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       // Saldo (mockup "Pagamentos ativos").
       Container(
@@ -230,7 +226,6 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(22),
-          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Container(
@@ -286,23 +281,19 @@ class _PartnerPaymentsScreenState extends ConsumerState<PartnerPaymentsScreen> {
           onTap: () => context.push('/partner-payments/setup'),
         ),
       ],
-      group('A caminho'),
-      const _Incoming(),
-      group('Por cobrar'),
-      const _ToReceive(),
-      group('Levantamentos'),
-      _Rows([
+      const SectionFrame(title: 'A caminho', children: [_Incoming()]),
+      const SectionFrame(title: 'Por cobrar', children: [_ToReceive()]),
+      SectionFrame(title: 'Levantamentos', children: [_Rows([
         if (s.payouts.isEmpty)
           const _RowData('Ainda não fizeste nenhum levantamento.', null, null)
         else
           for (final p in s.payouts) _RowData(euros(p.amountCents / 100, cents: true), _payoutDate(p), p.statusLabel),
-      ]),
-      group('Conta'),
-      _Rows([
+      ])]),
+      SectionFrame(title: 'Conta', children: [_Rows([
         _RowData('Dados e IBAN', null, s.bankLast4 == null ? (s.needsData ? 'Em falta' : '') : '···· ${s.bankLast4}',
             onTap: () => context.push('/partner-payments/setup')),
         _RowData('Modo de levantamento', null, PayoutMode.of(s.payoutSchedule).label, onTap: () => _pickMode(s)),
-      ]),
+      ])]),
     ]);
   }
 
@@ -328,8 +319,8 @@ class _Rows extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        // Dentro da moldura, sem caixa (mockup «Parceiro · Pagamentos»).
+        padding: EdgeInsets.zero,
         child: Column(children: [
           for (final (i, r) in rows.indexed)
             GestureDetector(
