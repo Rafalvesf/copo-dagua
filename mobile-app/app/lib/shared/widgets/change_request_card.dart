@@ -17,7 +17,10 @@ class ChangeRequestCard extends StatefulWidget {
   final bool mine;
   final String? imageUrl;
 
-  const ChangeRequestCard({super.key, required this.changeRequestId, required this.mine, this.imageUrl});
+  const ChangeRequestCard({super.key, required this.changeRequestId, required this.mine, this.imageUrl, this.eventLabel});
+
+  /// Etiqueta do evento no cartão (conversas juntas, 2026-11-25).
+  final String? eventLabel;
 
   @override
   State<ChangeRequestCard> createState() => _ChangeRequestCardState();
@@ -157,6 +160,7 @@ class _ChangeRequestCardState extends State<ChangeRequestCard> {
     };
     return ChatProposalCard(
       icon: kind == 'date' ? Hi.calendar : Hi.pencil,
+      eventLabel: widget.eventLabel,
       eyebrow: kind == 'date' ? 'Outro dia' : 'Pedido de alteração',
       title: title,
       subtitle: kind == 'date'

@@ -333,7 +333,7 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
   final rows = await supabase
       .from('conversations')
       .select(
-        'id, wedding_id, partner_id, last_message, last_message_at, events(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url)',
+        'id, wedding_id, partner_id, last_message, last_message_at, events(partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, owner_id, event_type, event_date)',
       )
       .eq('partner_id', partnerId)
       .order('last_message_at', ascending: false);
@@ -358,6 +358,12 @@ final partnerConversationsProvider = FutureProvider<List<ChatConversation>>((
       lastMessageAt: row['last_message_at'] == null
           ? null
           : DateTime.parse(row['last_message_at'] as String),
+      // Uma só conversa por cliente (2026-11-25): quem organiza e o evento.
+      clientId: event?['owner_id'] as String?,
+      eventLabel: eventLabelOf(
+        EventType.fromDb(event?['event_type'] as String?),
+        DateTime.tryParse('${event?['event_date'] ?? ''}'),
+      ),
     );
   }).toList();
 });
