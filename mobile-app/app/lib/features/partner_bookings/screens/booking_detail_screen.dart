@@ -437,6 +437,18 @@ Expanded(child: ScrollingHeader(
                                     subtitle: '${booking.clientName} · ${booking.eventType.label} · ${d.day} ${months[d.month - 1]}',
                                     state: state,
                                     onTalkToTeam: () => context.push('/support'),
+                                    onOtherDay: () async {
+                                      final all = await ref.read(partnerBookingsProvider(null).future).catchError((_) => <Booking>[]);
+                                      if (!context.mounted) return;
+                                      await showProposeOtherDaySheet(context, request: booking, all: all);
+                                    },
+                                    onChange: () => showChangeSheet(
+                                      context,
+                                      bookingId: booking.id,
+                                      otherName: booking.clientName,
+                                      subtitle: 'Reserva · ${booking.clientName}',
+                                      currentPeople: booking.people ?? 1,
+                                    ),
                                   );
                                   if (reason == null || !context.mounted) return;
                                   // Já recebeu dinheiro desta reserva? Para

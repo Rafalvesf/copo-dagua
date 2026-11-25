@@ -86,6 +86,8 @@ Future<String?> showPartnerCancelSheet(
   required String subtitle,
   required BookingCancelState state,
   VoidCallback? onTalkToTeam,
+  VoidCallback? onOtherDay,
+  VoidCallback? onChange,
 }) {
   return showIslandSheet<String>(
     context: context,
@@ -97,6 +99,8 @@ Future<String?> showPartnerCancelSheet(
       who: clientName,
       state: state,
       onTalkToTeam: onTalkToTeam,
+      onOtherDay: onOtherDay,
+      onChange: onChange,
     ),
   );
 }
@@ -110,7 +114,14 @@ class _CancelSheet extends StatefulWidget {
   final double? rest;
   final VoidCallback? onTalkToTeam;
 
+  /// «O QUE PODES FAZER» do parceiro (mockup «Cancelar reserva ·
+  /// parceiro»): «Propor outro dia» e «Pedir alteração» antes de cancelar.
+  final VoidCallback? onOtherDay;
+  final VoidCallback? onChange;
+
   const _CancelSheet({
+    this.onOtherDay,
+    this.onChange,
     required this.title,
     required this.subtitle,
     required this.partnerSide,
@@ -228,6 +239,29 @@ class _CancelSheetState extends State<_CancelSheet> {
                     ),
                   ]),
                 ),
+                if (widget.partnerSide && (widget.onOtherDay != null || widget.onChange != null)) ...[
+                  const SizedBox(height: 16),
+                  const Text('O QUE PODES FAZER', style: _caps),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+                    child: Column(children: [
+                      if (widget.onOtherDay != null)
+                        _DoRow('Propor outro dia', 'O sinal fica para o dia novo', () {
+                          Navigator.of(context).pop();
+                          widget.onOtherDay!();
+                        }),
+                      if (widget.onOtherDay != null && widget.onChange != null)
+                        const Divider(height: 1, thickness: 1, color: Color(0xFFD9D9D9)),
+                      if (widget.onChange != null)
+                        _DoRow('Pedir alteração', 'Pessoas, hora ou o que está incluído', () {
+                          Navigator.of(context).pop();
+                          widget.onChange!();
+                        }),
+                    ]),
+                  ),
+                ],
                 if (rows.isNotEmpty && !locked) ...[
                   const SizedBox(height: 16),
                   const Text('AS CONTAS', style: _caps),
@@ -313,6 +347,32 @@ class _CancelSheetState extends State<_CancelSheet> {
               ),
             ]),
           ),
+        ]),
+      ),
+    );
+  }
+}
+
+class _DoRow extends StatelessWidget {
+  final String title;
+  final String meta;
+  final VoidCallback onTap;
+  const _DoRow(this.title, this.meta, this.onTap);
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 60),
+        child: Row(children: [
+          Expanded(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ]),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: AppTheme.inkMuted),
         ]),
       ),
     );
