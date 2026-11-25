@@ -630,6 +630,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O parceiro pode propor outro dia a um pedido (antes de haver reserva), por exemplo quando já tem uma marcação nesse dia. Aparece um cartão na conversa com «Aceitar»/«Recusar»; aceite, o dia do pedido muda (o dia do evento não muda sozinho). Corre depois da 233.",
     check: { kind: "marker", id: "235" },
   },
+  {
+    file: "236_hora_preco_linhas.sql",
+    date: "2026-11-25",
+    title: "Hora do pedido, preço do outro dia e linhas da proposta",
+    what: "O pedido de orçamento guarda a hora (início e fim), que o organizador muda em «Editar pedido». «Propor outro dia» pode trazer outro preço: aceite, a proposta do pedido passa a esse total. A proposta guarda as linhas do «O que inclui». Corre depois da 235.",
+    check: { kind: "marker", id: "236" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
