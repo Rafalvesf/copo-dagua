@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../supabase/supabase_config.dart';
+import '../riverpod_cache.dart';
 
 /// Pessoa que confirmou num evento (migração 214): só quem segues ou tem o
 /// perfil público — os outros contam no número, sem foto.
@@ -16,6 +17,7 @@ class EventPerson {
 
 /// Até 5 pessoas que confirmaram, amigos primeiro. Vazio antes da 214.
 final eventAttendeesProvider = FutureProvider.autoDispose.family<List<EventPerson>, String>((ref, eventId) async {
+  ref.staleWhileRevalidate();
   try {
     final rows = await supabase.rpc('event_attendees_preview', params: {
       'p_event_ids': [eventId],
@@ -37,6 +39,7 @@ final eventAttendeesProvider = FutureProvider.autoDispose.family<List<EventPerso
 
 /// Quantos confirmaram num evento (migração 220); `null` antes dela.
 final eventGoingCountProvider = FutureProvider.autoDispose.family<int?, String>((ref, eventId) async {
+  ref.staleWhileRevalidate();
   try {
     final rows = await supabase.rpc('event_going_counts', params: {
       'p_event_ids': [eventId],
@@ -50,6 +53,7 @@ final eventGoingCountProvider = FutureProvider.autoDispose.family<int?, String>(
 
 /// Quem criou o evento (a foto do círculo do cartão). `null` antes da 214.
 final eventHostProvider = FutureProvider.autoDispose.family<EventPerson?, String>((ref, eventId) async {
+  ref.staleWhileRevalidate();
   try {
     final rows = await supabase.rpc('event_hosts_preview', params: {
       'p_event_ids': [eventId],

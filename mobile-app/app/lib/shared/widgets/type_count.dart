@@ -53,7 +53,7 @@ class _TypeCountState extends State<TypeCount> {
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         maxLength: '${widget.max}'.length,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink, fontFeatures: [FontFeature.tabularFigures()]),
         decoration: const InputDecoration(border: InputBorder.none, isCollapsed: true, counterText: ''),
         onTap: () => _ctrl.selection = TextSelection(baseOffset: 0, extentOffset: _ctrl.text.length),
         onChanged: (t) {

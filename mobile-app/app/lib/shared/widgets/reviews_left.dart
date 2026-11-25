@@ -11,11 +11,13 @@ import '../hero_icons.dart';
 import 'partner_badges.dart' show VerifiedBadge;
 import 'snappy_tap.dart';
 import 'v2_kit.dart';
+import '../../core/riverpod_cache.dart';
 
 /// Avaliações publicadas que esta pessoa deixou (só as publicadas, que já
 /// são públicas na página de cada parceiro).
 final reviewsLeftProvider = FutureProvider.autoDispose.family<List<({String partnerId, int rating, DateTime at})>, String>(
   (ref, profileId) async {
+  ref.staleWhileRevalidate();
     try {
       final rows = await supabase
           .from('reviews')

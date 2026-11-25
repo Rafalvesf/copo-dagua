@@ -7,6 +7,7 @@ import '../hero_icons.dart';
 import 'island_sheet.dart';
 import 'page_kit.dart' show KitTag, KitTagKind;
 import 'time_wheels.dart';
+import '../../core/riverpod_cache.dart';
 
 /// Horário de funcionamento do parceiro (migração 241, pedido do Rafael,
 /// 2026-11-25): os dias abertos de 1 (segunda) a 7 (domingo), cada um com a
@@ -85,6 +86,7 @@ const weekdayNamesPt = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sába
 
 /// O horário de um parceiro; `null` se ainda não indicou (ou sem a 241).
 final partnerOpeningHoursProvider = FutureProvider.autoDispose.family<OpeningHours?, String>((ref, partnerId) async {
+  ref.staleWhileRevalidate();
   try {
     final r = await supabase.from('partner_profiles').select('opening_hours').eq('id', partnerId).maybeSingle();
     final h = OpeningHours.fromJson(r?['opening_hours']);

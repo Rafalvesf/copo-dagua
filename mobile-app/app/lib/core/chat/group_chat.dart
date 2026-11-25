@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'
 import '../supabase/supabase_config.dart';
 import 'chat_attachments.dart';
 import 'chat_delete.dart';
+import '../riverpod_cache.dart';
 
 /// Grupos do evento (pedido do utilizador, 2026-10-20): organizadores e
 /// convidados criam grupos com as pessoas desse evento.
@@ -102,6 +103,7 @@ String get _me => supabase.auth.currentUser!.id;
 Duration? _noRetry(int count, Object error) => null;
 
 final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, String>((ref, eventId) async {
+  ref.staleWhileRevalidate();
   final rows = await supabase
       .from('chat_groups')
       .select('*')
@@ -138,6 +140,7 @@ final chatGroupsProvider = FutureProvider.autoDispose.family<List<ChatGroup>, St
 /// aparecem nas Mensagens como uma conversa normal). A policy de
 /// `chat_groups` só deixa ver os grupos de que sou membro.
 final myChatGroupsProvider = FutureProvider.autoDispose<List<ChatGroup>>((ref) async {
+  ref.staleWhileRevalidate();
   if (supabase.auth.currentUser == null) return const [];
   final rows = await supabase
       .from('chat_groups')

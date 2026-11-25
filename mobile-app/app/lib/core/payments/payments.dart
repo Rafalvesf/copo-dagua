@@ -1,3 +1,4 @@
+import 'dart:math' show Random;
 import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException, FunctionResponse;
@@ -212,7 +213,24 @@ class PaymentIntentInfo {
 /// `create-payment-intent`: um PaymentIntent para o método escolhido.
 /// Erros legíveis chegam como [CheckoutUnavailable] (`method_unavailable`,
 /// `partner_not_onboarded`, `invalid_state`, `processing`, `not_configured`).
-Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method, {String? phone, String? paymentMethodId}) async {
+///
+/// Idempotente (2026-11-25): dois toques iguais enquanto o primeiro ainda
+/// está a caminho recebem o mesmo pedido, e cada tentativa leva uma chave
+/// (`idempotency_key`) para a Stripe não criar dois pagamentos.
+final Map<String, Future<PaymentIntentInfo>> _inFlightIntents = {};
+
+Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method, {String? phone, String? paymentMethodId}) {
+  final k = '$paymentId|${method.code}|${phone ?? ''}|${paymentMethodId ?? ''}';
+  return _inFlightIntents[k] ??= _createPaymentIntent(paymentId, method, phone: phone, paymentMethodId: paymentMethodId, key: _idemKey())
+      .whenComplete(() => _inFlightIntents.remove(k));
+}
+
+String _idemKey() {
+  final r = Random.secure();
+  return List.generate(24, (_) => r.nextInt(16).toRadixString(16)).join();
+}
+
+Future<PaymentIntentInfo> _createPaymentIntent(String paymentId, PayMethod method, {String? phone, String? paymentMethodId, required String key}) async {
   final FunctionResponse res;
   try {
     res = await supabase.functions.invoke(
@@ -220,6 +238,7 @@ Future<PaymentIntentInfo> createPaymentIntent(String paymentId, PayMethod method
       body: {
         'payment_id': paymentId,
         'method': method.code,
+        'idempotency_key': key,
         if (phone != null) 'phone': phone,
         if (paymentMethodId != null) 'payment_method': paymentMethodId,
       },

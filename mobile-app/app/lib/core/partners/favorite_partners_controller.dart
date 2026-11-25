@@ -61,19 +61,25 @@ class FavoritePartnersController extends Notifier<FavoritePartnersState> {
     } else {
       next.add(partnerId);
     }
+    final before = state.partnerIds;
     state = state.copyWith(partnerIds: next);
 
-    if (isFav) {
-      await supabase
-          .from('favorite_partners')
-          .delete()
-          .eq('wedding_id', eventId)
-          .eq('partner_id', partnerId);
-    } else {
-      await supabase.from('favorite_partners').upsert({
-        'wedding_id': eventId,
-        'partner_id': partnerId,
-      });
+    try {
+      if (isFav) {
+        await supabase
+            .from('favorite_partners')
+            .delete()
+            .eq('wedding_id', eventId)
+            .eq('partner_id', partnerId);
+      } else {
+        await supabase.from('favorite_partners').upsert({
+          'wedding_id': eventId,
+          'partner_id': partnerId,
+        });
+      }
+    } catch (_) {
+      // Falhou no servidor: o coração volta a como estava.
+      state = state.copyWith(partnerIds: before);
     }
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../events/events_providers.dart';
 import '../supabase/supabase_config.dart';
+import '../riverpod_cache.dart';
 
 /// Perfil público e seguir (migração 183, mockup "Perfil" 2026-11-12).
 
@@ -91,6 +92,7 @@ class PublicProfile {
 
 /// null antes da migração 183 (ou se a pessoa não existe).
 final publicProfileProvider = FutureProvider.autoDispose.family<PublicProfile?, String>((ref, id) async {
+  ref.staleWhileRevalidate();
   try {
     final r = await supabase.rpc('public_profile', params: {'p_id': id});
     if (r is! Map) return null;
@@ -112,6 +114,7 @@ class FollowRow {
 
 /// Quem [id] segue: 'people' ou 'partners'.
 final followListProvider = FutureProvider.autoDispose.family<List<FollowRow>, (String, String)>((ref, k) async {
+  ref.staleWhileRevalidate();
   try {
     final r = await supabase.rpc('follow_list', params: {'p_id': k.$1, 'p_kind': k.$2});
     return [
@@ -133,6 +136,7 @@ class PartnerFollowInfo {
 }
 
 final partnerFollowInfoProvider = FutureProvider.autoDispose.family<PartnerFollowInfo?, String>((ref, id) async {
+  ref.staleWhileRevalidate();
   try {
     final r = await supabase.rpc('partner_follow_info', params: {'p_partner': id});
     if (r is! Map) return null;

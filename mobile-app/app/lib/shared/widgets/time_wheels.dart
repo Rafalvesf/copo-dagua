@@ -102,7 +102,7 @@ class _TimeWheelsState extends State<TimeWheels> {
                     onSelectedItemChanged: (k) => widget.columns[i].onChanged(widget.columns[i].options[k]),
                     itemBuilder: (_, k) => Center(
                       child: Text(widget.columns[i].options[k],
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink, fontFeatures: [FontFeature.tabularFigures()])),
                     ),
                   ),
                 ),

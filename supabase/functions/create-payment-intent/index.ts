@@ -285,6 +285,11 @@ Deno.serve(async (req) => {
   const holdDeposit = cardLike && (payment.type === "deposit" || holdUntilMs > Date.now() + 3600 * 1000);
   const wantExtended = holdDeposit && holdUntilMs > Date.now() + 6 * 24 * 3600 * 1000;
 
+  // Chave de idempotência (2026-11-25): a app manda uma por tentativa de
+  // pagar; dois toques ou um pedido repetido dão o mesmo PaymentIntent.
+  const idemKey = typeof body.idempotency_key === "string" && /^[A-Za-z0-9-]{8,64}$/.test(body.idempotency_key)
+    ? body.idempotency_key
+    : null;
   let intent;
   const createIntent = (extended: boolean) => stripe.paymentIntents.create({
       amount: totalChargeCents,
@@ -325,7 +330,10 @@ Deno.serve(async (req) => {
         held: holdDeposit ? "1" : "0",
         card_region: region,
       },
-    }, method === "mb_way" ? { apiVersion: "2025-09-30.clover" as never } : undefined);
+    }, {
+      ...(method === "mb_way" ? { apiVersion: "2025-09-30.clover" as never } : {}),
+      ...(idemKey ? { idempotencyKey: `pi-${payment.id}-${idemKey}-${extended ? "x" : "n"}` } : {}),
+    });
   try {
     try {
       intent = await createIntent(wantExtended);

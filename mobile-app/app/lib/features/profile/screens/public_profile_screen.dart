@@ -34,6 +34,8 @@ class PublicProfileScreen extends ConsumerStatefulWidget {
 
 class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   bool _busy = false;
+  // Otimista (2026-11-25): «Seguir» muda logo; volta atrás se falhar.
+  bool? _following;
   // Topo reduzido como nos parceiros (pedido 2026-11-22).
   final _scroll = ScrollController();
   final _eventsKey = GlobalKey();
@@ -47,11 +49,16 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   }
 
   Future<void> _follow(PublicProfile p) async {
-    setState(() => _busy = true);
+    final next = !(_following ?? p.iFollow);
+    setState(() {
+      _busy = true;
+      _following = next;
+    });
     try {
-      await followPerson(p.id, !p.iFollow);
+      await followPerson(p.id, next);
       ref.invalidate(publicProfileProvider(p.id));
     } catch (_) {
+      if (mounted) setState(() => _following = !next);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Não foi possível. Tenta outra vez.')));
       }
@@ -277,9 +284,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: ProfileButton(
-                              p.iFollow ? 'A seguir' : (p.followsMe ? 'Seguir também' : 'Seguir'),
+                              (_following ?? p.iFollow) ? 'A seguir' : (p.followsMe ? 'Seguir também' : 'Seguir'),
                               height: 52,
-                              dark: !p.iFollow,
+                              dark: !(_following ?? p.iFollow),
                               onTap: _busy ? null : () => _follow(p),
                             ),
                           ),

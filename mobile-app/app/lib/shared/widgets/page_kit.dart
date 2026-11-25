@@ -444,7 +444,7 @@ class KitSummary extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(value,
                     maxLines: 1,
-                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1)),
+                    style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.ink, height: 1, fontFeatures: [FontFeature.tabularFigures()])),
               ),
             ),
             if (unit != null) ...[

@@ -33,7 +33,7 @@ class OnbProgress extends StatelessWidget {
         width: 34,
         child: Text('${(value * 100).round()}%',
             textAlign: TextAlign.right,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: labelColor)),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: labelColor, fontFeatures: [FontFeature.tabularFigures()])),
       ),
     ]);
   }
