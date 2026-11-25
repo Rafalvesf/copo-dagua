@@ -202,7 +202,12 @@ class ChatProposalCard extends StatelessWidget {
     this.tone = ChatCardTone.neutral,
     this.icon = Hi.tag,
     this.rows = const [],
+    this.eventLabel,
   });
+
+  /// Etiqueta do evento (uma só conversa por pessoa, 2026-11-25): «Casamento
+  /// · Sáb, 12 jun 2027», para se saber de que evento é o cartão.
+  final String? eventLabel;
 
   /// Ícone do tipo no círculo 28 (prancheta «Todos os cartões»): pedido,
   /// reserva, proposta, confirmada, recusada, pagamento, alteração, dia.
@@ -288,6 +293,27 @@ class ChatProposalCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+            ),
+          if (eventLabel != null && eventLabel!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(999)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Hi.calendar, size: 12, color: Color(0xFF3A3733)),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(eventLabel!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
+                    ),
+                  ]),
+                ),
+              ),
             ),
           const SizedBox(height: 10),
           for (final r in rows) valueRow(r.$1, r.$2),

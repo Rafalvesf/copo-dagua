@@ -16,7 +16,13 @@ import 'chat_delete.dart';
 class PartnerChatThreadController extends Notifier<ChatThreadState> {
   PartnerChatThreadController(this.conversationId);
 
+  /// Um id, ou vários separados por vírgulas (as conversas de vários
+  /// eventos com o mesmo cliente, juntas — 2026-11-25). Escreve-se na
+  /// primeira.
   final String conversationId;
+
+  List<String> get _ids => conversationId.split(',').where((s) => s.isNotEmpty).toList();
+  String get _target => _ids.first;
 
   @override
   ChatThreadState build() {
@@ -29,7 +35,7 @@ class PartnerChatThreadController extends Notifier<ChatThreadState> {
     final rows = await supabase
         .from('messages')
         .select()
-        .eq('conversation_id', conversationId)
+        .inFilter('conversation_id', _ids)
         .order('created_at', ascending: true);
     state = ChatThreadState(
       loading: false,
@@ -38,10 +44,9 @@ class PartnerChatThreadController extends Notifier<ChatThreadState> {
           .toList(),
     );
     try {
-      await supabase.rpc(
-        'mark_conversation_read',
-        params: {'p_conversation_id': conversationId},
-      );
+      for (final id in _ids) {
+        await supabase.rpc('mark_conversation_read', params: {'p_conversation_id': id});
+      }
       ref.invalidate(partnerUnreadMessagesCountProvider);
     } catch (_) {}
   }
@@ -52,7 +57,7 @@ class PartnerChatThreadController extends Notifier<ChatThreadState> {
     final row = await supabase
         .from('messages')
         .insert({
-          'conversation_id': conversationId,
+          'conversation_id': _target,
           'sender_role': 'partner',
           'sender_id': supabase.auth.currentUser!.id,
           'body': trimmed,
@@ -67,7 +72,7 @@ class PartnerChatThreadController extends Notifier<ChatThreadState> {
     final row = await supabase
         .from('messages')
         .insert({
-          'conversation_id': conversationId,
+          'conversation_id': _target,
           'sender_role': 'partner',
           'sender_id': supabase.auth.currentUser!.id,
           'body': null,

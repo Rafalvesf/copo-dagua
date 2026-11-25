@@ -36,7 +36,11 @@ class RequestCard extends StatefulWidget {
     this.eventTitle,
     this.eventLine,
     this.eventPeople,
+    this.eventLabel,
   });
+
+  /// Etiqueta do evento no cartão (conversas juntas, 2026-11-25).
+  final String? eventLabel;
 
   @override
   State<RequestCard> createState() => _RequestCardState();
@@ -168,6 +172,7 @@ class _RequestCardState extends State<RequestCard> {
 
     return ChatProposalCard(
       icon: isPackage ? Hi.archiveBox : Hi.documentText,
+      eventLabel: widget.eventLabel,
       eyebrow: isPackage ? 'Pedido de reserva' : 'Pedido de orçamento',
       status: label,
       tone: tone,

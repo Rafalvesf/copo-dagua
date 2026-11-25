@@ -28,7 +28,13 @@ class ChatThreadState {
 class ChatThreadController extends Notifier<ChatThreadState> {
   ChatThreadController(this.conversationId);
 
+  /// Um id, ou vários separados por vírgulas (uma só conversa por parceiro,
+  /// 2026-11-25: as conversas de vários eventos com o mesmo parceiro
+  /// mostram-se juntas). Escreve-se sempre na primeira.
   final String conversationId;
+
+  List<String> get _ids => conversationId.split(',').where((s) => s.isNotEmpty).toList();
+  String get _target => _ids.first;
 
   @override
   ChatThreadState build() {
@@ -41,22 +47,27 @@ class ChatThreadController extends Notifier<ChatThreadState> {
     final rows = await supabase
         .from('messages')
         .select()
-        .eq('conversation_id', conversationId)
+        .inFilter('conversation_id', _ids)
         .order('created_at', ascending: true);
     // Conversa apagada deste lado (`couple_hidden_at`, 179): o histórico
     // até esse momento deixa de aparecer. Antes da migração a coluna não
     // existe — mostra tudo.
-    DateTime? hiddenAt;
+    final hidden = <String, DateTime>{};
     try {
-      final c = await supabase.from('conversations').select('couple_hidden_at').eq('id', conversationId).maybeSingle();
-      final h = c?['couple_hidden_at'] as String?;
-      if (h != null) hiddenAt = DateTime.parse(h);
+      final cs = await supabase.from('conversations').select('id, couple_hidden_at').inFilter('id', _ids);
+      for (final c in cs as List) {
+        final h = c['couple_hidden_at'] as String?;
+        if (h != null) hidden[c['id'] as String] = DateTime.parse(h);
+      }
     } catch (_) {}
     state = ChatThreadState(
       loading: false,
       messages: (rows as List)
           .map((r) => _fromRow(r as Map<String, dynamic>))
-          .where((m) => hiddenAt == null || m.sentAt.isAfter(hiddenAt))
+          .where((m) {
+            final h = hidden[m.conversationId];
+            return h == null || m.sentAt.isAfter(h);
+          })
           .toList(),
     );
     // Abrir a conversa marca-a como lida — `mark_conversation_read()`
@@ -64,10 +75,9 @@ class ChatThreadController extends Notifier<ChatThreadState> {
     // casal a ler. Melhor esforço: uma falha aqui não deve impedir o
     // ecrã de mostrar as mensagens já carregadas.
     try {
-      await supabase.rpc(
-        'mark_conversation_read',
-        params: {'p_conversation_id': conversationId},
-      );
+      for (final id in _ids) {
+        await supabase.rpc('mark_conversation_read', params: {'p_conversation_id': id});
+      }
       // Sem isto o selo da navbar (`unreadMessagesCountProvider`) ficava
       // com o valor em cache de antes de abrir esta conversa — a leitura
       // já tinha sido gravada na base de dados, só o provider é que
@@ -84,7 +94,7 @@ class ChatThreadController extends Notifier<ChatThreadState> {
     final row = await supabase
         .from('messages')
         .insert({
-          'conversation_id': conversationId,
+          'conversation_id': _target,
           'sender_role': 'couple',
           'sender_id': supabase.auth.currentUser!.id,
           'body': trimmed,
@@ -99,7 +109,7 @@ class ChatThreadController extends Notifier<ChatThreadState> {
     final row = await supabase
         .from('messages')
         .insert({
-          'conversation_id': conversationId,
+          'conversation_id': _target,
           'sender_role': 'couple',
           'sender_id': supabase.auth.currentUser!.id,
           'body': null,

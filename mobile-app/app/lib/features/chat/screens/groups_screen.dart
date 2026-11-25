@@ -19,6 +19,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../../../shared/widgets/chat_header.dart';
 import '../../../shared/widgets/chat_ui.dart';
+import '../../../shared/widgets/chat_summary_sheets.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/page_header.dart';
@@ -396,13 +397,6 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
     final msgs = thread.messages.reversed.where((m) => !blocked.contains(m.senderId)).toList();
     final reads = ref.watch(_groupReadsProvider(widget.group.id)).value ?? const <DateTime>[];
     final others = people.values.where((p) => p.id != me).toList();
-    // Faixa do evento (mockup "Grupo do evento", 2026-11-12).
-    const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    final ev = ref.watch(eventControllerProvider).events.where((w) => w.id == widget.group.eventId).firstOrNull;
-    final evDate = ev?.eventDate;
-    final eventTitle = ev == null
-        ? null
-        : [ev.displayNames, if (evDate != null) '${evDate.day} ${months[evDate.month - 1]} ${evDate.year}'].join(' · ');
     final names = others.map((p) => p.name.split(' ').first).toList();
     final subtitle = names.isEmpty
         ? 'Grupo'
@@ -424,12 +418,15 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                 : widget.group.isEventAll && widget.group.description?.isNotEmpty == true
                     ? widget.group.description!
                     : subtitle,
+            // Tocar no topo: o resumo da pessoa (conversa direta) ou do
+            // grupo — o evento e quem está (pranchetas de 2026-11-25).
             onOpenProfile: widget.group.isDirect
                 ? () {
                     final o = others.firstOrNull;
-                    if (o != null) context.push('/u/${o.id}');
+                    if (o != null) showPersonSummary(context, personId: o.id, name: o.name, avatarUrl: o.avatarUrl);
                   }
-                : _menu,
+                : () => showGroupSummary(context, group: widget.group, onOpenEvent: () => context.go('/home')),
+            menu: widget.group.isDirect ? const [] : [('Gerir o grupo', _menu)],
             leading: SizedBox(
               width: 46,
               height: 44,
@@ -467,18 +464,15 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
           color: const Color(0xFFF2F2F2),
           child: thread.loading && thread.messages.isEmpty
               ? const SkeletonChat()
-              : ChatEventIsland(
-                  title: eventTitle ?? 'Grupo do evento',
-                  subtitle: eventTitle == null ? null : 'Grupo do evento',
-                  action: ev == null ? null : 'Ver evento',
-                  onAction: ev == null ? null : () => context.go('/home'),
-                  child: JumpToLatest(
+              // Sem a ilha «Ver evento» (2026-11-25): tocar no topo abre o
+              // resumo do grupo / da pessoa.
+              : JumpToLatest(
                   controller: _scroll,
                   messageCount: msgs.length,
                   child: ListView.builder(
                   controller: _scroll,
                   reverse: true,
-                  padding: const EdgeInsets.fromLTRB(16, 82, 16, 16),
+                  padding: const EdgeInsets.all(16),
                   itemCount: msgs.length,
                   itemBuilder: (context, i) {
                     final m = msgs[i];
@@ -570,7 +564,6 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
                       ),
                     ]);
                   },
-                ),
                 ),
                 ),
           ),

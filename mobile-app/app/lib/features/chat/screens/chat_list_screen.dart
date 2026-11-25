@@ -164,7 +164,11 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       title = 'Apagar a conversa?';
       body = 'A conversa com ${c.name} sai da tua lista. ${c.name} continua a vê-la; se te escrever, volta a aparecer.';
       cta = 'Apagar conversa';
-      action = () => ref.read(chatListControllerProvider.notifier).hide(c.id);
+      action = () async {
+        for (final x in c.all) {
+          await ref.read(chatListControllerProvider.notifier).hide(x.id);
+        }
+      };
     }
     if (!await confirmChatDelete(context, title: title, body: body, cta: cta)) return false;
     if (!mounted) return false;
@@ -237,7 +241,25 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         if (!mine.any((w) => w.id == g.eventId)) (g.eventId, g.displayNames),
     ];
 
-    final allConvs = [for (final c in state.conversations) if (!_removed.contains(c.id)) c];
+    // Uma só conversa por parceiro (pedido 2026-11-25): as de vários
+    // eventos com o mesmo parceiro juntam-se; cada cartão diz o evento.
+    final evById = {for (final w in mine) w.id: w};
+    final allConvs = mergeConversations([
+      for (final c in state.conversations)
+        if (!_removed.contains(c.id))
+          ChatConversation(
+            id: c.id,
+            name: c.name,
+            avatarSeed: c.avatarSeed,
+            avatarUrl: c.avatarUrl,
+            eventId: c.eventId,
+            partnerId: c.partnerId,
+            lastMessage: c.lastMessage,
+            lastMessageAt: c.lastMessageAt,
+            unreadCount: c.unreadCount,
+            eventLabel: evById[c.eventId] == null ? null : eventLabelOf(evById[c.eventId]!.eventType, evById[c.eventId]!.eventDate),
+          ),
+    ], (c) => c.partnerId);
     final allGroups = [
       for (final g in ref.watch(myChatGroupsProvider).value ?? const <ChatGroup>[])
         if (!_removed.contains(g.id)) g

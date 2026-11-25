@@ -637,6 +637,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "O pedido de orçamento guarda a hora (início e fim), que o organizador muda em «Editar pedido». «Propor outro dia» pode trazer outro preço: aceite, a proposta do pedido passa a esse total. A proposta guarda as linhas do «O que inclui». Corre depois da 235.",
     check: { kind: "marker", id: "236" },
   },
+  {
+    file: "237_silenciar_grupo.sql",
+    date: "2026-11-25",
+    title: "Silenciar um grupo e quantos vão",
+    what: "Cada membro pode silenciar um grupo (deixa de receber os avisos das mensagens) no resumo do grupo, e o resumo mostra quantos confirmaram que vão ao evento. Corre depois da 236.",
+    check: { kind: "marker", id: "237" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

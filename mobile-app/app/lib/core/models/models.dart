@@ -1679,6 +1679,18 @@ class ChatConversation {
   final DateTime? lastMessageAt;
   final int unreadCount;
 
+  /// Do lado do parceiro: quem organiza o evento (`events.owner_id`), para
+  /// juntar as conversas do mesmo cliente.
+  final String? clientId;
+
+  /// «Casamento · Sáb, 12 jun 2027» — o evento desta conversa, que vai na
+  /// etiqueta de cada cartão quando as conversas se juntam.
+  final String? eventLabel;
+
+  /// Uma só conversa por pessoa (pedido do Rafael, 2026-11-25): as outras
+  /// conversas com a mesma pessoa (de outros eventos), mostradas juntas.
+  final List<ChatConversation> merged;
+
   const ChatConversation({
     required this.id,
     required this.name,
@@ -1689,7 +1701,63 @@ class ChatConversation {
     this.lastMessage,
     this.lastMessageAt,
     this.unreadCount = 0,
+    this.clientId,
+    this.eventLabel,
+    this.merged = const [],
   });
+
+  /// Esta e as que estão juntas com ela.
+  List<ChatConversation> get all => [this, ...merged];
+
+  /// Chave do fio de mensagens: os ids todos, a primeira é onde se escreve.
+  String get threadKey => all.map((c) => c.id).join(',');
+
+  /// A conversa a que pertence uma mensagem (para o evento do cartão).
+  ChatConversation of(String? conversationId) =>
+      all.firstWhere((c) => c.id == conversationId, orElse: () => this);
+}
+
+/// Junta as conversas com a mesma pessoa numa só (a mais recente à frente;
+/// as não lidas somam-se). [keyOf] diz quem é a pessoa.
+List<ChatConversation> mergeConversations(List<ChatConversation> list, String? Function(ChatConversation) keyOf) {
+  final groups = <String, List<ChatConversation>>{};
+  final out = <ChatConversation>[];
+  for (final c in list) {
+    final k = keyOf(c);
+    if (k == null) {
+      out.add(c);
+    } else {
+      groups.putIfAbsent(k, () => []).add(c);
+    }
+  }
+  for (final g in groups.values) {
+    g.sort((a, b) => (b.lastMessageAt ?? DateTime(0)).compareTo(a.lastMessageAt ?? DateTime(0)));
+    final top = g.first;
+    out.add(ChatConversation(
+      id: top.id,
+      name: top.name,
+      avatarSeed: top.avatarSeed,
+      avatarUrl: top.avatarUrl ?? g.map((c) => c.avatarUrl).whereType<String>().firstOrNull,
+      eventId: top.eventId,
+      partnerId: top.partnerId,
+      lastMessage: top.lastMessage,
+      lastMessageAt: top.lastMessageAt,
+      unreadCount: g.fold(0, (a, c) => a + c.unreadCount),
+      clientId: top.clientId,
+      eventLabel: top.eventLabel,
+      merged: g.skip(1).toList(),
+    ));
+  }
+  out.sort((a, b) => (b.lastMessageAt ?? DateTime(0)).compareTo(a.lastMessageAt ?? DateTime(0)));
+  return out;
+}
+
+/// «Casamento · Sáb, 12 jun 2027» — a etiqueta do evento nos cartões.
+String eventLabelOf(EventType type, DateTime? date) {
+  if (date == null) return type.label;
+  const wd = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  const mo = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  return '${type.label} · ${wd[date.weekday - 1]}, ${date.day} ${mo[date.month - 1]} ${date.year}';
 }
 
 /// Mesa da disposição de lugares. A posição da mesa na sequência não é

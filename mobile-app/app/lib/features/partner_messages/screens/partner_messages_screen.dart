@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../chat/widgets/message_row.dart';
 import '../../../shared/widgets/snappy_tap.dart';
-import '../../../shared/widgets/v2_kit.dart' show softCard, V2Avatar;
+import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
 import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
 import 'package:copo_dagua_app/features/messages/team_messages.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/partner_app/partner_app_providers.dart';
-import '../../../core/models/models.dart' show ChatConversation;
+import '../../../core/models/models.dart' show ChatConversation, mergeConversations;
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/feedback.dart';
 import '../../../shared/widgets/mascot.dart';
@@ -76,7 +76,9 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                     error: (err, st) => AsyncErrorView(
                       onRetry: () => ref.invalidate(partnerConversationsProvider),
                     ),
-                    data: (all) {
+                    data: (raw) {
+                      // Uma só conversa por cliente (pedido 2026-11-25).
+                      final all = mergeConversations(raw, (c) => c.clientId);
                       final conversations = query.isEmpty
                           ? all
                           : all
@@ -147,17 +149,18 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                           ),
                           for (final k in [0, 1, 2])
                             if (sections[k] != null) ...[
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin + 4, 18, AppTheme.screenMargin, 8),
+                              // Como a prancheta «Mensagens»: sem caixa branca,
+                              // título de grupo com a linha grossa por cima.
+                              Container(
+                                margin: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 4),
+                                padding: const EdgeInsets.only(top: 16),
+                                decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.sectionLine, width: 2))),
                                 child: Text(names[k],
                                     style: const TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                               ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-                                child: Container(
-                                  clipBehavior: Clip.antiAlias,
-                                  decoration: softCard(radius: 22),
-                                  child: Column(children: [
+                                child: Column(children: [
                                     for (var i = 0; i < sections[k]!.length; i++)
                                       MessageRow(
                                         avatar: V2Avatar(sections[k]![i].name, size: 52, imageUrl: sections[k]![i].avatarUrl, flat: true),
@@ -171,8 +174,7 @@ class _PartnerMessagesScreenState extends ConsumerState<PartnerMessagesScreen> {
                                           extra: sections[k]![i],
                                         ),
                                       ),
-                                  ]),
-                                ),
+                                ]),
                               ),
                             ],
                         ],
