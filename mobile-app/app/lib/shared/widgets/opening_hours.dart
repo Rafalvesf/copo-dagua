@@ -317,6 +317,38 @@ class OpeningHoursSection extends ConsumerWidget {
   }
 }
 
+/// Horário resumido por baixo do cartão do parceiro (perto da bio):
+/// o ponto e «Aberto agora · fecha às 19:00» 13; tocar abre a semana.
+class OpeningHoursInline extends ConsumerWidget {
+  final String partnerId;
+  const OpeningHoursInline({super.key, required this.partnerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final h = ref.watch(partnerOpeningHoursProvider(partnerId)).value;
+    if (h == null) return const SizedBox.shrink();
+    final open = h.isOpenNow();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 10, AppTheme.screenMargin, 0),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => showOpeningHoursSheet(context, h),
+        child: Row(children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: open ? AppTheme.accentOliveDark : const Color(0xFFB8B2A6), shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Flexible(child: Text(h.nowLabel() ?? '', style: const TextStyle(fontSize: 13, color: AppTheme.ink))),
+          const SizedBox(width: 4),
+          const Icon(Hi.chevronRight, size: 14, color: AppTheme.inkMuted),
+        ]),
+      ),
+    );
+  }
+}
+
 /// Popup «Horário»: os 7 dias, hoje a negrito, e o estado de agora.
 Future<void> showOpeningHoursSheet(BuildContext context, OpeningHours h) {
   final today = DateTime.now().weekday;

@@ -1039,8 +1039,8 @@ peças dos organizadores (§6).
   parceiro** que os organizadores abrem (§6.2) — no topo o sino e as
   Definições (pretos 44 com aro branco) em vez de voltar / favorito;
   «Editar perfil» + «Partilhar perfil» em vez de Seguir + Mensagem; sem a
-  barra de reservar; no fim «O TEU LINK E QR» e «MODO PRO». Antes de
-  publicado, o perfil de sempre com o estado da verificação.
+  barra de reservar; no fim «O TEU LINK E QR» e «MODO PRO». **Sempre esta
+  página**, também antes de publicado (o estado da verificação vai no fim).
 - **Horário de funcionamento** (migração 241, 2026-11-25; `OpeningHours`,
   `shared/widgets/opening_hours.dart`): pede-se no onboarding («Quando estão
   abertos?», em cima «Todos os dias» com «Aplicar a todos» — as mesmas
