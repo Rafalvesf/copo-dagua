@@ -285,16 +285,13 @@ class _MonthSummary extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('ESTE MÊS', style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
           const SizedBox(height: 4),
-          Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-            Text(s == null ? '—' : euros(s.revenue),
-                style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(width: 8),
-            if (s != null)
-              Flexible(
-                child: Text('em ${s.bookings} ${s.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'}',
-                    style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-              ),
-          ]),
+          // O valor numa linha e as reservas por baixo (2026-11-25: o
+          // texto ao lado do valor ficava desalinhado).
+          Text(s == null ? '—' : euros(s.revenue),
+              maxLines: 1, style: const TextStyle(fontSize: 40, height: 1.1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+          if (s != null)
+            Text('${s.bookings} ${s.bookings == 1 ? 'reserva confirmada' : 'reservas confirmadas'}',
+                style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
           const SizedBox(height: 10),
           Wrap(spacing: 6, runSpacing: 6, children: [
             KitTag('$newRequests ${newRequests == 1 ? 'pedido novo' : 'pedidos novos'}',
