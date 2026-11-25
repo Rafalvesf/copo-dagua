@@ -15,6 +15,7 @@ import 'core/web_keyboard_stub.dart' if (dart.library.js_interop) 'core/web_keyb
 import 'core/auth/auth_controller.dart';
 import 'core/monitoring/error_reporting.dart';
 import 'core/notifications/push.dart';
+import 'core/payments/payments.dart' show prewarmPayments;
 import 'core/partners/partner_referrals.dart';
 import 'core/invites/invites.dart' show myInviteStatsProvider;
 import 'shared/public_link.dart' show shareRefCode;
@@ -73,6 +74,8 @@ class CopoDaguaApp extends ConsumerWidget {
         PushNotifications.resync();
         // Convite de parceiro aberto antes de ter conta (migração 151).
         claimPendingPartnerReferral();
+        // Apple Pay / Google Pay prontos mais depressa em toda a app (2026-11-25).
+        prewarmPayments();
         // O meu código vai em todos os links que partilho (2026-11-25).
         ref.read(myInviteStatsProvider.future).then((s) => shareRefCode = s?.code).catchError((_) => null);
         Funnel.linkAccount();

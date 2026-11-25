@@ -350,6 +350,9 @@ class _PayScreenState extends ConsumerState<PayScreen> {
   /// Tem de abrir a janela do telemóvel logo no toque (sem esperas antes).
   void _payWallet() {
     setState(() => _error = null);
+    // Se criar o pagamento falhar, fica a mensagem certa (o motivo do
+    // servidor), não a genérica da janela do telemóvel (2026-11-25).
+    var failed = false;
     final future = _stripe.payWallet(() async {
       try {
         final info = await a.createIntent(PayMethod.wallet);
@@ -359,13 +362,14 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       _feeNow = info.feePctNow == null ? null : '${_pts(info.feePctNow!)} % + ${_eur((info.feeFixedCents ?? 100) / 100)}';
         return info.clientSecret;
       } catch (e) {
+        failed = true;
         _fail(e, _Step.select);
         return null;
       }
     });
     future.then((r) {
       if (!mounted) return;
-      if (r['cancelled'] == true) return;
+      if (r['cancelled'] == true || failed) return;
       _handleResult(r, back: _Step.select);
     });
   }
