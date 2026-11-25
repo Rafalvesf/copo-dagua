@@ -1,8 +1,5 @@
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:copo_dagua_app/shared/widgets/scrolling_header.dart';
-import '../../../core/event/event_controller.dart';
-import '../../../core/events/event_pass.dart' show myEventPassProvider;
 import '../../../shared/widgets/feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,142 +19,57 @@ import '../../../shared/widgets/chat_ui.dart';
 import '../../../shared/widgets/chat_summary_sheets.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../../../shared/widgets/island_sheet.dart';
-import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 
 /// Grupos do evento — organizadores e convidados (pedido do utilizador,
 /// 2026-10-20).
-class GroupsScreen extends ConsumerWidget {
-  final String eventId;
-  const GroupsScreen({super.key, required this.eventId});
-
-  Future<void> _newGroup(BuildContext context, WidgetRef ref) async {
-    final id = await showIslandSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => NewGroupSheet(eventId: eventId),
-    );
-    if (id == null || !context.mounted) return;
-    ref.invalidate(chatGroupsProvider(eventId));
-    final groups = await ref.read(chatGroupsProvider(eventId).future);
-    final g = groups.where((x) => x.id == id).firstOrNull;
-    if (g != null && context.mounted) context.push('/group/${g.id}', extra: g);
-  }
+/// Abre um grupo pelo id (notificações) ou o grupo do evento (avisos
+/// antigos com `/groups/<evento>`). A página «Grupos» saiu (pedido do
+/// Rafael, 2026-11-25: «devia ir logo para a página do grupo… apaga essa
+/// página grupos»).
+class GroupLoaderScreen extends StatelessWidget {
+  final String? groupId;
+  final String? weddingId;
+  const GroupLoaderScreen({super.key, this.groupId, this.weddingId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(chatGroupsProvider(eventId));
-    // Convidados só criam grupos se o organizador deixar (2026-11-08).
-    final organizer = ref.watch(eventControllerProvider.select((s) => s.event?.id)) == eventId;
-    final canCreate = organizer || (ref.watch(myEventPassProvider(eventId)).value?.sections.groupsCreate ?? true);
-    return GradientScaffold(
-      background: AppBackground.feed,
-      body: SafeArea(top: false, 
-        bottom: false,
-        child: ScrollingHeader(
- header: [SizedBox(height: MediaQuery.paddingOf(context).top),
-          PageHeader(
-            title: 'Grupos',
-            centered: true,
-            trailing: canCreate ? AddActionButton(onTap: () => _newGroup(context, ref)) : null,
-          )
- ],
- body: async.when(
-              loading: () => const SkeletonList(),
-              error: (e, _) => const _Empty(
-                title: 'Grupos ainda indisponíveis',
-                text: 'Os grupos ficam disponíveis assim que a atualização da base de dados for aplicada.',
-              ),
-              data: (groups) => groups.isEmpty
-                  ? _Empty(
-                      title: 'Ainda sem grupos',
-                      text: canCreate
-                          ? 'Cria um grupo com as pessoas do evento — família, padrinhos, amigos da faculdade…'
-                          : 'Os anfitriões ainda não criaram grupos.',
-                      action: canCreate ? () => _newGroup(context, ref) : null,
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () async => ref.invalidate(chatGroupsProvider(eventId)),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 40),
-                        itemCount: groups.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
-                        itemBuilder: (context, i) {
-                          final g = groups[i];
-                          return InkWell(
-                            borderRadius: BorderRadius.circular(22),
-                            onTap: () => context.push('/group/${g.id}', extra: g),
-                            child: Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: softCard(radius: 22),
-                              child: Row(children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: const BoxDecoration(color: Color(0xFFF2F2F2), shape: BoxShape.circle),
-                                  child: Icon(Hi.userGroup, color: AppTheme.accentOliveDark),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                    Text(g.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                            fontSize: AppFontSize.base,
-                                            fontWeight: g.unread ? FontWeight.w800 : FontWeight.w700,
-                                            color: AppTheme.ink)),
-                                    const SizedBox(height: 2),
-                                    Text(g.lastMessage ?? 'Sem mensagens',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: AppFontSize.sm, color: v2Muted)),
-                                  ]),
-                                ),
-                                if (g.unread)
-                                  Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.accentOliveDark, shape: BoxShape.circle)),
-                              ]),
-                            ),
-                          );
-                        },
-                      ),
+  Widget build(BuildContext context) {
+    return FutureBuilder<ChatGroup?>(
+      future: groupId != null ? fetchChatGroup(groupId!) : openEventGroup(weddingId ?? ''),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const GradientScaffold(background: AppBackground.cream, body: SkeletonChat());
+        }
+        final g = snap.data;
+        if (g == null) {
+          return GradientScaffold(
+            background: AppBackground.cream,
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.screenMargin),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const Text('Este grupo já não está disponível.',
+                        textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: () => context.go('/chat'),
+                      style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+                      child: const Text('Ir para as Mensagens'),
                     ),
+                  ]),
+                ),
+              ),
             ),
-),
-      ),
+          );
+        }
+        return GroupThreadScreen(group: g);
+      },
     );
   }
 }
 
-class _Empty extends StatelessWidget {
-  final String title;
-  final String text;
-  final VoidCallback? action;
-  const _Empty({required this.title, required this.text, this.action});
-
-  @override
-  Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Hi.userGroup, size: 56, color: AppTheme.accentOliveDark),
-            const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 6),
-            Text(text, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.inkMuted)),
-            if (action != null) ...[
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: action,
-                style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
-                child: const Text('Criar grupo'),
-              ),
-            ],
-          ]),
-        ),
-      );
-}
 
 /// Nome do grupo + escolha das pessoas do evento. Devolve o id do grupo.
 class NewGroupSheet extends ConsumerStatefulWidget {

@@ -9,6 +9,7 @@ import '../../../core/chat/chat_delete.dart';
 import '../../../core/chat/chat_helpers.dart';
 import '../../../core/supabase/supabase_config.dart';
 import '../widgets/message_row.dart';
+import 'groups_screen.dart' show NewGroupSheet;
 import '../../../core/chat/chat_list_controller.dart';
 import '../../../core/chat/presence.dart';
 import '../../../shared/widgets/island_sheet.dart';
@@ -133,7 +134,15 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     );
     if (!mounted || choice == null) return;
     if (choice == 'partner') return _startNewConversation();
-    await context.push('/groups/${choice.substring(6)}');
+    // Sem a página «Grupos» (2026-11-25): cria e abre logo o grupo.
+    final id = await showIslandSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => NewGroupSheet(eventId: choice.substring(6)),
+    );
+    if (id == null || !mounted) return;
+    final g = await fetchChatGroup(id);
+    if (g != null && mounted) await context.push('/group/${g.id}', extra: g);
     ref.invalidate(myChatGroupsProvider);
   }
 

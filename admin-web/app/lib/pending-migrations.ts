@@ -658,6 +658,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "A conversa da reserva recebe sozinha: o lembrete na véspera, «Como correu?» no dia a seguir, o pagamento do resto quando abre, os menus e alergias prontos e a reserva cancelada (uma vez cada). Corre a cada hora (pg_cron post-booking-cards). Corre depois da 238.",
     check: { kind: "marker", id: "239" },
   },
+  {
+    file: "240_aviso_abre_o_grupo.sql",
+    date: "2026-11-25",
+    title: "O aviso de grupo abre esse grupo",
+    what: "As notificações das mensagens de grupo passam a abrir o próprio grupo (/group/<id>) em vez da lista de grupos, que saiu da app. Corre depois da 239.",
+    check: { kind: "marker", id: "240" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

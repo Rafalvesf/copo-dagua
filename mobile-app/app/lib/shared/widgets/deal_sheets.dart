@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../../core/chat/chat_helpers.dart';
@@ -9,6 +8,7 @@ import '../hero_icons.dart';
 import '../money.dart';
 import 'alert_outline.dart';
 import 'island_sheet.dart';
+import 'time_wheels.dart';
 import 'vat_confirm.dart';
 
 /// Popups das pranchetas das Mensagens (2026-11-24/25), iguais aos
@@ -279,34 +279,8 @@ Widget _sheet(BuildContext context, {required Widget head, required List<Widget>
   );
 }
 
-/// Caixa de hora em pílula 52 («Início 14:00»).
-class _HourBox extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  const _HourBox(this.label, this.controller);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
-      child: Row(children: [
-        Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            keyboardType: TextInputType.datetime,
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9:]'))],
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
-            decoration: const InputDecoration(isCollapsed: true, border: InputBorder.none, hintText: '00:00'),
-          ),
-        ),
-      ]),
-    );
-  }
-}
+/// Horas da roda: das 06:00 às 06:00 do dia seguinte, de meia em meia hora.
+final List<String> _wheelHours = [for (var h = 6; h <= 30; h++) ...['${(h % 24).toString().padLeft(2, '0')}:00', '${(h % 24).toString().padLeft(2, '0')}:30']];
 
 Widget _section(String caps, Widget child) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text(caps, style: _caps),
@@ -453,14 +427,22 @@ class _EditRequestState extends State<_EditRequest> {
           ),
         ),
         _section('PESSOAS', _Stepper(top: '', value: _people, note: peopleNote, onChanged: (v) => setState(() => _people = v))),
-        _section(
-          'HORA',
-          Row(children: [
-            Expanded(child: _HourBox('Início', _start)),
-            const SizedBox(width: 8),
-            Expanded(child: _HourBox('Fim', _end)),
-          ]),
-        ),
+        // Roda de horas como no iPhone (2026-11-25).
+        TimeWheels(columns: [
+          WheelColumn(
+            label: 'COMEÇA ÀS',
+            options: _wheelHours,
+            value: _start.text.isEmpty ? null : _start.text,
+            fallback: '14:00',
+            onChanged: (v) => setState(() => _start.text = v),
+          ),
+          WheelColumn(
+            label: 'ACABA ÀS',
+            options: ['Sem fim', ..._wheelHours],
+            value: _end.text.isEmpty ? 'Sem fim' : _end.text,
+            onChanged: (v) => setState(() => _end.text = v == 'Sem fim' ? '' : v),
+          ),
+        ]),
         _section('O QUE PROCURAS', _Box(_msg, lines: 4, hint: 'O que procuras')),
         const Text('O dia e o local vêm do evento: mudam-se nas Definições do evento.', style: _muted),
       ],
@@ -1229,28 +1211,6 @@ class _ChangeSheetState extends State<_ChangeSheet> {
     }
   }
 
-  Widget _hour(String label, TextEditingController c) => Expanded(
-        child: Container(
-          height: 52,
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
-          child: Row(children: [
-            Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: c,
-                onChanged: (_) => setState(() {}),
-                keyboardType: TextInputType.datetime,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9:]'))],
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                decoration: const InputDecoration(isCollapsed: true, border: InputBorder.none, hintText: '00:00'),
-              ),
-            ),
-          ]),
-        ),
-      );
-
   @override
   Widget build(BuildContext context) {
     final editing = widget.existing != null;
@@ -1275,7 +1235,21 @@ class _ChangeSheetState extends State<_ChangeSheet> {
           Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             const Text('Passa a', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             const SizedBox(height: 8),
-            Row(children: [_hour('Início', _start), const SizedBox(width: 8), _hour('Fim', _end)]),
+            TimeWheels(columns: [
+              WheelColumn(
+                label: 'COMEÇA ÀS',
+                options: _wheelHours,
+                value: _start.text.isEmpty ? null : _start.text,
+                fallback: '14:00',
+                onChanged: (v) => setState(() => _start.text = v),
+              ),
+              WheelColumn(
+                label: 'ACABA ÀS',
+                options: ['Sem fim', ..._wheelHours],
+                value: _end.text.isEmpty ? 'Sem fim' : _end.text,
+                onChanged: (v) => setState(() => _end.text = v == 'Sem fim' ? '' : v),
+              ),
+            ]),
           ])
         else
           _Box(_text, lines: 3, hint: kind == 'scope' ? 'Trocar o álbum de 30 pelo de 50 páginas.' : 'Escreve o que querem mudar.'),

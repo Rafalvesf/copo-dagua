@@ -267,7 +267,9 @@ class _GuestHomeBodyState extends ConsumerState<_GuestHomeBody> {
       if (g != null) {
         await context.push('/group/${g.id}', extra: g);
       } else {
-        await context.push('/groups/$id');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('O grupo do evento ainda não está disponível.')),
+        );
       }
       ref.invalidate(eventGroupUnreadProvider(id));
     }

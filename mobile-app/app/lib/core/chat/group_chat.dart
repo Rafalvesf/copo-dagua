@@ -317,6 +317,28 @@ String currentUserId() => _me;
 
 
 /// Grupo «todos» do evento (189). Null se a migração ainda não correu.
+/// Um grupo pelo id (para abrir o grupo de uma notificação).
+Future<ChatGroup?> fetchChatGroup(String id) async {
+  try {
+    final r = await supabase.from('chat_groups').select('*').eq('id', id).maybeSingle();
+    if (r == null) return null;
+    return ChatGroup(
+      id: r['id'] as String,
+      eventId: (r['wedding_id'] as String?) ?? '',
+      name: r['name'] as String,
+      lastMessage: r['last_message'] as String?,
+      lastMessageAt: r['last_message_at'] == null ? null : DateTime.parse(r['last_message_at'] as String),
+      createdBy: r['created_by'] as String?,
+      isDirect: r['is_direct'] == true,
+      isEventAll: r['is_event_all'] == true,
+      photoUrl: r['photo_url'] as String?,
+      description: r['description'] as String?,
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
 Future<ChatGroup?> openEventGroup(String eventId) async {
   try {
     final id = await supabase.rpc('my_event_group', params: {'p_wedding_id': eventId});
