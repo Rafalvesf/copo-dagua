@@ -224,37 +224,31 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         child: SearchPill(controller: _search, hint: 'Procurar por nome ou zona'),
       ),
       const SizedBox(height: 12),
-      SizedBox(
-        height: 40,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-          children: [
-            // Só «Todos», «Hoje» e «Este mês» (pedido 2026-11-25).
-            for (final w in _When.values) ...[
-              _FilterChip(
-                label: w.label,
-                on: _when == w,
-                onTap: () => setState(() => _when = w),
-              ),
-              const SizedBox(width: 8),
-            ],
+      // As categorias com o tamanho da barra de pesquisa (pedido
+      // 2026-11-25): pílulas de 48, a toda a largura, repartidas por igual.
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        child: Row(children: [
+          // Só «Todos», «Hoje» e «Este mês» (pedido 2026-11-25).
+          for (final (i, w) in _When.values.indexed) ...[
+            if (i > 0) const SizedBox(width: 8),
+            Expanded(child: _FilterChip(label: w.label, on: _when == w, onTap: () => setState(() => _when = w))),
           ],
-        ),
+        ]),
       ),
       const SizedBox(height: 8),
       // Por baixo, «Pago» ou «Grátis» (tocar outra vez tira o filtro).
-      SizedBox(
-        height: 40,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
-          children: [
-            _FilterChip(label: 'Pago', on: _price == 'paid', onTap: () => setState(() => _price = _price == 'paid' ? null : 'paid')),
-            const SizedBox(width: 8),
-            _FilterChip(label: 'Grátis', on: _price == 'free', onTap: () => setState(() => _price = _price == 'free' ? null : 'free')),
-          ],
-        ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
+        child: Row(children: [
+          Expanded(
+            child: _FilterChip(label: 'Pago', on: _price == 'paid', onTap: () => setState(() => _price = _price == 'paid' ? null : 'paid')),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _FilterChip(label: 'Grátis', on: _price == 'free', onTap: () => setState(() => _price = _price == 'free' ? null : 'free')),
+          ),
+        ]),
       ),
       const SizedBox(height: 18),
       if (realEvents.isNotEmpty) ...[
@@ -640,14 +634,14 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) => SnappyTap(
         onTap: onTap,
         child: Container(
-          height: 38,
+          // A altura da pesquisa (48, pedido 2026-11-25).
+          height: 48,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            // Filtros iguais aos de Parceiros (DESIGN §6): verde quando
-            // escolhido, branco sem contorno quando não.
+            // Verde quando escolhido, branco sem contorno quando não.
             color: on ? AppTheme.accentOliveDark : Colors.white,
-            borderRadius: BorderRadius.circular(19),
+            borderRadius: BorderRadius.circular(24),
           ),
           child: Text(label,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),

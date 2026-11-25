@@ -225,6 +225,9 @@ ecrãs. O resto da app mantém a tabela acima.
 - **Filtros/categorias:** pílula 38, cantos 19, texto 14 negrito. Ativo:
   verde `#4F6B4A` + texto branco. Inativo: branco, **sem contorno**.
   Contador dentro: círculo 20 (preto no inativo, branco no ativo).
+  **Exceção — Descobrir** (pedido 2026-11-25): «Todos / Hoje / Este mês»
+  e, por baixo, «Pago / Grátis» têm a **altura da pesquisa (48, cantos
+  24)** e **dividem a largura da pesquisa** pelas pílulas da mesma linha.
 - **Etiquetas:** pílula, interior 10×5, 12 negrito, **sem contorno**; a
   neutra é `#E6E6E6` com texto `#3A3733` (nunca a cor do fundo da página).
 - **Fotos de perfil:** redondas, **planas** (sem aro nem sombra) — `V2Avatar`
