@@ -7,6 +7,7 @@ import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/page_kit.dart' show KitTag;
 import '../../../shared/widgets/venue_map.dart';
 import '../../../shared/widgets/navigation_sheet.dart';
+import '../../../shared/widgets/island_sheet.dart';
 
 /// Informação do evento para o parceiro (`partner_event_brief`, migração
 /// 226): cada categoria vê só o que precisa — todos a hora, o local e o
@@ -60,6 +61,11 @@ class PartnerEventBrief extends ConsumerWidget {
         final ages = [for (final a in ((b['child_ages'] as List?) ?? const [])) (a as num).toInt()];
         final highChairs = (b['high_chairs'] as num?)?.toInt() ?? 0;
         final menus = ((b['menus'] as List?) ?? const []).cast<Map>().where((m) => m['menu'] != 'Sem escolha').toList();
+        // 242: extras da reserva, extras pedidos pelas pessoas e quem pediu o quê.
+        final menusPending = (b['menus_pending'] as num?)?.toInt() ?? 0;
+        final extras = ((b['extras'] as List?) ?? const []).cast<Map>();
+        final guestExtras = ((b['guest_extras'] as List?) ?? const []).cast<Map>();
+        final orders = ((b['orders'] as List?) ?? const []).cast<Map>();
         final dietary = ((b['dietary'] as List?) ?? const []).cast<Map>();
         final tables = ((b['tables'] as List?) ?? const []).cast<Map>();
 
@@ -88,6 +94,11 @@ class PartnerEventBrief extends ConsumerWidget {
                   last: i == program.length - 1,
                 ),
             ]),
+          if (extras.isNotEmpty)
+            SectionFrame(title: 'Extras da reserva · ${extras.length}', children: [
+              for (final (i, e) in extras.indexed)
+                _Row('${e['name']}', e['price_unit'] == 'person' ? 'Por pessoa' : 'Incluído', last: i == extras.length - 1),
+            ]),
           if (dress != null || colors.isNotEmpty)
             SectionFrame(title: 'Estilo', children: [
               if (dress != null) _Row('Dress code', dress, last: colors.isEmpty),
@@ -113,10 +124,23 @@ class PartnerEventBrief extends ConsumerWidget {
                 FrameNote(highChairs == 1 ? '1 criança precisa de cadeirinha.' : '$highChairs crianças precisam de cadeirinha.', top: 10),
             ]),
           if (showFood) ...[
+            // Os teus menus, só os que ofereces (pedido 2026-11-25).
             SectionFrame(title: 'Menus', children: [
               if (menus.isEmpty) const FrameNote('Ainda ninguém escolheu menu.'),
               for (final (i, m) in menus.indexed) _Row('${m['menu']}', '${m['count']}', last: i == menus.length - 1),
+              if (menusPending > 0)
+                FrameNote(menusPending == 1 ? '1 pessoa ainda por escolher.' : '$menusPending pessoas ainda por escolher.', top: 8),
             ]),
+            if (guestExtras.isNotEmpty)
+              SectionFrame(title: 'Extras pedidos', children: [
+                for (final (i, e) in guestExtras.indexed) _Row('${e['name']}', '${e['count']}', last: i == guestExtras.length - 1),
+              ]),
+            if (orders.isNotEmpty)
+              SectionFrame(title: 'Quem pediu o quê · ${orders.length}', children: [
+                for (final (i, o) in orders.take(6).indexed) _OrderRow(o, last: i == (orders.length > 6 ? 5 : orders.length - 1)),
+                if (orders.length > 6)
+                  FrameButton44('Ver todos (${orders.length})', outlined: true, onTap: () => _showOrders(context, orders)),
+              ]),
             SectionFrame(title: dietary.isEmpty ? 'Alergias' : 'Alergias · ${dietary.length}', children: [
               if (dietary.isEmpty) const FrameNote('Nenhuma indicada.'),
               for (final (i, d) in dietary.indexed)
@@ -168,6 +192,71 @@ class PartnerEventBrief extends ConsumerWidget {
 }
 
 /// Linha de 48: rótulo 13 `#57534E` à esquerda, valor 14 negrito à direita.
+/// Uma pessoa: nome 16 e «Menu · extras · Mesa 4» 13 (242).
+class _OrderRow extends StatelessWidget {
+  final Map order;
+  final bool last;
+  const _OrderRow(this.order, {this.last = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final extras = [for (final e in (order['extras'] as List?) ?? const []) '$e'];
+    final meta = [
+      if (order['menu'] != null) '${order['menu']}',
+      if (extras.isNotEmpty) '+ ${extras.join(', ')}',
+      if (order['table'] != null) '${order['table']}',
+    ].join(' · ');
+    return Container(
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: AppTheme.line))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        Text('${order['name']}${order['child'] == true ? ' (criança)' : ''}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+        if (meta.isNotEmpty) Text(meta, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+      ]),
+    );
+  }
+}
+
+/// Todos: quem pediu o quê, num popup.
+void _showOrders(BuildContext context, List<Map> orders) {
+  showIslandSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (c) => SafeArea(
+      top: false,
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+          child: Row(children: [
+            Expanded(
+              child: Text('Quem pediu o quê · ${orders.length}',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ),
+            GestureDetector(
+              onTap: () => Navigator.of(c).pop(),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                child: const Icon(Icons.close_rounded, size: 20, color: Colors.white),
+              ),
+            ),
+          ]),
+        ),
+        Flexible(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            children: [for (final (i, o) in orders.indexed) _OrderRow(o, last: i == orders.length - 1)],
+          ),
+        ),
+      ]),
+    ),
+  );
+}
+
 class _Row extends StatelessWidget {
   final String label;
   final String value;

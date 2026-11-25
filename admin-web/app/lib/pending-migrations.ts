@@ -672,6 +672,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "Coluna partner_profiles.opening_hours: os dias abertos (1 = segunda … 7 = domingo) com a hora de abrir e de fechar. Pede-se no onboarding do parceiro, muda-se em «Horário» e aparece na página do parceiro.",
     check: { kind: "marker", id: "241" },
   },
+  {
+    file: "242_menus_extras_do_parceiro.sql",
+    date: "2026-11-25",
+    title: "Menus e extras na informação do parceiro",
+    what: "partner_event_brief passa a mostrar só os menus do parceiro (com quantos faltam escolher), os extras da reserva, quantas vezes cada extra foi pedido e «quem pediu o quê» (menu, extras e mesa de cada pessoa). Corre depois da 241.",
+    check: { kind: "marker", id: "242" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
