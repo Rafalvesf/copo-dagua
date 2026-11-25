@@ -20,6 +20,7 @@ import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import '../widgets/event_brief.dart';
 import '../widgets/day_clash_sheet.dart';
+import '../../../shared/widgets/deal_sheets.dart';
 import '../widgets/request_row.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/cancel_booking_sheet.dart';
@@ -312,10 +313,27 @@ Expanded(child: ScrollingHeader(
                       child: FilledButton(
                         onPressed: () async {
                           if (!await _dayOk() || !context.mounted) return;
-                          context.push(
-                            '/partner-requests/${booking.id}/proposal',
-                            extra: booking,
+                          // Popup «Enviar proposta» (prancheta, 2026-11-25).
+                          const wd = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+                          const mo = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+                          final d = booking.eventDate;
+                          final sent = await showProposalSheet(
+                            context,
+                            quoteRequestId: booking.id,
+                            eventId: booking.eventId,
+                            clientName: booking.clientName,
+                            eventLabel: booking.eventType.label,
+                            requestTitle: booking.packageLabel.isNotEmpty ? booking.packageLabel : 'Pedido de orçamento',
+                            requestLine: [
+                              '${wd[d.weekday - 1]}, ${d.day} ${mo[d.month - 1]}',
+                              if ((booking.people ?? 0) > 0) '${booking.people} pessoas',
+                              if (booking.city.isNotEmpty) booking.city,
+                            ].join(' · '),
+                            requestMessage: booking.messageFromCouple,
                           );
+                          if (!sent || !context.mounted) return;
+                          ref.invalidate(partnerBookingsProvider);
+                          context.pop();
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.ink,

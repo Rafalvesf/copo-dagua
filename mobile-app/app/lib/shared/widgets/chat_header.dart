@@ -33,6 +33,9 @@ class ChatHeader extends StatelessWidget {
   /// Visto verde de parceiro verificado ao lado do nome (DESIGN §6).
   final bool verified;
 
+  /// Mais opções no «⋯» antes de «Denunciar» («Pedir alteração»).
+  final List<(String, VoidCallback)> menu;
+
   const ChatHeader({
     super.key,
     required this.name,
@@ -44,6 +47,7 @@ class ChatHeader extends StatelessWidget {
     this.leading,
     this.pill,
     this.verified = false,
+    this.menu = const [],
   });
 
   @override
@@ -121,13 +125,24 @@ class ChatHeader extends StatelessWidget {
             roundBtn(const Icon(Hi.arrowLeft, size: 20, color: Colors.white), 'Voltar', () => Navigator.of(context).maybePop()),
             const SizedBox(width: 12),
             Expanded(child: onOpenProfile == null ? info : SnappyTap(onTap: onOpenProfile, child: info)),
-            if (onReport != null) ...[
+            if (onReport != null || menu.isNotEmpty) ...[
               const SizedBox(width: 12),
               IslandMenuButton<String>(
                 tooltip: 'Mais opções',
                 position: PopupMenuPosition.under,
-                onSelected: (_) => onReport!(),
-                itemBuilder: (_) => const [PopupMenuItem(value: 'report', child: Text('Denunciar'))],
+                onSelected: (v) {
+                  if (v == 'report') {
+                    onReport?.call();
+                    return;
+                  }
+                  for (final (label, action) in menu) {
+                    if (label == v) action();
+                  }
+                },
+                itemBuilder: (_) => [
+                  for (final (label, _) in menu) PopupMenuItem(value: label, child: Text(label)),
+                  if (onReport != null) const PopupMenuItem(value: 'report', child: Text('Denunciar')),
+                ],
                 child: Container(
                   width: 44,
                   height: 44,

@@ -200,7 +200,17 @@ class ChatProposalCard extends StatelessWidget {
     this.imageUrl,
     this.status,
     this.tone = ChatCardTone.neutral,
+    this.icon = Hi.tag,
+    this.rows = const [],
   });
+
+  /// Ícone do tipo no círculo 28 (prancheta «Todos os cartões»): pedido,
+  /// reserva, proposta, confirmada, recusada, pagamento, alteração, dia.
+  final IconData icon;
+
+  /// Linhas rótulo / valor (além de Total e Sinal): «Pessoas · 122»,
+  /// «Hora · 14:00 – 00:00», «Diferença · + 0 €».
+  final List<(String, String)> rows;
 
   /// Linha pequena por baixo dos valores (ex.: "Inclui a comissão …").
   final String? note;
@@ -246,7 +256,7 @@ class ChatProposalCard extends StatelessWidget {
               height: 28,
               decoration: const BoxDecoration(color: AppTheme.background, shape: BoxShape.circle),
               alignment: Alignment.center,
-              child: const LineIcon('M3 3h8l10 10-8 8L3 11V3zM7 6.5a1 1 0 1 0 0 .01', size: 14, color: Color(0xFF3A3733), stroke: 2),
+              child: Icon(icon, size: 16, color: const Color(0xFF3A3733)),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -280,6 +290,7 @@ class ChatProposalCard extends StatelessWidget {
               child: Text(subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ),
           const SizedBox(height: 10),
+          for (final r in rows) valueRow(r.$1, r.$2),
           if (price != null) valueRow('Total', euros(price!)),
           if (deposit != null) valueRow('Sinal para confirmar', euros(deposit!)),
           if (note != null) ...[

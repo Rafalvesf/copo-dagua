@@ -304,6 +304,21 @@ ecrãs. O resto da app mantém a tabela acima.
   contador (§2) das mensagens que chegaram entretanto; leva à mais recente
   e desaparece lá em baixo. Em todas as conversas (parceiros, convidados e
   grupos).
+- **Cartões nas mensagens** (prancheta «Todos os cartões», 2026-11-25;
+  `ChatProposalCard`, `RequestCard`, `ChangeRequestCard`): branco, cantos 22,
+  ícone do tipo num círculo 28, título de grupo, pílula do estado, título 16,
+  meta 13, linhas rótulo/valor, nota 12 e botões 36. Cada lado vê o seu:
+  pedido (organizador «Editar pedido»; parceiro «Recusar» + «Enviar
+  proposta»), proposta (parceiro «Editar proposta»; organizador «Recusar» +
+  «Aceitar», depois «Pagar sinal · X»), reserva confirmada («Ver reserva»,
+  linha verde), alteração e outro dia (quem pede «Cancelar» + «Editar»; quem
+  recebe «Recusar» + «Aceitar»). Os popups «Editar pedido», «Enviar /
+  Editar proposta» e «Pedir alteração» (no «⋯» da conversa) estão em
+  `shared/widgets/deal_sheets.dart`.
+- **Notificações:** um só popup em toda a app (`PartnerNotificationBell`,
+  prancheta «Popup das notificações»): «Todas» / «Por ler», «Avisos no
+  telemóvel» com «Ativar», grupos HOJE / ESTA SEMANA / ANTES e o botão
+  «Pagar», «Ver proposta» ou «Ver».
 - **Teclado — regra** (pedido 2026-11-24): tudo o que tem uma caixa de
   escrever em baixo — a caixa da conversa, as barras fixas com campos e os
   popups (§6.1) — **sobe por cima do teclado**, para se ver sempre o que se
