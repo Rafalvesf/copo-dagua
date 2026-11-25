@@ -616,7 +616,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       trackInterest(slug, 'quote', partnerId: widget.partner.id);
     }
     try {
-      await supabase.rpc(
+      final quoteId = await supabase.rpc(
         'request_quote',
         params: {
           'p_partner_id': widget.partner.id,
@@ -632,6 +632,16 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
           'p_message': quoteMessage,
         },
       );
+      // A hora fica no pedido (238): aparece no cartão e em «Editar pedido».
+      if (quoteId is String && result.startTime != null) {
+        try {
+          await supabase.rpc('set_quote_request_time', params: {
+            'p_id': quoteId,
+            'p_start': result.startTime,
+            'p_end': result.endTime,
+          });
+        } catch (_) {}
+      }
       // Pedido explícito do utilizador: o pedido de orçamento tem de
       // aparecer no chat tal como a proposta — melhor esforço, não
       // desfaz o pedido já criado se isto falhar.

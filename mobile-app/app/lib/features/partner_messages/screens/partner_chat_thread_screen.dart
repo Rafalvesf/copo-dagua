@@ -224,7 +224,7 @@ class _PartnerChatThreadScreenState
                               ChatAttachmentView(url: message.attachmentUrl!, type: message.attachmentType ?? 'file', name: message.attachmentName, isMe: isMe),
                             )
                           : message.changeRequestId != null
-                          ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, eventLabel: _labelOf(message))
+                          ? ChangeRequestCard(changeRequestId: message.changeRequestId!, mine: isMe, eventLabel: _labelOf(message), otherName: widget.conversation.name)
                           : message.isQuoteRequestNotice &&
                                   (message.text ?? '').startsWith('Pediu um orçamento') &&
                                   widget.conversation.of(message.conversationId).eventId != null
