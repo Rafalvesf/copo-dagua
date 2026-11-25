@@ -669,7 +669,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/budget',
-        builder: (context, state) =>lazyPage([l10.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.orcamento, child: l10.BudgetScreen())),
+        // Orçamento de todos os eventos («Todos» e as pílulas): sem portão
+        // da app toda; cada evento mostra só o que o servidor deixa ver.
+        builder: (context, state) =>lazyPage([l10.loadLibrary], () =>  l10.BudgetScreen()),
       ),
       GoRoute(
         path: '/seating',
@@ -732,12 +734,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/chat',
-        builder: (context, state) =>lazyPage([l11.loadLibrary], () =>  PermissionGate(perm: OrganizerPerm.conversas, child: l11.ChatListScreen())),
+        // Todas as conversas, de todos os eventos: sem portão (as permissões
+        // são de cada evento, 2026-11-25).
+        builder: (context, state) =>lazyPage([l11.loadLibrary], () =>  l11.ChatListScreen()),
       ),
       GoRoute(
         path: '/chat/:conversationId',
         builder: (context, state) =>lazyPage([l12.loadLibrary], () =>  state.extra is ChatConversation
-            ? PermissionGate(perm: OrganizerPerm.conversas, child: l12.ChatThreadScreen(conversation: state.extra as ChatConversation))
+            ? PermissionGate(
+                perm: OrganizerPerm.conversas,
+                eventId: (state.extra as ChatConversation).merged.isNotEmpty ? null : (state.extra as ChatConversation).eventId,
+                child: l12.ChatThreadScreen(conversation: state.extra as ChatConversation))
             : const _LostRoute('/chat')),
       ),
       // Perfil (mockup 2026-11-12): Definições num botão e perfis públicos.

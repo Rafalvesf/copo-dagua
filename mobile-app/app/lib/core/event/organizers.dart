@@ -42,16 +42,24 @@ class OrganizerPerms {
 }
 
 /// O que eu posso no evento ativo.
-final myEventPermsProvider = FutureProvider<OrganizerPerms>((ref) async {
-  final id = ref.watch(eventControllerProvider.select((s) => s.event?.id));
-  if (id == null) return OrganizerPerms.all;
+/// O que posso fazer num evento (migração 159). As permissões valem só
+/// para esse evento (pedido 2026-11-25: «esta mudança deve só afetar o
+/// evento que limitou as minhas capacidades, não a app toda»).
+final eventPermsProvider = FutureProvider.family<OrganizerPerms, String>((ref, eventId) async {
   try {
-    final r = await supabase.rpc('my_event_permissions', params: {'p_wedding': id});
+    final r = await supabase.rpc('my_event_permissions', params: {'p_wedding': eventId});
     if (r is! Map) return OrganizerPerms.all;
     return OrganizerPerms.fromJson(r, isOwner: r['is_owner'] == true);
   } on PostgrestException {
     return OrganizerPerms.all;
   }
+});
+
+/// As do evento aberto — só para os ecrãs desse evento.
+final myEventPermsProvider = FutureProvider<OrganizerPerms>((ref) async {
+  final id = ref.watch(eventControllerProvider.select((s) => s.event?.id));
+  if (id == null) return OrganizerPerms.all;
+  return ref.watch(eventPermsProvider(id).future);
 });
 
 class Organizer {
