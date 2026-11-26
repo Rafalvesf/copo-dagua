@@ -104,7 +104,7 @@ void _openSettings(BuildContext context, WidgetRef ref, bool isCouple) {
 /// um único caminho de upload aqui já "sincroniza" tudo o resto que a
 /// lê (incluindo uma conta de casal a ver a mesma foto).
 Future<void> _pickAndUploadAvatar(BuildContext context, WidgetRef ref) async {
-  final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+  final file = await ImagePicker().pickImage(maxWidth: 512, source: ImageSource.gallery, imageQuality: 85);
   if (file == null) return;
   try {
     await ref.read(authControllerProvider.notifier).uploadAvatarPhoto(file);

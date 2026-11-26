@@ -66,7 +66,7 @@ final partnerBookingsProvider = FutureProvider.family<List<Booking>, BookingStat
       .select(
         // `*` para apanhar as colunas da 190 (choice_mode, payer_mode,
         // people) sem falhar antes de a migração correr.
-        '*, profiles(full_name, avatar_url), proposals(title), events(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
+        '*, profiles!bookings_couple_id_fkey(full_name, avatar_url), proposals(title), events(location, partner_name_1, partner_name_2, profile_photo_url, cover_photo_url, event_type)',
       )
       .eq('partner_id', partnerId)
       .order('event_date', ascending: false)
@@ -564,7 +564,7 @@ final partnerBalanceProvider = FutureProvider<PartnerBalanceData>((ref) async {
   try {
     rows = await supabase
         .from('bookings')
-        .select('total_amount, status, event_date, profiles(full_name), events(partner_name_1, partner_name_2), '
+        .select('total_amount, status, event_date, profiles!bookings_couple_id_fkey(full_name), events(partner_name_1, partner_name_2), '
             'payments(type, status, amount, released_at, paid_at)')
         .eq('partner_id', partnerId)
         .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
