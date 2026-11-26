@@ -104,7 +104,12 @@ class ChecklistController extends Notifier<ChecklistState> {
   }
 
   Future<void> _update(ChecklistItem item) async {
-    final row = await supabase
+    // Muda já no ecrã (desempenho, 2026-11-26); volta atrás se falhar.
+    final before = state.items;
+    state = state.copyWith(items: [for (final i in state.items) if (i.id == item.id) item else i]);
+    final Map<String, dynamic> row;
+    try {
+      row = await supabase
         .from('checklist_items')
         .update({
           'title': item.title,
@@ -119,6 +124,10 @@ class ChecklistController extends Notifier<ChecklistState> {
         .eq('id', item.id)
         .select()
         .single();
+    } catch (_) {
+      state = state.copyWith(items: before);
+      rethrow;
+    }
     final updated = _itemFromRow(row);
     state = state.copyWith(
       items: [for (final i in state.items) if (i.id == updated.id) updated else i],

@@ -17,6 +17,50 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <!-- Travão dos recarregamentos (2026-11-26, «faz reload e aparece o logo e
+       fundo verde constantemente»): a página só se recarrega sozinha 3 vezes
+       em 2 minutos, seja qual for o motivo, e guarda porquê. Também guarda
+       se a página fechou sem aviso (p.ex. o iPhone fechou-a por falta de
+       memória). A app envia isto ao Sentry na abertura seguinte. -->
+  <script>
+    (function () {
+      var L;
+      try { L = window.localStorage; L.setItem('tt-probe', '1'); } catch (e) { L = null; }
+      window.tchinMayReload = function (why) {
+        if (!L) return false;
+        try {
+          var now = Date.now();
+          var log = JSON.parse(L.getItem('tt-reloads') || '[]').filter(function (x) { return now - x.t < 120000; });
+          if (log.length >= 3) return false;
+          log.push({ t: now, why: why });
+          L.setItem('tt-reloads', JSON.stringify(log));
+          L.setItem('tt-last-reload', JSON.stringify({ t: now, why: why }));
+          return true;
+        } catch (e) { return false; }
+      };
+      window.tchinTakeReloadReport = function () {
+        if (!L) return null;
+        try {
+          var r = { reload: L.getItem('tt-last-reload'), crash: L.getItem('tt-crash') };
+          L.removeItem('tt-last-reload');
+          L.removeItem('tt-crash');
+          return r.reload || r.crash ? JSON.stringify(r) : null;
+        } catch (e) { return null; }
+      };
+      if (!L) return;
+      try {
+        var alive = +(L.getItem('tt-alive') || 0);
+        if (alive && !L.getItem('tt-left') && Date.now() - alive < 15000) {
+          L.setItem('tt-crash', JSON.stringify({ t: Date.now(), aliveAgoMs: Date.now() - alive, ua: navigator.userAgent }));
+        }
+        L.removeItem('tt-left');
+        var beat = function () { try { L.setItem('tt-alive', String(Date.now())); } catch (e) {} };
+        beat();
+        setInterval(beat, 5000);
+        addEventListener('pagehide', function () { try { L.setItem('tt-left', '1'); } catch (e) {} });
+      } catch (e) {}
+    })();
+  </script>
   <!-- Regresso de um pagamento que precisou de sair da app (2026-10-21):
        guarda o id, limpa o endereço e salta a abertura e o brinde —
        a app abre logo na confirmação do pagamento. -->
@@ -58,7 +102,8 @@
               try {
                 if (sessionStorage.getItem('tt-sw-reset')) return;
                 sessionStorage.setItem('tt-sw-reset', '1');
-              } catch (e) {}
+              } catch (e) { return; }
+              if (window.tchinMayReload && !window.tchinMayReload('service-worker antigo')) return;
               location.reload();
             });
         });
@@ -115,6 +160,7 @@
         try {
           var last = +(sessionStorage.getItem('tt-reload-at') || 0);
           if (Date.now() - last < 60000) return false;
+          if (window.tchinMayReload && !window.tchinMayReload('ecrã não carregou')) return false;
           sessionStorage.setItem('tt-reload-at', String(Date.now()));
           sessionStorage.setItem('tt-skip-opening', '1');
         } catch (e) { return false; }
@@ -152,10 +198,14 @@
         try {
           var last = +(sessionStorage.getItem('tt-reload-at') || 0);
           if (Date.now() - last < 10000) return false;
+          if (window.tchinMayReload && !window.tchinMayReload('versão nova publicada')) return false;
           sessionStorage.setItem('tt-reload-at', String(Date.now()));
           sessionStorage.setItem('tt-skip-opening', '1');
-        } catch (e) {}
-        location.reload();
+        } catch (e) { return false; }
+        // Endereço novo (?r=): obriga o browser a ir buscar o index.html
+        // atual em vez do da cache (até 10 min) — senão abria outra vez a
+        // versão antiga e voltava a recarregar (2026-11-26).
+        location.replace(location.pathname + '?r=' + Date.now() + location.hash);
         return true;
       };
       // Ao voltar à app (2026-11-24, «aconteceu novamente», app no ícone

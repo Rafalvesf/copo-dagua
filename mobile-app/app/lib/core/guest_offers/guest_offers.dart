@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../shared/public_link.dart';
 import '../home/home_providers.dart' show CheckoutUnavailable;
 import '../supabase/supabase_config.dart';
+import 'package:copo_dagua_app/core/platform/platform_settings.dart';
 
 /// Reservas para os convidados (`099_guest_offers.sql`): o organizador
 /// combina com um parceiro um bloco de quartos ou lugares; cada convidado
@@ -154,8 +155,8 @@ class GuestReservation {
 /// com um cadeado ("Em breve") e o servidor recusa ofertas e reservas.
 final guestOffersEnabledProvider = FutureProvider<bool>((ref) async {
   try {
-    final row = await supabase.from('platform_settings').select('guest_offers_enabled').eq('id', 1).maybeSingle();
-    return row?['guest_offers_enabled'] as bool? ?? false;
+    final row = await platformSettingsRow();
+    return row['guest_offers_enabled'] as bool? ?? false;
   } catch (_) {
     return false;
   }

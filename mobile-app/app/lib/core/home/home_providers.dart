@@ -10,6 +10,7 @@ import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../payments/refunds.dart';
 import '../payments/fee_config.dart';
+import 'package:copo_dagua_app/core/platform/platform_settings.dart';
 
 /// Providers para o painel do casal (`home_feed_screen.dart`) — mesmo
 /// padrão de `core/partner_app/partner_app_providers.dart`, num ficheiro
@@ -296,18 +297,14 @@ class CheckoutUnavailable implements Exception {
 final platformCommissionPercentageProvider = FutureProvider<double>((
   ref,
 ) async {
-  final row = await supabase
-      .from('platform_settings')
-      .select('platform_commission_percentage')
-      .eq('id', 1)
-      .single();
+  final row = await platformSettingsRow();
   return (row['platform_commission_percentage'] as num).toDouble();
 });
 
 final partnerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
   ref.watch(authControllerProvider.select((s) => s.profile?.id));
   try {
-    final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
+    final row = await platformSettingsRow();
     final uid = supabase.auth.currentUser?.id;
     var feeBase = FeeConfig.parse(row['partner_fee_tiers'],
         flatPct: (row['partner_fee_percentage'] as num?)?.toDouble() ?? 0);
@@ -372,7 +369,7 @@ final organizerFeeForPartnerProvider = FutureProvider.family<FeeConfig, String>(
 /// sem escalões, `platform_commission_percentage`.
 final organizerFeeConfigProvider = FutureProvider<FeeConfig>((ref) async {
   try {
-    final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
+    final row = await platformSettingsRow();
     return FeeConfig.parse(row['organizer_fee_tiers'],
         flatPct: (row['platform_commission_percentage'] as num?)?.toDouble() ?? 0);
   } catch (_) {
@@ -401,11 +398,7 @@ final myDepositPercentageProvider = FutureProvider<double>((ref) async {
 });
 
 final platformDepositPercentageProvider = FutureProvider<double>((ref) async {
-  final row = await supabase
-      .from('platform_settings')
-      .select('deposit_percentage')
-      .eq('id', 1)
-      .single();
+  final row = await platformSettingsRow();
   return (row['deposit_percentage'] as num).toDouble();
 });
 

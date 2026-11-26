@@ -75,9 +75,10 @@ class ChatThreadController extends Notifier<ChatThreadState> {
     // casal a ler. Melhor esforço: uma falha aqui não deve impedir o
     // ecrã de mostrar as mensagens já carregadas.
     try {
-      for (final id in _ids) {
-        await supabase.rpc('mark_conversation_read', params: {'p_conversation_id': id});
-      }
+      // Todas ao mesmo tempo (desempenho, 2026-11-26).
+      await Future.wait([
+        for (final id in _ids) supabase.rpc('mark_conversation_read', params: {'p_conversation_id': id}),
+      ]);
       // Sem isto o selo da navbar (`unreadMessagesCountProvider`) ficava
       // com o valor em cache de antes de abrir esta conversa — a leitura
       // já tinha sido gravada na base de dados, só o provider é que
@@ -91,17 +92,37 @@ class ChatThreadController extends Notifier<ChatThreadState> {
   Future<void> sendText(String text) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
-    final row = await supabase
-        .from('messages')
-        .insert({
+    // Aparece logo (desempenho, 2026-11-26): a mensagem entra já na
+    // conversa e é trocada pela do servidor quando ele responder; se
+    // falhar, sai e o erro segue para o ecrã (que devolve o texto).
+    final temp = ChatMessage(
+      id: 'local-${DateTime.now().microsecondsSinceEpoch}',
+      conversationId: _target,
+      fromPartner: false,
+      text: trimmed,
+      sentAt: DateTime.now(),
+    );
+    state = state.copyWith(messages: [...state.messages, temp]);
+    try {
+      final row = await supabase
+          .from('messages')
+          .insert({
           'conversation_id': _target,
           'sender_role': 'couple',
           'sender_id': supabase.auth.currentUser!.id,
           'body': trimmed,
         })
-        .select()
-        .single();
-    state = state.copyWith(messages: [...state.messages, _fromRow(row)]);
+          .select()
+          .single();
+      final real = _fromRow(row);
+      state = state.copyWith(messages: [
+        for (final m in state.messages)
+          if (m.id == temp.id) real else if (m.id != real.id) m,
+      ]);
+    } catch (_) {
+      state = state.copyWith(messages: [for (final m in state.messages) if (m.id != temp.id) m]);
+      rethrow;
+    }
   }
 
   /// Foto, ficheiro, sticker ou GIF (`core/chat/chat_attachments.dart`).

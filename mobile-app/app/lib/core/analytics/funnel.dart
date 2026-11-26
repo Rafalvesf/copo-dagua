@@ -29,7 +29,16 @@ class Funnel {
   }
 
   /// [ref]: id do que se viu (parceiro, evento…), para contar uma vez por dia.
+  static final Map<String, DateTime> _recent = {};
+
   static void track(String step, {String? ref, Map<String, Object?> props = const {}}) {
+    // O mesmo passo duas vezes seguidas (p.ex. o ecrã a montar-se duas
+    // vezes ao abrir) conta uma só (desempenho, 2026-11-26).
+    final key = '$step|${ref ?? ''}';
+    final now = DateTime.now();
+    final last = _recent[key];
+    if (last != null && now.difference(last) < const Duration(seconds: 5)) return;
+    _recent[key] = now;
     () async {
       try {
         final anon = await _anonId();

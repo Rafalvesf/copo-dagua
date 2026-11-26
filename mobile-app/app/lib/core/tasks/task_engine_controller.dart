@@ -235,6 +235,8 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       writes.clear();
 
       // 1) Concluir automaticamente o que os dados reais já satisfazem.
+      // Desempenho (2026-11-26): um pedido por regra, não um por tarefa.
+      final completeByRule = <String, List<String>>{};
       for (final task in existing) {
         if (task.status != TaskStatus.active && task.status != TaskStatus.upcoming) continue;
         final template = task.taskTemplateId == null
@@ -243,19 +245,23 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         final rule = template?.completionRule;
         if (rule == null) continue;
         if (_isComplete(rule, template!.partnerCategorySlug, ctx)) {
-          writes.add(supabase.from('wedding_tasks').update({
-            'status': 'completed',
-            'completed_at': DateTime.now().toIso8601String(),
-            'completion_source': rule,
-            'updated_at': DateTime.now().toIso8601String(),
-          }).eq('id', task.id).then((_) {}));
+          (completeByRule[rule] ??= []).add(task.id);
         }
+      }
+      for (final e in completeByRule.entries) {
+        writes.add(supabase.from('wedding_tasks').update({
+          'status': 'completed',
+          'completed_at': DateTime.now().toIso8601String(),
+          'completion_source': e.key,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).inFilter('id', e.value).then((_) {}));
       }
 
       // 1b) Reabrir tarefas de categoria que o motor deu como feitas mas
       // que deixaram de o estar (ex.: a reserva foi cancelada) — só as
       // concluídas automaticamente por essa mesma regra, nunca as que o
       // organizador marcou à mão (2026-10-21).
+      final reopenIds = <String>[];
       for (final task in existing) {
         if (task.status != TaskStatus.completed || task.taskTemplateId == null) continue;
         final template = templates.where((t) => t.id == task.taskTemplateId).firstOrNull;
@@ -263,16 +269,20 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         if (rule == null || !_categoryRules.contains(rule)) continue;
         if (task.completionSource != rule) continue;
         if (_isComplete(rule, template!.partnerCategorySlug, ctx)) continue;
+        reopenIds.add(task.id);
+      }
+      if (reopenIds.isNotEmpty) {
         writes.add(supabase.from('wedding_tasks').update({
           'status': 'upcoming',
           'completed_at': null,
           'completion_source': null,
           'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', task.id).then((_) {}));
+        }).inFilter('id', reopenIds).then((_) {}));
       }
 
       // 2) Criar linhas `upcoming` para templates elegíveis que ainda
       // não têm tarefa neste casamento (idempotente via unique index).
+      final newRows = <Map<String, dynamic>>[];
       for (final template in templates) {
         if (existingByTemplate.containsKey(template.id)) continue;
         if (!_isEligible(template.eligibilityRule, template.partnerCategorySlug, ctx)) continue;
@@ -280,7 +290,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
             _isComplete(template.completionRule!, template.partnerCategorySlug, ctx)) {
           continue; // já satisfeita antes de sequer aparecer — não vale a pena criar.
         }
-        writes.add(supabase.from('wedding_tasks').insert({
+        newRows.add({
             'wedding_id': eventId,
             'task_template_id': template.id,
             'source': 'system',
@@ -291,9 +301,16 @@ class TaskEngineController extends Notifier<TaskEngineState> {
             'status': 'upcoming',
             'completion_behavior': taskCompletionBehaviorToDb(template.completionBehavior),
             'display_type': taskDisplayTypeToDb(template.displayType),
-          }).then((_) {}, onError: (_) {
-          // Corrida entre recomputes concorrentes — o índice único já
-          // protege contra duplicados, ignora o conflito.
+          });
+      }
+      if (newRows.isNotEmpty) {
+        // Todas num só pedido. Numa corrida entre recomputes, o índice
+        // único recusa a lista inteira: aí tenta uma a uma e ignora as
+        // que já existem (como antes).
+        writes.add(supabase.from('wedding_tasks').insert(newRows).then((_) {}, onError: (_) async {
+          await Future.wait([
+            for (final r in newRows) supabase.from('wedding_tasks').insert(r).then((_) {}, onError: (_) {}),
+          ]);
         }));
       }
       await Future.wait(writes);
@@ -329,6 +346,7 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       final urgentWaiting = eligibleUpcoming
           .where((t) => t.priority == TaskPriority.urgent)
           .toList();
+      final demoteIds = <String>[];
       for (var i = 0; i < urgentWaiting.length; i++) {
         if (active.length < kMaxActiveSystemTasks) break;
         active.sort(
@@ -338,37 +356,44 @@ class TaskEngineController extends Notifier<TaskEngineState> {
         if (taskPriorityWeight(weakest.priority) >= taskPriorityWeight(TaskPriority.urgent)) {
           break; // já tudo urgente, não há para onde empurrar.
         }
+        demoteIds.add(weakest.id);
+        active = active.where((t) => t.id != weakest.id).toList();
+      }
+      if (demoteIds.isNotEmpty) {
         await supabase.from('wedding_tasks').update({
           'status': 'upcoming',
           'updated_at': DateTime.now().toIso8601String(),
-        }).eq('id', weakest.id);
-        active = active.where((t) => t.id != weakest.id).toList();
+        }).inFilter('id', demoteIds);
       }
 
       // 5) Promover de `upcoming` para `active` até preencher a fila.
       var slots = kMaxActiveSystemTasks - active.length;
       final alreadyActiveIds = active.map((t) => t.id).toSet();
+      final promoted = <EventTask>[];
       for (final candidate in eligibleUpcoming) {
         if (slots <= 0) break;
         if (alreadyActiveIds.contains(candidate.id)) continue;
-        writes.add(() async {
-          await supabase.from('wedding_tasks').update({
-            'status': 'active',
-            'available_at': DateTime.now().toIso8601String(),
-            'seen': false,
-            'updated_at': DateTime.now().toIso8601String(),
-          }).eq('id', candidate.id);
-          await supabase.from('notifications').insert({
-            'wedding_id': eventId,
-            'type': 'new_task',
-            'title': 'Nova tarefa',
-            'body': candidate.description ?? candidate.title,
-            'wedding_task_id': candidate.id,
-          });
-        }());
+        promoted.add(candidate);
         slots--;
       }
-      await Future.wait(writes);
+      if (promoted.isNotEmpty) {
+        await supabase.from('wedding_tasks').update({
+          'status': 'active',
+          'available_at': DateTime.now().toIso8601String(),
+          'seen': false,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).inFilter('id', [for (final c in promoted) c.id]);
+        await supabase.from('notifications').insert([
+          for (final c in promoted)
+            {
+              'wedding_id': eventId,
+              'type': 'new_task',
+              'title': 'Nova tarefa',
+              'body': c.description ?? c.title,
+              'wedding_task_id': c.id,
+            },
+        ]);
+      }
 
       await _syncDynamicTasks(eventId);
 

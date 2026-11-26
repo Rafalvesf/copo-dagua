@@ -1,6 +1,7 @@
 import '../payments/fee_config.dart';
 import '../../shared/money.dart';
 import '../supabase/supabase_config.dart';
+import 'package:copo_dagua_app/core/platform/platform_settings.dart';
 
 /// Relatórios para descarregar (pedido do utilizador, 2026-10-20):
 /// - parceiros: "Lucros e clientes" em PDF e Excel;
@@ -46,7 +47,7 @@ String get exportPctLabel => exportOrgFee.tiers.isEmpty
 
 Future<void> _loadCommission() async {
   try {
-    final row = await supabase.from('platform_settings').select('*').eq('id', 1).single();
+    final row = await platformSettingsRow();
     exportCommissionPct = (row['platform_commission_percentage'] as num).toDouble();
     exportOrgFee = FeeConfig.parse(row['organizer_fee_tiers'], flatPct: exportCommissionPct);
     final raw = row['partner_fee_tiers'];

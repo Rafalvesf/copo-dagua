@@ -5,3 +5,5 @@ bool reloadForNewVersion() => false;
 bool reloadNow() => false;
 
 Future<bool?> newerVersionAvailable() async => null;
+
+String? takeReloadReport() => null;
