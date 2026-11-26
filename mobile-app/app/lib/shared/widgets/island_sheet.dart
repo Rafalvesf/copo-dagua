@@ -184,8 +184,8 @@ class _NavGrow extends StatelessWidget {
       return FadeTransition(
         opacity: animation,
         child: DecoratedBox(
-          decoration: BoxDecoration(borderRadius: radius, boxShadow: _shadows),
-          child: Material(color: Colors.white, borderRadius: radius, clipBehavior: Clip.antiAlias, child: child),
+          decoration: ShapeDecoration(shadows: _shadows, shape: RoundedSuperellipseBorder(borderRadius: radius)),
+          child: Material(color: Colors.white, shape: const RoundedSuperellipseBorder(borderRadius: radius), clipBehavior: Clip.antiAlias, child: child),
         ),
       );
     }
@@ -224,16 +224,13 @@ class _NavGrow extends StatelessWidget {
       builder: (context, content) {
         final s = settle.value;
         return DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            boxShadow: [
+          decoration: ShapeDecoration(shadows: [
               for (final b in _shadows)
                 BoxShadow(color: b.color.withValues(alpha: b.color.a * s), blurRadius: b.blurRadius, offset: b.offset),
-            ],
-          ),
+            ], shape: RoundedSuperellipseBorder(borderRadius: radius)),
           child: ClipPath(
             clipper: _WaveClipper(grow.value, waveFromBottom),
-            child: ClipRRect(
+            child: ClipRSuperellipse(
               borderRadius: radius,
               child: Stack(
               children: [

@@ -99,11 +99,7 @@ class LockedTopBar extends StatelessWidget {
               height: topInset + 68,
               padding: EdgeInsets.fromLTRB(AppTheme.screenMargin + 44 + 12, topInset + 12, AppTheme.screenMargin, 12),
               alignment: Alignment.centerLeft,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(35)),
-                boxShadow: [BoxShadow(color: Color(0x1F171713), blurRadius: 24, offset: Offset(0, 8))],
-              ),
+              decoration: const ShapeDecoration(color: Colors.white, shadows: [BoxShadow(color: Color(0x1F171713), blurRadius: 24, offset: Offset(0, 8))], shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(35)))),
               child: Row(children: [
                 Expanded(
                   child: Text(title.value ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -433,7 +429,7 @@ class KitSummary extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         // O resumo do topo é o destaque da página: caixa branca com o
         // contorno preto 1,5 (2026-11-21).
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+        decoration: ShapeDecoration(color: Colors.white, shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(kicker.toUpperCase(),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 2, color: AppTheme.inkMuted)),
@@ -804,11 +800,7 @@ class KitAlert extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(top: top),
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: tone, width: 1.5),
-      ),
+      decoration: ShapeDecoration(color: Colors.white, shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: tone, width: 1.5))),
       child: Row(children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: tone, shape: BoxShape.circle)),
         const SizedBox(width: 10),

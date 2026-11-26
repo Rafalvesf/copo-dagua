@@ -26,10 +26,7 @@ class SectionFrame extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         margin: EdgeInsets.only(top: top),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: lineColor, width: 1.5),
-        ),
+        decoration: ShapeDecoration(shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: lineColor, width: 1.5))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
           Row(children: [
             Expanded(
@@ -191,10 +188,7 @@ class FrameNumbers extends StatelessWidget {
   Widget _box(FrameNumber n) {
     final box = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: SectionFrame.lineColor, width: 1.5),
-      ),
+      decoration: ShapeDecoration(shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: SectionFrame.lineColor, width: 1.5))),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Text(n.label.toUpperCase(),
             textAlign: TextAlign.center,
