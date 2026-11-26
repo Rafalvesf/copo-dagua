@@ -430,6 +430,15 @@ ecrãs. O resto da app mantém a tabela acima.
   está a ver também esteve (`profile_event_photos`, migração 244), com a nota
   «Só vês as fotos dos eventos onde também estiveste.»; sem nenhuma em comum,
   não aparece.
+- **Galeria do evento — Lista ou Mosaico** (pedido 2026-11-26, pranchetas
+  «Galeria do evento · Lista / Mosaico»; `GalleryViewToggle`, `GalleryFeed`,
+  `gallery_social_ui.dart`): por cima dos filtros, o seletor «Lista /
+  Mosaico» (duas pílulas 38 a dividir a largura, a ativa preta, linha 1,5).
+  **Lista:** as publicações (autor, foto, gostos, comentários, «Descarregar»
+  o original, legenda) umas por baixo das outras, com a linha de secção entre
+  elas. **Mosaico:** blocos alternados — uma foto grande (2×2) ao lado de duas
+  pequenas (o lado alterna) e uma fila de três —, cantos 16, 6 entre fotos;
+  tocar abre as publicações. A escolha fica enquanto a app está aberta.
 - **Algarismos tabulares** (pedido 2026-11-25): os números que mudam ou
   se alinham — contadores (`CountBadge`), números 40 e 28 dos resumos e
   caixas, rodas, «−/+» e a percentagem do onboarding — usam

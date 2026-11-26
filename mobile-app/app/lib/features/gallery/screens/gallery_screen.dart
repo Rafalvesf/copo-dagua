@@ -237,6 +237,8 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                   ),
               ],
             ],
+            const GalleryViewToggle(),
+            const SizedBox(height: 12),
             KitPills([
               KitPill(label: 'Todas', count: allCount, selected: _tab == _GalleryTab.all,
                   onTap: () => setState(() => _tab = _GalleryTab.all)),
@@ -257,7 +259,7 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
             else
               // Grelha → publicações com autor, gostos e comentários
               // (galeria social, `gallery_social_ui.dart`).
-              GallerySocialGrid(eventId: widget.eventId, photos: approved),
+              GalleryFeed(eventId: widget.eventId, photos: approved),
           ],
         );
         return withNav(list);

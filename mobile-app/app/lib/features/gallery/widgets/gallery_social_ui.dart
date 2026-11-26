@@ -43,6 +43,88 @@ String _ago(DateTime t) {
 Widget _avatar(String name, String? url, double radius) => V2Avatar(name, size: radius * 2, imageUrl: url);
 
 /// Grelha 3 colunas. Coração vermelho no canto das fotos de que gostaste.
+/// Galeria em lista ou em mosaico (pedido do Rafael, 2026-11-26, pranchetas
+/// «Galeria do evento · Lista / Mosaico»). A escolha fica enquanto a app
+/// está aberta.
+enum GalleryView { list, mosaic }
+
+final ValueNotifier<GalleryView> galleryView = ValueNotifier(GalleryView.list);
+
+/// Seletor «Lista / Mosaico»: duas pílulas 38 a dividir a largura, a ativa
+/// preta (preto e branco com a linha 1,5, como as categorias).
+class GalleryViewToggle extends StatelessWidget {
+  const GalleryViewToggle({super.key});
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<GalleryView>(
+        valueListenable: galleryView,
+        builder: (context, v, _) {
+          Widget seg(String label, IconData icon, GalleryView value) {
+            final on = v == value;
+            return Expanded(
+              child: SnappyTap(
+                onTap: () => galleryView.value = value,
+                child: Container(
+                  height: 38,
+                  decoration: ShapeDecoration(
+                    color: on ? AppTheme.ink : Colors.white,
+                    shape: const StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
+                  ),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Icon(icon, size: 16, color: on ? Colors.white : AppTheme.ink),
+                    const SizedBox(width: 6),
+                    Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: on ? Colors.white : AppTheme.ink)),
+                  ]),
+                ),
+              ),
+            );
+          }
+
+          return Row(children: [
+            seg('Lista', Hi.queueList, GalleryView.list),
+            const SizedBox(width: 8),
+            seg('Mosaico', Hi.tableCells, GalleryView.mosaic),
+          ]);
+        },
+      );
+}
+
+/// As fotos aprovadas, em lista (publicações com autor, gostos, comentários e
+/// «Descarregar») ou em mosaico (tocar abre as publicações).
+class GalleryFeed extends ConsumerWidget {
+  final String eventId;
+  final List<GalleryPhoto> photos;
+  const GalleryFeed({super.key, required this.eventId, required this.photos});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => ValueListenableBuilder<GalleryView>(
+        valueListenable: galleryView,
+        builder: (context, v, _) {
+          if (v == GalleryView.mosaic) return GallerySocialGrid(eventId: eventId, photos: photos);
+          final meta = ref.watch(galleryFeedMetaProvider(eventId)).asData?.value ?? const {};
+          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            for (var i = 0; i < photos.length; i++) ...[
+              if (i > 0)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  child: Divider(height: 2, thickness: 2, color: AppTheme.sectionLine),
+                ),
+              _PostCard(
+                key: ValueKey(photos[i].id),
+                eventId: eventId,
+                photo: photos[i],
+                meta: meta[photos[i].id],
+                tint: galleryTint(i),
+                allPhotos: photos,
+              ),
+            ],
+          ]);
+        },
+      );
+}
+
+/// Mosaico: blocos alternados — uma foto grande (2×2) ao lado de duas
+/// pequenas (alternando o lado), depois uma fila de três pequenas.
 class GallerySocialGrid extends ConsumerWidget {
   final String eventId;
   final List<GalleryPhoto> photos;
@@ -52,49 +134,71 @@ class GallerySocialGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final meta = ref.watch(galleryFeedMetaProvider(eventId)).asData?.value ?? const {};
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-      ),
-      itemCount: photos.length,
-      itemBuilder: (context, index) {
-        final photo = photos[index];
-        final m = meta[photo.id];
-        return SnappyTap(
+    const gap = 6.0;
+
+    Widget tile(int index, double size) {
+      final photo = photos[index];
+      final m = meta[photo.id];
+      return SizedBox(
+        width: size,
+        height: size,
+        child: SnappyTap(
           onTap: () => openGalleryPosts(context, eventId: eventId, photos: photos, initialIndex: index),
-          child: ClipRRect(
-            borderRadius: galleryTileRadius(index, photos.length),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                ColoredBox(color: galleryTint(index)),
-                SizedNetworkImage(
-                  photo.imageUrl,
-                  fit: BoxFit.cover,
-                  semanticLabel: galleryPhotoLabel(photo, index, photos.length),
-                  errorBuilder: (context, error, stack) => const SizedBox.shrink(),
-                ),
-                if (m != null && (m.likedByMe || m.commentCount > 0))
-                  Positioned(
-                    top: 5,
-                    right: 6,
-                    child: Icon(
-                      m.likedByMe ? Hi.heart : Hi.chatBubbleOvalLeft,
-                      size: 16,
-                      color: m.likedByMe ? AppStatusColors.declined : Colors.white,
-                      shadows: const [Shadow(blurRadius: 4, color: Colors.black38)],
-                    ),
+          child: ClipRSuperellipse(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(fit: StackFit.expand, children: [
+              ColoredBox(color: galleryTint(index)),
+              SizedNetworkImage(
+                photo.imageUrl,
+                fit: BoxFit.cover,
+                semanticLabel: galleryPhotoLabel(photo, index, photos.length),
+                errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+              ),
+              if (m != null && (m.likedByMe || m.commentCount > 0))
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Icon(
+                    m.likedByMe ? Hi.heart : Hi.chatBubbleOvalLeft,
+                    size: 16,
+                    color: m.likedByMe ? AppStatusColors.declined : Colors.white,
+                    shadows: const [Shadow(blurRadius: 4, color: Colors.black38)],
                   ),
-              ],
-            ),
+                ),
+            ]),
           ),
-        );
-      },
-    );
+        ),
+      );
+    }
+
+    return LayoutBuilder(builder: (context, c) {
+      final unit = (c.maxWidth - gap * 2) / 3;
+      final big = unit * 2 + gap;
+      final rows = <Widget>[];
+      var i = 0;
+      var bigBlock = true;
+      var bigCount = 0;
+      while (i < photos.length) {
+        if (bigBlock && photos.length - i >= 3) {
+          final pair = Column(children: [tile(i + 1, unit), const SizedBox(height: gap), tile(i + 2, unit)]);
+          final left = bigCount.isEven;
+          rows.add(Row(children: left
+              ? [tile(i, big), const SizedBox(width: gap), pair]
+              : [pair, const SizedBox(width: gap), tile(i, big)]));
+          i += 3;
+          bigCount++;
+        } else {
+          final n = (photos.length - i) < 3 ? photos.length - i : 3;
+          rows.add(Row(children: [
+            for (var k = 0; k < n; k++) ...[if (k > 0) const SizedBox(width: gap), tile(i + k, unit)],
+          ]));
+          i += n;
+        }
+        bigBlock = !bigBlock;
+        rows.add(const SizedBox(height: gap));
+      }
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows);
+    });
   }
 }
 
