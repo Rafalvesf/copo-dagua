@@ -135,7 +135,7 @@ class GalleryScreen extends ConsumerWidget {
       if (!context.mounted || !await ensurePermission(context, AppPermission.camera)) return;
     }
 
-    final file = await ImagePicker().pickImage(source: source);
+    final file = await ImagePicker().pickImage(maxWidth: 1600, source: source);
     if (file == null) return;
     try {
       await uploadGalleryPhoto(eventId: eventId, file: file, autoApprove: true);

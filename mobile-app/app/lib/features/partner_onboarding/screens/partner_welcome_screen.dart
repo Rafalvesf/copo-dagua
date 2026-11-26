@@ -237,7 +237,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
 
   Future<void> _pickLogo() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final file = await picker.pickImage(maxWidth: 512, source: ImageSource.gallery, imageQuality: 85);
     if (file == null) return;
     final bytes = await file.readAsBytes();
     if (!mounted) return;
@@ -255,7 +255,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
 
   Future<void> _addPortfolioImages() async {
     final picker = ImagePicker();
-    final files = await picker.pickMultiImage(imageQuality: 85);
+    final files = await picker.pickMultiImage(maxWidth: 1600, imageQuality: 85);
     if (files.isEmpty) return;
     if (_deferred) {
       final added = <PortfolioItem>[];
