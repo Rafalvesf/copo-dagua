@@ -70,37 +70,43 @@ final _partnerBookableEventsProvider =
     FutureProvider.autoDispose.family<List<Event>, String>((ref, partnerId) async {
   final myId = ref.watch(authControllerProvider).profile?.id;
   final events = ref.watch(eventControllerProvider.select((s) => s.events));
-  final out = <Event>[];
-  for (final w in events) {
-    if (w.ownerId != myId) {
-      try {
-        final r = await supabase.rpc('my_event_permissions', params: {'p_wedding': w.id});
-        final perms = r is Map ? OrganizerPerms.fromJson(r, isOwner: r['is_owner'] == true) : OrganizerPerms.all;
-        if (!perms.can(OrganizerPerm.conversas)) continue;
-      } catch (_) {
-        // Antes da migração de permissões: permitido.
-      }
-    }
-    try {
-      final booking = await supabase
+  // Desempenho (2026-11-26): as permissões de todos os eventos ao mesmo
+  // tempo e as reservas / pedidos numa só consulta, em vez de 3 pedidos
+  // seguidos por evento.
+  final allowed = await Future.wait([
+    for (final w in events)
+      if (w.ownerId == myId)
+        Future.value(true)
+      else
+        supabase.rpc('my_event_permissions', params: {'p_wedding': w.id}).then((r) {
+          final perms = r is Map ? OrganizerPerms.fromJson(r, isOwner: r['is_owner'] == true) : OrganizerPerms.all;
+          return perms.can(OrganizerPerm.conversas);
+        }, onError: (_) => true), // antes da migração de permissões: permitido
+  ]);
+  final candidates = [for (var i = 0; i < events.length; i++) if (allowed[i]) events[i]];
+  if (candidates.isEmpty) return const <Event>[];
+  final ids = [for (final w in candidates) w.id];
+  final Set<String> busy;
+  try {
+    final res = await Future.wait([
+      supabase
           .from('bookings')
-          .select('id')
-          .eq('wedding_id', w.id)
+          .select('wedding_id')
+          .inFilter('wedding_id', ids)
           .eq('partner_id', partnerId)
-          .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']);
-      if (booking.isNotEmpty) continue;
-      final quote = await supabase
+          .inFilter('status', ['awaiting_deposit', 'confirmed', 'completed']),
+      supabase
           .from('quote_requests')
-          .select('id')
-          .eq('wedding_id', w.id)
+          .select('wedding_id')
+          .inFilter('wedding_id', ids)
           .eq('partner_id', partnerId)
-          .inFilter('status', ['pending', 'viewed', 'proposal_sent']);
-      if (quote.isNotEmpty) continue;
-    } catch (_) {
-      continue; // em dúvida, não oferecer este evento
-    }
-    out.add(w);
+          .inFilter('status', ['pending', 'viewed', 'proposal_sent']),
+    ]);
+    busy = {for (final rows in res) for (final r in rows) r['wedding_id'] as String};
+  } catch (_) {
+    return const <Event>[]; // em dúvida, não oferecer eventos
   }
+  final out = [for (final w in candidates) if (!busy.contains(w.id)) w];
   return out;
 });
 

@@ -6,6 +6,9 @@ external JSFunction? get _reload;
 @JS('tchinReloadNow')
 external JSFunction? get _reloadNow;
 
+@JS('tchinTakeReloadReport')
+external JSFunction? get _takeReport;
+
 @JS('tchinNewerVersionAvailable')
 external JSFunction? get _newer;
 
@@ -41,4 +44,13 @@ Future<bool?> newerVersionAvailable() async {
   } catch (_) {
     return null;
   }
+}
+
+/// O que fez a página recarregar (ou fechar sem aviso) da última vez —
+/// ver `tchinTakeReloadReport` no index.html. Lê e apaga.
+String? takeReloadReport() {
+  final f = _takeReport;
+  if (f == null) return null;
+  final r = f.callAsFunction(null)?.dartify();
+  return r is String ? r : null;
 }

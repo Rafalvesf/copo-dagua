@@ -46,12 +46,12 @@ export const LEARNED: Learned[] = [
       },
       {
         item: "2 · Escritas uma a uma",
-        verdict: "problema",
+        verdict: "ok",
         found:
           "O motor de tarefas (task_engine_controller.dart) atualiza e cria tarefas com um pedido por linha (em paralelo, mas " +
           "um pedido cada). O mesmo padrão, mais pequeno: marcar conversas como lidas (uma chamada por conversa) e ver as " +
           "permissões de cada evento na página do parceiro (uma a uma, à espera de cada).",
-        next: "Juntar num só pedido: upsert com a lista toda nas tarefas; uma função na base de dados para marcar várias conversas e para as permissões de vários eventos.",
+        next: "Resolvido a 26 nov: o motor de tarefas junta as escritas (um pedido por tipo, a lista de tarefas novas num só insert); conversas lidas e permissões em paralelo; reservas e pedidos de todos os eventos numa só consulta.",
       },
       {
         item: "3 · Gargalo numa dependência",
@@ -61,15 +61,24 @@ export const LEARNED: Learned[] = [
           "Flutter (skwasm, 1,1 s em paralelo) — cerca de metade do tempo até ao primeiro ecrã; nenhum chega aos 90 %. Há " +
           "pedidos repetidos: platform_settings (2×) e track_funnel_event (2×), e carregam-se a letra fina (300, que não se " +
           "usa) e a Roboto de reserva.",
-        next: "Ler platform_settings uma só vez (há 5 sítios que a pedem), juntar os eventos do funil, tirar a letra fina do pubspec e medir também com sessão iniciada.",
+        next: "Feito a 26 nov: platform_settings pedida uma só vez (platformSettingsRow), o funil não repete o mesmo passo em 5 s e a letra fina saiu. Falta medir com sessão iniciada.",
       },
       {
         item: "4 · Ecrã à espera do servidor",
-        verdict: "problema",
+        verdict: "ok",
         found:
           "Já são imediatos o coração dos favoritos e o «Seguir» (25 nov). Ainda esperam: enviar uma mensagem na conversa " +
           "(só aparece quando o servidor responde) e marcar uma tarefa da checklist como feita.",
-        next: "Mostrar a mensagem logo (cinzenta, «a enviar») e trocar pela do servidor quando chegar; o visto da tarefa muda logo e volta atrás se falhar.",
+        next: "Resolvido a 26 nov: a mensagem aparece logo e é trocada pela do servidor; o visto da checklist muda logo e volta atrás se falhar.",
+      },
+      {
+        item: "Extra · App a recarregar sozinha (logo e fundo verde)",
+        verdict: "ok",
+        found:
+          "Na versão WebAssembly a app não sabia que versão corria e usava a do index.html, que o telemóvel guarda até 10 min: " +
+          "depois de cada publicação recarregava, abria outra vez a versão antiga e voltava a recarregar.",
+        next: "Corrigido a 26 nov: recarrega com endereço novo (?r=) para buscar o index.html atual, no máximo 3 vezes em 2 min, " +
+          "e cada recarregamento (ou fecho sem aviso, p.ex. por falta de memória no iPhone) vai para o Sentry com o motivo.",
       },
       {
         item: "5 · HTML montado para cada visitante",

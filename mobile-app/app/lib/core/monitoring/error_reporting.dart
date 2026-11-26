@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import '../lazy_reload_stub.dart' if (dart.library.js_interop) '../lazy_reload_web.dart' show takeReloadReport;
+
 /// Registo de erros (Sentry, pedido 2026-10-25): quando a app falha no
 /// telemóvel de alguém, o erro chega ao painel do Sentry.
 ///
@@ -29,7 +31,15 @@ Future<void> runWithErrorReporting(FutureOr<void> Function() appRunner) async {
       o.tracesSampleRate = 0;
       o.attachScreenshot = false;
     },
-    appRunner: appRunner,
+    appRunner: () async {
+      // Recarregamentos e fechos sem aviso da última vez (2026-11-26,
+      // «faz reload constantemente»): vão para o Sentry para se ver porquê.
+      final report = takeReloadReport();
+      if (report != null) {
+        Sentry.captureMessage('Página recarregada ou fechada sem aviso: $report', level: SentryLevel.warning).ignore();
+      }
+      await appRunner();
+    },
   );
 }
 
