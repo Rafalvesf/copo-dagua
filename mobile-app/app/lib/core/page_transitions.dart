@@ -41,7 +41,10 @@ int _currentTab = 0;
 int _tabDir = 1;
 
 // Mais lenta, como um carrossel (2026-11-11: "está muito rápida").
-const _tabDuration = Duration(milliseconds: 460);
+// ux-motion (2026-11-25): os separadores usam-se a toda a hora (§20) —
+// 260 ms em vez de 460; as páginas abrem em 300 ms e fecham mais
+// depressa, em 180 ms (§18).
+const _tabDuration = Duration(milliseconds: 260);
 
 /// Fotografia da página que sai, para deslizar ao lado da que entra
 /// (2026-11-11: "vê-se o conteúdo da página anterior e aparece o novo").
@@ -64,7 +67,8 @@ ui.Image? _snapshot(ValueKey<String>? key) {
     return null;
   }
 }
-const _pushDuration = Duration(milliseconds: 380);
+const _pushDuration = Duration(milliseconds: 300);
+const _popDuration = Duration(milliseconds: 180);
 
 /// Rota de um separador da navbar: troca com slide horizontal, sem sombra.
 /// [asButton] devolve true quando a mesma rota é aberta a partir de um
@@ -83,7 +87,7 @@ GoRoute tabRoute({
         return CustomTransitionPage<void>(
           key: state.pageKey,
           transitionDuration: _pushDuration,
-          reverseTransitionDuration: _pushDuration,
+          reverseTransitionDuration: _popDuration,
           transitionsBuilder: (context, a, s, c) => PushTransition(animation: a, child: c),
           child: child,
         );
@@ -249,7 +253,7 @@ class TopDownPageTransitionsBuilder extends PageTransitionsBuilder {
 
   /// Lido no momento de voltar atrás: com o gesto do Safari, sai logo.
   @override
-  Duration get reverseTransitionDuration => _fromBrowserBack ? Duration.zero : _pushDuration;
+  Duration get reverseTransitionDuration => _fromBrowserBack ? Duration.zero : _popDuration;
 
   @override
   Widget buildTransitions<T>(

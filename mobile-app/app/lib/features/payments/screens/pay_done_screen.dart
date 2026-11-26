@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/theme_color/theme_color.dart';
 import '../../../shared/widgets/steady_ticker.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/motion.dart';
 
 class PayDoneArgs {
   final String partnerName;
@@ -51,8 +52,16 @@ class PayDoneScreen extends StatefulWidget {
 }
 
 class _PayDoneScreenState extends State<PayDoneScreen> with SteadyTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..forward();
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    startMotion(_c, context);
+  }
 
   static const _green = AppTheme.brandGreen;
 

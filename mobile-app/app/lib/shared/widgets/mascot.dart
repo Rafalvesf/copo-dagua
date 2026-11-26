@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'estrela.dart';
 import 'steady_ticker.dart';
+import 'package:copo_dagua_app/shared/motion.dart';
 
 export 'estrela.dart';
 
@@ -118,7 +119,7 @@ class _TchinClinkState extends State<TchinClink> with SteadyTickerProviderStateM
     super.didChangeDependencies();
     if (_c.value == 0 && !_c.isAnimating) {
       Future.delayed(widget.delay, () {
-        if (mounted) _c.forward();
+        if (mounted) startMotion(_c, context);
       });
     }
   }
@@ -258,7 +259,7 @@ class _ConfettiBurstState extends State<ConfettiBurst> with SteadyTickerProvider
     super.didChangeDependencies();
     if (_c.value == 0 && !_c.isAnimating) {
       Future.delayed(widget.delay, () {
-        if (mounted) _c.forward();
+        if (mounted) startMotion(_c, context);
       });
     }
   }

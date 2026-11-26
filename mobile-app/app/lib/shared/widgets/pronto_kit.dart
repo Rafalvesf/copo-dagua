@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'steady_ticker.dart';
+import 'package:copo_dagua_app/shared/motion.dart';
 
 /// Peças dos ecrãs "Pronto" do canvas (Onboarding 5 · Pronto, Convidado 8 ·
 /// Pronto, Parceiro 7 · Pronto), com os mesmos tempos do desenho.
@@ -27,7 +28,7 @@ mixin _DelayedStart<T extends StatefulWidget> on State<T>, SteadyTickerProviderS
     ctrl = AnimationController(vsync: this, duration: duration);
     _timer = Timer(delay, () {
       if (!mounted) return;
-      repeat ? ctrl.repeat() : ctrl.forward();
+      startMotion(ctrl, context, repeat: repeat);
     });
   }
 
@@ -242,8 +243,16 @@ class DuoClink extends StatefulWidget {
 
 class _DuoClinkState extends State<DuoClink> with SteadyTickerProviderStateMixin {
   // 0 → 3,4 s: entrada em 0–0,6 s; brinde em 0,4 + 3 s.
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 3400))
-    ..forward();
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 3400));
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    startMotion(_c, context);
+  }
 
   @override
   void dispose() {
@@ -388,8 +397,16 @@ class SentBadge extends StatefulWidget {
 }
 
 class _SentBadgeState extends State<SentBadge> with SteadyTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200))
-    ..forward();
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200));
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    startMotion(_c, context);
+  }
 
   @override
   void dispose() {

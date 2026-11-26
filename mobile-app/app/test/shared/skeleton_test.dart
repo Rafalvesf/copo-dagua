@@ -34,11 +34,18 @@ void avatarTests() {
   });
 }
 
-Color _boxColor(WidgetTester tester) {
+BoxDecoration _boxDecoration(WidgetTester tester) {
   final box = tester.widget<Container>(
     find.descendant(of: find.byType(SkeletonBox).first, matching: find.byType(Container)),
   );
-  return (box.decoration! as BoxDecoration).color!;
+  return box.decoration! as BoxDecoration;
+}
+
+/// A cor de base do bloco: a cor sólida ou, no «fantasma» (2026-11-25), a
+/// cor das pontas do degradê.
+Color _boxColor(WidgetTester tester) {
+  final d = _boxDecoration(tester);
+  return d.color ?? d.gradient!.colors.first;
 }
 
 void main() {
@@ -52,10 +59,12 @@ void main() {
     expect(first, isNot(AppTheme.background));
     expect(first, isNot(Colors.white));
 
+    // «Fantasma» (2026-11-25): a faixa clara anda pelo bloco.
+    final before = _boxDecoration(tester).gradient! as LinearGradient;
     await tester.pump(const Duration(milliseconds: 450));
-    final later = _boxColor(tester);
-    expect(later, isNot(first), reason: 'a cor tem de mudar durante a pulsação');
-    expect(later, isNot(AppTheme.background));
+    final after = _boxDecoration(tester).gradient! as LinearGradient;
+    expect(after.begin, isNot(before.begin), reason: 'a faixa tem de andar');
+    expect(_boxColor(tester), isNot(AppTheme.background));
   });
 
   // 2026-11-24: num Stack (aviso «Sem ligação») a página encolhia à altura

@@ -387,6 +387,17 @@ ecrãs. O resto da app mantém a tabela acima.
     com uma mola que mantém a velocidade do dedo; **carrosséis e filas
     horizontais** resistem nas pontas e voltam com mola
     (`BouncingScrollPhysics`).
+  - **Tempos** (skill `ux-motion`, 2026-11-25): as páginas abrem em
+    **300 ms** e **fecham mais depressa, em 180 ms**; mudar de separador
+    da navbar **260 ms** (usa-se a toda a hora). Os popups ficam como no
+    §6.1 (0,56 s / 0,32 s).
+  - **Coração ao guardar** (`HeartPop`): salta de 1 a 1,2 e volta em
+    220 ms só quando passa a favorito; ao tirar, muda sem salto.
+  - **«Reduzir movimento» em todas as entradas** (`startMotion`,
+    `shared/motion.dart`): saltam logo para o fim (pagamento feito, mudar
+    de modo, mascote, confetes, cascatas). Exceções: a abertura
+    (boas-vindas e brinde), que corre sempre (pedido 2026-10-17), e a
+    contagem decrescente do bilhete, que é um relógio.
 - **Algarismos tabulares** (pedido 2026-11-25): os números que mudam ou
   se alinham — contadores (`CountBadge`), números 40 e 28 dos resumos e
   caixas, rodas, «−/+» e a percentagem do onboarding — usam
