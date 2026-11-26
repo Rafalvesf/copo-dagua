@@ -421,6 +421,15 @@ ecrãs. O resto da app mantém a tabela acima.
   A app mostra sempre a versão leve; **«Descarregar» entrega o original**
   (tamanho real). Fotos com MB deixavam o iPhone sem memória (página fechada,
   «cartão verde»).
+- **Fotos da galeria — só para quem está no evento** (regra do Rafael,
+  2026-11-26): veem-nas os organizadores, quem as publicou e os convidados
+  do evento (estes só depois de aprovadas) — na base de dados, no Storage e
+  nas funções do feed (`can_see_gallery_photo`). **No perfil de quem as
+  publicou**, a secção «Fotos dos eventos» (grelha 3 colunas, cantos 16,
+  `ProfileEventPhotos`) mostra só as fotos aprovadas dos eventos onde quem
+  está a ver também esteve (`profile_event_photos`, migração 244), com a nota
+  «Só vês as fotos dos eventos onde também estiveste.»; sem nenhuma em comum,
+  não aparece.
 - **Algarismos tabulares** (pedido 2026-11-25): os números que mudam ou
   se alinham — contadores (`CountBadge`), números 40 e 28 dos resumos e
   caixas, rodas, «−/+» e a percentagem do onboarding — usam
