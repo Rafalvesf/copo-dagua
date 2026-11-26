@@ -45,8 +45,13 @@ class _TypeCountState extends State<TypeCount> {
 
   @override
   Widget build(BuildContext context) {
+    // 2026-11-26 («os números estão cortados nos popups»): o tema das
+    // caixas de texto punha fundo, contorno e margens dentro de 40–48 px e
+    // o número ficava cortado. Sem nada disso, e mais larga se o número
+    // tiver mais algarismos.
+    final digits = _ctrl.text.isEmpty ? 1 : _ctrl.text.length;
     return SizedBox(
-      width: widget.width,
+      width: widget.width > 12.0 * digits + 8 ? widget.width : 12.0 * digits + 8,
       child: TextField(
         controller: _ctrl,
         focusNode: _focus,
@@ -54,9 +59,22 @@ class _TypeCountState extends State<TypeCount> {
         textAlign: TextAlign.center,
         maxLength: '${widget.max}'.length,
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink, fontFeatures: [FontFeature.tabularFigures()]),
-        decoration: const InputDecoration(border: InputBorder.none, isCollapsed: true, counterText: ''),
+        decoration: const InputDecoration(
+          isCollapsed: true,
+          isDense: true,
+          filled: false,
+          contentPadding: EdgeInsets.zero,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          focusedErrorBorder: InputBorder.none,
+          counterText: '',
+        ),
         onTap: () => _ctrl.selection = TextSelection(baseOffset: 0, extentOffset: _ctrl.text.length),
         onChanged: (t) {
+          setState(() {});
           final v = int.tryParse(t.replaceAll(RegExp(r'[^0-9]'), ''));
           if (v != null && v >= widget.min && v <= widget.max) widget.onChanged(v);
         },
