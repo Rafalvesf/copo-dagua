@@ -55,6 +55,7 @@ import '../../../core/partners/partner_achievements.dart' show partnerAchievemen
 import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/widgets/enter_scale.dart';
 
 
 /// Eventos onde ainda dá para reservar este parceiro: elegíveis (sou dono, ou
@@ -1283,7 +1284,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
     final avg = count == 0 ? 0.0 : reviews.fold<int>(0, (t, r) => t + r.rating) / count;
     // Mockup (2026-11-20): «Experiência geral» com a nota grande e quantas
     // avaliações há de cada número de estrelas, em barras verdes.
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    return SmoothSize(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       widget.title(
         count,
         count > 1 && !_all ? 'Ver todas ($count)' : null,
@@ -1364,7 +1365,7 @@ class _ReviewsSectionState extends ConsumerState<_ReviewsSection> {
           ]),
         ),
       ],
-    ]);
+    ]));
   }
 }
 
@@ -2092,11 +2093,11 @@ class _PartnerHeadCardState extends ConsumerState<_PartnerHeadCard> {
         ]),
         if (bio.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(bio,
+          SmoothSize(child: Text(bio,
               maxLines: _more || !long ? null : 4,
               overflow: _more || !long ? null : TextOverflow.ellipsis,
               textAlign: TextAlign.justify,
-              style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink)),
+              style: const TextStyle(fontSize: 14, height: 1.4, color: AppTheme.ink))),
           if (long && !_more)
             Align(
               alignment: Alignment.centerLeft,

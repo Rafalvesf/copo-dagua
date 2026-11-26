@@ -104,7 +104,7 @@ export const LEARNED: Learned[] = [
       { item: "Passos a deslizar", verdict: "ok", found: "StepSlide no onboarding, no do parceiro, no assistente do convidado e no popup de reservar (PR #690)." },
       { item: "Palavra-passe errada abana", verdict: "ok", found: "Shake + linha vermelha no Entrar (PR #690)." },
       { item: "Molas e carrosséis", verdict: "ok", found: "Popups seguem o dedo e voltam com mola; carrosséis com BouncingScrollPhysics (PR #690)." },
-      { item: "Entradas a 0,97 e acordeões", verdict: "problema", found: "Ainda não aplicados de forma geral.", next: "Decidir com o Rafael onde vale a pena." },
+      { item: "Entradas a 0,97 e acordeões", verdict: "ok", found: "EnterScale nos avisos e no «vazio» das molduras; SmoothSize no «Ler mais», nos «Ver todos» e no «O que pode fazer» (26 nov). Demonstrações no canvas, prancheta «Animações»." },
       { item: "Tema e dicas ao pairar", verdict: "nao-se-aplica", found: "A app não tem tema escuro nem dicas de rato." },
     ],
   },

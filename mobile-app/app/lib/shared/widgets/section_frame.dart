@@ -5,6 +5,7 @@ import 'alert_outline.dart';
 import 'estrela.dart';
 import 'snappy_tap.dart';
 import 'v2_kit.dart' show V2Avatar;
+import 'package:copo_dagua_app/shared/widgets/enter_scale.dart';
 
 /// Secção numa moldura cinzenta (pedido do Rafael, 2026-11-22, mockup
 /// «Painel do organizador · secções com moldura»): a mesma linha 1,5 do
@@ -300,7 +301,7 @@ class MoreFacesRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final faces = rest.take(3).toList();
     final n = rest.length;
-    return Padding(
+    return EnterScale(child: Padding(
       padding: const EdgeInsets.only(top: 10),
       child: SnappyTap(
         onTap: onTap,
@@ -328,6 +329,6 @@ class MoreFacesRow extends StatelessWidget {
           FrameButton36(action, onTap: onTap),
         ]),
       ),
-    );
+    ));
   }
 }

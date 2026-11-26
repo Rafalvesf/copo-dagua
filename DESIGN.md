@@ -383,6 +383,13 @@ ecrãs. O resto da app mantém a tabela acima.
     e popups de reservar — o passo novo entra do lado para onde se vai.
   - **Palavra-passe errada abana** (`Shake`, `shared/widgets/shake.dart`) e
     fica com a linha vermelha até se voltar a escrever.
+  - **Entradas a partir de 0,97** (`EnterScale`, `shared/widgets/enter_scale.dart`):
+    avisos (`AlertOutline`) e o «vazio» das molduras (`FrameEmpty`) aparecem
+    de 0,97 e transparentes até ao normal em 220 ms — nunca a crescer do zero.
+  - **Acordeões suaves** (`SmoothSize`, o mesmo ficheiro): «Ler mais» da
+    descrição do parceiro, «Ver todas / Ver todos» (avaliações, listas do
+    perfil, resumo da conversa) e «O que pode fazer» dos organizadores — a
+    altura acompanha em 280 ms em vez de saltar.
   - **Popups seguem o dedo** ao puxar para baixo e, se não fecharem, voltam
     com uma mola que mantém a velocidade do dedo; **carrosséis e filas
     horizontais** resistem nas pontas e voltam com mola

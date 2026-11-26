@@ -9,6 +9,7 @@ import '../../shared/widgets/section_frame.dart' show MoreFacesRow, kListPreview
 import '../../shared/widgets/snappy_tap.dart';
 import '../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import 'package:copo_dagua_app/shared/widgets/enter_scale.dart';
 
 /// Peças do Perfil (mockup "Perfil", 2026-11-12).
 
@@ -361,7 +362,7 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
     final rows = ref.watch(followListProvider((widget.profileId, kind))).value ?? const <FollowRow>[];
     final total = widget.people + widget.partners;
     final shown = _all ? rows : rows.take(kListPreview).toList();
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    return SmoothSize(child: SmoothSize(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       ProfileSectionTitle('A seguir',
           action: total > kListPreview && !_all ? 'Ver todos ($total)' : null, onAction: () => setState(() => _all = true)),
       Padding(
@@ -441,7 +442,7 @@ class _FollowingSectionState extends ConsumerState<FollowingSection> {
             ]),
           ),
         ),
-    ]);
+    ])));
   }
 }
 
