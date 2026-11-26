@@ -44,6 +44,7 @@ import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/core/riverpod_cache.dart';
 
 /// Separador "Eventos" (pedido 2026-11): os eventos da conta — o que
 /// organizo e aqueles a que já tenho acesso — e os eventos públicos
@@ -739,6 +740,7 @@ class _OrgSummary {
 }
 
 final _orgSummaryProvider = FutureProvider.autoDispose.family<_OrgSummary, String>((ref, id) async {
+  ref.staleWhileRevalidate(); // desempenho, 2026-11-26
   try {
     Future<List> list(Future<dynamic> q) async => (await q) as List;
     final r = await Future.wait([
@@ -801,6 +803,7 @@ class _GuestSteps {
 }
 
 final _guestStepsProvider = FutureProvider.autoDispose.family<_GuestSteps, String>((ref, id) async {
+  ref.staleWhileRevalidate(); // desempenho, 2026-11-26
   final me = supabase.auth.currentUser?.id;
   if (me == null) return const _GuestSteps();
   Future<List> safe(Future<dynamic> f) async {
