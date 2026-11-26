@@ -15,6 +15,7 @@ import '../money.dart';
 import 'island_sheet.dart';
 import 'v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/widgets/enter_scale.dart';
 
 /// Resumos que abrem ao tocar no topo de uma conversa (pedido do Rafael,
 /// 2026-11-25; pranchetas «Conversa única com o parceiro · resumo dos
@@ -557,7 +558,7 @@ class _GroupSummaryState extends ConsumerState<_GroupSummary> {
     final cover = (e?['cover_photo_url'] as String?) ?? g.photoUrl;
     final shown = _all ? people : people.take(4).toList();
     final rest = people.skip(shown.length).toList();
-    return _sheet(context, [
+    return SmoothSize(child: _sheet(context, [
       ClipRRect(
         borderRadius: BorderRadius.circular(22),
         child: SizedBox(
@@ -685,7 +686,7 @@ class _GroupSummaryState extends ConsumerState<_GroupSummary> {
           }),
         ),
       ]),
-    ]);
+    ]));
   }
 }
 

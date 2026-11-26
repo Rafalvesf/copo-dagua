@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:copo_dagua_app/shared/widgets/enter_scale.dart';
 
 /// Tom de um alerta (DESIGN.md, "Alertas", 2026-11-12):
 /// - [pending] amarelo — algo por fazer;
@@ -85,7 +86,7 @@ class _AlertOutlineState extends State<AlertOutline> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final color = alertColor(widget.tone);
-    return AnimatedBuilder(
+    return EnterScale(child: AnimatedBuilder(
       animation: _c,
       builder: (context, child) {
         // 0 → 1 → 0 em cada ciclo; parado (0) quando acaba.
@@ -106,7 +107,7 @@ class _AlertOutlineState extends State<AlertOutline> with SingleTickerProviderSt
         );
       },
       child: widget.child,
-    );
+    ));
   }
 }
 

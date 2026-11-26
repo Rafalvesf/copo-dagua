@@ -14,6 +14,7 @@ import '../../../shared/widgets/gradient_scaffold.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/widgets/enter_scale.dart';
 
 /// Uma só sombra dos cartões em destaque (DESIGN.md §5).
 const _soft = [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))];
@@ -307,7 +308,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
     final perms = _local ?? o.perms;
     final pending = o.status == 'pending';
     final total = OrganizerPerm.values.length;
-    return Container(
+    return SmoothSize(child: Container(
       decoration: _card(),
       padding: const EdgeInsets.all(16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -384,7 +385,7 @@ class _CollaboratorCardState extends ConsumerState<_CollaboratorCard> {
           ],
         ],
       ]),
-    );
+    ));
   }
 }
 
