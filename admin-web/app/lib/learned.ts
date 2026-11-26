@@ -27,6 +27,25 @@ export type Learned = {
 
 export const LEARNED: Learned[] = [
   {
+    id: "fotos-memoria-iphone",
+    date: "2026-11-26",
+    title: "Fotos enormes fecham a página no iPhone (o «cartão verde»)",
+    source: "Sentry (ligado a 26 nov) e o pedido «a app está extremamente lenta»",
+    lesson:
+      "Uma foto de 12 MP ocupa ~48 MB de memória para ser mostrada, mesmo pequena. Com várias no ecrã, o Safari do iPhone " +
+      "fecha a página e ela volta a abrir do zero (o ecrã verde de arranque). As fotos têm de ser reduzidas ANTES de subir; " +
+      "o Sentry diz a verdade — medir primeiro, mexer depois.",
+    checks: [
+      { item: "Página fechada sem aviso", verdict: "ok", found: "COPO-DAGUA-K: duas vezes em 14 s na página Parceiros, com a app à frente (iPhone, versão JavaScript).", next: "Confirmar no Sentry que não volta depois das fotos reduzidas." },
+      { item: "Fotos guardadas", verdict: "ok", found: "36 fotos de 1–4,3 MB (87 MB) reduzidas para 1600 px / 512 px nos avatares e logótipos (~15 MB); originais em Documentos/a-nossa-fotos-originais-2026-11-26." },
+      { item: "Fotos novas", verdict: "ok", found: "Os 12 sítios que escolhiam fotos sem limite passam a reduzir antes de subir (PR #698)." },
+      { item: "Erro repetido das reservas do parceiro", verdict: "ok", found: "PGRST201 (37×): profiles ambíguo desde a booking_arrivals → profiles!bookings_couple_id_fkey (PR #698)." },
+      { item: "Arranque", verdict: "ok", found: "No iPhone deixa de pré-carregar os 60 ecrãs; nos outros começa aos 10 s com pausas. Resumos dos cartões de eventos guardados 5 min." },
+      { item: "Temporizadores e tempo real", verdict: "ok", found: "12 temporizadores e 5 canais: todos param ao sair do ecrã." },
+      { item: "Pedidos por cartão na página Eventos", verdict: "problema", found: "Cada cartão ainda faz os seus pedidos.", next: "Juntar numa função na base de dados (precisa de migração e autorização)." },
+    ],
+  },
+  {
     id: "desempenho-5-pontos",
     date: "2026-11-25",
     title: "Desempenho: 5 razões para uma app ficar lenta",
