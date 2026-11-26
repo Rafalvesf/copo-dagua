@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'steady_ticker.dart';
+import 'package:copo_dagua_app/shared/motion.dart';
 
 /// Lista de cartões que entram em cascata (fade + deslize de baixo para
 /// cima), um pouco depois um do outro — não há nenhuma biblioteca de
@@ -35,7 +36,16 @@ class _StaggeredFadeInState extends State<StaggeredFadeIn>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: _totalDuration());
-    _controller.forward();
+  }
+
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    startMotion(_controller, context);
   }
 
   Duration _totalDuration() {
@@ -49,7 +59,8 @@ class _StaggeredFadeInState extends State<StaggeredFadeIn>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.listKey != widget.listKey) {
       _controller.duration = _totalDuration();
-      _controller.forward(from: 0);
+      _controller.value = 0;
+      startMotion(_controller, context);
     }
   }
 

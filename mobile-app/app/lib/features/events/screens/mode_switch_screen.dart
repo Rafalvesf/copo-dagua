@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
+import 'package:copo_dagua_app/shared/motion.dart';
 
 /// Modo em que uma conta que organiza está a usar a app: a organizar o
 /// seu evento ou a acompanhar o evento de outra pessoa como convidado.
@@ -59,7 +60,16 @@ class ModeSwitchScreen extends StatefulWidget {
 }
 
 class _ModeSwitchScreenState extends State<ModeSwitchScreen> with SingleTickerProviderStateMixin {
-  late final _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..forward();
+  late final _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    startMotion(_anim, context);
+  }
 
   @override
   void initState() {

@@ -176,7 +176,7 @@ class FavoriteHeart extends ConsumerWidget {
           height: 32,
           child: Align(
             alignment: Alignment.centerRight,
-            child: Icon(favorited ? Hi.heart : Hi.heartOutline, size: size, color: AppTheme.ink),
+            child: HeartPop(on: favorited, child: Icon(favorited ? Hi.heart : Hi.heartOutline, size: size, color: AppTheme.ink)),
           ),
         ),
       ),
@@ -470,3 +470,39 @@ class PartnerCarousel extends StatelessWidget {
       );
 }
 
+/// Salto do coração ao guardar (skill `ux-motion` §7/§9, 2026-11-25): de 1
+/// a 1,2 e de volta em 220 ms, só quando passa a favorito; ao tirar, muda
+/// sem salto. Parado com «reduzir movimento».
+class HeartPop extends StatefulWidget {
+  final bool on;
+  final Widget child;
+  const HeartPop({super.key, required this.on, required this.child});
+
+  @override
+  State<HeartPop> createState() => _HeartPopState();
+}
+
+class _HeartPopState extends State<HeartPop> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+  late final Animation<double> _scale = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.2).chain(CurveTween(curve: Curves.easeOut)), weight: 40),
+    TweenSequenceItem(tween: Tween(begin: 1.2, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)), weight: 60),
+  ]).animate(_c);
+
+  @override
+  void didUpdateWidget(covariant HeartPop old) {
+    super.didUpdateWidget(old);
+    if (widget.on && !old.on && !(MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
+      _c.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ScaleTransition(scale: _scale, child: widget.child);
+}
