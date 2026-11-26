@@ -165,6 +165,8 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                   _ => all,
                 };
                 return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  const GalleryViewToggle(),
+                  const SizedBox(height: 12),
                   KitPills([
                     KitPill(label: 'Todas', count: all.length, selected: _tab == _GalleryTab.values.first,
                         onTap: () => setState(() => _tab = _GalleryTab.values.first)),
@@ -177,7 +179,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                   if (shown.isEmpty)
                     const GalleryEmptyState(message: 'Ainda não existem fotos. Carrega as primeiras.')
                   else
-                    GallerySocialGrid(eventId: widget.eventId, photos: shown),
+                    GalleryFeed(eventId: widget.eventId, photos: shown),
                 ]);
               },
             ),
