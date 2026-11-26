@@ -5,6 +5,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../shared/widgets/skeleton.dart';
 import 'lazy_reload_stub.dart' if (dart.library.js_interop) 'lazy_reload_web.dart';
+import 'package:copo_dagua_app/shared/widgets/remember_scroll.dart';
 
 /// Carrega o código de um ecrã só quando se abre (imports `deferred` no
 /// router; pedido 2026-11-09: "faz o load apenas da página que estás a ver
@@ -92,7 +93,7 @@ class _LazyPageState extends State<LazyPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_ready) return widget.builder();
+    if (_ready) return RememberScroll(child: widget.builder());
     // Enquanto o código do ecrã chega: esqueleto a pulsar (2026-11-23).
     if (!_offline) return const SkeletonPage();
     // fit: expand — sem isto o esqueleto encolhia à altura do conteúdo e

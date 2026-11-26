@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/mascot.dart' show ConfettiBurst;
 import '../../../shared/widgets/onb_kit.dart';
 import '../../../shared/theme_color/theme_color.dart';
 import '../../../shared/widgets/tchin_splash.dart';
@@ -116,7 +115,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       body: Stack(
         children: [
           const _WelcomeContent(),
-          if (_burst) const Positioned.fill(child: ConfettiBurst(origin: Offset(0.5, 0.45), count: 32)),
+          // Sem confetis na página verde de início (pedido 2026-11-26).
           if (_showSplash)
             Positioned.fill(
               child: AnimatedBuilder(

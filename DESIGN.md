@@ -398,6 +398,15 @@ ecrãs. O resto da app mantém a tabela acima.
     descrição do parceiro, «Ver todas / Ver todos» (avaliações, listas do
     perfil, resumo da conversa) e «O que pode fazer» dos organizadores — a
     altura acompanha em 280 ms em vez de saltar.
+  - **Voltar ao mesmo sítio** (pedido 2026-11-26; `RememberScroll`,
+    `shared/widgets/remember_scroll.dart`, em todas as páginas via `tabRoute`
+    e `lazyPage`): ao voltar a uma página (voltar atrás, trocar de separador,
+    swipe do Safari), a lista principal volta à posição onde estava — nunca
+    ao topo. O swipe de voltar do Safari também mostra a animação.
+  - **«Os meus eventos» — o mais recente primeiro** (pedido 2026-11-26,
+    `core/event/recent_events.dart`): os carrosséis «ORGANIZAS» e «CONVIDADO»
+    mostram primeiro o evento aberto (ou criado) há menos tempo; sem registo,
+    pela data.
   - **Popups seguem o dedo** ao puxar para baixo e, se não fecharem, voltam
     com uma mola que mantém a velocidade do dedo; **carrosséis e filas
     horizontais** resistem nas pontas e voltam com mola

@@ -25,6 +25,7 @@ import 'core/supabase/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/phone_frame.dart';
 import 'shared/widgets/brinde_gate.dart';
+import 'package:copo_dagua_app/core/event/recent_events.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,6 +77,7 @@ class CopoDaguaApp extends ConsumerWidget {
         claimPendingPartnerReferral();
         // Apple Pay / Google Pay prontos mais depressa em toda a app (2026-11-25).
         prewarmPayments();
+        loadRecentEvents();
         // O meu código vai em todos os links que partilho (2026-11-25).
         ref.read(myInviteStatsProvider.future).then((s) => shareRefCode = s?.code).catchError((_) => null);
         Funnel.linkAccount();
