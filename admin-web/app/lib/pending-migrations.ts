@@ -686,6 +686,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "As regras de ver e apagar fotos da galeria passam a aceitar também o original (`<foto>.original`), que fica ao lado da versão leve — quem descarrega recebe o tamanho real. Corre depois da 242.",
     check: { kind: "marker", id: "243" },
   },
+  {
+    file: "244_fotos_no_perfil.sql",
+    date: "2026-11-26",
+    title: "Fotos dos eventos no perfil",
+    what: "Nova função profile_event_photos: no perfil de quem publicou, as fotos aprovadas da galeria aparecem só a quem também esteve nesse evento (a mesma regra da galeria). Corre depois da 243.",
+    check: { kind: "marker", id: "244" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";

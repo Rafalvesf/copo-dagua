@@ -14,6 +14,7 @@ import '../../../shared/widgets/reduced_top_bar.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import '../../events/screens/eventos_screen.dart' show EventPosterCard;
 import '../profile_widgets.dart';
+import '../profile_event_photos.dart';
 import '../../../shared/widgets/reviews_left.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
@@ -220,6 +221,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                                   style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                             ),
                           ],
+                          // Fotos dos eventos (2026-11-26): só as dos eventos onde
+                          // quem vê também esteve (migração 244).
+                          ProfileEventPhotos(profileId: p.id),
                           KeyedSubtree(
                             key: _followingKey,
                             child: FollowingSection(profileId: p.id, people: p.followingPeople, partners: p.followingPartners),
