@@ -70,6 +70,9 @@ ui.Image? _snapshot(ValueKey<String>? key) {
 const _pushDuration = Duration(milliseconds: 300);
 const _popDuration = Duration(milliseconds: 180);
 
+/// Páginas de separador abertas a partir de um cartão (ver [tabRoute]).
+final Set<ValueKey<String>> _expandPages = {};
+
 /// Rota de um separador da navbar: troca com slide horizontal, sem sombra.
 /// [asButton] devolve true quando a mesma rota é aberta a partir de um
 /// botão (ex: escolher parceiro) — aí usa a animação dos botões.
@@ -83,7 +86,12 @@ GoRoute tabRoute({
     path: path,
     pageBuilder: (context, state) {
       final child = builder(context, state);
-      if (asButton?.call(state) ?? false) {
+      // Aberta a partir de um cartão (2026-11-26: «continua a aparecer por
+      // cima»): os eventos abrem rotas de separador (/evento, /guest-home/…)
+      // — usam a animação do cartão que cresce e lembram-se disso para,
+      // ao sair, encolher para o cartão.
+      if (ExpandOrigin.hasPending) _expandPages.add(state.pageKey);
+      if ((asButton?.call(state) ?? false) || _expandPages.contains(state.pageKey)) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
           transitionDuration: _pushDuration,
@@ -287,8 +295,15 @@ class ExpandOrigin {
     _at = DateTime.now();
   }
 
+  // Até 3 s (2026-11-26): o cartão do organizador espera pela escolha do
+  // evento antes de abrir a página.
+  static const _window = Duration(seconds: 3);
+
+  /// Há um cartão tocado há pouco à espera da página que vai abrir.
+  static bool get hasPending => _pending != null && _at != null && DateTime.now().difference(_at!) < _window;
+
   static Rect? _take() {
-    final fresh = _at != null && DateTime.now().difference(_at!) < const Duration(milliseconds: 800);
+    final fresh = _at != null && DateTime.now().difference(_at!) < _window;
     final r = fresh ? _pending : null;
     _pending = null;
     _at = null;
