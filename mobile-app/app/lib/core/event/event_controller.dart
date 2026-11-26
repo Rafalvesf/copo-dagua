@@ -11,6 +11,7 @@ import '../auth/auth_controller.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import 'package:copo_dagua_app/core/media/image_upload.dart';
+import 'package:copo_dagua_app/core/event/recent_events.dart';
 
 class EventState {
   final bool loading;
@@ -103,6 +104,7 @@ class EventController extends Notifier<EventState> {
     final w = state.events.where((e) => e.id == eventId).firstOrNull;
     if (w == null) return;
     await _saveActiveId(eventId);
+    markEventOpened(eventId); // o mais recente primeiro (2026-11-26)
     state = EventState(loading: false, event: w, events: state.events);
   }
 

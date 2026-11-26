@@ -45,6 +45,7 @@ import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 import 'package:copo_dagua_app/core/riverpod_cache.dart';
+import 'package:copo_dagua_app/core/event/recent_events.dart';
 
 /// Separador "Eventos" (pedido 2026-11): os eventos da conta — o que
 /// organizo e aqueles a que já tenho acesso — e os eventos públicos
@@ -174,8 +175,8 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
       if (a == null || b == null) return 0;
       return pa ? b.compareTo(a) : a.compareTo(b);
     }
-    final own = [...myEvents]..sort((a, b) => byDate(a.eventDate, b.eventDate));
-    final guest = [...invited]..sort((a, b) => byDate(a.eventDate, b.eventDate));
+    final own = [...myEvents]..sort((a, b) => compareRecent(a.id, b.id, () => byDate(a.eventDate, b.eventDate)));
+    final guest = [...invited]..sort((a, b) => compareRecent(a.eventId, b.eventId, () => byDate(a.eventDate, b.eventDate)));
 
     // Uma só página (pedido 2026-11-10): criar / código, os meus eventos
     // e "Descobrir" — nunca vazia, mesmo numa conta nova.
@@ -1086,7 +1087,10 @@ class _InvitedEventCard extends ConsumerWidget {
     return PhotoCard(
       frameTone: todo > 0 ? tone : null,
       filled: true,
-      onTap: () => context.go(open),
+      onTap: () {
+        markEventOpened(event.eventId); // o mais recente primeiro (2026-11-26)
+        context.go(open);
+      },
       photo: _coverImage(event.eventId, event.eventType, event.coverPhotoUrl),
       leftTag: const InfoTag('Convidado', onPhoto: true),
       rightTag: _datePill(event.eventDate),
@@ -1379,8 +1383,8 @@ class MyEventsCarousel extends ConsumerWidget {
       if (a == null || b == null) return 0;
       return pa ? b.compareTo(a) : a.compareTo(b);
     }
-    final own = [...myEvents]..sort((a, b) => byDate(a.eventDate, b.eventDate));
-    final guest = [...invited]..sort((a, b) => byDate(a.eventDate, b.eventDate));
+    final own = [...myEvents]..sort((a, b) => compareRecent(a.id, b.id, () => byDate(a.eventDate, b.eventDate)));
+    final guest = [...invited]..sort((a, b) => compareRecent(a.eventId, b.eventId, () => byDate(a.eventDate, b.eventDate)));
     if (own.isEmpty && guest.isEmpty) return const SizedBox.shrink();
     return SnapCarousel(
       peek: true,

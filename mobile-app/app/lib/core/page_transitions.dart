@@ -5,13 +5,15 @@ import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 
 import 'browser_back_stub.dart' if (dart.library.js_interop) 'browser_back_web.dart' as back;
+import 'package:copo_dagua_app/shared/widgets/remember_scroll.dart';
 
 /// Quando o utilizador volta atrás com o gesto do Safari (deslizar da
 /// esquerda para a direita) o próprio Safari já anima a saída — a app não
 /// repete a animação (pedido do utilizador, 2026-10-20).
 DateTime? _browserBackAt;
-bool get _fromBrowserBack =>
-    _browserBackAt != null && DateTime.now().difference(_browserBackAt!) < const Duration(milliseconds: 900);
+// 2026-11-26 («quando volto para trás com o swipe… deve mostrar a animação»):
+// a animação aparece sempre, também no gesto do Safari.
+bool get _fromBrowserBack => false && _browserBackAt != null;
 
 /// Chamado uma vez no arranque (`main.dart`).
 void installBrowserBackDetection() => back.listenBrowserBack(() => _browserBackAt = DateTime.now());
@@ -97,7 +99,7 @@ GoRoute tabRoute({
           transitionDuration: _pushDuration,
           reverseTransitionDuration: _popDuration,
           transitionsBuilder: (context, a, s, c) => PushTransition(animation: a, child: c),
-          child: child,
+          child: RememberScroll(child: child),
         );
       }
       final pageKey = state.pageKey;
@@ -121,7 +123,7 @@ GoRoute tabRoute({
         reverseTransitionDuration: _tabDuration,
         transitionsBuilder: (context, animation, secondary, child) =>
             _TabSlide(animation: animation, secondary: secondary, pageKey: pageKey, child: child),
-        child: RepaintBoundary(key: boundary, child: child),
+        child: RepaintBoundary(key: boundary, child: RememberScroll(child: child)),
       );
     },
   );
