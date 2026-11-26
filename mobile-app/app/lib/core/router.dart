@@ -838,14 +838,14 @@ void prefetchEventPage() {
 bool _prefetching = false;
 void prefetchAllPages() {
   if (_prefetching) return;
-  // Desempenho (2026-11-26, Sentry: o iPhone fechava a página por falta de
-  // memória): no iPhone não se pré-carregam os ecrãs — cada um vem quando
-  // se abre (e uma versão nova recarrega a página sozinha). Nos outros,
-  // começa aos 10 s e com uma pausa entre ecrãs, para não prender a app.
-  if (kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) return;
+  // 2026-11-26: os ecrãs vêm todos em segundo plano logo ao abrir (aos 4 s,
+  // com uma pausa entre ecrãs). Sem isto (no iPhone esteve desligado umas
+  // horas), uma app aberta numa versão antiga ia buscar o ecrã só ao abri-lo
+  // — e, depois de várias publicações, esse ficheiro já não existia: Pedidos
+  // e Mensagens ficavam a carregar.
   _prefetching = true;
   () async {
-    await Future<void>.delayed(const Duration(seconds: 10));
+    await Future<void>.delayed(const Duration(seconds: 4));
     // 2026-11-24: antes parava de vez à primeira falha, e os ecrãs que
     // faltavam só se iam buscar ao abrir — às vezes horas depois, quando a
     // versão antiga já tinha sido apagada do servidor («Não foi possível
