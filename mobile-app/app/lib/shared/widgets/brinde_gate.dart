@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../theme_color/theme_color.dart';
-import 'mascot.dart';
 import 'tchin_splash.dart';
 
 /// "Início 7 · Brinde" — logo a seguir a entrar, o Tchin Tchin brinda,
-/// diz olá e o verde fecha em círculo com confetti, revelando a app.
+/// diz olá e o verde fecha em círculo, revelando a app (sem confetis
+/// desde 2026-11-26).
 /// Acontece sempre a seguir a entrar ou criar conta.
 class BrindeGate extends ConsumerStatefulWidget {
   final Widget child;
@@ -93,7 +93,7 @@ class _BrindeGateState extends ConsumerState<BrindeGate> with TickerProviderStat
     return Stack(
       children: [
         widget.child,
-        if (_burst) const Positioned.fill(child: ConfettiBurst(origin: Offset(0.5, 0.45), count: 32)),
+        // Sem confetis ao entrar ou criar conta (pedido 2026-11-26).
         if (_show)
           Positioned.fill(
             child: AnimatedBuilder(
