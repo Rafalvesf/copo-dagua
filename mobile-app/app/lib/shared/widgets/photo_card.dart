@@ -136,7 +136,7 @@ class PhotoCard extends StatelessWidget {
       child: Stack(clipBehavior: Clip.none, fit: StackFit.expand, children: [
         // A foto vai até à linha da moldura (proposta B, 2026-11-22), com
         // os quatro cantos redondos por dentro da linha.
-        ClipRRect(borderRadius: BorderRadius.circular(21), child: photo),
+        ClipRSuperellipse(borderRadius: BorderRadius.circular(21), child: photo),
         if (leftTag != null) Positioned(left: 12, top: 12, child: leftTag!),
         if (rightTag != null) Positioned(right: 12, top: 12, child: rightTag!),
         if (photoAction != null) Positioned(right: 12, bottom: 12, child: photoAction!),
@@ -173,11 +173,7 @@ class PhotoCard extends StatelessWidget {
     // 1,5 da cor do tom, com o brilho só na linha (para dentro).
     final framed = frameTone == null
         ? Container(
-            decoration: BoxDecoration(
-              color: filled ? Colors.white : null,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: AppTheme.line),
-            ),
+            decoration: ShapeDecoration(color: filled ? Colors.white : null, shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: AppTheme.line))),
             child: body,
           )
         : AlertOutline(tone: frameTone!, radius: 22, fill: filled ? Colors.white : Colors.transparent, child: body);

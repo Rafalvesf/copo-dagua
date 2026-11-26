@@ -210,6 +210,14 @@ ecrãs. O resto da app mantém a tabela acima.
 - Linha de definições: altura mínima 56, nome 16 negrito à esquerda, valor 14
   `#57534E` + seta à direita. **Sem ícones** nas linhas.
 - Espaço entre título de secção e conteúdo: 12.
+- **Cantos contínuos** (pedido do Rafael, 2026-11-26, prancheta «Cantos
+  contínuos», B): os cantos redondos são contínuos, como no iPhone — a curva
+  nasce aos poucos, sem «degrau». Os tamanhos não mudam (12, 16, 22, 35); só a
+  forma. Na app: `ShapeDecoration(shape: RoundedSuperellipseBorder(...))` e
+  `ClipRSuperellipse` em vez de `BoxDecoration(borderRadius)` / `ClipRRect` —
+  cartões com foto, molduras e caixas de números, resumos, avisos, popups,
+  navbar e barras. As pílulas (botões, filtros, etiquetas) e os círculos
+  ficam iguais. Peças novas usam já a forma contínua.
 
 ## 5. Sombras
 

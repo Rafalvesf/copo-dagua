@@ -44,12 +44,8 @@ class PartnerBottomNav extends ConsumerWidget {
       top: false,
       minimum: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 20),
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(kNavRadius),
-          boxShadow: AppTheme.navBarShadow,
-        ),
-        child: ClipRRect(
+        decoration: ShapeDecoration(color: Colors.white, shadows: AppTheme.navBarShadow, shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(kNavRadius))),
+        child: ClipRSuperellipse(
           borderRadius: BorderRadius.circular(kNavRadius),
           child: ConnectedFilterNav(
             top: top,

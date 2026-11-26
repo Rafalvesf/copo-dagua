@@ -97,11 +97,7 @@ class _AlertOutlineState extends State<AlertOutline> with SingleTickerProviderSt
           foregroundPainter: _LineGlow(color: color, radius: widget.radius, v: v),
           child: Container(
             padding: widget.padding,
-            decoration: BoxDecoration(
-              color: widget.fill,
-              borderRadius: BorderRadius.circular(widget.radius),
-              border: Border.all(color: color, width: 1.5),
-            ),
+            decoration: ShapeDecoration(color: widget.fill, shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(widget.radius), side: BorderSide(color: color, width: 1.5))),
             child: child,
           ),
         );
