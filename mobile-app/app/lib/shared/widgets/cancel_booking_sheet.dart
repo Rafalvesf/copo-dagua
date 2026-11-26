@@ -305,7 +305,7 @@ class _CancelSheetState extends State<_CancelSheet> {
                     child: TextField(
                       controller: _reason,
                       style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-                      decoration: InputDecoration(
+                      decoration: InputDecoration(filled: false, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, 
                         isCollapsed: true,
                         border: InputBorder.none,
                         hintText: widget.partnerSide ? 'Diz ao cliente porque cancelas' : 'Diz a ${widget.who} o que mudou',

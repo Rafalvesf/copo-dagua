@@ -144,7 +144,7 @@ class _Box extends StatelessWidget {
         maxLines: multi ? lines + 2 : 1,
         keyboardType: keyboard,
         style: const TextStyle(fontSize: 15, color: AppTheme.ink, height: 1.4),
-        decoration: InputDecoration(
+        decoration: InputDecoration(filled: false, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, 
           isCollapsed: true,
           border: InputBorder.none,
           hintText: hint,
@@ -236,8 +236,11 @@ class _StepperState extends State<_Stepper> {
                   textAlign: TextAlign.center,
                   maxLength: 4,
                   style: big,
+                  // Sem o fundo do tema dentro da pílula (2026-11-26: aparecia
+                  // uma pílula cinzenta dentro da branca).
                   decoration: const InputDecoration(
-                      border: InputBorder.none, isCollapsed: true, counterText: '', contentPadding: EdgeInsets.symmetric(vertical: 9)),
+                      isCollapsed: true, filled: false, counterText: '', contentPadding: EdgeInsets.symmetric(vertical: 9),
+                      border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none),
                   onChanged: (t) {
                     final v = int.tryParse(t.replaceAll(RegExp(r'[^0-9]'), ''));
                     if (v != null && v >= 1) widget.onChanged(v);
@@ -1150,7 +1153,7 @@ class _EditOtherDayState extends State<_EditOtherDay> {
                       onChanged: (_) => setState(() {}),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                      decoration: const InputDecoration(isCollapsed: true, border: InputBorder.none, hintText: '0'),
+                      decoration: const InputDecoration(filled: false, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, isCollapsed: true, border: InputBorder.none, hintText: '0'),
                     ),
                   ),
                   const Text('€', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
