@@ -237,7 +237,7 @@ class _ProductSheetState extends ConsumerState<_ProductSheet> {
   }
 
   Future<void> _pickPhoto() async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1600, imageQuality: 85);
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file == null) return;
     setState(() => _busy = true);
     try {

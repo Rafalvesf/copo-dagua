@@ -413,6 +413,14 @@ ecrãs. O resto da app mantém a tabela acima.
     de modo, mascote, confetes, cascatas). Exceções: a abertura
     (boas-vindas e brinde), que corre sempre (pedido 2026-10-17), e a
     contagem decrescente do bilhete, que é um relógio.
+- **Imagens** (regra do Rafael, 2026-11-26; `uploadImageBinary`,
+  `core/media/image_upload.dart`): toda a imagem que sobe é convertida no
+  browser para a **versão leve** — WebP (JPEG sobre branco onde não há WebP,
+  p.ex. iPhone), lado maior até **1600 px** (**512** em avatares, logótipos e
+  fotos de perfil) — e o **original** fica ao lado em `<caminho>.original`.
+  A app mostra sempre a versão leve; **«Descarregar» entrega o original**
+  (tamanho real). Fotos com MB deixavam o iPhone sem memória (página fechada,
+  «cartão verde»).
 - **Algarismos tabulares** (pedido 2026-11-25): os números que mudam ou
   se alinham — contadores (`CountBadge`), números 40 e 28 dos resumos e
   caixas, rodas, «−/+» e a percentagem do onboarding — usam

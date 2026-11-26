@@ -15,6 +15,7 @@ import '../event/partner_invite.dart';
 import '../../shared/widgets/brinde_gate.dart';
 import '../../shared/widgets/tchin_splash.dart';
 import '../invite/public_invite.dart' show claimStoredPublicRsvps;
+import 'package:copo_dagua_app/core/media/image_upload.dart';
 
 class _Unset {
   const _Unset();
@@ -852,7 +853,7 @@ class AuthController extends Notifier<AuthState> {
     final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
     final path = '${profile.id}/avatar.$ext';
 
-    await supabase.storage.from('avatars').uploadBinary(
+    await uploadImageBinary('avatars', 
       path,
       bytes,
       fileOptions: FileOptions(contentType: 'image/$ext', upsert: true),

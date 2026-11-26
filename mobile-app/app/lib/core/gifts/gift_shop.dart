@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions, Functi
 import '../../shared/public_link.dart';
 import '../payments/payments.dart';
 import '../supabase/supabase_config.dart';
+import 'package:copo_dagua_app/core/media/image_upload.dart';
 
 /// Lista de presentes (migração 160): produtos da loja dos parceiros, pagos
 /// na app ao parceiro, e desejos do organizador, reservados e comprados fora.
@@ -277,7 +278,7 @@ Future<String> uploadProductPhoto(XFile file) async {
   final bytes = await file.readAsBytes();
   final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
   final path = '$uid/products/${DateTime.now().microsecondsSinceEpoch}.$ext';
-  await supabase.storage.from('portfolio').uploadBinary(path, bytes, fileOptions: FileOptions(contentType: 'image/${ext == 'jpg' ? 'jpeg' : ext}'));
+  await uploadImageBinary('portfolio', path, bytes, fileOptions: FileOptions(contentType: 'image/${ext == 'jpg' ? 'jpeg' : ext}'));
   return supabase.storage.from('portfolio').getPublicUrl(path);
 }
 

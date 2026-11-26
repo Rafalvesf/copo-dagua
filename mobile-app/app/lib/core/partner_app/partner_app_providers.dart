@@ -10,6 +10,7 @@ import '../home/home_providers.dart' show mapRealBookingStatus;
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
 import '../payments/refunds.dart';
+import 'package:copo_dagua_app/core/media/image_upload.dart';
 
 String _partnerId(Ref ref) =>
     ref.watch(authControllerProvider.select((s) => s.profile!.id));
@@ -219,9 +220,7 @@ Future<PortfolioItem> uploadPortfolioMedia({
       : (mediaType == PortfolioMediaType.video ? 'mp4' : 'jpg');
   final path = '$partnerId/${DateTime.now().microsecondsSinceEpoch}.$ext';
 
-  await supabase.storage
-      .from('portfolio')
-      .uploadBinary(
+  await uploadImageBinary('portfolio', 
         path,
         bytes,
         fileOptions: FileOptions(

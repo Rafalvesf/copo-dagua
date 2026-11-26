@@ -200,7 +200,7 @@ class _BusinessHeaderState extends ConsumerState<_BusinessHeader> {
   /// como logótipo do negócio (o que os organizadores veem) e como foto da
   /// conta (comentários, publicações, chat).
   Future<void> _pickPhoto() async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85, maxWidth: 1024);
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (file == null || !mounted) return;
     setState(() => _uploading = true);
     try {

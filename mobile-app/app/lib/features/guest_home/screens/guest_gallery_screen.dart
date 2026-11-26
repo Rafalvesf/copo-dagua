@@ -103,7 +103,7 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
       if (!mounted || !await ensurePermission(context, AppPermission.camera)) return;
     }
 
-    final file = await ImagePicker().pickImage(maxWidth: 1600, source: source);
+    final file = await ImagePicker().pickImage(source: source);
     if (file == null) return;
     try {
       await uploadGalleryPhoto(eventId: widget.eventId, file: file);

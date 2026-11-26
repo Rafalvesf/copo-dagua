@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 
 import '../moderation/moderation.dart';
 import '../supabase/supabase_config.dart';
+import 'package:copo_dagua_app/core/media/image_upload.dart';
 
 /// Galeria de fotos do casamento, moderada pelo casal
 /// (`061_wedding_gallery.sql`) — pedido explícito do utilizador: "todas
@@ -109,14 +110,23 @@ Future<void> uploadGalleryPhoto({
       .single();
 
   final bytes = await file.readAsBytes();
-  await supabase.storage
-      .from('wedding-gallery')
-      .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: 'image/$ext'));
+  await uploadImageBinary('wedding-gallery', path, bytes, fileOptions: FileOptions(contentType: 'image/$ext'));
 
   if (autoApprove && row['status'] == 'pending') {
     try {
       await moderateGalleryPhoto(row['id'] as String, true);
     } catch (_) {}
+  }
+}
+
+/// Link para descarregar a foto no tamanho original (regra de 2026-11-26:
+/// a app mostra uma versão leve, quem descarrega recebe o original). Sem
+/// original guardado (fotos antigas), a versão que se vê.
+Future<String> galleryDownloadUrl(GalleryPhoto photo) async {
+  try {
+    return await supabase.storage.from('wedding-gallery').createSignedUrl(originalPathOf(photo.storagePath), 600);
+  } catch (_) {
+    return photo.imageUrl;
   }
 }
 
@@ -135,6 +145,11 @@ Future<void> moderateGalleryPhoto(String photoId, bool approve) async {
 /// ficheiro órfão no Storage se o segundo passo falhar (pior do que uma
 /// linha órfã, que a UI já filtra por não existir).
 Future<void> deleteGalleryPhoto(GalleryPhoto photo) async {
+  // O original (2026-11-26) sai primeiro: a regra do Storage precisa da
+  // linha da foto para o deixar apagar.
+  try {
+    await supabase.storage.from('wedding-gallery').remove([originalPathOf(photo.storagePath)]);
+  } catch (_) {}
   await supabase.from('wedding_gallery_photos').delete().eq('id', photo.id);
   await supabase.storage.from('wedding-gallery').remove([photo.storagePath]);
 }
