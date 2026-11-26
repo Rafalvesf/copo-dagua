@@ -151,6 +151,7 @@ function buildGroups(pendingPartners: number, openDisputes: number, openTickets:
         { href: "/newsletter", label: "Pré-registos", icon: icons.users },
         { href: "/pending", label: "Pendentes", icon: icons.list, badge: openTasks },
         { href: "/migrations", label: "Migrações", icon: icons.list },
+        { href: "/learned", label: "Achievements Learned", icon: icons.star },
       ],
     },
     {
