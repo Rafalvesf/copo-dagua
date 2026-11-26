@@ -17,6 +17,7 @@ import '../widgets/guest_offer_widgets.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/widgets/type_count.dart';
 
 /// Lado do convidado: o alojamento e o transporte que o organizador
 /// preparou. Reserva e paga na app (Stripe), o valor vai para o parceiro.
@@ -330,12 +331,7 @@ class _Stepper extends StatelessWidget {
       children: [
         Expanded(child: Text(label, style: const TextStyle(fontSize: AppFontSize.base, color: AppTheme.ink))),
         btn(Hi.minus, 'Menos', value > min ? value - 1 : null),
-        SizedBox(
-          width: 40,
-          child: Text('$value',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: AppFontSize.lg, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        ),
+        TypeCount(value: value, min: min, max: max, width: 40, onChanged: onChanged),
         btn(Hi.plus, 'Mais', value < max ? value + 1 : null),
       ],
     );

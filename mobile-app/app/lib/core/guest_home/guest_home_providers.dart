@@ -285,14 +285,32 @@ Future<void> completeGuestOnboarding({
 Future<void> setMyRsvp(Guest guest, bool going) async {
   final token = guest.rsvpToken;
   if (token == null) throw StateError('sem token');
-  // O submit_rsvp reescreve a mensagem do convidado: manter a que lá está.
-  final row = await supabase.from('guests').select('guest_message').eq('id', guest.id).maybeSingle();
-  await supabase.rpc('submit_rsvp', params: {
+  // 2026-11-26: o `submit_rsvp` deixou de poder ser chamado pela app (403);
+  // usa-se o `submit_rsvp_full`, como o RSVP pelo link e o assistente. Ele
+  // reescreve menu, alergias e acompanhantes: mandam-se os que já lá estão.
+  final row = await supabase
+      .from('guests')
+      .select('menu_selection, dietary_restrictions, guest_message, side, age_group')
+      .eq('id', guest.id)
+      .maybeSingle();
+  List<Map<String, dynamic>>? companions;
+  try {
+    final rows = await supabase
+        .from('guest_companions')
+        .select('name, age_group, child_age, phone, email, menu, allergies, accompanied_by, will_install_app, high_chair')
+        .eq('guest_id', guest.id);
+    companions = [for (final r in (rows as List).cast<Map<String, dynamic>>()) {...r, 'child_age': r['child_age']?.toString()}];
+  } catch (_) {}
+  await supabase.rpc('submit_rsvp_full', params: {
     'p_token': token,
-    'p_rsvp_status': going ? 'confirmed' : 'declined',
-    'p_plus_one_name': guest.plusOneName,
-    'p_dietary_restrictions': guest.dietaryRestrictions,
-    'p_guest_message': row?['guest_message'],
+    'p_attending': going,
+    'p_menu': row?['menu_selection'],
+    'p_dietary': row?['dietary_restrictions'] ?? guest.dietaryRestrictions,
+    'p_age_group': row?['age_group'],
+    'p_side': row?['side'],
+    'p_group_label': null,
+    'p_message': row?['guest_message'],
+    'p_companions': companions,
   });
 }
 

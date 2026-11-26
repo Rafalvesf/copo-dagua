@@ -19,6 +19,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import 'ticket_pass_screens.dart' show TicketPassCard;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import 'package:copo_dagua_app/shared/widgets/type_count.dart';
 
 // ───────────────────────── Comprar ─────────────────────────
 
@@ -136,12 +137,7 @@ class _BuyTicketSheetState extends State<_BuyTicketSheet> {
                   onPressed: _qty > 1 && !_busy ? () => setState(() => _qty--) : null,
                   icon: const Icon(Hi.minus),
                 ),
-                SizedBox(
-                  width: 44,
-                  child: Text('$_qty',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                ),
+                TypeCount(value: _qty, min: 1, max: _maxQty, width: 44, onChanged: (v) => setState(() => _qty = v)),
                 IconButton.outlined(
                   tooltip: 'Mais',
                   onPressed: _qty < _maxQty && !_busy ? () => setState(() => _qty++) : null,
