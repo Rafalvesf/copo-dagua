@@ -1225,7 +1225,7 @@ class _PaidForSheetState extends State<PaidForSheet> {
           decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
           child: TextField(
             style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-            decoration: const InputDecoration(
+            decoration: const InputDecoration(filled: false, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, 
               isCollapsed: true,
               border: InputBorder.none,
               hintText: 'Procurar convidado',

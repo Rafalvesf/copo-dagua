@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoThemeData, CupertinoTextThemeData;
 import 'package:flutter/material.dart';
 import '../page_transitions.dart';
 
@@ -138,6 +139,15 @@ class AppTheme {
       // Páginas abertas por botões descem de cima, com sombra
       // (`page_transitions.dart`).
       pageTransitionsTheme: topDownPageTransitions,
+      // A mesma letra em toda a app (2026-11-26): as rodas das horas e datas
+      // (CupertinoPicker) usavam a letra do sistema da Apple.
+      cupertinoOverrideTheme: const CupertinoThemeData(
+        textTheme: CupertinoTextThemeData(
+          textStyle: TextStyle(fontFamily: fontFamily, fontFamilyFallback: fontFamilyFallback, color: ink),
+          pickerTextStyle: TextStyle(fontFamily: fontFamily, fontFamilyFallback: fontFamilyFallback, fontSize: 20, color: ink),
+          dateTimePickerTextStyle: TextStyle(fontFamily: fontFamily, fontFamilyFallback: fontFamilyFallback, fontSize: 20, color: ink),
+        ),
+      ),
       fontFamily: fontFamily,
       fontFamilyFallback: fontFamilyFallback,
       colorScheme: colorScheme,

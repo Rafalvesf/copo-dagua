@@ -717,7 +717,7 @@ class _MenusStepState extends State<_MenusStep> {
                   maxLength: 200,
                   textCapitalization: TextCapitalization.sentences,
                   style: const TextStyle(fontSize: 15, color: AppTheme.ink),
-                  decoration: const InputDecoration(
+                  decoration: const InputDecoration(filled: false, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, 
                     isCollapsed: true,
                     border: InputBorder.none,
                     counterText: '',
