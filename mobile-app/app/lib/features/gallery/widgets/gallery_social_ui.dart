@@ -397,7 +397,11 @@ class _PostCardState extends ConsumerState<_PostCard> with SingleTickerProviderS
                 _Action(
                   icon: Hi.arrowDownTray,
                   tooltip: 'Descarregar',
-                  onTap: () => launchUrl(_downloadUri(widget.photo.imageUrl), mode: LaunchMode.platformDefault, webOnlyWindowName: '_self'),
+                  // Descarrega o original (tamanho real), 2026-11-26.
+                  onTap: () async {
+                    final url = await galleryDownloadUrl(widget.photo);
+                    await launchUrl(_downloadUri(url), mode: LaunchMode.platformDefault, webOnlyWindowName: '_self');
+                  },
                 ),
               ],
             ),
@@ -928,7 +932,8 @@ class _Stat extends StatelessWidget {
 /// Supabase em vez de fazer logo download").
 Uri _downloadUri(String url) {
   final uri = Uri.parse(url);
-  final name = uri.pathSegments.isEmpty ? 'foto.jpg' : uri.pathSegments.last;
+  var name = uri.pathSegments.isEmpty ? 'foto.jpg' : uri.pathSegments.last;
+  if (name.endsWith('.original')) name = name.substring(0, name.length - '.original'.length);
   return uri.replace(queryParameters: {...uri.queryParameters, 'download': 'tchin-tchin-$name'});
 }
 

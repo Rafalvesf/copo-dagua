@@ -70,7 +70,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
 
   Future<void> _pickProfilePhoto() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(maxWidth: 512, source: ImageSource.gallery, imageQuality: 85);
+    final file = await picker.pickImage(source: ImageSource.gallery);
     if (file == null || !mounted) return;
     setState(() => _uploadingProfilePhoto = true);
     try {

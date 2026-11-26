@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 
 import '../auth/auth_controller.dart';
 import '../supabase/supabase_config.dart';
+import 'package:copo_dagua_app/core/media/image_upload.dart';
 
 /// Uma linha da taxonomia fixa `partner_categories` — ver
 /// `partner-app/profile/database.md`.
@@ -186,7 +187,7 @@ class PartnerProfileController extends Notifier<bool> {
     final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
     final path = '${profile.id}/logo.$ext';
 
-    await supabase.storage.from('portfolio').uploadBinary(
+    await uploadImageBinary('portfolio', 
       path,
       bytes,
       fileOptions: FileOptions(contentType: 'image/$ext', upsert: true),

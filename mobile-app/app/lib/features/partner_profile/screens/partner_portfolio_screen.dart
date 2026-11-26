@@ -40,7 +40,7 @@ class _PartnerPortfolioScreenState extends ConsumerState<PartnerPortfolioScreen>
 
   Future<void> _addImages() async {
     final picker = ImagePicker();
-    final files = await picker.pickMultiImage(maxWidth: 1600, imageQuality: 85);
+    final files = await picker.pickMultiImage();
     if (files.isEmpty) return;
     await _upload(files, PortfolioMediaType.image);
   }

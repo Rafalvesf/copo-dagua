@@ -564,7 +564,7 @@ class _HeroCardState extends ConsumerState<_HeroCard> {
 
   Future<void> _pickBanner() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(maxWidth: 1600, source: ImageSource.gallery, imageQuality: 85);
+    final file = await picker.pickImage(source: ImageSource.gallery);
     if (file == null || !mounted) return;
     final rawBytes = await file.readAsBytes();
     if (!mounted) return;
@@ -1641,7 +1641,7 @@ class _EventSkeleton extends StatelessWidget {
 
 Future<void> _pickBannerFrom(BuildContext context, WidgetRef ref) async {
   final picker = ImagePicker();
-  final file = await picker.pickImage(maxWidth: 1600, source: ImageSource.gallery, imageQuality: 85);
+  final file = await picker.pickImage(source: ImageSource.gallery);
   if (file == null || !context.mounted) return;
   final raw = await file.readAsBytes();
   if (!context.mounted) return;
@@ -3243,7 +3243,7 @@ class _MinimalTopState extends ConsumerState<_MinimalTop> {
 
   Future<void> _pickBanner() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(maxWidth: 1600, source: ImageSource.gallery, imageQuality: 85);
+    final file = await picker.pickImage(source: ImageSource.gallery);
     if (file == null || !mounted) return;
     final rawBytes = await file.readAsBytes();
     if (!mounted) return;
@@ -3650,7 +3650,7 @@ class _StatusPill extends StatelessWidget {
 /// Escolher a foto de capa (a capa e a sugestão «Pôr foto de capa»).
 Future<void> _pickCoverPhoto(BuildContext context, WidgetRef ref) async {
   final messenger = ScaffoldMessenger.of(context);
-  final file = await ImagePicker().pickImage(maxWidth: 1600, source: ImageSource.gallery, imageQuality: 85);
+  final file = await ImagePicker().pickImage(source: ImageSource.gallery);
   if (file == null || !context.mounted) return;
   final rawBytes = await file.readAsBytes();
   if (!context.mounted) return;

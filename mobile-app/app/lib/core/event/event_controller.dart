@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../auth/auth_controller.dart';
 import '../models/models.dart';
 import '../supabase/supabase_config.dart';
+import 'package:copo_dagua_app/core/media/image_upload.dart';
 
 class EventState {
   final bool loading;
@@ -255,7 +256,7 @@ class EventController extends Notifier<EventState> {
     state = state.copyWith(loading: true);
     final path = '${event.id}/banner.$ext';
 
-    await supabase.storage.from('wedding-banners').uploadBinary(
+    await uploadImageBinary('wedding-banners', 
       path,
       bytes,
       fileOptions: FileOptions(contentType: 'image/$ext', upsert: true),
@@ -287,7 +288,7 @@ class EventController extends Notifier<EventState> {
     final ext = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'jpg';
     final path = '${event.id}/profile.$ext';
 
-    await supabase.storage.from('wedding-banners').uploadBinary(
+    await uploadImageBinary('wedding-banners', 
       path,
       bytes,
       fileOptions: FileOptions(contentType: 'image/$ext', upsert: true),

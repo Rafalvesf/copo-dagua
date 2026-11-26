@@ -247,6 +247,44 @@
       } catch (e) {}
     })();
   </script>
+  <!-- Conversor de imagens (regra do Rafael, 2026-11-26): toda a imagem que
+       sobe para a app passa por aqui — lado maior até `max` px, WebP (ou JPEG
+       com fundo branco onde o browser não cria WebP, p.ex. iPhone). Feito pelo
+       browser (createImageBitmap + canvas), sem passar a foto inteira pela
+       memória da app. Ver lib/core/media/image_upload.dart. -->
+  <script>
+    window.tchinConvertImage = function (u8, max, q) {
+      return new Promise(function (resolve) {
+        try {
+          createImageBitmap(new Blob([u8])).then(function (bmp) {
+            var s = Math.min(1, max / Math.max(bmp.width, bmp.height));
+            var w = Math.max(1, Math.round(bmp.width * s)), h = Math.max(1, Math.round(bmp.height * s));
+            var c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            var ctx = c.getContext('2d');
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(bmp, 0, 0, w, h);
+            if (bmp.close) bmp.close();
+            var done = function (b) {
+              if (!b) { resolve(null); return; }
+              b.arrayBuffer().then(function (ab) { c.width = c.height = 0; resolve({ bytes: new Uint8Array(ab), type: b.type }); })
+                .catch(function () { resolve(null); });
+            };
+            c.toBlob(function (b) {
+              if (b && b.type === 'image/webp') { done(b); return; }
+              // Sem WebP: JPEG sobre branco (o JPEG não tem transparência).
+              var j = document.createElement('canvas');
+              j.width = w; j.height = h;
+              var jc = j.getContext('2d');
+              jc.fillStyle = '#FFFFFF'; jc.fillRect(0, 0, w, h);
+              jc.drawImage(c, 0, 0);
+              j.toBlob(function (jb) { j.width = j.height = 0; done(jb); }, 'image/jpeg', q);
+            }, 'image/webp', q);
+          }).catch(function () { resolve(null); });
+        } catch (e) { resolve(null); }
+      });
+    };
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="À Nossa! — o teu evento, num só lugar.">

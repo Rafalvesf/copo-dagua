@@ -679,6 +679,13 @@ export const MIGRATIONS: PendingMigration[] = [
     what: "partner_event_brief passa a mostrar só os menus do parceiro (com quantos faltam escolher), os extras da reserva, quantas vezes cada extra foi pedido e «quem pediu o quê» (menu, extras e mesa de cada pessoa). Corre depois da 241.",
     check: { kind: "marker", id: "242" },
   },
+  {
+    file: "243_galeria_originais.sql",
+    date: "2026-11-26",
+    title: "Galeria: originais para descarregar",
+    what: "As regras de ver e apagar fotos da galeria passam a aceitar também o original (`<foto>.original`), que fica ao lado da versão leve — quem descarrega recebe o tamanho real. Corre depois da 242.",
+    check: { kind: "marker", id: "243" },
+  },
 ];
 
 export const RAW_BASE = "https://raw.githubusercontent.com/Rafalvesf/copo-dagua/master/database/migrations/";
