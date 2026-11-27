@@ -384,7 +384,9 @@ ecrãs. O resto da app mantém a tabela acima.
   - **Cartão que cresce até à página** (`ExpandOrigin` / `ExpandTransition`,
     `core/page_transitions.dart`): tocar num cartão com foto (`PhotoCard`)
     abre a página a crescer do sítio do cartão (caixa branca, cantos 22 → 0,
-    a página aparece dentro); ao voltar, encolhe para o mesmo sítio. As
+    a página aparece dentro); ao voltar, encolhe para o mesmo sítio. Mais
+    lenta do que as outras páginas, para se ver: **500 ms a abrir, 380 ms a
+    fechar** (pedido 2026-11-27). As
     outras páginas continuam a descer de cima.
   - **Passos a deslizar** (`StepSlide`, `shared/widgets/step_slide.dart`):
     onboarding (`OnbStep`), onboarding do parceiro, assistente do convidado

@@ -71,6 +71,10 @@ ui.Image? _snapshot(ValueKey<String>? key) {
 }
 const _pushDuration = Duration(milliseconds: 300);
 const _popDuration = Duration(milliseconds: 180);
+// Cartão que cresce até à página: mais lento para se ver (pedido
+// 2026-11-27: «está muito rápida e quase nem se nota»).
+const _expandIn = Duration(milliseconds: 500);
+const _expandOut = Duration(milliseconds: 380);
 
 /// Páginas de separador abertas a partir de um cartão (ver [tabRoute]).
 final Set<ValueKey<String>> _expandPages = {};
@@ -99,8 +103,8 @@ GoRoute tabRoute({
       if ((asButton?.call(state) ?? false) || _expandPages.contains(state.pageKey)) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: _pushDuration,
-          reverseTransitionDuration: _popDuration,
+          transitionDuration: ExpandOrigin.pushDuration,
+          reverseTransitionDuration: ExpandOrigin.popDuration,
           transitionsBuilder: (context, a, s, c) => PushTransition(animation: a, child: c),
           child: RememberScroll(child: child),
         );
@@ -262,11 +266,11 @@ class TopDownPageTransitionsBuilder extends PageTransitionsBuilder {
   const TopDownPageTransitionsBuilder();
 
   @override
-  Duration get transitionDuration => _pushDuration;
+  Duration get transitionDuration => ExpandOrigin.pushDuration;
 
   /// Lido no momento de voltar atrás: com o gesto do Safari, sai logo.
   @override
-  Duration get reverseTransitionDuration => _fromBrowserBack ? Duration.zero : _popDuration;
+  Duration get reverseTransitionDuration => _fromBrowserBack ? Duration.zero : ExpandOrigin.popDuration;
 
   @override
   Widget buildTransitions<T>(
@@ -305,6 +309,11 @@ class ExpandOrigin {
   static const _window = Duration(seconds: 3);
 
   /// Há um cartão tocado há pouco à espera da página que vai abrir.
+  /// Durações da página que vai abrir: mais lentas se vem de um cartão
+  /// (lidas quando a página é criada, com o cartão ainda por usar).
+  static Duration get pushDuration => hasPending ? _expandIn : _pushDuration;
+  static Duration get popDuration => hasPending ? _expandOut : _popDuration;
+
   static bool get hasPending => _pending != null && _at != null && DateTime.now().difference(_at!) < _window;
 
   static Rect? _take() {
