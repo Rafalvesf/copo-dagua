@@ -43,6 +43,7 @@ class ChatListController extends Notifier<ChatListState> {
     );
     if (ids.isNotEmpty) {
       Future.microtask(() => _loadIds(ids.split(',')));
+      return const ChatListState(loading: true);
     }
     return const ChatListState();
   }
@@ -97,7 +98,12 @@ class ChatListController extends Notifier<ChatListState> {
     final conversationIds = conversationRows
         .map((r) => r['id'] as String)
         .toList();
-    final unreadCounts = await _unreadCountsByConversation(conversationIds);
+    // Uma falha a contar as por ler não pode deixar a lista a carregar
+    // para sempre (2026-11-27: «Mensagens fica a moer»).
+    Map<String, int> unreadCounts = const {};
+    try {
+      unreadCounts = await _unreadCountsByConversation(conversationIds);
+    } catch (_) {}
 
     if (!ref.mounted) return;
     state = ChatListState(

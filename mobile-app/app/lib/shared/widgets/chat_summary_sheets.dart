@@ -497,7 +497,7 @@ class _GroupSummaryState extends ConsumerState<_GroupSummary> {
     if (g.eventId.isNotEmpty) {
       supabase
           .from('events')
-          .select('event_type, event_date, ceremony_time, partner_name_1, partner_name_2, venue, cover_photo_url, owner_id')
+          .select('event_type, wedding_date, ceremony_time, partner_name_1, partner_name_2, venue, cover_photo_url, owner_id')
           .eq('id', g.eventId)
           .maybeSingle()
           .then((r) {
@@ -542,7 +542,7 @@ class _GroupSummaryState extends ConsumerState<_GroupSummary> {
     final owner = e?['owner_id'] as String?;
     people.sort((a, b) => (a.id == owner ? 0 : 1).compareTo(b.id == owner ? 0 : 1));
     final type = e == null ? null : EventType.fromDb(e['event_type'] as String?).label;
-    final date = DateTime.tryParse('${e?['event_date'] ?? ''}');
+    final date = DateTime.tryParse('${e?['wedding_date'] ?? ''}');
     final n1 = (e?['partner_name_1'] as String?)?.trim() ?? '';
     final n2 = (e?['partner_name_2'] as String?)?.trim() ?? '';
     final names = n1.isEmpty ? g.name : (n2.isEmpty ? n1 : '$n1 & $n2');
