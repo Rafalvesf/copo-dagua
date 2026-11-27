@@ -8,6 +8,7 @@ import 'snappy_tap.dart';
 import 'v2_kit.dart';
 import 'app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../leave.dart';
 
 // Peças das páginas redesenhadas (canvas «Páginas do evento», «Páginas do
 // parceiro», «Páginas do convidado», 2026-11-14), iguais em todas: um só
@@ -162,7 +163,7 @@ class _ScrollBackViewState extends State<ScrollBackView> {
           top: topInset + 12,
           child: ScrollAwareBackButton(
             controller: _controller,
-            onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+            onBack: widget.onBack ?? () => leave(context),
             imageExtent: widget.imageExtent,
           ),
         ),
@@ -235,7 +236,7 @@ class _KitPageState extends State<KitPage> {
             top: topInset + 12,
             child: ScrollAwareBackButton(
               controller: _controller,
-              onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+              onBack: widget.onBack ?? () => leave(context),
               rotate: widget.rotateBack,
             ),
           )
@@ -299,7 +300,7 @@ class KitHeader extends StatelessWidget {
         if (pinned)
           const SizedBox(width: 44)
         else
-          V2RoundButton(icon: Hi.chevronLeft, tooltip: 'Voltar', onTap: onBack ?? () => nav.maybePop()),
+          V2RoundButton(icon: Hi.chevronLeft, tooltip: 'Voltar', onTap: onBack ?? () => leave(context)),
         const Spacer(),
         for (final (i, a) in actions.indexed) ...[if (i > 0) const SizedBox(width: 10), a],
       ]),

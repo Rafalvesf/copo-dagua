@@ -108,6 +108,7 @@ import '../features/legal/legal_texts.dart';
 import '../features/settings/screens/username_screen.dart' deferred as l62;
 import '../features/partner_onboarding/screens/partner_welcome_screen.dart' deferred as l63;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import '../shared/leave.dart' show loadVisits, recordVisit;
 
 /// Rotas que vale a pena guardar para depois do login (não o início).
 bool _deepLinkWorthKeeping(String location) =>
@@ -136,7 +137,7 @@ class RouterRefreshNotifier extends ChangeNotifier {
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = RouterRefreshNotifier(ref);
 
-  return GoRouter(
+  final router = GoRouter(
     // Arranca no splash; o `redirect` leva para casa ou para «criar conta»
     // assim que a sessão guardada estiver decidida (sem piscar o registo).
     initialLocation: '/splash',
@@ -786,6 +787,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  // Por onde a pessoa passou, para o voltar levar sempre ao sítio de onde
+  // veio (pedido 2026-11-27, `shared/leave.dart`).
+  loadVisits();
+  router.routeInformationProvider.addListener(() => recordVisit(router.routeInformationProvider.value.uri.toString()));
+  return router;
 });
 
 

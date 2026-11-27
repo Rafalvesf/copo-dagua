@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/onb_kit.dart';
 import '../widgets/payout_details_form.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import '../../../shared/leave.dart';
 
 /// "Confirma os teus dados" (pedido 2026-10-19): antes de receber e
 /// levantar, a página mostra tudo o que é preciso, com o estado de cada
@@ -89,7 +90,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
       ('Conta e documento', 'IBAN e cartão de cidadão'),
     ];
     return OnbStep(
-      onBack: () => context.pop(),
+      onBack: () => leave(context, force: true),
       progress: 0.2,
       title: 'Recebe pagamentos na app',
       subtitle: widget.organizer
@@ -98,7 +99,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
       bottom: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         OnbButton(label: s.hasAccount && s.needsData ? 'Completar dados' : 'Começar', onPressed: _open),
         const SizedBox(height: 10),
-        OnbButton(label: 'Mais tarde', secondary: true, onPressed: () => context.pop()),
+        OnbButton(label: 'Mais tarde', secondary: true, onPressed: () => leave(context, force: true)),
       ]),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         _WhiteBox(
@@ -153,7 +154,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
   Widget _status(ConnectStatus s) {
     final active = s.active;
     return OnbStep(
-      onBack: () => context.pop(),
+      onBack: () => leave(context, force: true),
       progress: 1,
       title: active ? 'Pagamentos ativos' : 'Estamos a verificar',
       subtitle: active
@@ -162,7 +163,7 @@ class _SetupState extends ConsumerState<PartnerPayoutSetupScreen> {
       bottom: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         OnbButton(
           label: active && !widget.organizer ? 'Ver pagamentos' : 'Feito',
-          onPressed: () => active && !widget.organizer ? context.pushReplacement('/partner-payments') : context.pop(),
+          onPressed: () => active && !widget.organizer ? context.pushReplacement('/partner-payments') : leave(context, force: true),
         ),
         const SizedBox(height: 10),
         OnbButton(label: 'Rever os meus dados', secondary: true, onPressed: _open),

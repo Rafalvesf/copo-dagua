@@ -20,6 +20,7 @@ import '../../../shared/widgets/v2_kit.dart';
 import '../../payments/screens/pay_screen.dart' show PayScreen;
 import 'ticket_pass_screens.dart' show brandQr;
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../../../shared/leave.dart';
 
 String _hhmm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 
@@ -853,9 +854,9 @@ class _PayRequestSheetState extends State<PayRequestSheet> {
               if (i.result == 'error') ...[
                 _Button52(label: 'Tentar outra vez', onTap: _load),
                 const SizedBox(height: 10),
-                _Button52(label: 'Fechar', outline: true, onTap: () => context.pop()),
+                _Button52(label: 'Fechar', outline: true, onTap: () => leave(context, force: true)),
               ] else
-                _Button52(label: 'OK', onTap: () => context.pop()),
+                _Button52(label: 'OK', onTap: () => leave(context, force: true)),
             ],
     );
   }
@@ -892,7 +893,7 @@ class _SheetShell extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-        Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => context.pop())),
+        Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => leave(context, force: true))),
         Container(
           width: double.infinity,
           decoration: const BoxDecoration(
@@ -913,7 +914,7 @@ class _SheetShell extends StatelessWidget {
               Expanded(
                 child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
-              V2RoundButton(icon: Hi.xMark, tooltip: 'Fechar', onTap: () => context.pop()),
+              V2RoundButton(icon: Hi.xMark, tooltip: 'Fechar', onTap: () => leave(context, force: true)),
             ]),
             const SizedBox(height: 16),
             ...children,

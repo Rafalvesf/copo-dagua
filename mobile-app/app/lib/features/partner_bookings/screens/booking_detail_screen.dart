@@ -28,6 +28,7 @@ import '../../../core/exports/exports.dart';
 import '../../../shared/widgets/dispute_card.dart';
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../../../shared/leave.dart';
 
 class BookingDetailScreen extends ConsumerStatefulWidget {
   final Booking booking;
@@ -220,7 +221,7 @@ Expanded(child: ScrollingHeader(
                                               ? 'Pedido aceite. Fica reservado e cada convidado paga a sua parte.'
                                               : 'Pedido aceite. O cliente paga para confirmar.')),
                                     );
-                                    context.pop();
+                                    leave(context, force: true);
                                   }
                                 }),
                         style: FilledButton.styleFrom(
@@ -255,7 +256,7 @@ Expanded(child: ScrollingHeader(
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(content: Text('Pedido aceite. Fica reservado na tua agenda.')),
                                     );
-                                    context.pop();
+                                    leave(context, force: true);
                                   }
                                 }),
                         style: FilledButton.styleFrom(
@@ -297,7 +298,7 @@ Expanded(child: ScrollingHeader(
                           );
                           if (!sent || !context.mounted) return;
                           ref.invalidate(partnerBookingsProvider);
-                          context.pop();
+                          leave(context, force: true);
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: AppTheme.ink,

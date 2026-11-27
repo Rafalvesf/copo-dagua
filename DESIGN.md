@@ -403,6 +403,12 @@ ecrãs. O resto da app mantém a tabela acima.
     e `lazyPage`): ao voltar a uma página (voltar atrás, trocar de separador,
     swipe do Safari), a lista principal volta à posição onde estava — nunca
     ao topo. O swipe de voltar do Safari também mostra a animação.
+    **A seta de voltar e os «Fechar» levam sempre ao sítio de onde se veio**
+    (pedido 2026-11-27; `leave`, `shared/leave.dart`): sem página por baixo
+    (aberta pela navbar, por um link ou depois de recarregar), volta à
+    página visitada antes; só sem nenhuma vai para Eventos / Início do
+    parceiro. Os cartões de «Os meus eventos» abrem o evento por cima da
+    lista: ao voltar, o cartão encolhe para o seu sítio.
   - **«Os meus eventos» — o mais recente primeiro** (pedido 2026-11-26,
     `core/event/recent_events.dart`): os carrosséis «ORGANIZAS» e «CONVIDADO»
     mostram primeiro o evento aberto (ou criado) há menos tempo; sem registo,

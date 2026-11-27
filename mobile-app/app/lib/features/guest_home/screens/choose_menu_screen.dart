@@ -15,6 +15,7 @@ import '../../../shared/widgets/onb_kit.dart' show OnbField;
 import '../../../shared/widgets/page_kit.dart';
 import '../../partners/screens/partner_detail_screen.dart' show PackageChoiceCard, ExtraChoiceRow;
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../../../shared/leave.dart';
 
 /// «O teu menu» (190): a mesa foi reservada e cada convidado escolhe o seu
 /// menu e extras na app, antes de pagar (mockup «Restaurante · perfil»,
@@ -69,7 +70,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
       final paymentId = r.paymentId;
       if (paymentId == null) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Escolha guardada.')));
-        context.pop();
+        leave(context, force: true);
         return;
       }
       final pct = await guestShareFeePct(ref, t.partnerId,
@@ -83,7 +84,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
         baseAmount: r.amount,
       ));
       ref.invalidate(myEventTablesProvider(widget.eventId));
-      if (mounted) context.pop();
+      if (mounted) leave(context, force: true);
     } on PostgrestException catch (e) {
       if (!mounted) return;
       final msg = e.message.contains('closed')
@@ -114,7 +115,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
       background: AppBackground.subtle,
       body: KitPage(
         pinnedBack: true,
-        onBack: () => context.canPop() ? context.pop() : context.go('/guest-home'),
+        onBack: () => context.canPop() ? leave(context, force: true) : context.go('/guest-home'),
         bottom: 140,
         children: [
         const KitHeader(),

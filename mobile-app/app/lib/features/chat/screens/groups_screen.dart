@@ -22,6 +22,7 @@ import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../../../shared/leave.dart';
 
 /// Grupos do evento — organizadores e convidados (pedido do utilizador,
 /// 2026-10-20).
@@ -277,7 +278,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
       if (await runChatDelete(context, () => deleteChatGroup(widget.group.id))) {
         ref.invalidate(chatGroupsProvider(widget.group.eventId));
         ref.invalidate(myChatGroupsProvider);
-        if (mounted) context.pop();
+        if (mounted) leave(context, force: true);
       }
       return;
     }
@@ -285,7 +286,7 @@ class _GroupThreadScreenState extends ConsumerState<GroupThreadScreen> {
       await leaveChatGroup(widget.group.id);
       ref.invalidate(chatGroupsProvider(widget.group.eventId));
       ref.invalidate(myChatGroupsProvider);
-      if (mounted) context.pop();
+      if (mounted) leave(context, force: true);
     } else if (action == 'add') {
       final all = await ref.read(eventPeopleProvider(widget.group.eventId).future);
       final inGroup = people.map((p) => p.id).toSet();

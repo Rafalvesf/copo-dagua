@@ -9,6 +9,7 @@ import '../../../core/profile/username.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/buttons.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
+import '../../../shared/leave.dart';
 
 /// Escolher o @ (migração 163). Verifica enquanto se escreve se está livre.
 class UsernameScreen extends ConsumerStatefulWidget {
@@ -66,7 +67,7 @@ class _UsernameScreenState extends ConsumerState<UsernameScreen> {
       final u = await setMyUsername(_ctrl.text);
       ref.invalidate(myUsernameProvider);
       messenger.showSnackBar(SnackBar(content: Text('O teu @ agora é @$u.')));
-      if (mounted) context.pop();
+      if (mounted) leave(context, force: true);
     } on UsernameError catch (e) {
       setState(() => _status = e.code);
       if (e.code == 'too_soon') {
