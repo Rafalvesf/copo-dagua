@@ -27,6 +27,20 @@ export type Learned = {
 
 export const LEARNED: Learned[] = [
   {
+    id: "graphify",
+    date: "2026-11-27",
+    title: "Graphify: um mapa do código para gastar menos tokens",
+    source: "github.com/Graphify-Labs/graphify (pedido do Rafael)",
+    lesson:
+      "O graphify lê o código no computador (sem IA, sem enviar nada) e faz um grafo de ficheiros, classes e ligações em " +
+      "graphify-out/. Em vez de abrir muitos ficheiros, o Claude pergunta ao grafo onde está uma coisa e o que liga a quê.",
+    checks: [
+      { item: "Instalação", verdict: "ok", found: "graphifyy 0.9.121 (+ SQL) com pip; skill /graphify no Claude Code. Grafo da À Nossa!: 13 982 nós, 24 856 ligações, 562 grupos, em 30 s. graphify-out/ fica fora do git." },
+      { item: "Dart / Flutter", verdict: "problema", found: "Encontra onde cada classe está definida e de quem herda, mas não quem a usa (p. ex. que ecrãs montam um PhotoCard).", next: "Para «quem usa X» continuar a usar a pesquisa no código; atualizar com «graphify update .» depois de mudanças grandes." },
+      { item: "Perguntas em texto livre", verdict: "problema", found: "Pesquisas como «lista de conversas» dão sobretudo documentos; funciona melhor com nomes exatos (explain \"PhotoCard\", path \"A\" \"B\")." },
+    ],
+  },
+  {
     id: "fotos-memoria-iphone",
     date: "2026-11-26",
     title: "Fotos enormes fecham a página no iPhone (o «cartão verde»)",
