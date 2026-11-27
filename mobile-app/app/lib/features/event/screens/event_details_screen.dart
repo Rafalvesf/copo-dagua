@@ -2398,7 +2398,6 @@ List<_TodoItem> _todoItems(WidgetRef ref) {
   final guests = ref.watch(guestsControllerProvider).guests;
   final noAnswer = guests.where((g) => g.rsvpStatus == RsvpStatus.pending).length;
   final requests = eventId == null ? 0 : (ref.watch(joinRequestsProvider(eventId)).value?.length ?? 0);
-  final task = ref.watch(taskEngineControllerProvider).systemActive.firstOrNull;
   final items = <_TodoItem>[];
   if (due.isNotEmpty) {
     final (e, payId) = due.first;
@@ -2439,15 +2438,8 @@ List<_TodoItem> _todoItems(WidgetRef ref) {
       (context, ref) => _openRemind(context, ref),
     ));
   }
-  if (task != null) {
-    items.add(_TodoItem(
-      taskIcon(task.category), const Color(0xFFDDE5D3), _greenDark,
-      task.title,
-      'Tarefa recomendada',
-      'Abrir',
-      (context, ref) => openTask(context, ref, task),
-    ));
-  }
+  // Sem tarefas pré-feitas (2026-11-27: «são apenas sugestões; tarefas
+  // são coisas realmente importantes para fazer»).
   return items;
 }
 

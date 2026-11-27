@@ -12,6 +12,9 @@ import '../event/organizers.dart' show OrganizerPerm, eventPermsProvider;
 /// pedido do utilizador) — tarefas `USER` não contam para este limite.
 const int kMaxActiveSystemTasks = 4;
 
+/// Tarefas a partir dos modelos do admin: desligadas (2026-11-27).
+bool templateTasksOn = false;
+
 class TaskEngineState {
   final bool loading;
   final List<EventTask> systemActive;
@@ -188,6 +191,15 @@ class TaskEngineController extends Notifier<TaskEngineState> {
       // vez que abria o evento (2026-11-27).
       final perms = await ref.read(eventPermsProvider(eventId).future);
       if (!perms.can(OrganizerPerm.tarefas)) return;
+      // As tarefas dos modelos (templates) já não existem: o que era
+      // conselho são as Sugestões do painel e o «Para fazer» só tem o que é
+      // real (pagamentos, propostas, pedidos) — pedido 2026-11-27. Fica só a
+      // sincronização das tarefas de pagamentos/propostas e as notificações.
+      if (!templateTasksOn) {
+        await _syncDynamicTasks(eventId);
+        await _load(eventId);
+        return;
+      }
       final ctxF = _gatherContext(eventId);
       final templatesF = _loadTemplates();
       final ctx = await ctxF;
