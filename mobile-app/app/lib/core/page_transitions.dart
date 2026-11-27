@@ -92,7 +92,10 @@ GoRoute tabRoute({
       // cima»): os eventos abrem rotas de separador (/evento, /guest-home/…)
       // — usam a animação do cartão que cresce e lembram-se disso para,
       // ao sair, encolher para o cartão.
-      if (ExpandOrigin.hasPending) _expandPages.add(state.pageKey);
+      // Só a página que vai abrir fica com o cartão: a do
+      // separador por baixo também se reconstrói e roubava-o (2026-11-27:
+      // «a animação aparece apenas para os eventos no Descobrir»).
+      if (state.pageKey != _shownPage && ExpandOrigin.hasPending) _expandPages.add(state.pageKey);
       if ((asButton?.call(state) ?? false) || _expandPages.contains(state.pageKey)) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
@@ -319,6 +322,10 @@ final Expando<bool> _routeDecided = Expando('decidida');
 Rect? _originFor(Route<dynamic>? route) {
   if (route == null) return null;
   if (_routeDecided[route] != true) {
+    // Uma página que já está aberta (reconstruída por baixo de outra) não
+    // fica com o cartão tocado: é da página que está a abrir.
+    final a = route is ModalRoute ? route.animation : null;
+    if (a != null && a.status == AnimationStatus.completed) return null;
     _routeDecided[route] = true;
     final r = ExpandOrigin._take();
     if (r != null) _routeOrigin[route] = r;
