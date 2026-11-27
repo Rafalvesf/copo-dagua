@@ -1,4 +1,3 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,13 +6,15 @@ import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/auth/google_web_button.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/auth_ui.dart';
+import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/feedback.dart';
+import '../../../shared/widgets/flow_kit.dart';
 import '../../../shared/widgets/shake.dart';
-import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../../../shared/widgets/snappy_tap.dart';
 
-/// "Início 5 · Entrar" — igual ao canvas.
+/// Entrar com email (o mesmo aspeto do «Entra com o teu email» do fluxo
+/// novo, 2026-11-27): email, palavra-passe, «Esqueci-me da palavra-passe» e
+/// «Entrar»; por baixo, Apple e Google para quem criou a conta assim.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -24,9 +25,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  bool _show = false;
   bool _keep = true;
-  // Palavra-passe errada (skill `animacoes`, 2026-11-25): o campo abana e
-  // fica com a linha vermelha até se voltar a escrever.
+  // Palavra-passe errada (skill `animacoes`): o campo abana e fica com a
+  // linha vermelha até se voltar a escrever.
   int _shake = 0;
   bool _wrong = false;
 
@@ -35,6 +37,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  void _login() {
+    // Deixa o gestor de palavras-passe oferecer guardar o login.
+    TextInput.finishAutofillContext();
+    ref.read(authControllerProvider.notifier).login(email: _email.text.trim(), password: _password.text, keepSignedIn: _keep);
   }
 
   @override
@@ -49,125 +57,75 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         });
       }
     });
+    final notifier = ref.read(authControllerProvider.notifier);
 
-    return AuthPage(
-      children: [
-        const AuthHeading(title: 'Bem-vindo de volta', subtitle: 'Entra para continuar a organizar.'),
-        if (auth.status == AuthStatus.error && auth.errorMessage != null) ...[
-          const SizedBox(height: 16),
-          ErrorBanner(message: auth.errorMessage!),
-        ],
-        AutofillGroup(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AuthField(
-                label: 'Email',
-                controller: _email,
-                hint: 'nome@email.pt',
-                keyboardType: TextInputType.emailAddress,
-                topGap: 24,
-                autofillHints: const [AutofillHints.email, AutofillHints.username],
-              ),
-              Shake(
-                trigger: _shake,
-                child: AuthField(
-                  label: 'Password',
-                  controller: _password,
-                  hint: '••••••••',
-                  password: true,
-                  errorText: _wrong ? '' : null,
-                  onChanged: (_) {
-                    if (_wrong) setState(() => _wrong = false);
-                  },
-                  autofillHints: const [AutofillHints.password],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => setState(() => _keep = !_keep),
-                child: Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: _keep ? AppTheme.accentOliveDark : Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: _keep ? AppTheme.accentOliveDark : const Color(0xFF6E6A63), width: 1.5),
-                      ),
-                      child: _keep ? const Icon(Hi.check, size: 15, color: Colors.white) : null,
-                    ),
-                    const SizedBox(width: 10),
-                    const Flexible(
-                      child: Text(
-                        'Manter sessão iniciada',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14, color: AppTheme.ink),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            PressScale(child: TextButton(
-            onPressed: () => context.push('/forgot-password'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.accentOliveDark,
-              padding: EdgeInsets.zero,
-              textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w700),
-            ),
-            child: const Text('Esqueci-me da password'),
-          )),
+    return FlowPage(
+      tint: FlowTint.green,
+      dashCount: 0,
+      dashOn: 0,
+      trailingLabel: 'Voltar',
+      onTrailing: () => context.canPop() ? context.pop() : context.go('/welcome'),
+      centerContent: true,
+      content: const FlowStarHalo(Estrela.feliz, size: 120),
+      title: 'Bem-vindo\nde volta',
+      cta: AutofillGroup(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (auth.status == AuthStatus.error && auth.errorMessage != null) ...[
+            ErrorBanner(message: auth.errorMessage!),
+            const SizedBox(height: 12),
           ],
-        ),
-      ],
-      footer: [
-        AuthPrimaryButton(
-          label: 'Entrar',
-          loading: loading,
-          onPressed: () {
-            // Deixa o gestor de passwords oferecer guardar o login.
-            TextInput.finishAutofillContext();
-            ref.read(authControllerProvider.notifier).login(email: _email.text.trim(), password: _password.text, keepSignedIn: _keep);
-          },
-        ),
-        const AuthOrDivider(),
-        googleWebButton(
-              onCredential: (token, nonce) => ref.read(authControllerProvider.notifier).signInWithGoogleIdToken(token, nonce),
-            ) ??
-            AuthSocialButton(
-              label: 'Continuar com Google',
-              badge: const Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              onPressed: () => ref.read(authControllerProvider.notifier).signInWithProvider(OAuthProvider.google),
-            ),
-        AuthSocialButton(
-          label: 'Continuar com Apple',
-          badge: const Icon(Icons.apple, size: 14, color: AppTheme.ink),
-          onPressed: () => ref.read(authControllerProvider.notifier).signInWithProvider(OAuthProvider.apple),
-        ),
-        const SizedBox(height: 16),
-        GestureDetector(
-          onTap: () => context.push('/comecar'),
-          child: Text.rich(
-            TextSpan(
-              text: 'Ainda não tens conta? ',
-              children: [TextSpan(text: 'Criar conta', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.accentOliveDark))],
-            ),
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: AppTheme.inkMuted),
+          FlowField(
+            controller: _email,
+            hint: 'O teu email',
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email, AutofillHints.username],
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Shake(
+            trigger: _shake,
+            child: FlowField(
+              controller: _password,
+              hint: 'Palavra-passe',
+              obscure: !_show,
+              error: _wrong ? 'Email ou palavra-passe errados.' : null,
+              autofillHints: const [AutofillHints.password],
+              onChanged: (_) {
+                if (_wrong) setState(() => _wrong = false);
+              },
+              trailing: SnappyTap(
+                onTap: () => setState(() => _show = !_show),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(_show ? 'Esconder' : 'Mostrar',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF57534E))),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FlowTextAction('Esqueci-me da palavra-passe',
+                color: const Color(0xFF171713), onTap: () => context.push('/forgot-password')),
+          ),
+          const SizedBox(height: 4),
+          FlowCheckBox(
+            value: _keep,
+            onChanged: (v) => setState(() => _keep = v),
+            label: const TextSpan(text: 'Manter a sessão iniciada'),
+          ),
+          const SizedBox(height: 22),
+          FlowCta(label: 'Entrar', loading: loading, onPressed: _login),
+          const SizedBox(height: 16),
+          const FlowNote('ou'),
+          const SizedBox(height: 12),
+          FlowSocialButton.apple(onPressed: () => notifier.signInWithProvider(OAuthProvider.apple)),
+          const SizedBox(height: 10),
+          googleWebButton(onCredential: (token, nonce) => notifier.signInWithGoogleIdToken(token, nonce)) ??
+              FlowSocialButton.google(onPressed: () => notifier.signInWithProvider(OAuthProvider.google)),
+        ]),
+      ),
+      footer: FlowFooterLink(prefix: 'Ainda não tens conta?', action: 'Criar conta', onTap: () => context.push('/comecar')),
     );
   }
 }

@@ -3,8 +3,12 @@ import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/onboarding/intro_answers.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/onb_kit.dart';
+import '../../../shared/widgets/estrela.dart';
+import '../../../shared/widgets/flow_kit.dart';
+import '../../../shared/widgets/step_slide.dart';
+import 'start_flow_screen.dart';
 import '../../../shared/theme_color/theme_color.dart';
 import '../../../shared/widgets/tchin_splash.dart';
 
@@ -79,9 +83,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Topo das boas-vindas (gradiente claro): a barra fica desta cor
+    // Topo das boas-vindas (fundo verde suave): a barra fica desta cor
     // quando a abertura a soltar, em vez de branca.
-    setRouteBarColor(ModalRoute.of(context), const Color(0xFFE9D8C4));
+    setRouteBarColor(ModalRoute.of(context), FlowTint.green);
     // Pedido do utilizador (2026-10-17): a abertura acontece sempre,
     // todas as vezes — mesmo com "reduzir movimento" ligado no telemóvel.
     if (_showSplash && _splash.value == 0 && !_started) {
@@ -136,75 +140,67 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   }
 }
 
-/// Início (mockup "Onboarding · 1 Início", 2026-11-12): imagem de fundo
-/// em cima, título e os botões "Começar" e "Já tenho conta". A barra de
-/// progresso começa em 20%.
-class _WelcomeContent extends StatelessWidget {
+/// Boas-vindas 1 a 3 (pranchetas «Fluxo novo», 2026-11-27): três cartões
+/// com a estrela, só na primeira abertura sem conta neste aparelho
+/// ([IntroAnswers.introSeen]). «Saltar» e «Começar» levam ao papel, que
+/// aparece aqui mesmo; «Entrar» vai ao login. Das vezes seguintes, o
+/// `/welcome` mostra logo o papel.
+class _WelcomeContent extends StatefulWidget {
   const _WelcomeContent();
 
   @override
+  State<_WelcomeContent> createState() => _WelcomeContentState();
+}
+
+class _WelcomeContentState extends State<_WelcomeContent> {
+  bool? _showIntro;
+  int _page = 0;
+
+  static const _cards = [
+    (FlowTint.green, Estrela.feliz, 'Organiza\nsem stress', 'Continuar'),
+    (Colors.white, Estrela.piscar, 'Convida\nnum toque', 'Continuar'),
+    (FlowTint.terra, Estrela.feliz, 'Tens um\nnegócio?', 'Começar'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    IntroAnswers.introSeen().then((seen) {
+      if (mounted) setState(() => _showIntro = !seen);
+    });
+  }
+
+  void _toRoles() {
+    IntroAnswers.markIntroSeen();
+    setState(() => _showIntro = false);
+  }
+
+  void _login() {
+    IntroAnswers.markIntroSeen();
+    context.push('/login');
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.of(context).padding.top;
-    final h = MediaQuery.sizeOf(context).height;
-    return Stack(children: [
-      // Fotografia de fundo (por enquanto o tom quente do mockup, até
-      // haver foto) que se funde com o fundo da página.
-      Positioned(
-        left: 0,
-        right: 0,
-        top: 0,
-        height: h * 0.71,
-        child: const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment(-0.4, -0.6),
-              radius: 1.2,
-              colors: [Color(0xFFE9D8C4), Color(0xFFCDB79C), Color(0xFF9C8468), Color(0xFF6E5C49)],
-              stops: [0, 0.38, 0.7, 1],
-            ),
-          ),
-        ),
+    final intro = _showIntro;
+    if (intro == null) return const ColoredBox(color: FlowTint.green, child: SizedBox.expand());
+    if (!intro) return const StartFlowBody();
+    final c = _cards[_page];
+    return StepSlide(
+      id: _page,
+      order: _page,
+      child: FlowPage(
+        key: ValueKey('intro$_page'),
+        tint: c.$1,
+        dashOn: _page,
+        trailingLabel: 'Saltar',
+        onTrailing: _toRoles,
+        centerContent: true,
+        content: FlowStarHalo(c.$2),
+        title: c.$3,
+        cta: FlowCta(label: c.$4, onPressed: () => _page < _cards.length - 1 ? setState(() => _page++) : _toRoles()),
+        footer: FlowFooterLink(prefix: 'Já tens conta?', action: 'Entrar', onTap: _login),
       ),
-      Positioned(
-        left: 0,
-        right: 0,
-        top: 0,
-        height: h * 0.71,
-        child: const DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0x00F2F0EB), AppTheme.background],
-              stops: [0.45, 1],
-            ),
-          ),
-        ),
-      ),
-      SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(AppTheme.screenMargin, top > 0 ? 12 : 24, AppTheme.screenMargin, 24),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const SizedBox(height: 44, child: OnbProgress(value: 0.2, labelColor: Colors.white)),
-            const Spacer(),
-            const Text('À Nossa!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 8),
-            const Text('Organiza, convida e celebra.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 28, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 8),
-            const Text('Casamentos, aniversários e festas, com os convidados e os parceiros no mesmo sítio.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
-            const SizedBox(height: 28),
-            OnbButton(label: 'Começar', onPressed: () => context.push('/comecar')),
-            const SizedBox(height: 10),
-            OnbButton(label: 'Já tenho conta', secondary: true, onPressed: () => context.push('/login')),
-          ]),
-        ),
-      ),
-    ]);
+    );
   }
 }

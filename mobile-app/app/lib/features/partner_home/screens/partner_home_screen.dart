@@ -16,6 +16,8 @@ import '../../../shared/widgets/snappy_tap.dart';
 import '../../partner_bookings/widgets/request_row.dart';
 import '../widgets/partner_promotion_card.dart';
 import '../widgets/partner_invite_card.dart';
+import '../widgets/partner_profile_progress.dart';
+import '../../../core/partner_profile/partner_completion.dart';
 import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/page_kit.dart';
 import '../../../shared/widgets/estrela.dart' show Estrela;
@@ -77,6 +79,10 @@ class PartnerHomeScreen extends ConsumerWidget {
     final toReply = (ref.watch(partnerReviewsProvider).value ?? const <Review>[]).where((r) => r.response == null).toList();
     final pro = ref.watch(myPartnerProProvider).value;
     final isPro = pro?.active ?? false;
+    // Antes de verificado (fluxo novo, 2026-11-27): o cartão «O teu perfil»
+    // e a verificação em cima; os pedidos só aparecem depois de publicado.
+    final completion = ref.watch(partnerCompletionProvider).value;
+    final published = completion?.published ?? profile?.partnerProfileStatus == 'published';
     return GradientScaffold(
       background: AppBackground.subtle,
       body: Stack(
@@ -147,17 +153,27 @@ class PartnerHomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  newRequests.isEmpty
-                      ? 'Sem pedidos à espera. Avisamos-te quando chegar um.'
-                      : 'Tens ${newRequests.length} ${newRequests.length == 1 ? 'pedido' : 'pedidos'} à espera de resposta.',
+                  !published && completion != null
+                      ? completion.inReview
+                          ? 'A equipa está a ver o teu perfil.'
+                          : completion.complete
+                              ? 'O perfil está completo. Já podes pedir a verificação.'
+                              : 'Faltam ${completion.missing} ${completion.missing == 1 ? 'passo' : 'passos'} para pedires a verificação.'
+                      : newRequests.isEmpty
+                          ? 'Sem pedidos à espera. Avisamos-te quando chegar um.'
+                          : 'Tens ${newRequests.length} ${newRequests.length == 1 ? 'pedido' : 'pedidos'} à espera de resposta.',
                   style: const TextStyle(fontSize: 13, height: 1.4, color: AppTheme.inkMuted),
                 ),
                 const SizedBox(height: 16),
+                if (!published && completion != null) ...[
+                  PartnerProfileProgress(completion: completion),
+                  const SizedBox(height: 16),
+                ],
                 // Painel com molduras (pedido 2026-11-25, mockup «Parceiro ·
                 // Início»): resumo do mês, Para fazer, Esta semana, Números,
                 // O teu negócio, A tua página e Convida e paga menos.
-                _MonthSummary(stats: stats, newRequests: newRequests.length, thisWeek: thisWeek.length),
-                _TodoFrame(requests: newRequests, reviews: toReply),
+                _MonthSummary(stats: stats, newRequests: published ? newRequests.length : 0, thisWeek: thisWeek.length),
+                _TodoFrame(requests: published ? newRequests : const [], reviews: toReply),
                 SectionFrame(title: 'Esta semana', children: [
                   _WeekStrip(bookings: thisWeek),
                   if (thisWeek.isEmpty)

@@ -3,15 +3,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../supabase/supabase_config.dart';
 
 /// Respostas do início da app (mockup "Onboarding", 2026-11-12), dadas
-/// antes de haver conta: papel, tipos de eventos de interesse, país,
-/// cidade e faixa etária. Ficam guardadas no telemóvel (sobrevivem ao
-/// redirecionamento do Google/Apple na web) e vão para o perfil assim
-/// que a conta existe (`profiles.country/city/age_range/interest_types`,
-/// migração 186).
+/// antes de haver conta. Desde o fluxo novo (2026-11-27) já não se
+/// perguntam os interesses nem «De onde és?»; [flushToProfile] continua a
+/// enviar o que ficou guardado por versões antigas
+/// (`profiles.country/city/age_range/interest_types`, migração 186).
+///
+/// Também guarda se as boas-vindas 1 a 3 já foram vistas neste aparelho
+/// ([introSeen]): só aparecem na primeira abertura sem conta.
 class IntroAnswers {
   IntroAnswers._();
 
   static const _key = 'intro_answers_v1';
+  static const _seenKey = 'intro_cards_seen_v1';
+
+  /// As boas-vindas 1 a 3 já foram vistas neste aparelho.
+  static Future<bool> introSeen() async {
+    try {
+      return (await SharedPreferences.getInstance()).getBool(_seenKey) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> markIntroSeen() async {
+    try {
+      await (await SharedPreferences.getInstance()).setBool(_seenKey, true);
+    } catch (_) {}
+  }
 
   static bool partner = false;
   static List<String> interests = [];

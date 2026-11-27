@@ -1,69 +1,67 @@
-import '../../../shared/widgets/estrela.dart';
+import 'dart:async';
+import 'dart:math' as math;
+import 'dart:typed_data';
+
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
-import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/auth/auth_controller.dart';
-import '../../../core/events/events_providers.dart' show organizerPaymentsReady, setEventMaxAttendees;
-import '../../../core/models/models.dart';
-import '../../../core/moderation/word_filter.dart';
-import '../../../core/onboarding/intro_answers.dart';
-import '../../../core/supabase/supabase_config.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/event/date_format_pt.dart';
 import '../../../core/event/event_controller.dart';
-import '../../../shared/public_link.dart';
-import '../../../shared/widgets/first_run_tour.dart' show TourRole;
+import '../../../core/models/models.dart';
+import '../../../core/moderation/word_filter.dart';
+import '../../../core/profile/username.dart';
+import '../../../core/supabase/supabase_config.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../shared/hero_icons.dart';
+import '../../../shared/widgets/estrela.dart';
+import '../../../shared/widgets/flow_kit.dart';
 import '../../../shared/widgets/line_icon.dart';
-import '../../../shared/widgets/onb_kit.dart';
+import '../../../shared/widgets/onb_kit.dart' show onbTypeIcons, showOnbDateSheet;
 import '../../../shared/widgets/onboarding_exit.dart';
-import '../../../shared/widgets/permissions_step.dart' show PermissionsStep;
+import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/snappy_tap.dart';
+import '../../../shared/widgets/step_slide.dart';
+import '../../../shared/widgets/time_wheels.dart' show pickTimeWheel;
+import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
-import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
-import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
-import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
-/// Criar evento (mockup "Onboarding", 2026-11-12): uma ou duas perguntas
-/// por ecrã, sem repetir o que já sabemos (nome e telemóvel da conta,
-/// zona do início da app):
-///   1. Que evento vais criar? (grelha; "Outro" → "Que evento é?", 24)
-///   2. Como se chama? (até 40, com sugestões)
-///   3. Quando e onde?
-///   4. Quantas pessoas, no máximo? (= convidados previstos e limite)
-///   ·  Quem pode ir? (só nos tipos que podem ser públicos)
-///   5. Organizas com alguém?
-/// e no fim "Parabéns! 🎉". Tudo se muda depois no evento.
-enum _Step { type, name, when, people, access, organizer }
+/// Organizador depois de ter conta, e criar evento (pranchetas «Fluxo
+/// novo», 2026-11-27):
+///   1. «O teu perfil» (foto, nome, @, bio) — a conta por email é criada
+///      aqui;
+///   2. «Tudo pronto, Ana!» — «Começar» (Explorar, sem evento) ou «Criar o
+///      meu evento»;
+///   3. «Que evento vais criar?» num só ecrã (tipo, como vai ser, nome, dia
+///      e hora);
+///   4. «Evento feito!» — convidar (por link ou a pessoas da app) ou ver o painel.
+/// Em `/novo-evento` ([newEvent]) abre logo no 3. As pessoas e o resto
+/// pedem-se depois, no painel do evento.
+enum _Stage { profile, ready, create, done }
 
-const _peopleChips = [30, 50, 80, 120, 200, 300];
+/// «Como vai ser?» (`events.event_format`, migração 245).
+const _formats = {'Comer fora': 'fora', 'Num espaço': 'espaco', 'Em casa': 'casa'};
 
-/// Interesses do início da app → tipo pré-escolhido.
-const _interestType = {
-  'Casamento': EventType.wedding,
-  'Aniversário': EventType.birthday,
-  'Batizado': EventType.baptism,
-  'Festa': EventType.party,
-  'Evento de empresa': EventType.corporate,
-  'Despedida': EventType.other,
-  'Jantar': EventType.other,
-  'Outro': EventType.other,
-};
+/// Os sete tipos, em duas filas (4 + 3), como na prancheta.
+const _typeRows = [
+  [EventType.birthday, EventType.wedding, EventType.party, EventType.corporate],
+  [EventType.baptism, EventType.newYear, EventType.other],
+];
+
+String _typeLabel(EventType t) => t == EventType.corporate ? 'Empresa' : t.label;
 
 class OnboardingWizardScreen extends ConsumerStatefulWidget {
-  /// Só para as capturas de ecrã (`?step=N`).
+  /// Só para as capturas de ecrã (`?step=N`): 0 perfil, 1 pronto, 2 criar.
   final int initialStep;
 
-  /// `true` = criar mais um evento a partir do separador Eventos
-  /// (`/novo-evento`) — sem pergunta inicial, sem permissões e sem marcar
-  /// o onboarding.
+  /// `true` = criar mais um evento (`/novo-evento`, o «+» de Meus eventos):
+  /// abre logo no criar evento, sem permissões e sem marcar o onboarding.
   final bool newEvent;
 
-  /// Tipo já escolhido no cartão "O que vamos celebrar?" (`?tipo=`).
+  /// Tipo já escolhido (`?tipo=`).
   final String? initialType;
 
   /// Já preenchidos ao criar o plano a partir de um evento real
@@ -87,172 +85,194 @@ class OnboardingWizardScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen> {
-  late int _index = widget.initialStep;
+  late _Stage _stage = widget.newEvent
+      ? _Stage.create
+      : switch (widget.initialStep) {
+          1 => _Stage.ready,
+          2 => _Stage.create,
+          _ => _Stage.profile,
+        };
   bool _saving = false;
-  Event? _createdEvent;
-  bool _permsDone = false;
-  late bool _startAnswered = widget.newEvent || widget.initialStep > 0;
 
+  // ---- O teu perfil ----
+  final _fullName = TextEditingController();
+  final _username = TextEditingController();
+  final _bio = TextEditingController();
+  XFile? _photo;
+  Uint8List? _photoBytes;
+  String? _usernameError;
+  String? _usernameOk;
+  String? _nameError;
+  Timer? _usernameDebounce;
+
+  // ---- Criar evento ----
   EventType? _type;
   final _otherLabel = TextEditingController();
+  String? _format;
   final _name = TextEditingController();
-  bool _nameTouched = false;
   DateTime? _date;
-  final _location = TextEditingController();
-  int _people = 50;
-  String? _homeZone;
-  bool _peopleEditing = false;
-  final _peopleCtrl = TextEditingController();
-  final _peopleFocus = FocusNode();
-  bool _isPublic = false;
-  double? _price;
-  bool _inviteOrganizer = false;
+  TimeOfDay? _time;
+  String? _location;
 
   @override
   void initState() {
     super.initState();
     Funnel.track(widget.newEvent ? 'event_create_start' : 'onboarding_start');
     _type = EventType.values.where((e) => e.name == widget.initialType).firstOrNull;
-    if (_type == null) {
-      for (final i in IntroAnswers.interests) {
-        final t = _interestType[i];
-        if (t != null) {
-          _type = t;
-          if (t == EventType.other && i != 'Outro') _otherLabel.text = i;
-          break;
-        }
-      }
-    }
-    _type ??= EventType.wedding;
-    _location.text = IntroAnswers.city;
-    _homeZone = IntroAnswers.city.isEmpty ? null : IntroAnswers.city;
-    if (widget.initialName?.trim().isNotEmpty == true) {
-      _name.text = widget.initialName!.trim();
-      _nameTouched = true;
-    }
+    if (widget.initialName?.trim().isNotEmpty == true) _name.text = widget.initialName!.trim();
     final d = DateTime.tryParse(widget.initialDate ?? '');
     if (d != null) _date = d;
-    if (widget.initialLocation?.trim().isNotEmpty == true) _location.text = widget.initialLocation!.trim();
-    for (final c in [_otherLabel, _name, _location]) {
+    if (widget.initialLocation?.trim().isNotEmpty == true) _location = widget.initialLocation!.trim();
+    for (final c in [_fullName, _bio, _otherLabel, _name]) {
       c.addListener(() => setState(() {}));
     }
-    if (_location.text.isEmpty) _loadCity();
+    if (!widget.newEvent) _prefillProfile();
   }
 
-  /// Zona da conta (perfil) quando o início da app foi noutro aparelho.
-  Future<void> _loadCity() async {
+  /// Nome, @ e bio que a conta já tem (Apple/Google, ou depois de
+  /// confirmar o email).
+  Future<void> _prefillProfile() async {
+    final profile = ref.read(authControllerProvider).profile;
+    if (profile != null && _fullName.text.isEmpty) _fullName.text = profile.fullName.trim();
+    if (ref.read(authControllerProvider.notifier).hasPendingSignup) return;
     final id = supabase.auth.currentUser?.id;
     if (id == null) return;
     try {
-      final row = await supabase.from('profiles').select('city').eq('id', id).maybeSingle();
-      final city = (row?['city'] as String?)?.trim() ?? '';
-      if (city.isNotEmpty && mounted) {
-        _homeZone = city;
-        if (_location.text.isEmpty) _location.text = city;
+      final r = await supabase.rpc('my_username');
+      final u = r is Map ? r['username'] as String? : null;
+      if (u != null && u.isNotEmpty && mounted && _username.text.isEmpty) {
+        _username.text = u;
+        setState(() => _usernameOk = '@$u é teu');
       }
+    } catch (_) {}
+    try {
+      final row = await supabase.from('profiles').select('bio').eq('id', id).maybeSingle();
+      final bio = (row?['bio'] as String?)?.trim() ?? '';
+      if (bio.isNotEmpty && mounted && _bio.text.isEmpty) _bio.text = bio;
     } catch (_) {}
   }
 
   @override
   void dispose() {
-    _otherLabel.dispose();
-    _name.dispose();
-    _location.dispose();
-    _peopleCtrl.dispose();
-    _peopleFocus.dispose();
+    _usernameDebounce?.cancel();
+    for (final c in [_fullName, _username, _bio, _otherLabel, _name]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  EventType get _eventType => _type ?? EventType.other;
+  void _go(_Stage s) => setState(() => _stage = s);
 
-  List<_Step> get _steps => [
-        _Step.type,
-        _Step.name,
-        _Step.when,
-        _Step.people,
-        if (_eventType.canBePublic) _Step.access,
-        _Step.organizer,
-      ];
-
-  _Step get _current => _steps[_index.clamp(0, _steps.length - 1)];
-
-  // Percentagens do mockup: tipo 20 (30 com «Outro» escrito), nome 40,
-  // quando 50, pessoas 60, quem pode ir 70, organizador 80, pronto 100.
-  double get _progress => switch (_current) {
-        _Step.type => _eventType == EventType.other && _otherLabel.text.trim().isNotEmpty ? 0.3 : 0.2,
-        _Step.name => 0.4,
-        _Step.when => 0.5,
-        _Step.people => 0.6,
-        _Step.access => 0.7,
-        _Step.organizer => 0.8,
-      };
-
-  String _firstName(Profile p) => p.fullName.trim().split(' ').first;
-
-  String get _typeText {
-    if (_eventType == EventType.other && _otherLabel.text.trim().isNotEmpty) return _otherLabel.text.trim();
-    return _eventType.label;
+  String get _firstName {
+    final n = _fullName.text.trim().isNotEmpty ? _fullName.text.trim() : (ref.read(authControllerProvider).profile?.fullName ?? '');
+    return n.trim().split(' ').first;
   }
 
-  List<String> _nameSuggestions(Profile p) {
-    final n = _firstName(p);
-    final t = _typeText;
-    final out = <String>[
-      switch (_eventType) {
-        EventType.wedding => 'O casamento do $n',
-        EventType.birthday => 'Os anos do $n',
-        _ => '$t do $n',
-      },
-      if (_eventType == EventType.wedding) '$n & …' else t,
-      '$t ${(DateTime.now().year + (DateTime.now().month > 9 ? 1 : 0))}',
-    ];
-    return [for (final s in out) if (s.length <= 40 && !s.contains('…')) s];
+  // ---------------------------------------------------------------- perfil
+
+  /// Verifica o @ enquanto se escreve (como no registo antigo).
+  void _onUsernameChanged(String v) {
+    _usernameDebounce?.cancel();
+    final u = normalizeUsername(v);
+    setState(() {
+      _usernameOk = null;
+      _usernameError = u.isEmpty ? null : usernameFormatError(u);
+    });
+    if (u.isEmpty || _usernameError != null) return;
+    _usernameDebounce = Timer(const Duration(milliseconds: 450), () async {
+      String? status;
+      try {
+        status = await usernameStatus(u);
+      } catch (_) {}
+      if (!mounted || normalizeUsername(_username.text) != u) return;
+      setState(() {
+        switch (status) {
+          case 'taken':
+            _usernameError = 'Esse @ já está ocupado.';
+          case 'reserved':
+            _usernameError = 'Esse @ não está disponível.';
+          case 'invalid':
+            _usernameError = usernameFormatError(u) ?? 'Esse @ não é válido.';
+          case 'mine':
+            _usernameOk = '@$u é teu';
+          case 'ok':
+            _usernameOk = '@$u está livre';
+        }
+      });
+    });
   }
 
-  String? get _otherError {
-    if (_eventType != EventType.other) return null;
-    return WordFilter.allowed(_otherLabel.text) ? null : WordFilter.message;
+  /// A foto chega inteira (os seletores não reduzem); a versão leve faz-se
+  /// ao subir, em `uploadImageBinary`.
+  Future<void> _pickPhoto() async {
+    try {
+      final f = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (f == null) return;
+      final bytes = await f.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _photo = f;
+        _photoBytes = bytes;
+      });
+    } catch (_) {}
   }
 
-  String? get _nameError => WordFilter.allowed(_name.text) ? null : WordFilter.message;
+  bool get _profileReady =>
+      _fullName.text.trim().isNotEmpty &&
+      normalizeUsername(_username.text).isNotEmpty &&
+      _usernameError == null &&
+      WordFilter.allowed(_bio.text);
 
-  bool get _canContinue => switch (_current) {
-        _Step.type => _type != null &&
-            (_eventType != EventType.other || (_otherLabel.text.trim().isNotEmpty && _otherError == null)),
-        _Step.name => _name.text.trim().isNotEmpty && _nameError == null,
-        _Step.when => WordFilter.allowed(_location.text),
-        _ => true,
-      };
-
-  void _back() {
-    if (_index > 0) {
-      setState(() => _index--);
-    } else if (widget.newEvent) {
-      context.go('/eventos');
-    } else {
-      setState(() => _startAnswered = false);
-    }
-  }
-
-  Future<void> _next(Profile profile) async {
-    if (_peopleEditing) _commitPeople();
-    if (_current == _Step.type && !_nameTouched) {
-      final s = _nameSuggestions(profile);
-      if (s.isNotEmpty) _name.text = s.first;
-    }
-    if (_index < _steps.length - 1) {
-      setState(() => _index++);
-      return;
-    }
-    await _create(profile);
-  }
-
-  /// "Mais tarde": a conta fica criada sem evento e vai para Eventos.
-  Future<void> _later() async {
+  Future<void> _saveProfile() async {
+    final name = _fullName.text.trim();
+    setState(() => _nameError = WordFilter.allowed(name) ? null : WordFilter.message);
+    if (_nameError != null) return;
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
+      await ref.read(authControllerProvider.notifier).saveOrganizerProfile(
+            fullName: name,
+            username: _username.text,
+            bio: _bio.text.trim().isEmpty ? null : _bio.text.trim(),
+            avatar: _photo,
+          );
+      if (!mounted) return;
+      setState(() => _saving = false);
+      _go(_Stage.ready);
+    } on UsernameError catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _usernameOk = null;
+        _usernameError = switch (e.code) {
+          'taken' => 'Esse @ já está ocupado.',
+          'reserved' => 'Esse @ não está disponível.',
+          'too_soon' => 'Só podes mudar o @ uma vez por mês.',
+          _ => 'Esse @ não é válido.',
+        };
+      });
+    } on SignupFailed catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível guardar. Tenta novamente.')));
+    }
+  }
+
+  // ----------------------------------------------------------------- pronto
+
+  /// «Começar»: a conta fica sem evento e entra no Explorar (o router segue
+  /// o novo estado). Com [then], vai a seguir para essa página.
+  Future<void> _explore({String? then}) async {
+    setState(() => _saving = true);
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
       await ref.read(authControllerProvider.notifier).skipEventCreation();
+      if (then != null) router.go(then);
     } on SignupFailed catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
@@ -261,30 +281,79 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     if (mounted) setState(() => _saving = false);
   }
 
-  /// Cria o evento no fim das perguntas. Se já existir um (ex.: a app foi
-  /// fechada no fim), reaproveita-o em vez de criar outro.
-  Future<void> _create(Profile profile) async {
+  // ------------------------------------------------------------ criar evento
+
+  EventType get _eventType => _type ?? EventType.other;
+
+  String? get _otherError {
+    if (_type != EventType.other) return null;
+    if (_otherLabel.text.trim().length > 24) return 'No máximo 24 caracteres.';
+    return WordFilter.allowed(_otherLabel.text) ? null : WordFilter.message;
+  }
+
+  String? get _nameFieldError {
+    if (_name.text.trim().length > 40) return 'No máximo 40 caracteres.';
+    return WordFilter.allowed(_name.text) ? null : WordFilter.message;
+  }
+
+  bool get _canCreate =>
+      _type != null &&
+      (_type != EventType.other || (_otherLabel.text.trim().isNotEmpty && _otherError == null)) &&
+      _name.text.trim().isNotEmpty &&
+      _nameFieldError == null;
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final d = await showOnbDateSheet(
+      context,
+      initial: _date,
+      first: DateTime(now.year, now.month, now.day),
+      last: DateTime(now.year + 5, 12, 31),
+    );
+    if (d != null) setState(() => _date = d);
+  }
+
+  Future<void> _pickTime() async {
+    final t = await pickTimeWheel(context,
+        initial: _time ?? const TimeOfDay(hour: 20, minute: 0), title: 'A que horas começa?', label: 'COMEÇA ÀS');
+    if (t != null) setState(() => _time = t);
+  }
+
+  void _useCode() {
+    if (widget.newEvent) {
+      showGuestModeSheet(context);
+    } else {
+      // Ainda no onboarding: entra sem evento e abre Meus eventos, onde
+      // está «Recebeste um convite?».
+      _explore(then: '/meus-eventos');
+    }
+  }
+
+  void _closeCreate() {
+    if (!widget.newEvent) return _go(_Stage.ready);
+    context.canPop() ? context.pop() : context.go('/meus-eventos');
+  }
+
+  /// Cria o evento. Se já existir um (ex.: a app foi fechada a meio do
+  /// onboarding), reaproveita-o em vez de criar outro.
+  Future<void> _create() async {
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      // A conta só é criada agora, mesmo antes do "Pronto".
       final auth = ref.read(authControllerProvider.notifier);
+      // Normalmente a conta já foi criada em «O teu perfil».
       if (auth.hasPendingSignup) {
         await auth.commitSignup();
         final id = ref.read(authControllerProvider).profile?.id;
-        if (id != null && id.isNotEmpty) {
-          await ref.read(eventControllerProvider.notifier).load(id);
-        }
+        if (id != null && id.isNotEmpty) await ref.read(eventControllerProvider.notifier).load(id);
         if (!mounted) return;
       }
       final existing = widget.newEvent ? null : ref.read(eventControllerProvider).event;
       final event = existing ??
           await ref.read(eventControllerProvider.notifier).create(
-                // O nome do evento (até 40) é o nome que aparece em todo o lado.
                 partnerName1: _name.text.trim(),
                 eventDate: _date,
-                location: _location.text.trim().isEmpty ? null : _location.text.trim(),
-                estimatedGuests: _people,
+                location: _location,
                 eventType: _eventType,
               );
       if (existing == null) {
@@ -293,29 +362,30 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
               eventTypes: [_eventType],
               otherLabel: _eventType == EventType.other ? _otherLabel.text.trim() : null,
             );
-        // Público/privado e preço (141/142) — ignora em silêncio sem as colunas.
-        try {
-          final public = _isPublic && _eventType.canBePublic;
-          await supabase.from('events').update({
-            'is_public': public,
-            'is_paid': public && (_price ?? 0) > 0,
-            'entry_price': public && (_price ?? 0) > 0 ? _price : null,
-          }).eq('id', event.id);
-        } catch (_) {}
-        // O máximo de pessoas é também o limite de entradas (182).
-        try {
-          await setEventMaxAttendees(event.id, _people);
-        } catch (_) {}
+        final t = _time;
+        if (t != null) {
+          String two(int v) => v.toString().padLeft(2, '0');
+          try {
+            // A hora de início (`events.ceremony_time`), como no painel.
+            await supabase.from('events').update({'ceremony_time': '${two(t.hour)}:${two(t.minute)}'}).eq('id', event.id);
+          } catch (_) {}
+        }
+        final f = _format;
+        if (f != null) {
+          try {
+            // «Como vai ser?» (`events.event_format`, migração 245).
+            await supabase.from('events').update({'event_format': _formats[f]!}).eq('id', event.id);
+          } catch (_) {}
+        }
         if (ref.read(authControllerProvider).profile?.role == UserRole.guest) {
-          await ref.read(authControllerProvider.notifier).becomeOrganizer();
+          await auth.becomeOrganizer();
         }
       }
       if (!mounted) return;
       setState(() {
-        _createdEvent = event;
         _saving = false;
+        _stage = _Stage.done;
       });
-      if (_inviteOrganizer) _invite(event);
     } on SignupFailed catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -328,6 +398,8 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       ));
     }
   }
+
+  // ---------------------------------------------------------- evento feito
 
   /// Marca o onboarding como feito e segue para [route].
   Future<void> _finish(String route) async {
@@ -348,554 +420,319 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
     context.go(route);
   }
 
-  /// Convidar outro organizador por link (079): menu de partilha; sem
-  /// menu, copia o link.
-  Future<void> _invite(Event event) async {
-    final messenger = ScaffoldMessenger.of(context);
-    String link;
-    try {
-      final token = await ref.read(eventControllerProvider.notifier).createPartnerInviteToken(event.id);
-      link = publicLink('/juntar/$token');
-    } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Não foi possível criar o link de convite.')));
-      return;
-    }
-    var shared = false;
-    try {
-      final result = await SharePlus.instance.share(
-        ShareParams(text: 'Junta-te a mim para organizarmos «${event.displayNames}» na app À Nossa!: $link'),
-      );
-      shared = result.status != ShareResultStatus.unavailable;
-    } catch (_) {}
-    if (!shared) {
-      await copyText(link);
-      messenger.showSnackBar(const SnackBar(content: Text('Link para organizar contigo copiado.')));
-    }
-  }
+  /// «Convidar» (pedido 2026-11-27): a página Convidar tem as duas formas,
+  /// por link e a pessoas dentro da app (quem segues).
+  Future<void> _shareInvite() => _finish('/guests/convidar');
 
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final d = await showOnbDateSheet(
-      context,
-      initial: _date,
-      first: DateTime(now.year, now.month, now.day),
-      last: DateTime(now.year + 5, 12, 31),
-    );
-    if (d != null) setState(() => _date = d);
-  }
-
-  Future<void> _pickPlace() async {
-    final v = await showOnbPlaceSheet(
-      context,
-      current: _location.text,
-      homeZone: _homeZone,
-      validate: (t) => WordFilter.allowed(t) ? null : WordFilter.message,
-    );
-    if (v != null) setState(() => _location.text = v);
-  }
-
-  /// Escrever o número de pessoas (mockup Ev4c): além do − / + e atalhos.
-  Future<void> _typePeople() async {
-    setState(() => _peopleEditing = true);
-    _peopleCtrl.text = '$_people';
-    _peopleCtrl.selection = TextSelection(baseOffset: 0, extentOffset: _peopleCtrl.text.length);
-    _peopleFocus.requestFocus();
-  }
-
-  void _commitPeople() {
-    final n = int.tryParse(_peopleCtrl.text.trim());
-    setState(() {
-      if (n != null && n > 0) _people = n.clamp(1, 5000);
-      _peopleEditing = false;
-    });
-  }
-
-  Future<void> _editText({
-    required String title,
-    required TextEditingController target,
-    String? hint,
-    TextInputType? keyboard,
-  }) async {
-    final c = TextEditingController(text: target.text);
-    final v = await showIslandDialog<String>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setD) {
-          final err = WordFilter.allowed(c.text) ? null : WordFilter.message;
-          return IslandAlert(
-            title: Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            content: OnbField(controller: c, hint: hint, autofocus: true, keyboardType: keyboard, error: err, onChanged: (_) => setD(() {})),
-            actions: [
-              PressScale(child: TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar'))),
-              PressScale(child: TextButton(onPressed: err == null ? () => Navigator.pop(ctx, c.text.trim()) : null, child: const Text('Guardar'))),
-            ],
-          );
-        },
-      ),
-    );
-    if (v != null) setState(() => target.text = v);
-  }
-
-  Future<void> _editPrice() async {
-    // Antes de pôr preço: ativar os pagamentos para receber o dinheiro
-    // dos bilhetes (pedido 2026-11-12). Volta aqui depois.
-    if (_price == null && !await organizerPaymentsReady()) {
-      if (!mounted) return;
-      // Conta ainda por criar (fica criada no fim): ativa-se depois.
-      if (supabase.auth.currentUser == null || ref.read(authControllerProvider.notifier).hasPendingSignup) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Para cobrar a entrada, ativa os pagamentos depois de criar o evento, em Acesso e entrada.')));
-        return;
-      }
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Para cobrar a entrada, ativa primeiro os pagamentos.')));
-      await context.push('/bilhetes/ativar');
-      if (!mounted || !await organizerPaymentsReady()) return;
-    }
-    final c = TextEditingController(text: _price == null ? '' : _price!.toStringAsFixed(_price! % 1 == 0 ? 0 : 2));
-    await _editText(title: 'Preço da entrada (€)', target: c, hint: 'Vazio = grátis', keyboard: const TextInputType.numberWithOptions(decimal: true));
-    final v = double.tryParse(c.text.replaceAll('€', '').replaceAll(',', '.').trim());
-    setState(() => _price = v == null || v <= 0 ? null : v);
-  }
+  // ----------------------------------------------------------------- build
 
   @override
   Widget build(BuildContext context) {
     final profile = ref.watch(authControllerProvider).profile;
-    if (profile == null) {
-      return const SkeletonPage(carousel: false);
-    }
+    if (profile == null) return const SkeletonPage(carousel: false);
     if (profile.role == UserRole.partner) return PartnerWelcomeScreen(initialStep: widget.initialStep);
 
-    if (!_startAnswered) {
-      return _StartChoice(
-        name: _firstName(profile),
-        saving: _saving,
-        onNow: () => setState(() => _startAnswered = true),
-        onLater: _later,
-        onExit: () => exitOnboarding(context, ref),
-      );
-    }
+    final Widget page = switch (_stage) {
+      _Stage.profile => _profilePage(),
+      _Stage.ready => _readyPage(),
+      _Stage.create => _createPage(),
+      _Stage.done => _donePage(),
+    };
+    return StepSlide(id: _stage, order: _stage.index, child: page);
+  }
 
-    final created = _createdEvent;
-    if (created != null && !_permsDone && !widget.newEvent) {
-      return PermissionsStep(role: TourRole.organizer, onDone: () => setState(() => _permsDone = true));
-    }
-    if (created != null) {
-      return _DoneView(
-        name: created.displayNames,
-        saving: _saving,
-        onGuests: () => _finish('/guests'),
-        onEvent: () => _finish('/evento'),
-      );
-    }
-
-    final kicker = '${_steps.indexOf(_current) + 1} de ${_steps.length}';
-    final cta = OnbButton(
-      label: _current == _Step.organizer ? 'Criar evento' : 'Continuar',
-      loading: _saving,
-      onPressed: _canContinue && !_saving ? () => _next(profile) : null,
-    );
-
-    switch (_current) {
-      case _Step.type:
-        final other = _eventType == EventType.other;
-        return OnbStep(
-          onBack: _back,
-          progress: _progress,
-          kicker: kicker,
-          title: 'Que evento vais criar?',
-          subtitle: other ? 'Escreve o que é, em poucas palavras.' : 'Já vem escolhido o que disseste no início.',
-          bottom: cta,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            OnbTypeGrid(selected: _type, onTap: (t) => setState(() => _type = t)),
-            if (other) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-                ),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  const Text('Que evento é?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  const SizedBox(height: 12),
-                  OnbField(
-                    controller: _otherLabel,
-                    hint: 'Ex.: Despedida de solteira',
-                    maxLength: 24,
-                    fill: AppTheme.background,
-                    autofocus: _otherLabel.text.isEmpty,
-                    error: _otherError,
-                  ),
-                  if (_otherError == null) ...[
-                    const SizedBox(height: 12),
-                    Wrap(spacing: 6, runSpacing: 6, children: [
-                      for (final s in const ['Despedida', 'Jantar', 'Reunião de família', 'Workshop', 'Inauguração'])
-                        SnappyTap(
-                          onTap: () => _otherLabel.text = s,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(999)),
-                            child: Text(s, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3A3733))),
-                          ),
-                        ),
-                    ]),
-                  ],
-                  const SizedBox(height: 12),
-                  OnbMeta(_otherError == null
-                      ? 'Escreve o que quiseres, até nomes. Aparece no Descobrir e nos convites. Máximo 24 caracteres.'
-                      : 'Podes escrever o que quiseres, incluindo nomes de pessoas.'),
-                ]),
-              ),
-            ],
-          ]),
-        );
-      case _Step.name:
-        final suggestions = _nameSuggestions(profile);
-        return OnbStep(
-          onBack: _back,
-          progress: _progress,
-          kicker: kicker,
-          title: 'Como se chama?',
-          subtitle: 'Escreve o que quiseres. É o nome que os convidados veem.',
-          bottom: cta,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            OnbField(
-              controller: _name,
-              label: 'Nome do evento',
-              maxLength: 40,
+  Widget _profilePage() => FlowPage(
+        key: const ValueKey('profile'),
+        tint: FlowTint.yellow,
+        dashOn: 2,
+        trailingLabel: 'Voltar',
+        onTrailing: () => exitOnboarding(context, ref),
+        content: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          Center(child: _PhotoPicker(bytes: _photoBytes, onTap: _pickPhoto)),
+          const SizedBox(height: 16),
+          FlowBlock(
+            label: 'Nome',
+            child: FlowField(
+              controller: _fullName,
+              hint: 'Nome e apelido',
               error: _nameError,
-              onChanged: (_) => _nameTouched = true,
+              autofillHints: const [AutofillHints.name],
+              onChanged: (_) {
+                if (_nameError != null) setState(() => _nameError = null);
+              },
             ),
-            if (suggestions.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              const OnbGroupLabel('Sugestões'),
-              const SizedBox(height: 8),
-              OnbChips(
-                items: suggestions,
-                selected: {_name.text.trim()},
-                onTap: (s) => setState(() {
-                  _name.text = s;
-                  _nameTouched = true;
-                }),
-              ),
-            ],
-          ]),
-        );
-      case _Step.when:
-        final days = _date?.difference(DateTime.now()).inDays;
-        return OnbStep(
-          onBack: _back,
-          progress: _progress,
-          kicker: kicker,
-          title: 'Quando e onde?',
-          subtitle: 'Se ainda não sabes a data, avança.',
-          skipLabel: 'Ainda não sei',
-          onSkip: () => setState(() {
-            _date = null;
-            _index++;
-          }),
-          bottom: cta,
+          ),
+          const SizedBox(height: 12),
+          FlowBlock(
+            label: 'Nome de utilizador',
+            child: FlowField(
+              controller: _username,
+              prefix: '@',
+              hint: 'ana.silva',
+              error: _usernameError,
+              okText: _usernameError == null ? _usernameOk : null,
+              onChanged: _onUsernameChanged,
+            ),
+          ),
+          const SizedBox(height: 12),
+          FlowBlock(
+            label: 'Bio (opcional)',
+            child: FlowField(
+              controller: _bio,
+              hint: 'Uma frase sobre ti',
+              error: WordFilter.allowed(_bio.text) ? null : WordFilter.message,
+            ),
+          ),
+        ]),
+        title: 'O teu perfil',
+        cta: FlowCta(label: 'Continuar', loading: _saving, onPressed: _profileReady && !_saving ? _saveProfile : null),
+      );
+
+  Widget _readyPage() => FlowPage(
+        key: const ValueKey('ready'),
+        tint: FlowTint.green,
+        dashOn: 2,
+        centerContent: true,
+        content: const FlowStarHalo(Estrela.feliz),
+        title: _firstName.isEmpty ? 'Tudo pronto!' : 'Tudo pronto,\n$_firstName!',
+        cta: FlowCta(label: 'Começar', loading: _saving, onPressed: _saving ? null : () => _explore()),
+        footer: FlowFooterLink(
+          prefix: 'Já tens um em mente?',
+          action: 'Criar o meu evento',
+          onTap: _saving ? null : () => _go(_Stage.create),
+        ),
+      );
+
+  Widget _createPage() {
+    final other = _type == EventType.other;
+    return FlowPage(
+      key: const ValueKey('create'),
+      brand: 'Novo evento',
+      tint: FlowTint.blue,
+      dashCount: 2,
+      dashOn: 0,
+      trailingLabel: 'Fechar',
+      onTrailing: _saving ? null : _closeCreate,
+      content: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+        FlowBlock(
+          label: 'Tipo',
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            OnbRows(rows: [
-              ('Data', _date == null ? 'Escolher' : '${formatShortDatePt(_date!).replaceFirstMapped(RegExp(r' [A-Z]\w+$'), (m) => m[0]!.toLowerCase())} ${_date!.year}', _pickDate),
-              ('Onde', _location.text.trim().isEmpty ? 'Escolher' : _location.text.trim(),
-                  _pickPlace),
-            ]),
-            if (days != null && days >= 0) ...[
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: const Color(0xFFE6EDE1), borderRadius: BorderRadius.circular(999)),
-                  child: Text('Faltam ${days + 1} dias',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF3F7A4F))),
-                ),
-              ),
-            ],
-            if (IntroAnswers.city.isNotEmpty) ...[const SizedBox(height: 12), const OnbMeta('A zona vem da tua conta.')],
-          ]),
-        );
-      case _Step.people:
-        return OnbStep(
-          onBack: _back,
-          progress: _progress,
-          kicker: kicker,
-          title: 'Quantas pessoas, no máximo?',
-          subtitle: 'Uma estimativa chega.',
-          bottom: cta,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-              child: Row(children: [
-                _RoundStep(
-                  path: 'M5 12h14',
-                  dark: false,
-                  onTap: _people > 1 ? () => setState(() {
-                    _peopleEditing = false;
-                    _people = (_people - (_people > 20 ? 10 : 1)).clamp(1, 5000);
-                  }) : null,
-                ),
-                Expanded(
-                  child: Column(children: [
-                    // Toca no número para o escrever (pedido 2026-11-14).
-                    _peopleEditing
-                        ? IntrinsicWidth(
-                            child: TextField(
-                              controller: _peopleCtrl,
-                              focusNode: _peopleFocus,
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
-                              cursorColor: AppTheme.ink,
-                              onSubmitted: (_) => _commitPeople(),
-                              onTapOutside: (_) {
-                                _peopleFocus.unfocus();
-                                _commitPeople();
-                              },
-                              style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
-                              decoration: const InputDecoration(
-                                isCollapsed: true,
-                                filled: false,
-                                contentPadding: EdgeInsets.fromLTRB(6, 0, 6, 2),
-                                border: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF4F6B4A), width: 2)),
-                                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF4F6B4A), width: 2)),
-                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF4F6B4A), width: 2)),
-                              ),
-                            ),
-                          )
-                        : SnappyTap(
-                            onTap: _typePeople,
-                            child: Container(
-                              padding: const EdgeInsets.fromLTRB(6, 0, 6, 2),
-                              decoration: const BoxDecoration(
-                                border: Border(bottom: BorderSide(color: Color(0xFFD8D3C9), width: 2)),
-                              ),
-                              child: Text('$_people',
-                                  style: const TextStyle(fontSize: 40, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                            ),
-                          ),
-                    const SizedBox(height: 2),
-                    const Text('pessoas no máximo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
-                  ]),
-                ),
-                _RoundStep(
-                  path: LineIcon.plus,
-                  dark: true,
-                  onTap: () => setState(() {
-                    _peopleEditing = false;
-                    _people = (_people + (_people >= 20 ? 10 : 1)).clamp(1, 5000);
-                  }),
-                ),
-              ]),
-            ),
-            const SizedBox(height: 12),
-            OnbChips(
-              items: [for (final n in _peopleChips) n == 300 ? '300+' : '$n'],
-              selected: {_people == 300 ? '300+' : '$_people'},
-              onTap: (v) => setState(() {
-                _peopleEditing = false;
-                _people = int.parse(v.replaceAll('+', ''));
-              }),
-            ),
-            const SizedBox(height: 12),
-            const OnbMeta('Toca no número para o escreveres. É o limite de convidados e de entradas; podes mudar mais tarde.'),
-          ]),
-        );
-      case _Step.access:
-        return OnbStep(
-          onBack: _back,
-          progress: _progress,
-          kicker: kicker,
-          title: 'Quem pode ir?',
-          subtitle: 'Só em festas, noites, concertos, festivais, empresas e «Outro».',
-          bottom: cta,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            OnbOption(
-              title: 'Só convidados',
-              subtitle: 'Entra quem tiver o teu link.',
-              selected: !_isPublic,
-              onTap: () => setState(() => _isPublic = false),
-            ),
-            const SizedBox(height: 12),
-            OnbOption(
-              title: 'Aberto a todos',
-              subtitle: 'Aparece no Descobrir. Limite: as $_people pessoas que puseste.',
-              selected: _isPublic,
-              onTap: () => setState(() => _isPublic = true),
-            ),
-            if (_isPublic) ...[
-              const SizedBox(height: 12),
-              OnbRows(rows: [
-                ('Entrada', _price == null ? 'Grátis' : '${_price!.toStringAsFixed(_price! % 1 == 0 ? 0 : 2)} €', _editPrice),
-              ]),
-              const SizedBox(height: 12),
-              const OnbMeta('Podes pôr preço na entrada.'),
-            ],
-          ]),
-        );
-      case _Step.organizer:
-        return OnbStep(
-          onBack: _back,
-          progress: _progress,
-          kicker: kicker,
-          title: 'Organizas com alguém?',
-          subtitle: 'Partilham convidados, orçamento e conversas.',
-          bottom: cta,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
-              child: Column(children: [
-                Container(
-                  constraints: const BoxConstraints(minHeight: 64),
-                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFD9D9D9)))),
-                  child: Row(children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(color: Color(0xFFE7D9C3), shape: BoxShape.circle),
-                      alignment: Alignment.center,
-                      child: Text(_firstName(profile).isEmpty ? '?' : _firstName(profile)[0].toUpperCase(),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            for (var r = 0; r < _typeRows.length; r++) ...[
+              if (r > 0) const SizedBox(height: 8),
+              Row(children: [
+                for (var k = 0; k < _typeRows[r].length; k++) ...[
+                  if (k > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: _TypeTile(
+                      type: _typeRows[r][k],
+                      selected: _type == _typeRows[r][k],
+                      onTap: () => setState(() => _type = _typeRows[r][k]),
                     ),
-                    const SizedBox(width: 12),
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(_firstName(profile), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      const Text('Tu', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
-                    ]),
-                  ]),
-                ),
-                SnappyTap(
-                  onTap: () => setState(() => _inviteOrganizer = !_inviteOrganizer),
-                  child: Container(
-                    constraints: const BoxConstraints(minHeight: 64),
-                    child: Row(children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                            color: _inviteOrganizer ? const Color(0xFF4F6B4A) : AppTheme.ink, shape: BoxShape.circle),
-                        alignment: Alignment.center,
-                        child: LineIcon(_inviteOrganizer ? LineIcon.check : LineIcon.plus, size: 20, color: Colors.white),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          const Text('Adicionar organizador',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                          Text(
-                            _inviteOrganizer
-                                ? 'Ao criar, abrimos o link para lhe enviares.'
-                                : 'O teu par, família ou wedding planner. Recebe um link.',
-                            style: const TextStyle(fontSize: 13, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.inkMuted),
-                          ),
-                        ]),
-                      ),
-                    ]),
                   ),
-                ),
+                ],
               ]),
-            ),
-            const SizedBox(height: 12),
-            const OnbMeta('Também podes fazer isto depois, nas definições do evento.'),
+            ],
+            if (other) ...[
+              const SizedBox(height: 8),
+              FlowField(
+                controller: _otherLabel,
+                hint: 'Que evento é? Ex.: Despedida',
+                autofocus: _otherLabel.text.isEmpty,
+                error: _otherError,
+              ),
+            ],
           ]),
-        );
-    }
+        ),
+        const SizedBox(height: 12),
+        FlowBlock(
+          label: 'Como vai ser?',
+          child: FlowPillGrid(
+            items: _formats.keys.toList(),
+            selected: {?_format},
+            onTap: (v) => setState(() => _format = _format == v ? null : v),
+          ),
+        ),
+        const SizedBox(height: 12),
+        FlowBlock(
+          label: 'Nome',
+          child: FlowField(controller: _name, hint: 'Os 30 da Rita', error: _nameFieldError),
+        ),
+        const SizedBox(height: 12),
+        FlowBlock(
+          label: 'Quando',
+          child: Row(children: [
+            Expanded(
+              child: _PickPill(
+                icon: Hi.calendar,
+                label: _date == null
+                    ? 'Dia'
+                    : '${formatShortDatePt(_date!).replaceFirstMapped(RegExp(r' [A-Z]\w+$'), (m) => m[0]!.toLowerCase())} ${_date!.year}',
+                onTap: _pickDate,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _PickPill(
+                icon: Hi.clock,
+                label: _time == null
+                    ? 'Hora'
+                    : '${_time!.hour.toString().padLeft(2, '0')}:${_time!.minute.toString().padLeft(2, '0')}',
+                onTap: _pickTime,
+              ),
+            ),
+          ]),
+        ),
+      ]),
+      title: 'Que evento\nvais criar?',
+      cta: FlowCta(label: 'Confirmar evento', loading: _saving, onPressed: _canCreate && !_saving ? _create : null),
+      footer: FlowFooterLink(prefix: 'Recebeste um convite?', action: 'Usar código', onTap: _saving ? null : _useCode),
+    );
+  }
+
+  Widget _donePage() => FlowPage(
+        key: const ValueKey('done'),
+      brand: 'Novo evento',
+        tint: FlowTint.green,
+        dashCount: 2,
+        dashOn: 1,
+        trailingLabel: 'Fechar',
+        onTrailing: _saving ? null : () => _finish('/evento'),
+        centerContent: true,
+        content: const FlowStarHalo(Estrela.parabens),
+        title: 'Evento feito!',
+        cta: FlowCta(label: 'Convidar', loading: _saving, onPressed: _saving ? null : _shareInvite),
+        footer: FlowFooterLink(prefix: 'Mais tarde?', action: 'Ver o painel', onTap: _saving ? null : () => _finish('/evento')),
+      );
+}
+
+/// Mosaico do tipo (72, cantos 22, ícone 22 + nome 12); escolhido a preto.
+class _TypeTile extends StatelessWidget {
+  final EventType type;
+  final bool selected;
+  final VoidCallback onTap;
+  const _TypeTile({required this.type, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = selected ? Colors.white : AppTheme.ink;
+    final icon = onbTypeIcons[type];
+    return SnappyTap(
+      onTap: onTap,
+      semanticLabel: _typeLabel(type),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        height: 72,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: ShapeDecoration(
+          color: selected ? AppTheme.ink : Colors.white,
+          shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22)),
+        ),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          if (icon != null) LineIcon(icon.$1, circles: icon.$2, size: 22, stroke: 1.8, color: fg),
+          const SizedBox(height: 6),
+          Text(_typeLabel(type),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, height: 1.1, fontWeight: FontWeight.w700, color: fg)),
+        ]),
+      ),
+    );
   }
 }
 
-/// Botão redondo 44 do contador de pessoas (− contorno, + preto).
-class _RoundStep extends StatelessWidget {
-  final String path;
-  final bool dark;
-  final VoidCallback? onTap;
-  const _RoundStep({required this.path, required this.dark, this.onTap});
+/// Pílula branca 52 com ícone, texto e a seta («Dia», «Hora»).
+class _PickPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _PickPill({required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) => SnappyTap(
         onTap: onTap,
-        child: Opacity(
-          opacity: onTap == null ? 0.35 : 1,
-          child: Container(
-            width: 44,
-            height: 44,
-            // Botão redondo preto, ícone branco (DESIGN.md §2, 2026-11-21).
-            decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-            alignment: Alignment.center,
-            child: LineIcon(path, size: 20, color: Colors.white, stroke: 2.4),
-          ),
+        semanticLabel: label,
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.fromLTRB(18, 0, 14, 0),
+          decoration: const ShapeDecoration(color: Colors.white, shape: StadiumBorder()),
+          child: Row(children: [
+            Icon(icon, size: 18, color: AppTheme.ink),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+            ),
+            const Icon(Hi.chevronRight, size: 16, color: AppTheme.ink),
+          ]),
         ),
       );
 }
 
-/// Criar já ou mais tarde (a conta "Utilizador" não tem de criar logo
-/// um evento).
-class _StartChoice extends StatelessWidget {
-  final String name;
-  final bool saving;
-  final VoidCallback onNow;
-  final VoidCallback onLater;
-  final VoidCallback onExit;
-
-  const _StartChoice({required this.name, required this.saving, required this.onNow, required this.onLater, required this.onExit});
+/// Foto do perfil (opcional): círculo 104 tracejado com «Foto» e o «+»
+/// preto 40; com foto, mostra-a.
+class _PhotoPicker extends StatelessWidget {
+  final Uint8List? bytes;
+  final VoidCallback onTap;
+  const _PhotoPicker({required this.bytes, required this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    return OnbStep(
-      onBack: onExit,
-      progress: 0.2,
-      title: 'Olá, $name! Queres criar um evento já?',
-      subtitle: 'Podes criar agora ou entrar primeiro e ver os eventos públicos. Crias um evento quando quiseres no separador Eventos.',
-      bottom: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        OnbButton(label: 'Criar um evento agora', onPressed: saving ? null : onNow),
-        const SizedBox(height: 10),
-        OnbButton(label: 'Mais tarde', secondary: true, loading: saving, onPressed: onLater),
-      ]),
-      child: const SizedBox.shrink(),
-    );
-  }
-}
-
-/// "Parabéns! 🎉" (mockup Pronto).
-class _DoneView extends StatelessWidget {
-  final String name;
-  final bool saving;
-  final VoidCallback onGuests;
-  final VoidCallback onEvent;
-  const _DoneView({required this.name, required this.saving, required this.onGuests, required this.onEvent});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 24),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const SizedBox(height: 44, child: OnbProgress(value: 1)),
-            Expanded(
-              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const EstrelaMascot(Estrela.parabens, size: 150),
-                const SizedBox(height: 20),
-                const Text('Parabéns! 🎉',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 35, height: 1.15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                const SizedBox(height: 16),
-                Text('$name está criado. Agora é convidar.',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, height: 1.45, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
-              ]),
+  Widget build(BuildContext context) => SnappyTap(
+        onTap: onTap,
+        semanticLabel: 'Escolher foto',
+        child: SizedBox(
+          width: 104,
+          height: 104,
+          child: Stack(children: [
+            Positioned.fill(
+              child: bytes != null
+                  ? ClipOval(child: Image.memory(bytes!, fit: BoxFit.cover))
+                  : CustomPaint(
+                      painter: _DashedCircle(),
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(color: FlowTint.halo, shape: BoxShape.circle),
+                        child: Center(
+                          child: Text('Foto',
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+                        ),
+                      ),
+                    ),
             ),
-            OnbButton(label: 'Adicionar convidados', loading: saving, onPressed: onGuests),
-            const SizedBox(height: 10),
-            OnbButton(label: 'Ver o evento', secondary: true, onPressed: saving ? null : onEvent),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
+                alignment: Alignment.center,
+                child: Icon(bytes != null ? Hi.pencil : Hi.plus, size: 20, color: Colors.white),
+              ),
+            ),
           ]),
         ),
-      ),
-    );
+      );
+}
+
+class _DashedCircle extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppTheme.inkMuted
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final r = size.width / 2 - 0.75;
+    final c = Offset(size.width / 2, size.height / 2);
+    const dashes = 36;
+    const sweep = 2 * math.pi / dashes;
+    for (var i = 0; i < dashes; i++) {
+      canvas.drawArc(Rect.fromCircle(center: c, radius: r), i * sweep, sweep * 0.55, false, paint);
+    }
   }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

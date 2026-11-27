@@ -1,4 +1,3 @@
-import '../../../shared/widgets/app_progress.dart';
 import '../../../shared/widgets/estrela.dart';
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
@@ -508,15 +507,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              if (a.step case final st? when st.$2 > 1) ...[
-                Row(children: [
-                  Expanded(child: AppProgressBar(value: st.$1 / st.$2, height: 10, track: const Color(0xFFD9D9D9))),
-                  const SizedBox(width: 10),
-                  Text('${st.$1} DE ${st.$2}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                ]),
-                const SizedBox(height: 16),
-              ],
+              // Sem barra de progresso nos popups de pagar (pedido 2026-11-27).
               Row(children: [
                 if (_canGoBack) ...[
                   _SheetRound(

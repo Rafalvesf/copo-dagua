@@ -132,8 +132,8 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        // Sem barra de progresso nos popups de pagar (pedido 2026-11-27).
         StepSheetHead(
-          step: widget.step,
           title: 'Queres juntar alguma coisa?',
           subtitle: widget.subtitle ?? 'Aceitaste a proposta. ${widget.partnerName} tem extras para o teu pedido.',
         ),

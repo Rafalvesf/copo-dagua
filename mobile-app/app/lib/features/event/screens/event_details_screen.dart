@@ -9,14 +9,14 @@ import '../../events/widgets/event_actions_sheet.dart';
 import '../../settings/screens/settings_screen.dart' show EditEventPage, PanelPage;
 import '../widgets/event_program_section.dart';
 import '../widgets/organizer_suggestions.dart';
+import '../widgets/fresh_event_panel.dart';
 import '../../guest_home/widgets/guest_dashboard.dart' show DashSummary, DashNow, DashAllDone, DashTasksEmpty, DashPhotos, DashButton36, dashWhenAt;
 import '../../../shared/widgets/page_kit.dart' show KitCaps, KitGroup, KitRow, KitTag, KitTagKind, LockedTopBar;
 import '../../../core/events/event_pass.dart' show GuestSection, GuestSections, guestSectionsProvider;
 import '../../../shared/text_case.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../shared/widgets/alert_outline.dart';
-import '../../../shared/widgets/partner_suggestion_card.dart';
-import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show softCard, V2Avatar;
+import 'package:copo_dagua_app/shared/widgets/v2_kit.dart' show V2Avatar;
 import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/reduced_top_bar.dart';
 import 'package:flutter/services.dart';
@@ -24,23 +24,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../payments/open_payment.dart';
 import '../../payments/booking_extras_sheet.dart' show payBookingFlow;
 import '../../guest_home/widgets/choose_menu_sheet.dart' show chooseMenuAndPay;
 import '../../../core/guest_home/event_tables.dart' show EventTable, myEventTablesProvider;
-import '../../tasks/task_actions.dart';
 import '../../../core/budget/budget_controller.dart';
-import '../../../core/budget/expense_controller.dart';
 import '../../../core/home/home_providers.dart';
 import '../../../core/models/models.dart';
-import '../../../core/tasks/task_engine_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/event/date_format_pt.dart';
 import '../../../core/event/event_controller.dart';
 import '../../../core/event/menu_style.dart';
 import '../../../core/event/organizers.dart';
 import '../../guests/screens/guests_list_screen.dart' show shareEventInvite;
-import '../../../shared/widgets/sticker_icon.dart';
 import '../../../shared/widgets/scroll_aware_back_button.dart';
 import '../../../shared/widgets/floating_bottom_nav.dart';
 import '../../../shared/widgets/gradient_scaffold.dart';
@@ -48,7 +43,6 @@ import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/photo_adjust_screen.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/money.dart';
-import '../../../shared/widgets/snap_carousel.dart';
 import '../../../core/gallery/gallery_providers.dart';
 import '../../../core/guests/guest_controller.dart';
 import '../../../core/seating/seating_controller.dart';
@@ -56,13 +50,10 @@ import '../../../core/supabase/supabase_config.dart';
 import '../../../core/events/events_providers.dart' show joinRequestsProvider, JoinRequest;
 import '../../../shared/widgets/island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
-import '../../../core/gifts/gift_shop.dart' show giftListProvider, GiftItem;
-import '../../../core/events/tickets.dart' show ticketSummaryProvider;
 import '../../../core/partners/promotions.dart' show featuredForMeProvider, FeaturedPick, trackPromotionClick;
 import '../../../core/partners/partner_providers.dart' show partnerByIdProvider;
 import '../../partners/screens/partner_detail_screen.dart' show PartnerDetailScreen;
 import '../../partners/widgets/partner_cards.dart' show PartnerCarousel;
-import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 import '../../../shared/leave.dart';
 
@@ -170,10 +161,12 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
         }
       }
     }
-    if (mounted) setState(() {
-      _editing = false;
-      _saving = false;
-    });
+    if (mounted) {
+      setState(() {
+        _editing = false;
+        _saving = false;
+      });
+    }
   }
 
   @override
@@ -493,6 +486,29 @@ _Look _look(BuildContext context, WidgetRef ref) {
   return _Look(color: c.color, on: c.on, accent: c.accent, tint: c.tint, comp: c.comp, tagline: d.tagline, motif: d.motif, doodles: d.doodles);
 }
 
+/// Um evento «acabado de criar»: tudo já carregado e sem convidados, sem
+/// pedidos para entrar, sem reservas nem propostas (as recusadas não
+/// contam), e ainda não passou nem é hoje. Enquanto alguma coisa carrega,
+/// fica o painel de sempre.
+bool _isFreshEvent(WidgetRef ref, Event event) {
+  final eventDate = event.eventDate;
+  if (eventDate != null) {
+    final now = DateTime.now();
+    final days = DateTime(eventDate.year, eventDate.month, eventDate.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+    if (days <= 0) return false;
+  }
+  final guests = ref.watch(guestsControllerProvider);
+  if (guests.loading || guests.guests.isNotEmpty) return false;
+  final bookings = ref.watch(coupleBookingsProvider).value;
+  if (bookings == null) return false;
+  if (bookings.any((b) => b.eventId == event.id && b.status != BookingStatus.recusado)) return false;
+  final proposals = ref.watch(pendingProposalsProvider).value;
+  if (proposals == null || proposals.any((p) => p.eventId == event.id)) return false;
+  final requests = ref.watch(joinRequestsProvider(event.id)).value;
+  if (requests == null || requests.isNotEmpty) return false;
+  return true;
+}
+
 /// O conteúdo da página do evento num estilo.
 class _PageBody extends ConsumerWidget {
   final Event event;
@@ -508,6 +524,22 @@ class _PageBody extends ConsumerWidget {
     // próximos passos, números, convite, sugestões, reservas e gerir.
     // O estilo "Clássico" usa o topo minimalista; os outros mantêm o seu.
     final classic = layout == MenuLayout.classic;
+    // Evento acabado de criar (mockup «Criar evento 3», 2026-11-27): só o
+    // que falta, uma ação de cada vez, até haver convidados ou reservas.
+    if (_isFreshEvent(ref, event)) {
+      final fresh = FreshEventPanel(
+        event: event,
+        onCover: () => _pickCoverPhoto(context, ref),
+        onShare: () => shareEventInvite(context, event),
+        onMore: () => showEventActionsSheet(context, ref,
+            eventId: event.id,
+            name: capFirst(event.displayNames),
+            isOwner: event.ownerId == ref.read(authControllerProvider).profile?.id),
+      );
+      const freshPadding = EdgeInsets.only(bottom: 140);
+      if (!scrollable) return Padding(padding: freshPadding, child: fresh);
+      return ListView(controller: controller, padding: freshPadding, children: [fresh]);
+    }
     final children = <Widget>[
       if (classic)
         _MinimalTop(event: event)
@@ -1032,43 +1064,6 @@ bool _routeAllowed(String route, OrganizerPerms perms) {
   return p == null || perms.can(p);
 }
 
-class _QuickLinksRow extends ConsumerWidget {
-  const _QuickLinksRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
-    // Esconde os atalhos das secções sem permissão (o dono vê tudo).
-    final items = [for (final s in _shortcuts(ref)) if (_routeAllowed(s.route, perms)) s];
-    if (items.isEmpty) return const SizedBox.shrink();
-    final look = _look(context, ref);
-    const bg = [0, 1, 1, 0, 0, 1];
-    Widget tile(int i) => _QuickLinkTile(
-          icon: items[i].icon,
-          label: items[i].label,
-          subtitle: items[i].subtitle,
-          color: bg[i % bg.length] == 0 ? look.tint : look.comp,
-          index: i,
-          accent: look.accent,
-          onTap: () => context.push(items[i].route),
-        );
-    return Column(
-      children: [
-        for (var r = 0; r * 2 < items.length; r++) ...[
-          if (r > 0) const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: tile(r * 2)),
-              const SizedBox(width: 12),
-              if (r * 2 + 1 < items.length) Expanded(child: tile(r * 2 + 1)) else const Expanded(child: SizedBox()),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-}
-
 /// Categorias marcadas como já tratadas ou sem necessidade
 /// (`wedding_service_preferences`).
 final _servicesHandledProvider = FutureProvider<int>((ref) async {
@@ -1081,536 +1076,6 @@ final _servicesHandledProvider = FutureProvider<int>((ref) async {
       .neq('preference', 'needed');
   return (rows as List).length;
 });
-
-class _QuickLinkTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final Color color;
-  final Color accent;
-  final int index;
-  final VoidCallback onTap;
-
-  const _QuickLinkTile({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.color,
-    required this.accent,
-    required this.index,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Canvas "Menu · Casamento": ícone num autocolante branco inclinado.
-    const tilts = [-6.0, 5.0, 4.0, -5.0, -3.0, 6.0];
-    final tilt = tilts[index % tilts.length] * 3.14159 / 180;
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        height: 116,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(22), boxShadow: _softShadow),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Transform.rotate(
-                    angle: tilt,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-                      ),
-                      child: Icon(icon, size: 22, color: accent),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.ink),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Botão de partilha do casamento — pedido explícito do utilizador:
-/// "o botao de partilha para o casamento deve aparecer entre os o
-/// orcamento gasto e parceiros reservados [_FinancialSummaryRow] e o
-/// orcamento, convidados e lugaares [_QuickLinksRow]". Reaproveita
-/// [InviteShareSheet], já construído em `guests_list_screen.dart`
-/// (link de convite + código do casal) — mesmo conteúdo, só um segundo
-/// ponto de entrada, sem duplicar lógica.
-class _ShareEventButton extends StatelessWidget {
-  final Event event;
-  final Color color;
-  final Color on;
-
-  const _ShareEventButton({required this.event, required this.color, required this.on});
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: () => shareEventInvite(context, event),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6))],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Dois copos a brindar — o "tchin tchin".
-            Icon(Hi.beaker, size: 22, color: on),
-            const SizedBox(width: 10),
-            Text(
-              'Partilhar convite',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: on),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Top-3 tarefas recomendadas pelo motor de tarefas
-/// (`core/tasks/task_engine_controller.dart`) — substitui a antiga
-/// leitura direta de `checklist_items`. Pedido explícito do
-/// utilizador (2026-09-01): nunca mostrar dezenas de tarefas, só as
-/// que o motor já promoveu a `ACTIVE`.
-class _UpcomingTasksSection extends ConsumerWidget {
-  const _UpcomingTasksSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(taskEngineControllerProvider);
-    final top = state.systemActive.take(3).toList();
-    final accent = _look(context, ref).accent;
-
-    if (top.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: softCard().boxShadow,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        child: const Text('Sem tarefas pendentes — bom trabalho! 🎉'),
-      );
-    }
-
-    return Column(
-      children: [
-        for (final (index, task) in top.indexed) ...[
-          _TaskRow(
-            title: task.title,
-            // Menos texto (design): só a primeira frase.
-            description: task.description?.split(RegExp(r'(?<=[.!?])\s')).first.trim(),
-            icon: taskIcon(task.category),
-            accent: accent,
-            index: index,
-            onTap: () => openTask(context, ref, task),
-          ),
-          if (index != top.length - 1) const SizedBox(height: 10),
-        ],
-      ],
-    );
-  }
-}
-
-class _TaskRow extends StatelessWidget {
-  final String title;
-  final String? description;
-  final IconData icon;
-  final Color accent;
-  final int index;
-  final VoidCallback onTap;
-
-  const _TaskRow({
-    required this.title,
-    this.description,
-    required this.icon,
-    required this.accent,
-    required this.index,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SnappyTap(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: _softShadow,
-        ),
-        child: Row(
-          children: [
-            // Ícone "autocolante" dos menus novos (canvas 2026-10-18).
-            StickerIcon(icon, color: accent, turns: StickerIcon.tilt(index)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                  ),
-                  if (description != null) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      description!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const Icon(Hi.chevronRight, size: 18, color: Color(0xFF6E6A63)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Orçamento gasto e parceiros reservados — como no design: cartões de
-/// cor, rótulo em cima, valor, e uma linha por baixo.
-class _FinancialSummaryRow extends ConsumerWidget {
-  const _FinancialSummaryRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final budget = ref.watch(budgetControllerProvider).budget;
-    final confirmed = ref.watch(coupleBookingsProvider).maybeWhen(
-          // Reservado = sinal pago (confirmado) ou serviço já feito
-          // (concluído); antes só contava "confirmado" e as reservas
-          // concluídas davam 0 (2026-10-19).
-          data: (list) => list
-              .where((b) => b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido)
-              .toList(),
-          orElse: () => const <CoupleBooking>[],
-        );
-    final look = _look(context, ref);
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _SummaryTile(
-              label: 'Orçamento gasto',
-              value: budget == null ? '—' : euros(budget.spent),
-              detail: budget == null || budget.total == 0 ? 'Orçamento por definir' : 'de ${euros(budget.total)}',
-              color: look.tint,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _SummaryTile(
-              label: 'Parceiros reservados',
-              // Um parceiro com várias reservas conta uma vez.
-              value: '${confirmed.map((b) => b.partnerName).toSet().length}',
-              detail: confirmed.isEmpty
-                  ? 'Nenhum ainda'
-                  : confirmed.map((b) => b.partnerName).toSet().join(', '),
-              color: look.comp,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final String detail;
-  final Color color;
-
-  const _SummaryTile({
-    required this.label,
-    required this.value,
-    required this.detail,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20), boxShadow: _softShadow),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: AppTheme.ink)),
-          const SizedBox(height: 4),
-          Text(
-            detail,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppTheme.inkMuted, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Despesas não pagas com prazo próximo — "Pagamentos próximos" no
-/// estilo do Orçamento (canvas 2026-10-18): um cartão rosa por
-/// pagamento, com a data num quadrado branco inclinado.
-class _UpcomingPaymentsCard extends ConsumerWidget {
-  const _UpcomingPaymentsCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pending = ref.watch(expenseControllerProvider).pending;
-    // Também os sinais/restantes das reservas, com o valor que o casal paga
-    // (com comissão), e um toque abre logo o pagamento — 2026-10-19.
-    final orgFee = ref.watch(organizerFeeConfigProvider).value ?? const FeeConfig();
-    final bookings = ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[];
-    final bookingDue = <(Expense, String)>[
-      for (final b in bookings.where((b) => b.status != BookingStatus.recusado)) ...[
-        if (b.pendingDepositPaymentId != null)
-          (
-            Expense(
-              id: 'booking:${b.id}:deposit',
-              eventId: b.eventId,
-              // Restaurantes (e outras categorias sem sinal, 191): paga-se tudo
-            // de uma vez — não há sinal.
-            title: '${b.depositIsFull ? 'Pagamento' : 'Sinal'} · ${b.partnerName}',
-              amount: amountWithCommission(b.depositAmount ?? 0, orgFee.effectivePct(b.amount)),
-              dueDate: b.pendingDepositDueAt ?? DateTime.now(),
-            ),
-            b.pendingDepositPaymentId!,
-          ),
-        if (b.pendingFinalPaymentId != null)
-          (
-            Expense(
-              id: 'booking:${b.id}:final',
-              eventId: b.eventId,
-              title: 'Restante · ${b.partnerName}',
-              amount: amountWithCommission(b.finalPaymentAmount ?? 0, orgFee.effectivePct(b.amount)),
-              dueDate: b.finalPaymentDueAt ?? b.serviceDate,
-            ),
-            b.pendingFinalPaymentId!,
-          ),
-      ],
-    ];
-    final payIds = {for (final (e, id) in bookingDue) e.id: id};
-    final withDueDate = [
-      ...pending.where((e) => e.dueDate != null),
-      for (final (e, _) in bookingDue) e,
-    ]..sort((a, b) => a.dueDate!.compareTo(b.dueDate!));
-    final soon = withDueDate.take(3).toList();
-    final look = _look(context, ref);
-
-    if (soon.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const Text('Pagamentos próximos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              const Spacer(),
-              SnappyTap(
-                onTap: () => context.push('/budget'),
-                child: Text(
-                  'Ver todos',
-                  style: TextStyle(color: look.accent, fontWeight: FontWeight.w700, fontSize: AppFontSize.md),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          for (final (i, expense) in soon.indexed) ...[
-            if (i > 0) const SizedBox(height: 10),
-            SnappyTap(
-              onTap: () => payIds[expense.id] != null
-                  ? openPaymentFlow(context, ref, payIds[expense.id]!)
-                  : context.push('/budget'),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF6E3DF),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: _softShadow,
-                ),
-                child: Row(
-                  children: [
-                    DateSticker(date: expense.dueDate!, turns: StickerIcon.tilt(i)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(expense.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                          const SizedBox(height: 2),
-                          const Text('Pendente · toca para pagar', style: TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(euros(expense.amount, cents: payIds.containsKey(expense.id)),
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Reservas do casal (parceiros contratados).
-class _BookingsSection extends ConsumerWidget {
-  const _BookingsSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bookingsAsync = ref.watch(coupleBookingsProvider);
-    final look = _look(context, ref);
-
-    // Canvas "Menu · Casamento": título como "Próximas tarefas", "Ver
-    // todas" na cor do evento e um cartão branco com cada parceiro
-    // (logótipo ou iniciais, nome, categoria e valor).
-    return bookingsAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (err, st) => const SizedBox.shrink(),
-      data: (bookings) {
-        final live = bookings.where((b) => b.status != BookingStatus.recusado).toList();
-        if (live.isEmpty) return const SizedBox.shrink();
-        return _Section(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                const Text('Reservas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                const Spacer(),
-                SnappyTap(
-                  onTap: () => context.push('/bookings'),
-                  child: Text(
-                    'Ver todas',
-                    style: const TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w800, fontSize: AppFontSize.md),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SnappyTap(
-              onTap: () => context.push('/bookings'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: _softShadow,
-                ),
-                child: Column(
-                  children: [
-                    for (final (i, booking) in live.indexed)
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          border: i == 0 ? null : const Border(top: BorderSide(color: Color(0xFFF0ECE4))),
-                        ),
-                        child: Row(
-                          children: [
-                            StickerIcon(_categoryIcon(booking.category), color: look.accent, turns: StickerIcon.tilt(i)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(booking.partnerName, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                  if (booking.category?.isNotEmpty == true)
-                                    Text(booking.category!, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 12, color: AppTheme.inkMuted)),
-                                ],
-                              ),
-                            ),
-                            _StatusPill(booking.status),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ));
-      },
-    );
-  }
-
-  /// Ícone por categoria do parceiro (canvas: casa, máquina, nota…).
-  static IconData _categoryIcon(String? category) {
-    final c = category?.toLowerCase() ?? '';
-    if (c.contains('foto') || c.contains('víde')) return Hi.camera;
-    if (c.contains('músic') || c.contains('dj')) return Hi.musicalNote;
-    if (c.contains('som') || c.contains('luz')) return Hi.microphone;
-    if (c.contains('flor') || c.contains('decor')) return Hi.sparkles;
-    if (c.contains('bolo') || c.contains('doce') || c.contains('pastel')) return Hi.cake;
-    if (c.contains('cater') || c.contains('jantar') || c.contains('bebida') || c.contains('bar')) return Hi.beaker;
-    if (c.contains('espaç') || c.contains('quinta') || c.contains('venue')) return Hi.home;
-    if (c.contains('aloj') || c.contains('hotel')) return Hi.homeModern;
-    if (c.contains('transp')) return Hi.truck;
-    return Hi.sparkles;
-  }
-}
 
 /// Estado "a carregar" do separador Casamento (canvas): a forma do cartão
 /// do casal e dos quadrados, a pulsar, com a navbar já no sítio.
@@ -2329,8 +1794,6 @@ class _Grid extends StatelessWidget {
 
 const _cardBorder = Color(0xFFDCD8CE);
 const _green = Color(0xFF4F6B4A);
-const _greenDark = Color(0xFF2F4A2C);
-
 BoxDecoration _card({double radius = 22}) => BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(radius),
@@ -2378,340 +1841,6 @@ List<(Expense, String?)> _duePayments(WidgetRef ref) {
   return out;
 }
 
-class _TodoItem {
-  final IconData icon;
-  final Color tint;
-  final Color ink;
-  final String title;
-  final String subtitle;
-  final bool urgent;
-  final String action;
-  final bool primary;
-  final void Function(BuildContext context, WidgetRef ref) onTap;
-  const _TodoItem(this.icon, this.tint, this.ink, this.title, this.subtitle, this.action, this.onTap,
-      {this.urgent = false, this.primary = false});
-}
-
-List<_TodoItem> _todoItems(WidgetRef ref) {
-  final eventId = ref.watch(eventControllerProvider.select((s) => s.event?.id));
-  final due = _duePayments(ref);
-  final guests = ref.watch(guestsControllerProvider).guests;
-  final noAnswer = guests.where((g) => g.rsvpStatus == RsvpStatus.pending).length;
-  final requests = eventId == null ? 0 : (ref.watch(joinRequestsProvider(eventId)).value?.length ?? 0);
-  final items = <_TodoItem>[];
-  if (due.isNotEmpty) {
-    final (e, payId) = due.first;
-    items.add(_TodoItem(
-      Hi.banknotes, const Color(0xFFF7EACA), const Color(0xFF6B4A10),
-      e.title,
-      '${euros(e.amount, cents: payId != null)} até ${_shortDay(e.dueDate!)}${due.length > 1 ? ' · mais ${due.length - 1}' : ''}',
-      'Pagar',
-      (context, ref) {
-        final parts = e.id.split(':');
-        if (payId == null) {
-          context.push('/budget');
-        } else {
-          payBookingFlow(context, ref,
-              paymentId: payId, bookingId: parts.length == 3 && parts.first == 'booking' ? parts[1] : null, partnerName: e.title);
-        }
-      },
-      // Vermelho só quando o prazo acaba em 3 dias ou menos (DESIGN.md).
-      urgent: toneForDue(e.dueDate) == AlertTone.urgent,
-      primary: true,
-    ));
-  }
-  if (requests > 0) {
-    items.add(_TodoItem(
-      Hi.userPlus, const Color(0xFFF3DEE0), const Color(0xFF6B2C33),
-      '$requests ${requests == 1 ? 'pedido para entrar' : 'pedidos para entrar'}',
-      'Responderam pelo link',
-      'Aceitar',
-      (context, ref) => context.push('/guests'),
-    ));
-  }
-  if (noAnswer > 0) {
-    items.add(_TodoItem(
-      Hi.bell, const Color(0xFFD9D9D9), const Color(0xFF4A3F2A),
-      '$noAnswer sem resposta',
-      'Convidados que ainda não responderam',
-      'Lembrar',
-      (context, ref) => _openRemind(context, ref),
-    ));
-  }
-  // Sem tarefas pré-feitas (2026-11-27: «são apenas sugestões; tarefas
-  // são coisas realmente importantes para fazer»).
-  return items;
-}
-
-/// Faixa fina logo abaixo do cartão: há coisas para tratar.
-class _UrgentStrip extends ConsumerWidget {
-  const _UrgentStrip();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final items = _todoItems(ref);
-    if (items.isEmpty) return const SizedBox.shrink();
-    // Vermelho se algum pagamento acaba em 3 dias ou menos; senão amarelo.
-    final tone = _duePayments(ref).any((d) => toneForDue(d.$1.dueDate) == AlertTone.urgent)
-        ? AlertTone.urgent
-        : AlertTone.pending;
-    return SnappyTap(
-      onTap: () {
-        // Desce até "Para fazer agora" (logo abaixo do planeamento).
-        final pos = Scrollable.maybeOf(context)?.position;
-        if (pos == null) return;
-        pos.animateTo((pos.pixels + 260).clamp(0.0, pos.maxScrollExtent),
-            duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
-      },
-      child: AlertOutline(
-        tone: tone,
-        radius: 16,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: SizedBox(
-        height: 49,
-        child: Row(
-          children: [
-            Container(
-              width: 26,
-              height: 26,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(color: alertColor(tone), shape: BoxShape.circle),
-              child: Text('${items.length}',
-                  textAlign: TextAlign.center,
-                  textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
-                  style: const TextStyle(fontSize: 13, height: 1, fontWeight: FontWeight.w700, color: Colors.white)),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                // Só a contagem: o resto da linha cortava-se e o detalhe já
-                // está logo abaixo, em "Para fazer agora" (2026-11-08).
-                items.length == 1 ? 'coisa para tratar' : 'coisas para tratar',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textHeightBehavior: const TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
-                style: const TextStyle(fontSize: 15, height: 1, fontWeight: FontWeight.w700, color: AppTheme.ink),
-              ),
-            ),
-            const Icon(Hi.chevronRight, color: AppTheme.ink),
-          ],
-        ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Planeamento: tarefas feitas / total.
-class _PlanningBar extends ConsumerWidget {
-  const _PlanningBar();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(taskEngineControllerProvider);
-    final done = s.systemDone.length;
-    final total = done + s.systemActive.length;
-    if (total == 0) return const SizedBox.shrink();
-    final pct = done / total;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            const Text('Planeamento', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const Spacer(),
-            Text('${(pct * 100).round()}% · $done de $total tarefas',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _green)),
-          ],
-        ),
-        const SizedBox(height: 8),
-        AppProgressBar(value: pct, height: 8, track: const Color(0xFFE2DED4)),
-      ],
-    );
-  }
-}
-
-/// "Para fazer agora" (ou "Esta semana" nos últimos 7 dias).
-class _TodoNow extends ConsumerWidget {
-  final Event event;
-  const _TodoNow({required this.event});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final items = _todoItems(ref);
-    final days = event.eventDate?.difference(DateTime.now()).inDays;
-    final week = days != null && days >= 0 && days <= 7;
-    if (items.isEmpty) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(week ? 'Esta semana' : 'Para fazer agora',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: _card(),
-          child: Column(
-            children: [
-              for (final (i, it) in items.indexed) ...[
-                if (i > 0) const Divider(height: 1, color: Color(0xFFF2F2F2)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(color: it.tint, borderRadius: BorderRadius.circular(12)),
-                        child: Icon(it.icon, size: 20, color: it.ink),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(it.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                            Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 13, color: it.urgent ? const Color(0xFF8A4B10) : AppTheme.inkMuted)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      PressScale(child: FilledButton(
-                        onPressed: () => it.onTap(context, ref),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.ink,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(0, 40),
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          shape: const StadiumBorder(),
-                          textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700),
-                        ),
-                        child: Text(it.action),
-                      )),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Os números do evento: só as caixas com valor acima de 0 (2026-11-11).
-/// A quarta depende do tipo: mesas, presentes ou bilhetes.
-class _StatBlocks extends ConsumerWidget {
-  final Event event;
-  const _StatBlocks({required this.event});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final w = event;
-    final guests = ref.watch(guestsControllerProvider).guests;
-    final confirmed = guests.where((g) => g.rsvpStatus == RsvpStatus.confirmed).length;
-    final budget = ref.watch(budgetControllerProvider).budget;
-    final bookings = (ref.watch(coupleBookingsProvider).asData?.value ?? const <CoupleBooking>[])
-        .where((b) => b.status != BookingStatus.recusado)
-        .toList();
-    final reserved = bookings
-        .where((b) => b.status == BookingStatus.confirmado || b.status == BookingStatus.concluido)
-        .map((b) => b.partnerName)
-        .toSet()
-        .length;
-    final partners = bookings.map((b) => b.partnerName).toSet().length;
-    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
-
-    final boxes = <Widget>[];
-    void add(String label, String value, String? of, String sub, String route, {Color? subColor}) {
-      // O co-organizador não vê o cartão de uma secção sem permissão.
-      if (!_routeAllowed(route, perms)) return;
-      boxes.add(SnappyTap(
-        onTap: () => context.push(route),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: _card(radius: 20),
-          // Conteúdo ao centro (pedido 2026-11-15).
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.inkMuted)),
-              const SizedBox(height: 6),
-              Text.rich(TextSpan(children: [
-                TextSpan(text: value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                if (of != null) TextSpan(text: ' $of', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
-              ]), textAlign: TextAlign.center),
-              const SizedBox(height: 4),
-              Text(sub, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: subColor ?? AppTheme.inkMuted)),
-            ],
-          ),
-        ),
-      ));
-    }
-
-    // Convidados, orçamento e parceiros não se desligam (2026-11-11).
-    if (confirmed > 0) {
-      add('Convidados', '$confirmed', '/ ${guests.length}', 'confirmados', '/guests', subColor: _green);
-    }
-    {
-      final spent = budget?.spent ?? 0;
-      final total = budget?.total ?? 0;
-      final estimate = w.estimatedBudget ?? 0;
-      if (spent > 0) {
-        add('Orçamento', euros(spent), null, total > 0 ? 'de ${euros(total)}' : 'gastos', '/budget');
-      } else if (total > 0) {
-        add('Orçamento', euros(total), null, 'por gastar', '/budget');
-      } else if (estimate > 0) {
-        add('Orçamento', euros(estimate), null, 'estimativa', '/budget');
-      }
-    }
-    if (partners > 0) {
-      final proposals = partners - reserved;
-      add('Parceiros', '$reserved', null,
-          [reserved == 1 ? 'reservado' : 'reservados', if (proposals > 0) '$proposals ${proposals == 1 ? 'proposta' : 'propostas'}'].join(' · '),
-          '/bookings');
-    }
-    {
-      switch (_fourthOf(w.eventType)) {
-        case _Fourth.seats:
-          // Só faz sentido com mais de uma mesa; com uma (ex.: jantar de
-          // grupo) a caixa nem aparece. Pode desligar-se nas Definições.
-          final tables = ref.watch(seatingControllerProvider).tables;
-          final seated = tables.fold<int>(0, (n, t) => n + t.guestIds.length);
-          if (tables.length > 1 && seated > 0 && w.panelShows('stat_fourth')) add('Mesas', '$seated', guests.isEmpty ? null : '/ ${guests.length}', 'sentados', '/seating');
-        case _Fourth.gifts:
-          final items = ref.watch(giftListProvider(w.id)).value ?? const <GiftItem>[];
-          final taken = items.fold<int>(0, (n, g) => n + g.taken);
-          final wanted = items.fold<int>(0, (n, g) => n + g.wanted);
-          if (taken > 0 && w.panelShows('stat_fourth')) add('Presentes', '$taken', '/ $wanted', 'já oferecidos', '/gift-list');
-        case _Fourth.tickets:
-          final sold = ref.watch(ticketSummaryProvider(w.id)).value?.sold ?? 0;
-          if (sold > 0) add('Bilhetes', '$sold', null, 'vendidos', '/bilhetes');
-      }
-    }
-    if (boxes.isEmpty) return const SizedBox.shrink();
-
-    final rows = <Widget>[];
-    for (var i = 0; i < boxes.length; i += 2) {
-      if (i > 0) rows.add(const SizedBox(height: 10));
-      rows.add(i + 1 < boxes.length
-          ? IntrinsicHeight(
-              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Expanded(child: boxes[i]),
-                const SizedBox(width: 10),
-                Expanded(child: boxes[i + 1]),
-              ]),
-            )
-          : boxes[i]);
-    }
-    return _Section(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: rows));
-  }
-}
-
 enum _Fourth { seats, gifts, tickets }
 
 _Fourth _fourthOf(EventType t) => switch (t) {
@@ -2726,67 +1855,6 @@ String fourthLabel(EventType t) => switch (_fourthOf(t)) {
       _Fourth.gifts => 'Presentes',
       _Fourth.tickets => 'Bilhetes',
     };
-
-/// Margens laterais e espaço por cima de cada bloco do painel.
-class _Section extends StatelessWidget {
-  final Widget child;
-  const _Section({required this.child});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 18, AppTheme.screenMargin, 0),
-        child: child,
-      );
-}
-
-/// "Gerir": sempre presente; as linhas seguem o tipo de evento e as
-/// escolhas em Definições → Painel do evento.
-class _ManageList extends ConsumerWidget {
-  final Event event;
-  const _ManageList({required this.event});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final w = event;
-    // Deixou de ser uma lista comprida aqui no painel: agora é uma única
-    // entrada que abre a página "Definições do evento", organizada por temas
-    // (pedido do Rafael — mockup «Definições do evento», 2026-11-17).
-    return _Section(
-      child: Container(
-        decoration: _card(),
-        clipBehavior: Clip.antiAlias,
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => _EventSettingsPage(event: w))),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 60),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Definições do evento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                          SizedBox(height: 2),
-                          Text('Detalhes, convidados, conteúdo e arquivo', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Hi.chevronRight, size: 20, color: AppTheme.inkMuted),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Página "Definições do evento": tudo sobre este evento, por temas
 /// (O EVENTO / CONVIDADOS / CONTEÚDO / ARQUIVO). Mockup «Definições do
@@ -2985,88 +2053,6 @@ class _EventSettingsPageState extends ConsumerState<_EventSettingsPage> {
   }
 }
 
-/// O convite (verde): código, enviar e ver como convidado.
-class _InviteCodeCard extends StatelessWidget {
-  final Event event;
-  const _InviteCodeCard({required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    final code = event.guestCode;
-    return _Section(
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: _green, borderRadius: BorderRadius.circular(22)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Título em cima e o código por baixo, na largura toda: lado a
-            // lado, um código comprido (JANTARDENATAL-7984) esmagava o
-            // título letra a letra (2026-11-15).
-            const Text('O convite', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.white)),
-            const SizedBox(height: 2),
-            const Text('Código para entrar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFE6EDE1))),
-            if (code != null) ...[
-              const SizedBox(height: 10),
-              Semantics(
-                button: true,
-                label: 'Copiar o link do convite',
-                child: SnappyTap(
-                  onTap: () {
-                    copyText(event.inviteUrl ?? code);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link do convite copiado.')));
-                  },
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(code, maxLines: 1, style: const TextStyle(fontSize: 22, letterSpacing: 2, fontWeight: FontWeight.w700, color: Colors.white)),
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: PressScale(child: FilledButton(
-                    onPressed: () => shareEventInvite(context, event),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: AppTheme.ink,
-                      minimumSize: const Size(0, 46),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      shape: const StadiumBorder(),
-                      textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
-                    ),
-                    child: const Text('Enviar convite', maxLines: 1),
-                  )),
-                ),
-                if (code != null) ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: PressScale(child: OutlinedButton(
-                      onPressed: () => context.push('/invite/$code'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(0, 46),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        side: const BorderSide(color: Color(0x99FFFFFF), width: 1.5),
-                        shape: const StadiumBorder(),
-                        textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
-                      ),
-                      child: const FittedBox(child: Text('Ver como convidado', maxLines: 1)),
-                    )),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// "Lembrar" quem não respondeu (migração 165, pedido 2026-11-08): quem
 /// tem conta na app recebe notificação e push; quem não tem recebe o
 /// convite por mensagem.
@@ -3217,10 +2203,7 @@ class _RemindSheetState extends State<_RemindSheet> {
 
 // ---------- Painel do evento (canvas "Painel do evento", 2026-11-11) ----------
 
-const _sheetColor = Color(0xFFE9E8E4);
 const _hairline = Color(0xFFDCD6C8);
-const _red = Color(0xFFC8553D);
-
 /// Topo minimalista: foto de capa a toda a largura, voltar e definições,
 /// tipo do evento, nome, data e local, e a contagem decrescente.
 class _MinimalTop extends ConsumerStatefulWidget {
@@ -3444,111 +2427,6 @@ class _MinimalCountdownState extends State<_MinimalCountdown> {
   }
 }
 
-/// "Próximos passos" (ou "Primeiros passos" num evento novo): progresso
-/// do planeamento e as três coisas mais importantes agora.
-class _NextSteps extends ConsumerWidget {
-  final Event event;
-  const _NextSteps({required this.event});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Painel de tarefas: um co-organizador sem a permissão de tarefas não o vê.
-    final perms = ref.watch(myEventPermsProvider).value ?? OrganizerPerms.all;
-    if (!perms.can(OrganizerPerm.tarefas)) return const SizedBox.shrink();
-    final s = ref.watch(taskEngineControllerProvider);
-    final done = s.systemDone.length;
-    final total = done + s.systemActive.length;
-    final items = _todoItems(ref).take(3).toList();
-    if (items.isEmpty && total == 0) return const SizedBox.shrink();
-    final days = event.eventDate?.difference(DateTime.now()).inDays;
-    final title = days != null && days >= 0 && days <= 7
-        ? 'Esta semana'
-        : done == 0
-            ? 'Primeiros passos'
-            : 'Próximos passos';
-    return _Section(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 6),
-        decoration: _card(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(children: [
-              Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.ink))),
-              if (total > 0)
-                Text('$done de $total', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: _green)),
-            ]),
-            if (total > 0) ...[
-              const SizedBox(height: 8),
-              AppProgressBar(value: done / total, height: 8, track: const Color(0xFFE2DED4)),
-            ],
-            const SizedBox(height: 6),
-            for (final (i, it) in items.indexed)
-              Container(
-                constraints: const BoxConstraints(minHeight: 64),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  border: i == items.length - 1 ? null : const Border(bottom: BorderSide(color: Color(0xFFEFEBE2))),
-                ),
-                child: Row(children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFCFC8B8), width: 2),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(it.title, maxLines: 2, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.ink)),
-                      const SizedBox(height: 2),
-                      if (it.urgent)
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(color: _red, borderRadius: BorderRadius.circular(999)),
-                          child: Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
-                        )
-                      else
-                        Text(it.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
-                    ]),
-                  ),
-                  const SizedBox(width: 10),
-                  SnappyTap(
-                    onTap: () => it.onTap(context, ref),
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
-                      child: Text(it.action, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
-                    ),
-                  ),
-                ]),
-              ),
-            PressScale(child: TextButton(
-              onPressed: () => context.push('/tasks'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppTheme.ink,
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(0, 44),
-                textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 14, fontWeight: FontWeight.w800),
-              ),
-              child: const Text('Ver todas as tarefas'),
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// "Sugestões para ti": um parceiro de cada vez, cartões da largura do
 /// ecrã que prendem ao deslizar, com pontos por baixo.
 class _Suggestions extends ConsumerStatefulWidget {
@@ -3597,36 +2475,6 @@ class _SuggestionsState extends ConsumerState<_Suggestions> {
           onTap: (p) => _open(list.firstWhere((k) => k.partnerId == p.id)),
         ),
       ]),
-    );
-  }
-}
-
-/// Estado de uma reserva em pill (confirmado, por pagar, em análise).
-class _StatusPill extends StatelessWidget {
-  final BookingStatus status;
-  const _StatusPill(this.status);
-
-  @override
-  Widget build(BuildContext context) {
-    // "Falta o sinal": alerta pendente (branco, linha amarela) — DESIGN.md.
-    if (status == BookingStatus.aceite) {
-      return const AlertOutline(
-        tone: AlertTone.pending,
-        radius: 999,
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        child: Text('Falta pagar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-      );
-    }
-    final (label, bg, fg) = switch (status) {
-      BookingStatus.confirmado => ('Confirmado', const Color(0xFFDDE5D3), _greenDark),
-      BookingStatus.concluido => ('Concluído', const Color(0xFFDDE5D3), _greenDark),
-      BookingStatus.aceite => ('Falta pagar', const Color(0xFFF7EACA), const Color(0xFF5A3E0C)),
-      _ => ('Pendente', const Color(0xFFD9D9D9), AppTheme.ink),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: fg)),
     );
   }
 }
@@ -3693,15 +2541,6 @@ Widget _orgTaskRow(BuildContext context,
           ]),
         ),
       ),
-    );
-
-/// Ícone 24 num círculo cinzento 44 (sugestões, pedidos para entrar).
-Widget _roundIcon(IconData icon) => Container(
-      width: 44,
-      height: 44,
-      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFE6E6E6)),
-      alignment: Alignment.center,
-      child: Icon(icon, size: 22, color: AppTheme.ink),
     );
 
 class _OrgBody extends ConsumerWidget {

@@ -18,7 +18,7 @@ cores, sombras ou tamanhos à mão quando já existe um.
 
 | Uso | Cor | Token |
 |---|---|---|
-| Fundo de **todas** as páginas | `#F2F2F2` (cinzento claro **neutro**, liso, sem degradê — pedido 2026-11-21: «um cinzento não esverdeado») | `AppTheme.background`, `AppBackground.*` |
+| Fundo de **todas** as páginas | `#F2F2F2` (cinzento claro **neutro**, liso, sem degradê — pedido 2026-11-21: «um cinzento não esverdeado»); exceção: os ecrãs dos fluxos novos têm fundos suaves de cor (§6.9) | `AppTheme.background`, `AppBackground.*`, `FlowTint` |
 | Cartões, barras, popups | `#FFFFFF` | — |
 | Linha entre **secções diferentes** | `#CFCFCF`, **2 px** | `AppTheme.sectionLine` |
 | Linha entre elementos **da mesma secção** (linhas de uma lista) | `#E3E3E3`, 1 px | `AppTheme.line` |
@@ -104,7 +104,9 @@ mais acolhedora. Só nestes ecrãs — e em mais lado nenhum — vale esta escal
 (pedido do Rafael, 2026-11-16): título **32**, texto/subtítulo **17**, título
 de grupo/eyebrow **13**, botões **17** (altura **56**). O 32 e o 17 são
 exceções conscientes à regra «sem tamanhos intermédios», limitadas a estes
-ecrãs. O resto da app mantém a tabela acima.
+ecrãs. O resto da app mantém a tabela acima. Os **fluxos novos** (boas-vindas,
+conta, criar evento e parceiro, §6.9) usam o título **44** por baixo do
+conteúdo, a frase 17 e o botão 56 com a seta.
 
 ## 4. Espaços e formas
 
@@ -507,16 +509,9 @@ ecrãs. O resto da app mantém a tabela acima.
   baixo; na web, o `#app-host` ocupa só a área visível acima do teclado
   — topo e altura (`visualViewport`), porque no iPhone a área visível
   também se desloca (`web/index.html`, 2026-11-24).
-- **Onboarding** (`shared/widgets/onb_kit.dart`, mockup "Onboarding"
-  2026-11-12): barra de progresso (§6) de **10** com a percentagem (12
-  negrito) à direita — começa sempre em 20%; botão de voltar redondo
-  preto 44 (§2); "1 DE 4" como título de grupo (13); título 32, subtítulo 17
-  (escala de primeiro contacto, §3);
-  caixas de texto em pílula branca **52** (texto 15, contador 13 à
-  direita, erro = linha vermelha 1,5 + ponto + frase 13); cartões de
-  opção brancos (cantos 22, interior 16), **verdes quando escolhidos**;
-  grelha de tipos de evento em 3 colunas (82 de altura, ícone 24, texto
-  12 negrito); contador de pessoas com número 40.
+- **Onboarding:** os fluxos novos de boas-vindas, conta, criar evento e
+  parceiro estão no §6.9 (`shared/widgets/flow_kit.dart`). O `onb_kit.dart`
+  fica só para o que ainda o usa (convidado, folhas de data e local).
 - **Mascote — a estrela** (`shared/widgets/estrela.dart`, desenho do
   Rafael, canvas «Estrela · reações», 2026-11-14): estrela no verde da app `#4F6B4A` (pedido 2026-11-16),
   lisa, com sombra no chão; 12 reações (feliz, parabéns, apaixonada, fixe,
@@ -656,6 +651,10 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   «Voltar» em baixo: os botões de baixo são só ações (um preto a toda a
   largura, ou contorno + preto, p. ex. «Pagar mais tarde» + «Pagar»). Vale
   para todas as secções da app (organizador, parceiro e convidado).
+  **Exceção, os popups de reservar e pagar** (pedido 2026-11-27, §6.2): sem
+  barra de progresso, sem «×» e sem certinhos; o «Voltar» é texto cinzento
+  `#57534E` por baixo do botão principal (no «Está certo?», «Voltar» à
+  esquerda e «Pedir sem pagar agora» à direita, na mesma linha).
 
 ## 6.2 Parceiros e perfis (mockups «Parceiros e perfis», 2026-11-20)
 
@@ -741,25 +740,34 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   valor 40, para que é (13) e a explicação. O valor é o que o parceiro
   indica em «Preços e pacotes» (`average_quote_price`) e a nota é
   `reference_note` (migração 203).
-- **Popups de reserva — o mesmo fluxo em todas as categorias** (mockups
-  «Reservar por categoria», 2026-11-20/21): Para que evento? (sempre) ·
-  Confirma as pessoas (vêm do evento e das respostas; aviso amarelo só se
-  forem **mais** do que no evento, «22 de 122 do evento» se forem menos) ·
-  Quem paga? (só onde faz sentido) · o que falta saber da categoria (hora,
-  entrega, partida…) · Tudo certo? («Continuar») · Queres juntar alguma
-  coisa? (extras; «Sem extras» + «Continuar») · Pedir reserva. A reserva só
-  é pedida depois dos extras. Nunca se volta a perguntar o dia, o local nem
-  as pessoas. Fim: «Reserva pedida» (estrela contente, resumo, «Ver
-  conversa» + «OK»); pagamento feito → estrela a piscar o olho.
-  **Com sinal** (pedido do Rafael, 2026-11-22, mockup «Reserva: quem paga e
-  pagar o sinal»): o último passo é só «Pedir reserva»; depois vem
-  **«Reserva feita!»** (estrela **a piscar o olho**, animada; resumo, «Continuar») e logo a
-  seguir o popup **«Pagar o sinal»** — resumo (reserva, sinal), «A pagar
-  agora», «+ taxa de serviço no passo seguinte», a nota (cativo até o
-  parceiro aceitar; aceite, cancela-se com devolução até 48 h depois de
-  pagar; depois, sem reembolso; recusado ou sem resposta em 48 h, é
-  libertado) e **«Pagar mais tarde» + «Pagar agora»**. Pago → «Sinal pago»
-  (a piscar o olho).
+- **Popups de reserva e pagar** (pedido do Rafael, 2026-11-27, pranchetas
+  «Fluxo novo: Pagar»; `ReserveFlowSheet`, `reserve_flow.dart` e
+  `reserve_pieces.dart`): menos passos e menos preto.
+  1. **«Para que evento?»**: os eventos em cartões `#F2F2F2` (capa 44, nome
+     16, «Sex, 12 dez, 18 pessoas» 13) e «Criar um novo evento» («+» preto 44).
+  2. **«Evento novo»** (só ao criar): a linha do parceiro (foto 52, nome do
+     parceiro e pacote, «Evento novo»), «QUE EVENTO É?» (mosaicos),
+     «COMO VAI SER?» (Comer fora, Num espaço, Em casa), «NOME», «QUANDO?»
+     (pílulas «Dia» e «Hora» com ícone e seta, texto preto negrito) e
+     «QUANTAS PESSOAS?» (− e + pretos, «Mais ou menos»). O evento é criado aqui.
+  3. **«Que dia?»**: calendário do mês; o dia escolhido num círculo verde;
+     os dias em que o parceiro não pode (fecha, já reservado, menos de 7
+     dias) riscados a `#CFCFCF`. Salta se o evento já tem dia.
+  4. **«Para que horas queres reservar?»**: a roda do iPhone, só com as horas
+     em que o parceiro está aberto. Salta se o evento já tem hora.
+  5. As perguntas da categoria e os extras, só quando existem.
+  6. **«Está certo?»**: a linha do parceiro, o valor 40 («sinal de 30 %,
+     total …»), o dia com o calendário pequeno (faixa do mês `#8A8580`), a
+     hora e as pessoas com «Mudar» / «Editar» (pílulas brancas sem linha),
+     «QUEM PAGA» («Pagamos nós» / «Cada um paga o seu», verde a escolhida),
+     o método de pagamento e **«Desliza para pagar»** (preto). Sem sinal a
+     pagar (restaurantes, «Cada um paga o seu», orçamento): botão preto
+     «Pedir reserva» / «Pedir orçamento».
+  7. **«Pedido enviado e sinal pago»**: estrela a piscar o olho 120, resumo,
+     «Ver conversa» (contorno) + «OK».
+  **Escolher sem certinhos:** o escolhido fica branco com a linha de dentro
+  2 `#8A8580` (cartões e mosaicos) ou verde (pílulas); tocar encolhe para
+  0,97 em 150 ms. Botões principais pretos; o resto cinzento.
 - **Informação do evento para o parceiro** (pedido do Rafael, 2026-11-23;
   migração 226, `partner_event_brief`, `event_brief.dart`): na reserva
   confirmada, em molduras — **todos**: «Quando e onde» (hora, local, morada,
@@ -1164,6 +1172,15 @@ amarela/vermelha (`FrameTaskRow`) e os três estados do §4, números em
 caixas (`FrameNumbers`). Notificações, mensagens e conversas são as mesmas
 peças dos organizadores (§6).
 
+- **Perfil por completar** (pedido 2026-11-27, prancheta «Parceiro 5»;
+  `PartnerProfileProgress`): enquanto o perfil não está publicado, o Início
+  abre com o cartão branco «O TEU PERFIL» (percentagem 40, barra, «Completa
+  o perfil a 100 % para a equipa te verificar.», os passos feitos com o visto
+  verde e os que faltam com o botão 36: fotos do trabalho, descrição,
+  preços e dados bancários, NIF e IBAN) e a moldura «VERIFICAÇÃO»: antes
+  dos 100 % «Ainda não podes pedir» com «Pedir verificação» apagado; a 100 %
+  o botão preto (`submit_partner_profile_for_review`); depois «A equipa
+  responde em 24 h». Os pedidos só aparecem depois de verificado.
 - **Início:** topo (logótipo + nome, QR, sino, ⋯) · «Olá, Nome!» 28 ·
   resumo «ESTE MÊS» (receita 40, linha preta 1,5) · PARA FAZER (pedidos e
   avaliações por responder) · ESTA SEMANA (7 dias, hoje a preto, ponto
@@ -1206,6 +1223,49 @@ peças dos organizadores (§6).
 - **Serviços e preços:** pílulas Pacotes / Só orçamento; «PACOTES · N» com
   «+ Adicionar pacote» (contorno 44), «EXTRAS · N» com «+ Adicionar extra»;
   em só orçamento, «QUANTO PODE CUSTAR».
+
+## 6.9 Fluxos novos: boas-vindas, conta, criar evento e parceiro (pedido do Rafael, 2026-11-27)
+
+Pranchetas «Fluxo novo» do canvas. Peças em `shared/widgets/flow_kit.dart`
+(`FlowPage`, `FlowCta`, `FlowField`, `FlowChoiceCard`, `FlowCheckBox`,
+`FlowPillGrid`).
+
+- **Desenho:** fundo suave de cor (`FlowTint`: verde `#DCE8D3`, amarelo
+  `#F7E6BF`, terra `#F3D9CF`, azul `#D9E3EF`), traços do progresso (4) em
+  cima, «À Nossa!» (ou «Novo evento») à esquerda e «Saltar», «Voltar» ou
+  «Fechar» à direita; o conteúdo; o **título 44 por baixo do conteúdo**; o
+  botão preto 56 com o texto à esquerda e o círculo branco 40 com a seta; um
+  rodapé 15 («Já tens conta? **Entrar**»). A estrela num halo branco
+  translúcido. Escolhido: **preto** (cartões, mosaicos e pílulas); nas
+  categorias do parceiro, as outras com a linha preta 1,5.
+- **Boas-vindas 1 a 3** (só na primeira vez, sem conta): estrela, título e
+  botão, sem frase. **Boas-vindas 4** «Como vais usar a À Nossa!?»: dois
+  cartões grandes (organizar eventos ou ter um negócio), obrigatório, sem
+  visto. **Boas-vindas 5** «Entra na À Nossa!»: Apple, Google e a caixa
+  **«Tenho 18 anos ou mais e aceito os Termos e a Privacidade»**
+  (obrigatória antes de qualquer botão). **Boas-vindas 6** «Entra com o teu
+  email»: email, palavra-passe com «Mostrar» e a regra a verde, os 18 anos e
+  «Criar conta».
+- **Organizador:** «O teu perfil» (foto, nome, @ com a verificação, bio
+  opcional) e «Tudo pronto, Nome!» com «Começar» (vai ao Explorar) e «Criar o
+  meu evento». As permissões pedem-se ao entrar na app logo a seguir a criar
+  a conta (`/permissoes`), nunca dentro do criar evento.
+- **Criar evento** (o «+» de Meus eventos, `/novo-evento`): um só ecrã
+  «Que evento vais criar?» (tipo, «Como vai ser?» Comer fora / Num espaço /
+  Em casa, nome, «Dia» e «Hora»), «Confirmar evento», e «Evento feito!» com
+  «Convidar» (a página Convidar: por link ou a pessoas da app). O «Como vai
+  ser?» fica em `events.event_format` (migração 245).
+- **Painel do evento acabado de criar** (sem convidados nem reservas;
+  `FreshEventPanel`): cartão azul com a capa por pôr, o dia, o nome 28 e
+  «Convidar» 52; «A seguir» com «Quantas pessoas» e «A que horas» (pessoas
+  previstas, sem limite de entradas); o caminho «Até ao …» em três paragens
+  (comer fora: «Até ao jantar»; em casa, a meio «Comida e bebidas»). Com o
+  primeiro convidado ou reserva, volta o painel normal (§6.5).
+- **Parceiro:** depois de entrar, sempre: 1 «Como se chama o teu negócio?»
+  (nome e o que faz, até 3, grelha de 3 iguais), 2 «Onde trabalhas?» (morada,
+  mapa e «Deslocas-te até», grelha de 2), 3 «A tua foto de perfil» com a
+  pré-visualização do cartão e «Criar o meu perfil», 4 «Já está quase!» (os
+  passos que faltam) e o Início com o perfil por completar (§6.8).
 
 ## 7. Alertas
 
