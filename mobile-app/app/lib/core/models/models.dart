@@ -327,6 +327,10 @@ class Event {
   /// aparece no topo do painel em vez de "Outro".
   final String? eventTypeOther;
 
+  /// «Como vai ser?» (migração 245): `fora` (comer fora), `espaco` (num
+  /// espaço) ou `casa` (em casa). Escolhe-se ao criar o evento.
+  final String? eventFormat;
+
   /// Blocos do painel que o organizador escondeu (Definições → Painel do
   /// evento, migração 177).
   final List<String> panelHidden;
@@ -352,6 +356,7 @@ class Event {
     this.updatedAt,
     this.guestCode,
     this.eventTypeOther,
+    this.eventFormat,
     this.panelHidden = const [],
   });
 
@@ -421,6 +426,7 @@ class Event {
     DateTime? updatedAt,
     String? guestCode,
     String? eventTypeOther,
+    String? eventFormat,
     List<String>? panelHidden,
   }) {
     return Event(
@@ -448,6 +454,7 @@ class Event {
       updatedAt: updatedAt ?? this.updatedAt,
       guestCode: guestCode ?? this.guestCode,
       eventTypeOther: eventTypeOther ?? this.eventTypeOther,
+      eventFormat: eventFormat ?? this.eventFormat,
       panelHidden: panelHidden ?? this.panelHidden,
     );
   }

@@ -1,32 +1,36 @@
-import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'dart:async';
 
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 import 'package:go_router/go_router.dart';
 
 import '../../../core/auth/auth_controller.dart';
-import '../../../core/auth/google_web_button.dart';
 import '../../../core/models/models.dart';
-import '../../../core/profile/username.dart';
 import '../../../core/supabase/supabase_config.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/feedback.dart';
-import '../../../shared/widgets/auth_ui.dart';
+import '../../../shared/widgets/flow_kit.dart';
+import '../../../shared/widgets/snappy_tap.dart';
+import 'start_flow_screen.dart' show AdultTermsBox;
 
-final _nameRegex = RegExp(r'^[a-zA-ZÀ-ÿ]+(\s[a-zA-ZÀ-ÿ]+)+$');
 final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 final _passwordRegex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d).{8,}$');
 
+/// Boas-vindas 6 «Entra com o teu email» (prancheta «Fluxo novo»,
+/// 2026-11-27): só email, palavra-passe e os 18 anos. O nome e o @ pedem-se
+/// em «O teu perfil» (organizador) ou no perfil do negócio (parceiro).
+///
+/// - Organizador (`role=couple`, ou `guest` sem código): a conta fica em
+///   memória ([AuthController.startSignup]) e é criada em «O teu perfil».
+/// - Parceiro: a conta é criada logo ([AuthController.registerPartner]) e o
+///   router segue para `/partner-setup`.
+/// - Convidado com código (`?code=`, links de convite): pede também o nome e
+///   cria a conta já ligada ao evento ([AuthController.register]).
 class RegisterScreen extends ConsumerStatefulWidget {
   final UserRole role;
 
-  /// Pré-preenchido quando se chega aqui a partir do link de convite
-  /// (`invite_page_screen.dart`, `?code=...`) — conta passou a ser
-  /// obrigatória para o convidado, por isso o link já traz o código do
-  /// casal em vez de deixar o convidado de o copiar à mão.
+  /// Código do evento vindo do link de convite (`?code=`).
   final String? initialEventCode;
 
   const RegisterScreen({super.key, required this.role, this.initialEventCode});
@@ -37,456 +41,187 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _name = TextEditingController();
-  // O @ escolhido logo a seguir ao nome (pedido 2026-11-22).
-  final _username = TextEditingController();
-  String? _usernameError;
-  String? _usernameOk;
-  Timer? _usernameDebounce;
   final _email = TextEditingController();
-  final _phone = TextEditingController();
-  String? _phoneError;
   final _password = TextEditingController();
-  final _eventCode = TextEditingController();
-  bool _acceptedTerms = false;
+  bool _show = false;
+  bool _accepted = false;
+  bool _termsError = false;
   bool _checkingCode = false;
-
   String? _nameError;
   String? _emailError;
   String? _passwordError;
-  String? _termsError;
-  String? _eventCodeError;
+  String? _codeError;
+  String? _foundEvent;
 
-  // Pré-visualização em tempo real do casamento encontrado pelo
-  // código, enquanto o convidado ainda está a preencher o resto do
-  // formulário — antes disto, o único feedback sobre o código
-  // acontecia em `_submit()`, no fim, sem mostrar a quem se estava a
-  // juntar. Puramente aditivo: `_submit()` continua a validar o
-  // código de novo no fim, exatamente como antes.
-  Timer? _codeDebounce;
-  bool _verifyingCode = false;
-  String? _foundEventNames;
+  String? get _code {
+    final c = widget.initialEventCode?.trim() ?? '';
+    return widget.role == UserRole.guest && c.isNotEmpty ? c : null;
+  }
 
   @override
   void initState() {
     super.initState();
     Funnel.track('signup_start', ref: widget.role.name);
-    if (widget.initialEventCode != null) {
-      _eventCode.text = widget.initialEventCode!;
-      _onEventCodeChanged(widget.initialEventCode!);
+    for (final c in [_name, _email, _password]) {
+      c.addListener(() => setState(() {}));
     }
+    if (_code != null) _lookupCode();
   }
 
   @override
   void dispose() {
-    _codeDebounce?.cancel();
-    _usernameDebounce?.cancel();
-    _username.dispose();
     _name.dispose();
     _email.dispose();
-    _phone.dispose();
     _password.dispose();
-    _eventCode.dispose();
     super.dispose();
   }
 
-  void _onEventCodeChanged(String value) {
-    _codeDebounce?.cancel();
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      setState(() => _foundEventNames = null);
-      return;
-    }
-    _codeDebounce = Timer(const Duration(milliseconds: 500), () => _lookupEventCode(trimmed));
-  }
-
-  /// Só uma pré-visualização best-effort — nunca bloqueia nem substitui
-  /// a validação real feita em `_submit()` antes do signUp.
-  Future<void> _lookupEventCode(String code) async {
-    setState(() => _verifyingCode = true);
+  /// Mostra a que evento se vai juntar (só informativo).
+  Future<void> _lookupCode() async {
     try {
-      final rows = await supabase.rpc(
-        'lookup_wedding_by_guest_code',
-        params: {'p_code': code},
-      ) as List;
-      if (!mounted) return;
-      if (rows.isEmpty) {
-        setState(() => _foundEventNames = null);
-      } else {
-        final row = rows.first as Map<String, dynamic>;
-        final name1 = row['partner_name_1'] as String?;
-        final name2 = row['partner_name_2'] as String?;
-        setState(() {
-          _foundEventNames = (name2 != null && name2.isNotEmpty) ? '$name1 & $name2' : (name1 ?? '');
-        });
-      }
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _foundEventNames = null);
-    } finally {
-      if (mounted) setState(() => _verifyingCode = false);
-    }
+      final rows = await supabase.rpc('lookup_wedding_by_guest_code', params: {'p_code': _code}) as List;
+      if (!mounted || rows.isEmpty) return;
+      final row = rows.first as Map<String, dynamic>;
+      final n1 = row['partner_name_1'] as String?;
+      final n2 = row['partner_name_2'] as String?;
+      setState(() => _foundEvent = n2 != null && n2.isNotEmpty ? '$n1 & $n2' : n1);
+    } catch (_) {}
   }
 
   bool _validate() {
     setState(() {
-      _nameError = _nameRegex.hasMatch(_name.text.trim())
-          ? null
-          : 'Introduz o teu nome completo';
-      // O @ (2026-11-22): obrigatório; o «ocupado» da verificação mantém-se.
-      final u = normalizeUsername(_username.text);
-      if (u.isEmpty) {
-        _usernameError = 'Escolhe o teu @';
-      } else if (usernameFormatError(u) != null) {
-        _usernameError = usernameFormatError(u);
-      } else if (_usernameError != null && !_usernameError!.startsWith('Esse @')) {
-        _usernameError = null;
-      }
-      _emailError = _emailRegex.hasMatch(_email.text.trim())
-          ? null
-          : 'Introduz um email válido';
-      // Telemóvel obrigatório (pedido 2026-10-17): com o email, é o que
-      // liga esta conta às respostas que outros já deram por ela.
-      _phoneError = _phone.text.replaceAll(RegExp(r'[^0-9]'), '').length >= 9
-          ? null
-          : 'Introduz o teu telemóvel';
-      _passwordError = _passwordRegex.hasMatch(_password.text)
-          ? null
-          : 'A password precisa de pelo menos 8 caracteres, com letras e números';
-      _termsError = _acceptedTerms
-          ? null
-          : 'Confirma que tens 18 anos ou mais e aceitas os termos';
-      // Conta única "Utilizador" (2026-11): o código é opcional — quem
-      // não foi convidado entra e vê os eventos públicos.
-      if (widget.role == UserRole.guest) _eventCodeError = null;
+      _nameError = _code != null && _name.text.trim().isEmpty ? 'Escreve o teu nome.' : null;
+      _emailError = _emailRegex.hasMatch(_email.text.trim()) ? null : 'Escreve um email válido.';
+      _passwordError =
+          _passwordRegex.hasMatch(_password.text) ? null : 'Pelo menos 8 caracteres, com letras e números.';
+      _termsError = !_accepted;
     });
-    return _nameError == null &&
-        _usernameError == null &&
-        _emailError == null &&
-        _phoneError == null &&
-        _passwordError == null &&
-        _termsError == null &&
-        _eventCodeError == null;
+    return _nameError == null && _emailError == null && _passwordError == null && !_termsError;
   }
 
-  /// Confirma o código do casal (`lookup_wedding_by_guest_code()`,
-  /// `050_wedding_guest_code.sql`) ANTES de criar a conta — nunca cria uma
-  /// conta real presa a um código inválido. Público (`anon`), por isso
-  /// não precisa de sessão nenhuma para correr aqui. A associação real
-  /// (`join_wedding_by_code`) só acontece depois do signUp, dentro de
-  /// `AuthController.register()`, já autenticado.
   Future<void> _submit() async {
     if (!_validate()) return;
-    if (widget.role == UserRole.guest && _eventCode.text.trim().isNotEmpty) {
-      setState(() => _checkingCode = true);
-      final List rows;
-      try {
-        rows = await supabase.rpc(
-          'lookup_wedding_by_guest_code',
-          params: {'p_code': _eventCode.text.trim()},
-        ) as List;
-      } catch (_) {
-        if (!mounted) return;
-        setState(() {
-          _checkingCode = false;
-          _eventCodeError = 'Não foi possível verificar o código. Tenta novamente.';
-        });
-        return;
-      }
-      if (!mounted) return;
-      setState(() => _checkingCode = false);
-      if (rows.isEmpty) {
-        setState(
-          () => _eventCodeError = 'Código inválido — confirma com quem organiza.',
-        );
-        return;
-      }
-    }
-    if (!mounted) return;
-    // Organizadores e parceiros: a conta só é criada no fim do
-    // onboarding (no "Pronto") — até lá os dados ficam em memória.
-    // Utilizador sem código: segue para o onboarding, que pergunta se
-    // quer criar já um evento ou mais tarde (pedido 2026-11).
+    final auth = ref.read(authControllerProvider.notifier);
+    final email = _email.text.trim();
     if (widget.role == UserRole.partner) {
-      // Parceiro (2026-11-16): cria já a conta e entra na app; o perfil do
-      // negócio só aparece ao tocar em «Reservas».
-      await ref.read(authControllerProvider.notifier).registerPartner(
-            fullName: _name.text.trim(),
-            email: _email.text.trim(),
-            phone: _phone.text.trim(),
-            password: _password.text,
-            username: _usernameOrNull,
-          );
+      // O nome do negócio pede-se a seguir, no perfil do negócio.
+      await auth.registerPartner(fullName: email.split('@').first, email: email, password: _password.text);
       return;
     }
-    if (widget.role != UserRole.guest || _codeOrNull == null) {
-      ref.read(authControllerProvider.notifier).startSignup(
-            fullName: _name.text.trim(),
-            email: _email.text.trim(),
-            phone: _phone.text.trim(),
-            password: _password.text,
-            role: _signupRole,
-            username: _usernameOrNull,
-          );
+    final code = _code;
+    if (code == null) {
+      auth.startSignup(fullName: '', email: email, password: _password.text, role: UserRole.couple);
       return;
     }
-    ref
-        .read(authControllerProvider.notifier)
-        .register(
-          fullName: _name.text.trim(),
-          email: _email.text.trim(),
-          phone: _phone.text.trim(),
-          password: _password.text,
-          role: _signupRole,
-          eventCode: _codeOrNull,
-          username: _usernameOrNull,
-        );
-  }
-
-  /// Google/Apple: o convidado precisa de um código válido antes (como
-  /// no registo com email); o papel escolhido segue para a conta nova.
-  /// Também com Google/Apple: confirmar a idade e os termos primeiro
-  /// (lista de conformidade, 2026-11-08).
-  bool _termsOk() {
-    if (_acceptedTerms) return true;
-    setState(() => _termsError = 'Confirma que tens 18 anos ou mais e aceitas os termos');
-    return false;
-  }
-
-  Future<void> _social(OAuthProvider provider) async {
-    if (!_termsOk()) return;
-    if (!await _guestCodeOk()) return;
-    await ref.read(authControllerProvider.notifier).signInWithProvider(
-          provider,
-          role: _signupRole,
-          eventCode: _codeOrNull,
-        );
-  }
-
-  /// Google na web: o botão oficial já devolveu o ID token.
-  Future<void> _googleCredential(String idToken, String nonce) async {
-    if (!_termsOk()) return;
-    if (!await _guestCodeOk()) return;
-    await ref.read(authControllerProvider.notifier).signInWithGoogleIdToken(
-          idToken,
-          nonce,
-          role: _signupRole,
-          eventCode: _codeOrNull,
-        );
-  }
-
-  /// Com código, entra direto nesse evento; sem código, passa pelo
-  /// onboarding (internamente `couple` até decidir — "Mais tarde" volta
-  /// a utilizador sem evento).
-  UserRole get _signupRole =>
-      widget.role == UserRole.guest && _codeOrNull == null ? UserRole.couple : widget.role;
-
-  String? get _codeOrNull {
-    final c = _eventCode.text.trim();
-    return widget.role == UserRole.guest && c.isNotEmpty ? c : null;
-  }
-
-  Future<bool> _guestCodeOk() async {
-    if (widget.role == UserRole.guest && _eventCode.text.trim().isNotEmpty) {
-      final code = _eventCode.text.trim();
-      setState(() => _checkingCode = true);
-      List rows = const [];
-      try {
-        rows = await supabase.rpc('lookup_wedding_by_guest_code', params: {'p_code': code}) as List;
-      } catch (_) {}
-      if (!mounted) return false;
-      setState(() => _checkingCode = false);
-      if (rows.isEmpty) {
-        setState(() => _eventCodeError = 'Código inválido — confirma com quem organiza.');
-        return false;
-      }
+    // Convidado com código: confirma-o antes de criar a conta.
+    setState(() => _checkingCode = true);
+    List rows = const [];
+    try {
+      rows = await supabase.rpc('lookup_wedding_by_guest_code', params: {'p_code': code}) as List;
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _checkingCode = false);
+    if (rows.isEmpty) {
+      setState(() => _codeError = 'O código do convite já não é válido. Confirma com quem organiza.');
+      return;
     }
-    return true;
-  }
-
-  /// Verifica o @ enquanto se escreve: formato logo, disponibilidade depois
-  /// de uma pausa (se a verificação falhar, não bloqueia).
-  void _onUsernameChanged(String v) {
-    _usernameDebounce?.cancel();
-    final u = normalizeUsername(v);
-    setState(() {
-      _usernameOk = null;
-      _usernameError = u.isEmpty ? null : usernameFormatError(u);
-    });
-    if (u.isEmpty || _usernameError != null) return;
-    _usernameDebounce = Timer(const Duration(milliseconds: 450), () async {
-      String? status;
-      try {
-        status = await usernameStatus(u);
-      } catch (_) {}
-      if (!mounted || normalizeUsername(_username.text) != u) return;
-      setState(() {
-        switch (status) {
-          case 'taken':
-            _usernameError = 'Esse @ já está ocupado.';
-          case 'reserved':
-            _usernameError = 'Esse @ não está disponível.';
-          case 'invalid':
-            _usernameError = usernameFormatError(u) ?? 'Esse @ não é válido.';
-          case 'ok':
-          case 'mine':
-            _usernameOk = '@$u está livre';
-        }
-      });
-    });
-  }
-
-  String? get _usernameOrNull {
-    final u = normalizeUsername(_username.text);
-    return u.isEmpty ? null : u;
+    await auth.register(
+      fullName: _name.text.trim(),
+      email: email,
+      password: _password.text,
+      role: UserRole.guest,
+      eventCode: code,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
-    final loading = auth.status == AuthStatus.authenticating;
-
+    final loading = auth.status == AuthStatus.authenticating || _checkingCode;
     ref.listen(authControllerProvider, (prev, next) {
-      if (next.status == AuthStatus.emailUnverified) {
-        context.go('/verify-email');
-      }
+      if (next.status == AuthStatus.emailUnverified) context.go('/verify-email');
     });
+    final pwOk = _passwordRegex.hasMatch(_password.text);
 
-    return AuthPage(
-      children: [
-        AuthHeading(
-          title: 'Cria a tua conta',
-          subtitle: switch (widget.role) {
-            UserRole.partner => 'Parceiro',
-            UserRole.guest => 'Utilizador',
-            _ => 'Utilizador · organizar um evento',
-          },
-        ),
-        if (auth.status == AuthStatus.error && auth.errorMessage != null) ...[
-          const SizedBox(height: 16),
-          ErrorBanner(message: auth.errorMessage!),
-        ],
-        AuthField(label: 'Nome', controller: _name, hint: 'Nome e apelido', errorText: _nameError, topGap: 20),
-        // O teu @ — escolhe-se logo a seguir ao nome (2026-11-22); muda-se
-        // depois em «Editar perfil».
-        AuthField(
-          label: 'Nome de utilizador',
-          controller: _username,
-          hint: '@ana.silva',
-          errorText: _usernameError,
-          onChanged: _onUsernameChanged,
-        ),
-        if (_usernameOk != null && _usernameError == null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(_usernameOk!,
-                style: const TextStyle(color: AppStatusColors.confirmed, fontSize: 12, fontWeight: FontWeight.w700)),
-          ),
-        if (widget.role == UserRole.guest) ...[
-          AuthField(
-            label: 'Código de um evento (opcional)',
-            controller: _eventCode,
-            hint: 'Ex.: INES-TOMAS-24',
-            errorText: _eventCodeError,
-            onChanged: _onEventCodeChanged,
-          ),
-          if (_verifyingCode)
-            const Padding(
-              padding: EdgeInsets.only(top: 6),
-              child: Text('A verificar código...', style: TextStyle(color: AppTheme.inkMuted, fontSize: 12)),
-            )
-          else if (_foundEventNames != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                'Vais juntar-te ao evento de $_foundEventNames',
-                style: const TextStyle(color: AppStatusColors.confirmed, fontSize: 12, fontWeight: FontWeight.w700),
-              ),
-            ),
-        ],
-        AuthField(label: 'Email', controller: _email, hint: 'nome@email.pt', keyboardType: TextInputType.emailAddress, errorText: _emailError),
-        AuthField(
-          label: 'Telemóvel',
-          controller: _phone,
-          hint: '912 345 678',
-          keyboardType: TextInputType.phone,
-          errorText: _phoneError,
-          autofillHints: const [AutofillHints.telephoneNumber],
-        ),
-        AuthField(
-          label: 'Password',
-          controller: _password,
-          hint: 'Mín. 8 caracteres, letras e números',
-          password: true,
-          errorText: _passwordError,
-        ),
-        const SizedBox(height: 16),
-        GestureDetector(
-          onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: _acceptedTerms ? AppTheme.accentOliveDark : Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: _acceptedTerms ? AppTheme.accentOliveDark : AppTheme.borderMuted, width: 1.5),
-                ),
-                child: _acceptedTerms ? const Icon(Hi.check, size: 16, color: Colors.white) : null,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    const Text('Tenho 18 anos ou mais e aceito os ', style: _termsStyle),
-                    GestureDetector(
-                      onTap: () => context.push('/termos'),
-                      child: const Text('Termos', style: _termsLink),
-                    ),
-                    const Text(' e a ', style: _termsStyle),
-                    GestureDetector(
-                      onTap: () => context.push('/privacidade'),
-                      child: const Text('Política de Privacidade', style: _termsLink),
-                    ),
-                  ],
-                ),
-              ),
+    return FlowPage(
+      tint: FlowTint.green,
+      dashOn: 1,
+      trailingLabel: 'Voltar',
+      onTrailing: () => context.canPop() ? context.pop() : context.go('/comecar'),
+      centerContent: true,
+      content: const FlowStarHalo(Estrela.feliz, size: 120),
+      title: 'Entra com\no teu email',
+      cta: AutofillGroup(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (auth.status == AuthStatus.error && auth.errorMessage != null) ...[
+            ErrorBanner(message: auth.errorMessage!),
+            const SizedBox(height: 12),
+          ],
+          if (_code != null) ...[
+            if (_foundEvent != null) ...[
+              FlowNote('Vais juntar-te a «$_foundEvent».', align: TextAlign.left),
+              const SizedBox(height: 8),
             ],
-          ),
-        ),
-        if (_termsError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(_termsError!, style: const TextStyle(fontSize: 12, color: AppStatusColors.declined)),
-          ),
-      ],
-      footer: [
-        AuthPrimaryButton(label: 'Criar conta', loading: loading || _checkingCode, onPressed: _submit),
-        const AuthOrDivider(),
-        googleWebButton(onCredential: _googleCredential) ??
-            AuthSocialButton(
-              label: 'Continuar com Google',
-              badge: const Text('G', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              onPressed: () => _social(OAuthProvider.google),
+            if (_codeError != null) ...[
+              FlowNote(_codeError!, align: TextAlign.left),
+              const SizedBox(height: 8),
+            ],
+            FlowField(
+              controller: _name,
+              hint: 'O teu nome',
+              error: _nameError,
+              autofillHints: const [AutofillHints.name],
             ),
-        AuthSocialButton(
-          label: 'Continuar com Apple',
-          badge: const Icon(Icons.apple, size: 14, color: AppTheme.ink),
-          onPressed: () => _social(OAuthProvider.apple),
-        ),
-      ],
+            const SizedBox(height: 8),
+          ],
+          FlowField(
+            controller: _email,
+            hint: 'O teu email',
+            error: _emailError,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            onChanged: (_) {
+              if (_emailError != null) setState(() => _emailError = null);
+            },
+          ),
+          const SizedBox(height: 8),
+          FlowField(
+            controller: _password,
+            hint: 'Palavra-passe',
+            obscure: !_show,
+            error: _passwordError != null && !pwOk ? _passwordError : null,
+            okText: pwOk ? '8 caracteres, letras e números' : null,
+            autofillHints: const [AutofillHints.newPassword],
+            trailing: SnappyTap(
+              onTap: () => setState(() => _show = !_show),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(_show ? 'Esconder' : 'Mostrar',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF57534E))),
+              ),
+            ),
+          ),
+          if (!pwOk && _passwordError == null) ...[
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.only(left: 8),
+              child: FlowNote('8 caracteres, letras e números', align: TextAlign.left),
+            ),
+          ],
+          const SizedBox(height: 16),
+          AdultTermsBox(
+            value: _accepted,
+            error: _termsError && !_accepted,
+            onChanged: (v) => setState(() {
+              _accepted = v;
+              if (v) _termsError = false;
+            }),
+          ),
+          const SizedBox(height: 22),
+          FlowCta(label: 'Criar conta', loading: loading, onPressed: _submit),
+        ]),
+      ),
+      footer: FlowFooterLink(prefix: 'Já tens conta?', action: 'Entrar', onTap: () => context.push('/login')),
     );
   }
 }
-
-const _termsStyle = TextStyle(fontSize: 13, height: 19 / 13, color: AppTheme.inkMuted);
-const _termsLink = TextStyle(
-  fontSize: 13,
-  height: 19 / 13,
-  fontWeight: FontWeight.w700,
-  color: AppTheme.ink,
-  decoration: TextDecoration.underline,
-);

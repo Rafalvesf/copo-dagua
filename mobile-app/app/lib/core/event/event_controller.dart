@@ -347,6 +347,7 @@ class EventController extends Notifier<EventState> {
       updatedAt: row['updated_at'] == null ? null : DateTime.parse(row['updated_at'] as String),
       guestCode: row['guest_code'] as String?,
       eventTypeOther: row['event_type_other'] as String?,
+      eventFormat: row['event_format'] as String?,
       panelHidden: [for (final k in (row['panel_hidden'] as List?) ?? const []) k as String],
     );
   }
@@ -376,7 +377,7 @@ class EventController extends Notifier<EventState> {
       location: w.location, venue: w.venue, ceremonyType: w.ceremonyType, eventType: w.eventType,
       estimatedGuests: w.estimatedGuests, estimatedBudget: w.estimatedBudget, status: w.status,
       quote: w.quote, coverPhotoUrl: w.coverPhotoUrl, profilePhotoUrl: w.profilePhotoUrl,
-      updatedAt: w.updatedAt, guestCode: w.guestCode, eventTypeOther: v, panelHidden: w.panelHidden,
+      updatedAt: w.updatedAt, guestCode: w.guestCode, eventTypeOther: v, eventFormat: w.eventFormat, panelHidden: w.panelHidden,
     );
     _replace(updated);
   }

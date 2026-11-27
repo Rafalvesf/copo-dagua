@@ -109,6 +109,9 @@ import '../features/settings/screens/username_screen.dart' deferred as l62;
 import '../features/partner_onboarding/screens/partner_welcome_screen.dart' deferred as l63;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import '../shared/leave.dart' show loadVisits, recordVisit;
+import 'permissions/permissions_gate.dart';
+import '../shared/widgets/permissions_step.dart' show PermissionsStep;
+import '../shared/widgets/first_run_tour.dart' show TourRole;
 
 /// Rotas que vale a pena guardar para depois do login (não o início).
 bool _deepLinkWorthKeeping(String location) =>
@@ -271,13 +274,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (location == '/partner-home' && role != UserRole.partner) return homeForRole;
           if (location == '/guest-home' && role != UserRole.guest) return homeForRole;
           if (location == '/eventos' && role == UserRole.partner) return homeForRole;
-          // Parceiro sem perfil do negócio (canvas «Onboarding», 2026-11-16):
-          // usa a app, e «Reservas» abre primeiro o «Olá, parceiro!».
+          // Parceiro sem perfil do negócio (fluxo novo, 2026-11-27): logo
+          // depois de entrar faz os 3 passos (nome e o que faz, onde, foto)
+          // antes de usar a app. Depois de criado, `/partner-setup` mostra
+          // ainda o «Já está quase!» e segue para o Início.
           if (role == UserRole.partner) {
             final needsProfile = auth.profile?.onboardingComplete == false;
-            if (needsProfile && location == '/partner-requests') return '/partner-setup';
-            if (!needsProfile && location == '/partner-setup') return '/partner-requests';
+            if (needsProfile && location != '/partner-setup') return '/partner-setup';
           }
+          // Logo a seguir a criar a conta: as permissões, uma vez, ao entrar
+          // na app (já não fazem parte do criar evento, 2026-11-27).
+          if (PermissionsGate.pending && location != '/permissoes' && location != '/partner-setup') {
+            return '/permissoes';
+          }
+          if (!PermissionsGate.pending && location == '/permissoes') return homeForRole == '/home' ? '/eventos' : homeForRole;
           // Sem ecrã de transição entre modo organizador e convidado
           // (pedido 2026-11-12: "remove a animação"); só se regista o modo.
           if (role == UserRole.couple && location != '/modo') {
@@ -333,6 +343,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/partner-setup',
         builder: (context, state) => lazyPage([l63.loadLibrary], () => l63.PartnerWelcomeScreen()),
+      ),
+      GoRoute(
+        path: '/permissoes',
+        builder: (context, state) {
+          final role = ref.read(authControllerProvider).profile?.role;
+          return PermissionsStep(
+            role: switch (role) {
+              UserRole.partner => TourRole.partner,
+              UserRole.couple => TourRole.organizer,
+              _ => TourRole.organizer,
+            },
+            onDone: () {
+              PermissionsGate.pending = false;
+              context.go(role == UserRole.partner ? '/partner-home' : '/eventos');
+            },
+          );
+        },
       ),
       GoRoute(
         path: '/maintenance',

@@ -15,7 +15,6 @@ import '../../../core/social/social.dart';
 import '../../profile/profile_widgets.dart' show FollowedByRow, ProfileButton;
 import 'package:copo_dagua_app/core/partners/promotions.dart';
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
-import 'package:copo_dagua_app/shared/widgets/founder_badge.dart';
 import '../../../shared/widgets/review_tile.dart';
 import '../../../core/page_transitions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,15 +35,12 @@ import '../../../shared/widgets/alert_outline.dart';
 import '../partner_style.dart';
 import '../widgets/partner_cards.dart';
 import '../../../core/profile/username.dart' show usernameOfProvider;
-import '../../payments/open_payment.dart' show openPaymentFlow;
 import '../widgets/reserve_flow.dart';
 import '../../../shared/widgets/dense_card.dart' show PriceBox;
-import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/navigation_sheet.dart' show showNavigationSheet;
 import '../../../shared/widgets/venue_map.dart' show VenueMap;
 import '../../../shared/money.dart';
 import '../../../core/partners/category_figure.dart';
-import '../../../shared/widgets/step_sheet_head.dart';
 import '../../../shared/widgets/island_sheet.dart';
 import '../../../shared/widgets/v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/sized_network_image.dart';
@@ -52,7 +48,6 @@ import '../../../shared/widgets/partner_badges.dart';
 import '../../../shared/widgets/partner_achievements.dart';
 import '../../../shared/text_case.dart';
 import '../../../core/partners/partner_achievements.dart' show partnerAchievementsProvider;
-import '../../../core/partners/partner_pro.dart' show proPartnerIdsProvider;
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 import 'package:copo_dagua_app/shared/widgets/enter_scale.dart';
@@ -177,14 +172,11 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
   /// Pacote escolhido no perfil (mockup «Perfis dos parceiros», 2026-11-15).
   int? _selectedPackage;
   final Set<String> _selectedExtras = {};
-  int? _people;
   final _packageMessage = TextEditingController();
   final _scroll = ScrollController();
   /// «Como escolhem» (190): falso = igual para todos (escolhe-se aqui um
   /// menu), verdadeiro = cada um escolhe o seu na app antes de pagar.
   bool _eachChooses = false;
-  /// «Quem paga» (190): verdadeiro = cada convidado paga a sua parte.
-  bool _eachPays = false;
 
   /// Percentagem do sinal deste parceiro (`partner_deposit_pct`, 191): 100
   /// = sem sinal. Lida ao abrir «Reservar».
@@ -197,191 +189,166 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     super.dispose();
   }
 
-  /// Escolhe o evento para onde reservar, entre os eventos **reserváveis**
-  /// (elegíveis e onde ainda não pedi — [_partnerBookableEventsProvider]).
-  /// Com um só, usa-o direto; com mais do que um, mostra o popup.
-  Future<Event?> _chooseEvent() async {
-    final bookable = await ref.read(_partnerBookableEventsProvider(widget.partner.id).future);
-    if (bookable.isEmpty) return ref.read(eventControllerProvider).event;
-    if (bookable.length == 1) return bookable.first;
-    if (!mounted) return null;
-    return showIslandSheet<Event>(
-      // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
-      confirmExit: true,
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => _EventPickerSheet(
-        events: bookable,
-        partnerName: widget.partner.name,
-        myId: ref.read(authControllerProvider).profile?.id,
-      ),
-    );
-  }
-
-  /// «Pedir este pacote» (188): pacote, extras, pessoas e mensagem. Antes
-  /// da migração (função em falta) cai no pedido de orçamento normal com
-  /// o pacote na mensagem.
-  Future<void> _requestPackage(ServicePackage pkg, List<ServiceExtra> extras, int people, {Event? event, ReserveFlowResult? flow}) async {
-    if (_requestingQuote) return;
-    final pickedEvent = event ?? await _chooseEvent();
-    if (pickedEvent == null || !mounted) return;
-    final chosen = flow?.extras ?? extras.where((e) => _selectedExtras.contains(e.id)).toList();
-    final summary = [
-      'Pacote "${pkg.name}"',
-      if (pkg.perPerson) 'para $people pessoas',
-      if (chosen.isNotEmpty) 'com ${chosen.map((e) => e.name).join(', ')}',
-      if (_eachPays) '(cada um paga o seu)',
-    ].join(' ');
-    final note = flow?.summary() ?? _packageMessage.text.trim();
-    setState(() => _requestingQuote = true);
-    Funnel.track('quote_request_start', ref: widget.partner.id);
-    try {
-      final quoteId = await supabase.rpc('request_package', params: {
-        'p_partner_id': widget.partner.id,
-        'p_wedding_id': pickedEvent.id,
-        'p_package_id': pkg.id,
-        'p_extra_ids': chosen.map((e) => e.id).toList(),
-        'p_people': people,
-        'p_event_date': pickedEvent.eventDate?.toIso8601String().split('T').first,
-        'p_message': note.isEmpty ? null : note,
-        if (_eachPays) 'p_payer_mode': 'each',
-      });
-      try {
-        await sendQuoteRequestMessage(
-          eventId: pickedEvent.id,
-          partnerId: widget.partner.id,
-          partnerName: widget.partner.name,
-          eventDate: pickedEvent.eventDate,
-          message: [summary, if (note.isNotEmpty) note].join('\n'),
-        );
-      } catch (_) {}
-      ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
-      ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
-      if (mounted) {
-        double each(String unit, double price) => unit == 'person' ? price * people : price;
-        final total = each(pkg.priceUnit, pkg.price) + chosen.fold<double>(0, (t, e) => t + each(e.priceUnit, e.price));
-        final due = pickedEvent.eventDate?.subtract(const Duration(days: 3));
-        final noDeposit = (flow != null) && _depositPct >= 100;
-        // Com sinal (pedido do Rafael, 2026-11-22): «Reserva feita!» e logo
-        // a seguir o popup «Pagar o sinal» («Pagar mais tarde» / «Pagar
-        // agora»). Pago já, fica cativo até o parceiro aceitar.
-        final offerDeposit = flow != null && quoteId is String && !_eachPays && !noDeposit && !pkg.isStartingPrice && total > 0;
-        final recapTitle = [pkg.name, if (chosen.isNotEmpty) '+ ${chosen.length} extra'].join(' ');
-        final recapMeta = [pickedEvent.displayNames, if (_eventMeta(pickedEvent).isNotEmpty) _eventMeta(pickedEvent).split(' · ').first].join(' · ');
-        await _showRequestSent(
-          title: offerDeposit ? 'Reserva feita!' : 'Reserva pedida',
-          body: _eachPays
-              ? '${widget.partner.name} aceita ou recusa e avisamos-te. Cada convite paga a sua parte${due != null ? ' até ${reserveShortDay(due).toLowerCase()}' : ''}.'
-              : noDeposit
-                  ? '${widget.partner.name} aceita ou recusa e avisamos-te. Sem sinal: pagas tudo de uma vez, nos 6 dias antes do prazo.'
-                  : offerDeposit
-                      ? 'Pedimos a reserva à ${widget.partner.name}. Avisamos-te quando aceitar. Paga já o sinal para garantir a data.'
-                      : '${widget.partner.name} aceita ou recusa e avisamos-te. Paga o sinal para garantir a data.',
-          recapTitle: recapTitle,
-          recapMeta: recapMeta,
-          recapValue: pkg.isStartingPrice ? null : euros(total),
-          event: pickedEvent,
-          continueLabel: offerDeposit ? 'Continuar' : null,
-        );
-        if (offerDeposit && mounted) {
-          await _askPayDeposit(quoteId, pickedEvent: pickedEvent, total: total);
-        }
-      }
-    } on PostgrestException catch (e) {
-      if (!mounted) return;
-      if (e.code == 'PGRST202' || e.code == '42883') {
-        setState(() => _requestingQuote = false);
-        await _requestQuote(initialMessage: 'Olá! Queremos o ${summary.substring(0, 1).toLowerCase()}${summary.substring(1)}.${note.isEmpty ? '' : ' $note'}');
-        return;
-      }
-      final message = switch (e.code) {
+  /// O erro do servidor dito como deve ser no popup da reserva.
+  String _requestError(PostgrestException e, {bool quote = false}) => switch (e.code) {
         'P0002' => 'Este parceiro já não está disponível.',
+        // Migração 117: contratado em segredo por outro organizador.
         'P0010' => PartnerUnavailableException.message,
         'P0003' => 'Escolhe uma data com pelo menos 7 dias de antecedência.',
-        'P0009' => 'Já fizeste um pedido a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.',
+        // Migração 103: só um pedido de cada vez por parceiro.
+        'P0009' => quote
+            ? 'Já pediste orçamento a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.'
+            : 'Já fizeste um pedido a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.',
         _ when e.message.contains('too_few_people') => 'Este pacote pede mais pessoas.',
         _ when e.message.contains('too_many_people') => 'Este pacote não dá para tantas pessoas.',
-        _ => 'Não foi possível enviar o pedido.',
+        _ => quote ? 'Não foi possível enviar o pedido de orçamento.' : 'Não foi possível enviar o pedido.',
       };
-      _comingSoon(message);
-    } catch (_) {
-      if (mounted) _comingSoon('Não foi possível enviar o pedido.');
-    } finally {
-      if (mounted) setState(() => _requestingQuote = false);
-    }
+
+  /// Depois de um pedido: o botão passa a «Pedido já enviado».
+  void _afterRequest() {
+    ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
+    ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
   }
 
-  /// «Reservar mesa» (190): cada um escolhe o seu menu e extras na app.
-  /// A reserva não tem sinal; quem paga é decidido em [_eachPays].
-  Future<void> _requestTable(int people, {Event? event, ReserveFlowResult? flow}) async {
-    if (_requestingQuote) return;
-    final pickedEvent = event ?? await _chooseEvent();
-    if (pickedEvent == null || !mounted) return;
-    final note = flow?.summary() ?? _packageMessage.text.trim();
-    final summary = 'Mesa para $people pessoas · cada um escolhe${_eachPays ? ' e paga' : ''} o seu';
-    setState(() => _requestingQuote = true);
+  String? _day(ReserveFlowResult r) => r.day?.toIso8601String().split('T').first;
+
+  /// «Pedir este pacote» (188): pacote, extras, pessoas e o resumo. Antes
+  /// da migração (função em falta) segue como pedido de orçamento com o
+  /// pacote na mensagem. Devolve o `quote_requests.id`.
+  Future<String?> _sendPackage(ServicePackage pkg, ReserveFlowResult r) async {
+    final summary = [
+      'Pacote "${pkg.name}"',
+      if (pkg.perPerson) 'para ${r.people} pessoas',
+      if (r.extras.isNotEmpty) 'com ${r.extras.map((e) => e.name).join(', ')}',
+      if (r.eachPays) '(cada um paga o seu)',
+    ].join(' ');
+    final note = r.summary();
     Funnel.track('quote_request_start', ref: widget.partner.id);
+    final Object? quoteId;
     try {
-      final quoteId = await supabase.rpc('request_table', params: {
+      quoteId = await supabase.rpc('request_package', params: {
         'p_partner_id': widget.partner.id,
-        'p_wedding_id': pickedEvent.id,
-        'p_people': people,
-        'p_event_date': pickedEvent.eventDate?.toIso8601String().split('T').first,
+        'p_wedding_id': r.event.id,
+        'p_package_id': pkg.id,
+        'p_extra_ids': r.extras.map((e) => e.id).toList(),
+        'p_people': r.people,
+        'p_event_date': _day(r),
         'p_message': note.isEmpty ? null : note,
-        'p_payer_mode': _eachPays ? 'each' : 'organizer',
+        if (r.eachPays) 'p_payer_mode': 'each',
       });
-      // «Nós pagamos por» (216): as pessoas cuja comida pagamos nós.
-      final paidFor = flow?.paidFor ?? const <String, String>{};
-      if (_eachPays && paidFor.isNotEmpty && quoteId is String) {
-        try {
-          await supabase.rpc('set_paid_for', params: {
-            'p_quote_request_id': quoteId,
-            'p_booking_id': null,
-            'p_keys': paidFor.keys.toList(),
-          });
-        } catch (_) {}
-      }
-      try {
-        await sendQuoteRequestMessage(
-          eventId: pickedEvent.id,
-          partnerId: widget.partner.id,
-          partnerName: widget.partner.name,
-          eventDate: pickedEvent.eventDate,
-          message: [summary, if (note.isNotEmpty) note].join('\n'),
-        );
-      } catch (_) {}
-      ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
-      ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
-      if (mounted) {
-        await _showRequestSent(
-          title: 'Reserva pedida',
-          body: '${widget.partner.name} aceita ou recusa e avisamos-te. Depois, cada convidado escolhe o seu menu na app${_eachPays ? ' e cada convite paga a sua parte' : ''}.',
-          recapTitle: 'Mesa para $people',
-          recapMeta: pickedEvent.displayNames,
-          recapValue: 'Grátis',
-          event: pickedEvent,
-        );
-      }
     } on PostgrestException catch (e) {
-      if (!mounted) return;
       if (e.code == 'PGRST202' || e.code == '42883') {
-        setState(() => _requestingQuote = false);
-        await _requestQuote(initialMessage: 'Olá! Queremos uma ${summary.substring(0, 1).toLowerCase()}${summary.substring(1)}.${note.isEmpty ? '' : ' $note'}');
-        return;
+        return _sendQuote(r, message: 'Olá! Queremos o ${summary.substring(0, 1).toLowerCase()}${summary.substring(1)}. $note');
       }
-      final message = switch (e.code) {
-        'P0002' => 'Este parceiro já não está disponível.',
-        'P0010' => PartnerUnavailableException.message,
-        'P0003' => 'Escolhe uma data com pelo menos 7 dias de antecedência.',
-        'P0009' => 'Já fizeste um pedido a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.',
-        _ => 'Não foi possível enviar o pedido.',
-      };
-      _comingSoon(message);
+      throw ReserveRequestError(_requestError(e));
     } catch (_) {
-      if (mounted) _comingSoon('Não foi possível enviar o pedido.');
-    } finally {
-      if (mounted) setState(() => _requestingQuote = false);
+      throw const ReserveRequestError('Não foi possível enviar o pedido.');
     }
+    try {
+      await sendQuoteRequestMessage(
+        eventId: r.event.id,
+        partnerId: widget.partner.id,
+        partnerName: widget.partner.name,
+        eventDate: r.day,
+        message: [summary, if (note.isNotEmpty) note].join('\n'),
+      );
+    } catch (_) {}
+    _afterRequest();
+    return quoteId is String ? quoteId : null;
+  }
+
+  /// «Reservar mesa» (190): cada um escolhe o seu menu e extras na app; a
+  /// reserva não tem sinal.
+  Future<String?> _sendTable(ReserveFlowResult r) async {
+    final note = r.summary();
+    final summary = 'Mesa para ${r.people} pessoas, cada um escolhe${r.eachPays ? ' e paga' : ''} o seu';
+    Funnel.track('quote_request_start', ref: widget.partner.id);
+    final Object? quoteId;
+    try {
+      quoteId = await supabase.rpc('request_table', params: {
+        'p_partner_id': widget.partner.id,
+        'p_wedding_id': r.event.id,
+        'p_people': r.people,
+        'p_event_date': _day(r),
+        'p_message': note.isEmpty ? null : note,
+        'p_payer_mode': r.eachPays ? 'each' : 'organizer',
+      });
+    } on PostgrestException catch (e) {
+      if (e.code == 'PGRST202' || e.code == '42883') {
+        return _sendQuote(r, message: 'Olá! Queremos uma ${summary.substring(0, 1).toLowerCase()}${summary.substring(1)}. $note');
+      }
+      throw ReserveRequestError(_requestError(e));
+    } catch (_) {
+      throw const ReserveRequestError('Não foi possível enviar o pedido.');
+    }
+    // «Nós pagamos por» (216): as pessoas cuja comida pagamos nós.
+    if (r.eachPays && r.paidFor.isNotEmpty && quoteId is String) {
+      try {
+        await supabase.rpc('set_paid_for', params: {
+          'p_quote_request_id': quoteId,
+          'p_booking_id': null,
+          'p_keys': r.paidFor.keys.toList(),
+        });
+      } catch (_) {}
+    }
+    try {
+      await sendQuoteRequestMessage(
+        eventId: r.event.id,
+        partnerId: widget.partner.id,
+        partnerName: widget.partner.name,
+        eventDate: r.day,
+        message: [summary, if (note.isNotEmpty) note].join('\n'),
+      );
+    } catch (_) {}
+    _afterRequest();
+    return quoteId is String ? quoteId : null;
+  }
+
+  /// Pedido de orçamento: o dia, o local e as pessoas vêm do evento; o
+  /// parceiro responde com uma proposta.
+  Future<String?> _sendQuote(ReserveFlowResult r, {String? message}) async {
+    final e = r.event;
+    final place = (e.venue?.trim().isNotEmpty == true) ? e.venue!.trim() : e.location?.trim();
+    final quoteMessage = message ?? [r.summary(), ?r.message].join('\n');
+    Funnel.track('quote_request_start', ref: widget.partner.id);
+    for (final slug in widget.partner.categorySlugs) {
+      trackInterest(slug, 'quote', partnerId: widget.partner.id);
+    }
+    final Object? quoteId;
+    try {
+      quoteId = await supabase.rpc('request_quote', params: {
+        'p_partner_id': widget.partner.id,
+        'p_wedding_id': e.id,
+        'p_event_date': _day(r),
+        'p_location': (place == null || place.isEmpty) ? null : place,
+        // O parceiro define o preço na proposta (pedido de 2026-09-04).
+        'p_budget_min': null,
+        'p_budget_max': null,
+        'p_message': quoteMessage,
+      });
+    } on PostgrestException catch (err) {
+      throw ReserveRequestError(_requestError(err, quote: true));
+    } catch (_) {
+      throw const ReserveRequestError('Não foi possível enviar o pedido de orçamento.');
+    }
+    // A hora fica no pedido (238): aparece no cartão e em «Editar pedido».
+    if (quoteId is String && r.startTime != null) {
+      try {
+        await supabase.rpc('set_quote_request_time', params: {'p_id': quoteId, 'p_start': r.startTime, 'p_end': r.endTime});
+      } catch (_) {}
+    }
+    try {
+      await sendQuoteRequestMessage(
+        eventId: e.id,
+        partnerId: widget.partner.id,
+        partnerName: widget.partner.name,
+        eventDate: r.day,
+        location: (place == null || place.isEmpty) ? null : place,
+        message: quoteMessage,
+      );
+    } catch (_) {}
+    _afterRequest();
+    return quoteId is String ? quoteId : null;
   }
 
   @override
@@ -404,174 +371,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  /// Popup de confirmação depois de enviar um pedido/reserva (pedido do
-  /// Rafael, 2026-11-18): "Reserva pedida" com um só botão "OK". Com o sinal
-  /// pago no fim do pedido (migração 207), a estrela é a de parabéns.
-  /// «Pagar o sinal» logo a seguir a «Reserva feita!» (pedido do Rafael,
-  /// 2026-11-22): o resumo, o que acontece ao sinal e «Pagar mais tarde» /
-  /// «Pagar agora». Pago já (migração 207), fica cativo até o parceiro
-  /// aceitar; aceite, cancela-se com devolução até 48 h depois de pagar.
-  Future<void> _askPayDeposit(String quoteId, {required Event pickedEvent, required double total}) async {
-    final deposit = double.parse((total * _depositPct / 100).toStringAsFixed(2));
-    final name = widget.partner.name;
-    final meta = [name, if (_eventMeta(pickedEvent).isNotEmpty) _eventMeta(pickedEvent).split(' · ').first].join(' · ');
-    final now = await showIslandSheet<bool>(
-      confirmExit: true,
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        Widget line(String k, String v) => Container(
-              constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(children: [
-                Expanded(child: Text(k, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
-                Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-              ]),
-            );
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            StepSheetHead(title: 'Pagar o sinal', subtitle: meta),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
-              child: Column(children: [
-                line('Reserva', euros(total)),
-                Container(height: 1, color: const Color(0xFFD9D9D9)),
-                line('Sinal (${_depositPct.round()} %)', euros(deposit, cents: true)),
-              ]),
-            ),
-            const SizedBox(height: 12),
-            Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-              const Expanded(child: Text('A pagar agora', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted))),
-              Text(euros(deposit, cents: true), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            ]),
-            const Align(
-              alignment: Alignment.centerRight,
-              child: Text('+ taxa de serviço no passo seguinte', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'O sinal fica cativo até $name aceitar. Se aceitar, podes cancelar a reserva até 48 h depois de pagar e recebes tudo; '
-              'depois disso, não é reembolsável. Se recusar ou não responder em 48 h, o valor é libertado.',
-              style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted),
-            ),
-            const SizedBox(height: 20),
-            Row(children: [
-              Expanded(child: ProfileButton('Pagar mais tarde', height: 52, onTap: () => Navigator.of(ctx).pop(false))),
-              const SizedBox(width: 8),
-              Expanded(child: ProfileButton('Pagar agora', dark: true, height: 52, onTap: () => Navigator.of(ctx).pop(true))),
-            ]),
-          ]),
-        );
-      },
-    );
-    if (now != true || !mounted) return;
-    var paid = false;
-    try {
-      final paymentId = await supabase.rpc('prepay_request_deposit', params: {'p_quote_request_id': quoteId});
-      if (paymentId is String && mounted) {
-        await openPaymentFlow(context, ref, paymentId, onPaid: (c) => Navigator.of(c).pop());
-        final row = await supabase.from('payments').select('status').eq('id', paymentId).maybeSingle();
-        paid = row?['status'] == 'paid';
-      }
-    } catch (_) {
-      if (mounted) _comingSoon('Não foi possível abrir o pagamento. Pagas depois em Reservas.');
-      return;
-    }
-    if (paid && mounted) {
-      await _showRequestSent(
-        title: 'Sinal pago',
-        body: 'Fica cativo até $name aceitar. Se aceitar, podes cancelar até 48 h depois de pagar; depois disso, não é reembolsável.',
-        event: pickedEvent,
-        paid: true,
-      );
-    }
-  }
-
-  Future<void> _showRequestSent({
-    required String title,
-    required String body,
-    String? recapTitle,
-    String? recapMeta,
-    String? recapValue,
-    Event? event,
-    bool paid = false,
-    /// Só um botão preto (p. ex. «Continuar» para pagar o sinal a seguir).
-    String? continueLabel,
-  }) async {
-    if (!mounted) return;
-    // Mockup «Reserva pedida» (2026-11-20): estrela contente, o resumo do
-    // que se pediu e «Ver conversa» (o pedido já está na conversa) + «OK».
-    final chat = await showIslandSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Pedido → contente; pagamento feito → parabéns (DESIGN.md §6).
-            // «Reserva feita!» e pagamento feito → a piscar o olho, animada
-            // (pedido 2026-11-22).
-            Center(
-              child: EstrelaMascot(
-                paid || continueLabel != null ? Estrela.piscar : Estrela.contente,
-                size: 96,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 6),
-            Text(body,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, height: 1.45, color: AppTheme.inkMuted)),
-            if (recapTitle != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                      Text(recapTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                      if (recapMeta != null && recapMeta.isNotEmpty)
-                        Text(recapMeta,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
-                    ]),
-                  ),
-                  if (recapValue != null) ...[
-                    const SizedBox(width: 10),
-                    Text(recapValue, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                  ],
-                ]),
-              ),
-            ],
-            const SizedBox(height: 20),
-            if (continueLabel != null)
-              ProfileButton(continueLabel, dark: true, height: 52, onTap: () => Navigator.of(ctx).pop(false))
-            else
-              Row(children: [
-                Expanded(child: ProfileButton('Ver conversa', height: 52, onTap: () => Navigator.of(ctx).pop(true))),
-                const SizedBox(width: 8),
-                Expanded(child: ProfileButton('OK', dark: true, height: 52, onTap: () => Navigator.of(ctx).pop(false))),
-              ]),
-          ],
-        ),
-      ),
-    );
-    if (chat == true && mounted) await _openChat(event: event);
   }
 
   Future<void> _openChat({Event? event}) async {
@@ -605,110 +404,15 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     }
   }
 
-  Future<void> _requestQuote({String? initialMessage}) async {
-    if (_requestingQuote) return;
-    final events = await _eventsForSheet();
-    if (!mounted || events.isEmpty) return;
-    final partner = widget.partner;
-
-    // Mockups «Reservar por categoria» · Só orçamento (2026-11-21): o
-    // mesmo fluxo da reserva — evento, pessoas, o que procuras e «Pedir
-    // orçamento». O dia, o local e as pessoas vêm do evento.
-    final result = await showIslandSheet<ReserveFlowResult>(
-      // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
-      confirmExit: true,
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => ReserveFlowSheet(
-        partnerName: partner.name,
-        kind: reserveKindFor(partner.primaryCategorySlug),
-        events: events,
+  /// Pedir orçamento (só orçamento): o mesmo popup da reserva, que acaba em
+  /// «Pedir orçamento».
+  Future<void> _requestQuote({String? initialMessage}) => _openFlow(
+        kind: reserveKindFor(widget.partner.primaryCategorySlug),
         quote: true,
-        reference: partner.quoteOnly ? partnerReference(partner) : null,
+        reference: widget.partner.quoteOnly ? partnerReference(widget.partner) : null,
         initialMessage: initialMessage,
-      ),
-    );
-    if (result == null || !mounted) return;
-    final pickedEvent = result.event;
-    final place = (pickedEvent.venue?.trim().isNotEmpty == true) ? pickedEvent.venue!.trim() : pickedEvent.location?.trim();
-    final quoteMessage = [result.summary(), if (result.message != null) result.message!].join('\n');
-
-    setState(() => _requestingQuote = true);
-    Funnel.track('quote_request_start', ref: widget.partner.id);
-    for (final slug in widget.partner.categorySlugs) {
-      trackInterest(slug, 'quote', partnerId: widget.partner.id);
-    }
-    try {
-      final quoteId = await supabase.rpc(
-        'request_quote',
-        params: {
-          'p_partner_id': widget.partner.id,
-          'p_wedding_id': pickedEvent.id,
-          'p_event_date': pickedEvent.eventDate?.toIso8601String().split('T').first,
-          'p_location': (place == null || place.isEmpty) ? null : place,
-          // O parceiro define o preço na proposta (`send_proposal_screen.dart`)
-          // — o casal deixou de indicar orçamento min./máx. aqui, pedido
-          // explícito do utilizador (2026-09-04): só envia o pedido, sem
-          // pré-condicionar o valor.
-          'p_budget_min': null,
-          'p_budget_max': null,
-          'p_message': quoteMessage,
-        },
+        send: _sendQuote,
       );
-      // A hora fica no pedido (238): aparece no cartão e em «Editar pedido».
-      if (quoteId is String && result.startTime != null) {
-        try {
-          await supabase.rpc('set_quote_request_time', params: {
-            'p_id': quoteId,
-            'p_start': result.startTime,
-            'p_end': result.endTime,
-          });
-        } catch (_) {}
-      }
-      // Pedido explícito do utilizador: o pedido de orçamento tem de
-      // aparecer no chat tal como a proposta — melhor esforço, não
-      // desfaz o pedido já criado se isto falhar.
-      try {
-        await sendQuoteRequestMessage(
-          eventId: pickedEvent.id,
-          partnerId: widget.partner.id,
-          partnerName: widget.partner.name,
-          eventDate: pickedEvent.eventDate,
-          location: (place == null || place.isEmpty) ? null : place,
-          message: quoteMessage,
-        );
-      } catch (_) {}
-      // O botão passa logo a "Pedido já enviado".
-      ref.invalidate(partnerRelationshipStatusProvider(widget.partner.id));
-      ref.invalidate(_partnerBookableEventsProvider(widget.partner.id));
-      if (mounted) {
-        await _showRequestSent(
-          title: 'Orçamento pedido',
-          body: '${partner.name} responde com uma proposta e avisamos-te. Não pagas nada agora.',
-          recapTitle: 'Só orçamento',
-          recapMeta: pickedEvent.displayNames,
-          event: pickedEvent,
-        );
-      }
-    } on PostgrestException catch (e) {
-      if (!mounted) return;
-      final message = switch (e.code) {
-        'P0002' => 'Este parceiro já não está disponível.',
-        // Migração 117: contratado em segredo por outro organizador.
-        'P0010' => PartnerUnavailableException.message,
-        'P0003' => 'Escolhe uma data com pelo menos 7 dias de antecedência.',
-        // Migração 103: só um pedido de cada vez por parceiro.
-        'P0009' => 'Já pediste orçamento a este parceiro. Só podes pedir outra vez se o pedido ou a reserva for cancelado.',
-        _ => 'Não foi possível enviar o pedido de orçamento.',
-      };
-      _comingSoon(message);
-    } catch (_) {
-      if (mounted)
-        _comingSoon('Não foi possível enviar o pedido de orçamento.');
-    } finally {
-      if (mounted) setState(() => _requestingQuote = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -751,7 +455,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     final extras = ref
         .watch(partnerExtrasForProvider(partner.id))
         .maybeWhen(data: (e) => e, orElse: () => const <ServiceExtra>[]);
-    final eventGuests = ref.watch(eventControllerProvider.select((s) => s.event?.estimatedGuests));
     // Menus por pessoa (restaurantes, catering): pessoas e «Como escolhem»
     // no topo da carta (190).
     final perPersonMenus = !widget.selectionMode && !widget.publicView && packages.any((p) => p.perPerson);
@@ -760,10 +463,6 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     // escolhe o seu depois. No perfil os menus só se veem.
     final menusOnly = perPersonMenus && reserveKindFor(partner.primaryCategorySlug) == ReserveKind.mesa;
     _eachChooses = menusOnly;
-    final selPkg = !_eachChooses && _selectedPackage != null && _selectedPackage! < packages.length ? packages[_selectedPackage!] : null;
-    final peopleMin = selPkg?.minPeople ?? 1;
-    final peopleMax = selPkg?.maxPeople ?? 9999;
-    final topPeople = (_people ?? eventGuests ?? peopleMin).clamp(peopleMin, peopleMax);
     final portfolio = ref
         .watch(partnerPortfolioForProvider(partner.id))
         .maybeWhen(data: (p) => p, orElse: () => const <PortfolioItem>[]);
@@ -857,7 +556,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     } else if (_eachChooses) {
       barBox = ('MESA', 'Grátis');
       barLabel = 'Reservar mesa';
-      barAction = _requestingQuote ? null : () => _openTableSheet(topPeople);
+      barAction = _requestingQuote ? null : () => _openTableSheet();
     } else if (selPkgBar != null) {
       barBox = (
         selPkgBar.name.toUpperCase(),
@@ -866,12 +565,7 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
       barLabel = 'Reservar';
       barAction = _requestingQuote
           ? null
-          : () => _openReserveSheet(
-                selPkgBar,
-                extras.where((e) => e.appliesTo(selPkgBar.id)).toList(),
-                perPersonMenus ? topPeople : null,
-                eventGuests,
-              );
+          : () => _openReserveSheet(selPkgBar, extras.where((e) => e.appliesTo(selPkgBar.id)).toList());
     } else {
       barLabel = 'Escolher pacote';
       barAction = _scrollToPackages;
@@ -1179,68 +873,74 @@ class _PartnerDetailScreenState extends ConsumerState<PartnerDetailScreen> {
     );
   }
 
-  /// Eventos para escolher nos popups: os reserváveis; sem nenhum, o atual.
-  Future<List<Event>> _eventsForSheet() async {
-    final bookable = await ref.read(_partnerBookableEventsProvider(widget.partner.id).future);
-    if (bookable.isNotEmpty) return bookable;
-    final current = ref.read(eventControllerProvider).event;
-    return current == null ? const [] : [current];
-  }
-
-  /// Pedido de reserva em passos (mockups «Reservar por categoria»,
-  /// 2026-11-20/21): evento, pessoas a confirmar, quem paga, o que falta
-  /// saber, «Tudo certo?», extras e «Pedir reserva» — o mesmo em todas as
-  /// categorias.
-  Future<void> _openReserveSheet(ServicePackage pkg, List<ServiceExtra> pkgExtras, int? fixedPeople, int? guests) async {
-    final events = await _eventsForSheet();
-    if (!mounted || events.isEmpty) return;
+  /// O popup de reservar e pagar (pranchetas «FPay», 2026-11-27): evento
+  /// (ou um novo), dia, hora, o que falta saber, extras, «Está certo?» com
+  /// «Desliza para pagar» e o fim. Sair pergunta antes (DESIGN.md §6.1).
+  Future<void> _openFlow({
+    required ReserveKind kind,
+    ServicePackage? package,
+    List<ServiceExtra> extras = const [],
+    bool quote = false,
+    double? reference,
+    String? initialMessage,
+    required ReserveSender send,
+  }) async {
+    if (_requestingQuote) return;
+    setState(() => _requestingQuote = true);
+    List<Event> events;
     try {
-      final pct = await supabase.rpc('partner_deposit_pct', params: {'p_partner_id': widget.partner.id});
-      if (pct is num) _depositPct = pct.toDouble();
-    } catch (_) {}
+      events = await ref.read(_partnerBookableEventsProvider(widget.partner.id).future);
+    } catch (_) {
+      events = const [];
+    }
+    if (!quote && package != null) {
+      try {
+        final pct = await supabase.rpc('partner_deposit_pct', params: {'p_partner_id': widget.partner.id});
+        if (pct is num) _depositPct = pct.toDouble();
+      } catch (_) {}
+    }
     if (!mounted) return;
-    final result = await showIslandSheet<ReserveFlowResult>(
-      // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
+    setState(() => _requestingQuote = false);
+    final outcome = await showIslandSheet<ReserveOutcome>(
       confirmExit: true,
       context: context,
       isScrollControlled: true,
       builder: (ctx) => ReserveFlowSheet(
+        partnerId: widget.partner.id,
         partnerName: widget.partner.name,
+        partnerImage: widget.partner.imageUrl,
+        kind: kind,
+        package: package,
+        events: events,
+        extras: extras,
+        depositPct: _depositPct,
+        quote: quote,
+        reference: reference,
+        initialMessage: initialMessage,
+        responds: responseLabel(ref.read(partnerPublicStatsProvider(widget.partner.id)).value?.responseMinutes),
+        onRequest: (r) {
+          if (mounted) {
+            setState(() {
+              _selectedExtras.clear();
+            });
+          }
+          return send(r);
+        },
+      ),
+    );
+    if (outcome != null && outcome.openChat && mounted) await _openChat(event: outcome.event);
+  }
+
+  /// «Reservar» com o pacote escolhido.
+  Future<void> _openReserveSheet(ServicePackage pkg, List<ServiceExtra> pkgExtras) => _openFlow(
         kind: reserveKindFor(widget.partner.primaryCategorySlug),
         package: pkg,
-        events: events,
         extras: pkgExtras,
-        depositPct: _depositPct,
-      ),
-    );
-    if (result == null || !mounted) return;
-    setState(() {
-      _selectedExtras.clear();
-      _people = result.people;
-      _eachPays = result.eachPays;
-    });
-    await _requestPackage(pkg, pkgExtras, result.people, event: result.event, flow: result);
-  }
+        send: (r) => _sendPackage(pkg, r),
+      );
 
   /// «Reservar mesa»: cada convidado escolhe o seu menu depois (190).
-  Future<void> _openTableSheet(int people) async {
-    final events = await _eventsForSheet();
-    if (!mounted || events.isEmpty) return;
-    final result = await showIslandSheet<ReserveFlowResult>(
-      // Reserva/pagamento: sair pergunta antes (DESIGN.md §6.1).
-      confirmExit: true,
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => ReserveFlowSheet(
-        partnerName: widget.partner.name,
-        kind: ReserveKind.mesa,
-        events: events,
-      ),
-    );
-    if (result == null || !mounted) return;
-    setState(() => _eachPays = result.eachPays);
-    await _requestTable(result.people, event: result.event, flow: result);
-  }
+  Future<void> _openTableSheet() => _openFlow(kind: ReserveKind.mesa, send: _sendTable);
 
   Future<void> _share(Partner partner) async {
     final link = publicLink('/parceiro/${partner.id}');
@@ -1618,142 +1318,9 @@ class ExtraChoiceRow extends StatelessWidget {
       );
 }
 
-/// Popup "Para qual evento?" — escolhe o evento onde reservar o parceiro
-/// quando há mais do que um evento elegível (DESIGN.md §2/§4).
-class _EventPickerSheet extends StatelessWidget {
-  final List<Event> events;
-  final String partnerName;
-  final String? myId;
-  const _EventPickerSheet({required this.events, required this.partnerName, this.myId});
-
-  // Etiqueta do papel (§1): «Organizo» (dono) verde, «Posso contratar» neutra.
-  Widget _roleChip(bool owner) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: owner ? const Color(0xFFE6EDE1) : const Color(0xFFF2F2F2),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(owner ? 'Organizo' : 'Posso contratar',
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: owner ? const Color(0xFF3F7A4F) : const Color(0xFF3A3733))),
-      );
-
-  String _meta(Event w) {
-    final parts = <String>[];
-    final d = w.eventDate;
-    if (d != null) {
-      const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-      parts.add('${d.day} ${meses[d.month - 1]} ${d.year}');
-    }
-    final place = (w.venue?.isNotEmpty == true) ? w.venue! : (w.location ?? '');
-    if (place.isNotEmpty) parts.add(place);
-    return parts.join(' · ');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(color: const Color(0xFFD8D3C8), borderRadius: BorderRadius.circular(999)),
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Text('Reservar — para qual evento?',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-            const SizedBox(height: 4),
-            Text('$partnerName vai ficar reservado no evento que escolheres.',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF57534E))),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                color: AppTheme.background,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < events.length; i++) ...[
-                    if (i > 0) const Divider(height: 1, color: Color(0xFFD9D9D9)),
-                    InkWell(
-                      onTap: () => Navigator.of(context).pop(events[i]),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 64),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          child: Row(children: [
-                            // Foto principal do evento (cai nas iniciais se não houver).
-                            V2Avatar(events[i].displayNames, size: 44, imageUrl: events[i].coverPhotoUrlCacheBusted),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(events[i].displayNames,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
-                                  if (_meta(events[i]).isNotEmpty) ...[
-                                    const SizedBox(height: 2),
-                                    Text(_meta(events[i]),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 13, color: Color(0xFF57534E))),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            _roleChip(events[i].ownerId == myId),
-                          ]),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text('Só aparecem os eventos que organizas ou onde podes contratar.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Color(0xFF57534E))),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Peças do perfil do parceiro (mockups «Parceiros e perfis», 2026-11-20).
 // ---------------------------------------------------------------------------
-
-/// «12 jun 2027 · Sintra» para a linha do evento nos popups.
-String _eventMeta(Event w) {
-  final parts = <String>[];
-  final d = w.eventDate;
-  if (d != null) {
-    const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    parts.add('${d.day} ${meses[d.month - 1]} ${d.year}');
-  }
-  final place = (w.venue?.isNotEmpty == true) ? w.venue! : (w.location ?? '');
-  if (place.isNotEmpty) parts.add(place);
-  if (w.estimatedGuests != null) parts.add('${w.estimatedGuests} pessoas');
-  return parts.join(' · ');
-}
 
 /// Botão redondo 44 sobre a foto: preto com o ícone branco sólido 20, como
 /// em todo o lado (DESIGN.md §2, pedido 2026-11-21).

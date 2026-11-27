@@ -18,8 +18,10 @@ import '../../core/supabase/supabase_config.dart';
 /// [step]: passo do popup quando o pagamento vem depois de outro passo
 /// (p. ex. «2 DE 2» depois dos extras); devolve `'back'` se se tocou no
 /// voltar.
+/// [methods]: só estas formas de pagar (p. ex. só o cartão, quando já se
+/// escolheu no popup da reserva).
 Future<Object?> openPaymentFlow(BuildContext context, WidgetRef ref, String paymentId,
-    {void Function(BuildContext context)? onPaid, (int, int)? step}) async {
+    {void Function(BuildContext context)? onPaid, (int, int)? step, List<PayMethod>? methods}) async {
   Map<String, dynamic>? row;
   try {
     row = await supabase
@@ -65,6 +67,7 @@ Future<Object?> openPaymentFlow(BuildContext context, WidgetRef ref, String paym
       baseAmount: (row['amount'] as num).toDouble(),
       onPaid: onPaid,
       step: step,
+      methods: methods,
       onChat: _chatOpener(
         eventId: (row['bookings'] as Map?)?['wedding_id'] as String?,
         partnerId: row['partner_id'] as String?,

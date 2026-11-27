@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../profile/username.dart' show setMyUsername;
+import '../profile/username.dart' show normalizeUsername, setMyUsername;
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,6 +16,7 @@ import '../../shared/widgets/brinde_gate.dart';
 import '../../shared/widgets/tchin_splash.dart';
 import '../invite/public_invite.dart' show claimStoredPublicRsvps;
 import 'package:copo_dagua_app/core/media/image_upload.dart';
+import '../permissions/permissions_gate.dart';
 
 class _Unset {
   const _Unset();
@@ -104,6 +105,15 @@ class PendingSignup {
   /// O @ escolhido no registo (aplicado quando a conta já tem sessão).
   final String? username;
   const PendingSignup({required this.fullName, required this.email, this.phone, required this.password, required this.role, this.username});
+
+  PendingSignup copyWith({String? fullName, UserRole? role, String? username}) => PendingSignup(
+        fullName: fullName ?? this.fullName,
+        email: email,
+        phone: phone,
+        password: password,
+        role: role ?? this.role,
+        username: username ?? this.username,
+      );
 }
 
 /// Erro legível ao criar a conta no fim do onboarding.
@@ -162,13 +172,8 @@ class AuthController extends Notifier<AuthState> {
   Future<void> skipEventCreation() async {
     final p = _pendingSignup;
     if (p != null) {
-      _pendingSignup = PendingSignup(
-        fullName: p.fullName,
-        email: p.email,
-        phone: p.phone,
-        password: p.password,
-        role: UserRole.guest,
-      );
+      // Mantém o @ escolhido em «O teu perfil» (antes perdia-se aqui).
+      _pendingSignup = p.copyWith(role: UserRole.guest);
       await commitSignup();
       final profile = state.profile;
       if (profile != null) state = AuthState(status: AuthState.statusFor(profile), profile: profile);
@@ -181,6 +186,70 @@ class AuthController extends Notifier<AuthState> {
       await supabase.from('profiles').update({'onboarding_completed': true}).eq('id', user.id);
     }
     await reloadProfile();
+  }
+
+  /// Foto e bio de «O teu perfil» à espera de a conta existir (registo por
+  /// email com a confirmação do email ligada): aplicam-se na primeira
+  /// sessão. Só em memória.
+  XFile? _heldAvatar;
+  String? _heldBio;
+
+  /// «O teu perfil» do organizador (fluxo novo, 2026-11-27): nome, @, bio e
+  /// foto. Registo por email: completa o registo guardado em memória e cria
+  /// a conta agora (o «Tudo pronto» diz que a conta está criada); a foto e
+  /// a bio sobem logo a seguir. Apple/Google: a conta já existe e grava-se
+  /// no perfil. Lança [SignupFailed] ou [UsernameError].
+  Future<void> saveOrganizerProfile({
+    required String fullName,
+    required String username,
+    String? bio,
+    XFile? avatar,
+  }) async {
+    final name = fullName.trim();
+    final u = normalizeUsername(username);
+    final p = _pendingSignup;
+    if (p != null) {
+      _pendingSignup = p.copyWith(fullName: name, username: u);
+      _heldAvatar = avatar;
+      _heldBio = bio;
+      await commitSignup();
+      await _applyHeldProfileExtras();
+      return;
+    }
+    final profile = state.profile;
+    if (profile == null) return;
+    if (name.isNotEmpty && name != profile.fullName) await updateFullName(name);
+    String? current;
+    try {
+      final r = await supabase.rpc('my_username');
+      if (r is Map) current = r['username'] as String?;
+    } catch (_) {}
+    if (u.isNotEmpty && u != current) await setMyUsername(u);
+    _heldAvatar = avatar;
+    _heldBio = bio;
+    await _applyHeldProfileExtras();
+  }
+
+  /// Sobe a foto (por `uploadAvatarPhoto`, que passa por
+  /// `uploadImageBinary`) e grava a bio guardadas em [saveOrganizerProfile].
+  /// Nunca bloqueia: uma falha aqui não desfaz a conta.
+  Future<void> _applyHeldProfileExtras() async {
+    final user = supabase.auth.currentUser;
+    if (user == null || state.profile == null || state.profile!.id.isEmpty) return;
+    final bio = _heldBio?.trim();
+    final avatar = _heldAvatar;
+    _heldBio = null;
+    _heldAvatar = null;
+    if (bio != null && bio.isNotEmpty) {
+      try {
+        await supabase.from('profiles').update({'bio': bio}).eq('id', user.id);
+      } catch (_) {}
+    }
+    if (avatar != null) {
+      try {
+        await uploadAvatarPhoto(avatar);
+      } catch (_) {}
+    }
   }
 
   /// Volta a ler o perfil (ex.: depois de `become_organizer`) — o router
@@ -204,6 +273,8 @@ class AuthController extends Notifier<AuthState> {
   Future<void> commitSignup() async {
     final p = _pendingSignup;
     if (p == null) return;
+    // Conta nova: ao entrar na app pedem-se as permissões (2026-11-27).
+    PermissionsGate.pending = true;
     await _setKeepSignedIn(true);
     final AuthResponse response;
     try {
@@ -447,6 +518,8 @@ class AuthController extends Notifier<AuthState> {
     await prefs.remove(_pendingRoleKey);
     await prefs.remove(_pendingCodeKey);
     if (role != null) {
+      // Conta nova com Apple/Google: permissões ao entrar na app.
+      PermissionsGate.pending = true;
       try {
         await supabase.rpc('set_new_account_role', params: {'p_role': role});
       } catch (_) {}
@@ -617,6 +690,7 @@ class AuthController extends Notifier<AuthState> {
       await _applyPendingEventCode(user);
       final profile = await _loadProfile(user);
       state = AuthState(status: AuthState.statusFor(profile), profile: profile);
+      await _applyHeldProfileExtras();
     } on AuthException catch (e) {
       final notConfirmed =
           e.message.toLowerCase().contains('not confirmed') ||
@@ -718,6 +792,7 @@ class AuthController extends Notifier<AuthState> {
       await _applyPendingEventCode(user);
       final profile = await _loadProfile(user);
       state = AuthState(status: AuthState.statusFor(profile), profile: profile);
+      await _applyHeldProfileExtras();
       return;
     }
     state = state.copyWith(

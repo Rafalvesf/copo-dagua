@@ -39,6 +39,7 @@ class _JoinEventsScreenState extends ConsumerState<JoinEventsScreen> {
   }
 
   Future<void> _joinIfSignedIn() async {
+    if (_joining) return;
     final auth = ref.read(authControllerProvider);
     if (auth.status != AuthStatus.active) {
       ref.read(pendingPartnerInviteProvider.notifier).set(widget.token);
