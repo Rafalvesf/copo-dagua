@@ -48,7 +48,7 @@ void leave(BuildContext context, {bool force = false}) {
   try {
     role = ProviderScope.containerOf(context, listen: false).read(authControllerProvider).profile?.role ?? UserRole.couple;
   } catch (_) {}
-  context.go(role == UserRole.partner ? '/partner-home' : '/eventos');
+  context.go(role == UserRole.partner ? '/partner-home' : '/meus-eventos');
 }
 
 /// Últimas páginas visitadas (até 30), guardadas no telemóvel para

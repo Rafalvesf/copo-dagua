@@ -186,7 +186,7 @@ class _GuestProfileBody extends ConsumerWidget {
         // (pedido 2026-10-17): título grande, foto redonda com câmara,
         // e secções com títulos em maiúsculas e linhas com divisórias.
         return ScrollBackView(
-          onBack: () => context.canPop() ? context.pop() : context.go('/eventos'),
+          onBack: () => context.canPop() ? context.pop() : context.go('/meus-eventos'),
           builder: (context, scrollCtrl) => ListView(
             controller: scrollCtrl,
             padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 20, AppTheme.screenMargin, 140),

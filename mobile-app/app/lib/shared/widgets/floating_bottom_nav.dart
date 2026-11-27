@@ -13,7 +13,7 @@ import 'floating_filter_bar.dart' show ConnectedFilterNav;
 import '../../core/event/menu_style.dart';
 import 'press_scale.dart';
 
-enum AppTab { home, partners, chat, event, events }
+enum AppTab { home, partners, chat, event, events, mine }
 
 /// Raio dos cantos das navbars = raio do círculo do separador ativo mais
 /// a margem à volta (10 + 4 + 21), para os cantos ficarem concêntricos
@@ -66,7 +66,7 @@ class FloatingBottomNav extends ConsumerWidget {
           child: ConnectedFilterNav(
           top: top,
           navRow: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
           child: Row(
             // Cada separador ocupa uma fatia igual da largura (em vez
             // de `spaceEvenly`, que distribuía o espaço entre as
@@ -87,11 +87,12 @@ class FloatingBottomNav extends ConsumerWidget {
                     activeIcon: Hi.globeEuropeAfricaOutline,
                     // O painel de cada evento abre a partir de Eventos
                     // (separador "O meu evento" retirado, 2026-11-10).
-                    active: current == AppTab.events || current == AppTab.event,
+                    active: current == AppTab.events,
                     accent: menuColor.color,
                     onAccent: menuColor.on,
                     onTap: () => context.go('/eventos'),
-                    label: 'Eventos',
+                    // «Explorar» (pedido 2026-11-27): só os eventos para descobrir.
+                    label: 'Explorar',
                   ),
                 ),
               ),
@@ -105,6 +106,22 @@ class FloatingBottomNav extends ConsumerWidget {
                     onAccent: menuColor.on,
                     onTap: () => context.go('/partners'),
                     label: 'Parceiros',
+                  ),
+                ),
+              ),
+              // «Meus eventos» (pedido 2026-11-27, prancheta «Navbar · A»):
+              // o QR em cima e os eventos que organizo ou a que vou; o
+              // painel de cada evento abre daqui.
+              Expanded(
+                child: Center(
+                  child: _NavIcon(
+                    icon: Hi.ticket,
+                    activeIcon: Hi.ticket,
+                    active: current == AppTab.mine || current == AppTab.event,
+                    accent: menuColor.color,
+                    onAccent: menuColor.on,
+                    onTap: () => context.go('/meus-eventos'),
+                    label: 'Meus eventos',
                   ),
                 ),
               ),
@@ -195,7 +212,8 @@ class _NavIcon extends StatelessWidget {
       // percetível").
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        // 5 separadores (2026-11-27): menos folga dos lados para caberem.
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         decoration: BoxDecoration(
           color: active ? const Color(0xFFEBEBEB) : Colors.transparent,
           borderRadius: BorderRadius.circular(kNavRadius - 10),
@@ -230,10 +248,14 @@ class _NavIcon extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 3),
-            Text(label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+            // «Meus eventos» não corta: num ecrã estreito a letra encolhe
+            // um pouco em vez de aparecer «Meus eve…».
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label,
+                  maxLines: 1,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+            ),
           ],
         ),
       ),

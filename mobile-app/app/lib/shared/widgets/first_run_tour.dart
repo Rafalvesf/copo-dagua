@@ -193,9 +193,9 @@ const _copy = {
     welcomeTitle: 'Bem-vindos à À Nossa!',
     welcomeBody: 'Em menos de um minuto mostramos onde está tudo para organizarem o vosso evento.',
     steps: [
-      _Step('Encontra parceiros', 'Espaços, catering, fotografia e muito mais. Pede orçamento e recebe propostas aqui.', navIndex: 0),
-      _Step('Eventos', 'Os vossos eventos (convidados, mesas, orçamento, programa) e eventos abertos para descobrir.', navIndex: 1),
-      _Step('Conversas', 'Fala com os parceiros e cria grupos com a equipa e os convidados.', navIndex: 2),
+      _Step('Encontra parceiros', 'Espaços, catering, fotografia e muito mais. Pede orçamento e recebe propostas aqui.', navIndex: 1),
+      _Step('Meus eventos', 'O teu QR e os teus eventos (convidados, mesas, orçamento, programa). Em «Explorar» descobres eventos abertos.', navIndex: 2),
+      _Step('Conversas', 'Fala com os parceiros e cria grupos com a equipa e os convidados.', navIndex: 3),
       _Step('Tarefas e notificações', 'Dizemos-vos o que fazer a seguir: propostas para rever, pagamentos e lembretes.', anchor: 'bell', navIndex: 3),
     ],
     notifSub: 'Mensagens e pagamentos com a app fechada',
@@ -270,10 +270,15 @@ class _TourOverlayState extends State<_TourOverlay> {
       if (r == null) return null;
       // A ilha da barra: margem 16 dos lados e 26 (ou a área segura) em
       // baixo; dentro, 8 de margem e 4 separadores com a mesma largura.
-      final left = r.left + 16 + 8;
-      final width = r.width - 32 - 16;
+      // Organizadores e convidados: 5 separadores com 4 de margem
+      // (2026-11-27, Explorar + Meus eventos); parceiros: 4 com 8.
+      final partner = _c == _copy[TourRole.partner];
+      final inner = partner ? 8.0 : 4.0;
+      final tabs = partner ? 4 : 5;
+      final left = r.left + 16 + inner;
+      final width = r.width - 32 - inner * 2;
       final bottom = r.bottom - math.max(pad.bottom, 26);
-      final x = left + width * (s.navIndex! + 0.5) / 4;
+      final x = left + width * (s.navIndex! + 0.5) / tabs;
       return (center: Offset(x, bottom - 32), radius: 32);
     }
     return null;

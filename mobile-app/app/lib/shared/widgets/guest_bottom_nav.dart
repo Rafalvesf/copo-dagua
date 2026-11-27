@@ -44,7 +44,7 @@ class GuestBottomNav extends ConsumerWidget {
     // evento. Um convidado está sempre «dentro» de Eventos.
     final role = ref.watch(authControllerProvider).profile?.role;
     return FloatingBottomNav(
-      current: current == GuestTab.profile ? AppTab.home : AppTab.events,
+      current: current == GuestTab.profile ? AppTab.home : AppTab.mine,
       top: top,
       profilePath: role == UserRole.couple ? '/home' : _path('/guest-profile'),
     );

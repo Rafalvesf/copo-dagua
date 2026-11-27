@@ -313,6 +313,22 @@ ecrãs. O resto da app mantém a tabela acima.
   baixo, cantos 35;
   ícone 24 + texto 11 negrito; inativo `#57534E`, ativo `#171713` com pílula
   `#EBEBEB`.
+  **Cinco separadores** (pedido 2026-11-27, pranchetas «Navbar · A» e
+  «Explorar · A»): **Explorar** (o globo; os eventos para descobrir) ·
+  Parceiros · **Meus eventos** (bilhete; o painel de cada evento também
+  acende este) · Mensagens · Perfil. O parceiro mantém os seus quatro.
+- **Meus eventos** (`/meus-eventos`, `EventosScreen(mine: true)`): título 28
+  com «+» (criar evento) e o sino; em cima o **QR da conta** (cartão branco,
+  QR 112 num quadrado `#F2F2F2`, «O MEU CÓDIGO», «Mostra à entrada», frase 13
+  e «Ampliar» preto 36, que abre «Entrada»); depois os convites por
+  responder, «Recebeste um convite?» e os carrosséis «ORGANIZAS · N» e
+  «CONVIDADO · N».
+- **Explorar** (`/eventos`): título 28 e o sino; o **destaque grande** —
+  foto 340 com cantos 22, o dia e a entrada em pílulas brancas, véu escuro
+  em baixo, «DESTAQUE DA SEMANA» 12, o nome 28 a branco, «local · cidade» 13
+  e «Ver evento» branco 36 (um evento da À Nossa!, ou o primeiro evento real
+  em Portugal); depois a pesquisa, os filtros e «EM PORTUGAL» / «NA À
+  NOSSA!». Cresce até à página como os cartões.
 - **Ícones:** Heroicons Solid na app; nos ecrãs dos mockups (Perfil,
   Mensagens, Conversa, Definições, Parceiro) os ícones de traço dos mockups
   (`LineIcon`) — menos dentro dos botões redondos, que levam sempre o ícone
@@ -561,7 +577,7 @@ ecrãs. O resto da app mantém a tabela acima.
 
 ## 6.0 Eventos reais (pedido do Rafael, 2026-11-23; migração 222)
 
-- No **Descobrir** da aba Eventos, por cima dos eventos da À Nossa!, a linha
+- No **Explorar** (antes «Descobrir» da aba Eventos), por cima dos eventos da À Nossa!, a linha
   **«EM PORTUGAL · N»** com eventos reais de Portugal continental
   (`external_events`, só publicados e que ainda não acabaram), num carrossel
   com o mesmo `PhotoCard` (categoria e dia na foto, «data · hora», «local ·

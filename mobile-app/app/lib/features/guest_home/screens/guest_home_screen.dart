@@ -168,7 +168,7 @@ class _EmptyState extends StatelessWidget {
             icon: Hi.informationCircle,
           ),
           const SizedBox(height: 16),
-          PrimaryButton(label: 'Ver eventos', onPressed: () => context.go('/eventos')),
+          PrimaryButton(label: 'Ver eventos', onPressed: () => context.go('/meus-eventos')),
           const SizedBox(height: 24),
           Center(
             child: PressScale(child: TextButton.icon(

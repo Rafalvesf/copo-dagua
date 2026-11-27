@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:copo_dagua_app/shared/utils_clipboard.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +48,9 @@ import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 import 'package:copo_dagua_app/core/riverpod_cache.dart';
 import 'package:copo_dagua_app/core/event/recent_events.dart';
+import '../../../core/events/my_qr.dart' show MyQr, fetchMyQr;
+import '../../../core/page_transitions.dart' show ExpandOrigin;
+import 'ticket_pass_screens.dart' show brandQr;
 
 /// Separador "Eventos" (pedido 2026-11): os eventos da conta — o que
 /// organizo e aqueles a que já tenho acesso — e os eventos públicos
@@ -53,7 +58,12 @@ import 'package:copo_dagua_app/core/event/recent_events.dart';
 class EventosScreen extends ConsumerStatefulWidget {
   /// 1 = abrir em "Os meus eventos" (vindo do modo convidado).
   final int? initialTab;
-  const EventosScreen({super.key, this.initialTab});
+
+  /// «Meus eventos» (pedido 2026-11-27, prancheta «Meus eventos»): o QR em
+  /// cima, os convites e os carrosséis «Organizas» / «Convidado». Sem isto
+  /// é o «Explorar» (só os eventos para descobrir, prancheta «Explorar · A»).
+  final bool mine;
+  const EventosScreen({super.key, this.initialTab, this.mine = false});
 
   @override
   ConsumerState<EventosScreen> createState() => _EventosScreenState();
@@ -143,6 +153,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
   @override
   Widget build(BuildContext context) {
     final role = ref.watch(authControllerProvider.select((s) => s.profile?.role));
+    final mine = widget.mine;
     // Já não há contas só de convidado (2026-11-11): organizadores e
     // convidados são a mesma conta, com a mesma barra de baixo.
     final organizer = role != UserRole.partner;
@@ -188,7 +199,16 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
     // 202) — aparecem aqui, como os convites de convidado.
     final orgInvites = ref.watch(myOrganizerInvitesProvider).value ?? const <OrganizerInvite>[];
 
-    final content = <Widget>[
+    // Destaque grande do Explorar: um evento da À Nossa! (se houver) ou o
+    // primeiro evento real em Portugal (os grátis primeiro).
+    final hero = filtering || publicEvents.isEmpty ? null : publicEvents.first;
+    final heroReal = filtering || hero != null || realEvents.isEmpty ? null : realEvents.first;
+    final listPublic = hero == null ? publicEvents : publicEvents.skip(1).toList();
+    final listReal = heroReal == null ? realEvents : realEvents.skip(1).toList();
+
+    final mineContent = <Widget>[
+      const _Pad(_MyQrCard()),
+      const SizedBox(height: 16),
       if (pending.isNotEmpty) _Pad(_InviteNotice(event: pending.first, more: pending.length - 1)),
       for (final inv in orgInvites) _Pad(_OrganizerInviteNotice(invite: inv)),
       // Igual ao mockup "Página de eventos" (2026-11-11): o cartão verde
@@ -216,12 +236,34 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             itemBuilder: (context, i) => _InvitedEventCard(event: guest[i]),
           ),
         ],
-        // Mais espaço até «Descobrir».
         const SizedBox(height: 16),
       ],
-      // O programa saiu daqui (pedido do Rafael, 2026-11-20): fica só no
-      // painel do evento.
-      const _Title('Descobrir', subtitle: 'Eventos abertos a que podes ir'),
+    ];
+
+    final content = mine ? mineContent : <Widget>[
+      if (hero != null)
+        _Pad(_HeroEvent(
+          photo: hero.coverPhotoUrl == null
+              ? _PosterPlaceholder(type: hero.eventType, seed: hero.eventId.hashCode)
+              : SizedNetworkImage(hero.coverPhotoUrl!, fit: BoxFit.cover),
+          leftTag: hero.date == null
+              ? hero.eventType.label
+              : '${_weekdaysShort[hero.date!.weekday - 1]}, ${hero.date!.day} ${_monthsShort[hero.date!.month - 1]}',
+          rightTag: hero.isPaid ? hero.priceLabel.replaceAll(' por pessoa', '') : 'Grátis',
+          title: capFirst(hero.displayNames),
+          meta: [?hero.place, if (hero.location?.isNotEmpty == true) hero.location!].join(' · '),
+          onTap: () => context.push('/evento/${hero.eventId}'),
+        ))
+      else if (heroReal != null)
+        _Pad(_HeroEvent(
+          photo: ExternalEventPhoto.card(heroReal),
+          leftTag: '${_weekdaysShort[heroReal.startsOn.weekday - 1]}, ${heroReal.startsOn.day} ${_monthsShort[heroReal.startsOn.month - 1]}',
+          rightTag: heroReal.isFree ? 'Grátis' : externalEventPrice(heroReal).$2,
+          title: heroReal.title,
+          meta: [?heroReal.venue, heroReal.city].join(' · '),
+          onTap: () => context.push('/evento-real/${heroReal.id}'),
+        )),
+      if (hero != null || heroReal != null) const SizedBox(height: 16),
       Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 0, AppTheme.screenMargin, 0),
         child: SearchPill(controller: _search, hint: 'Procurar por nome ou zona'),
@@ -254,20 +296,20 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
         ]),
       ),
       const SizedBox(height: 18),
-      if (realEvents.isNotEmpty) ...[
-        _RowLabel('Em Portugal', realEvents.length),
+      if (listReal.isNotEmpty) ...[
+        _RowLabel('Em Portugal', listReal.length),
         SnapCarousel(
           peek: true,
-          itemCount: realEvents.length,
-          itemBuilder: (context, i) => _RealEventCard(event: realEvents[i]),
+          itemCount: listReal.length,
+          itemBuilder: (context, i) => _RealEventCard(event: listReal[i]),
         ),
         const SizedBox(height: 16),
-        if (publicEvents.isNotEmpty) _RowLabel('Na À Nossa!', publicEvents.length),
+        if (listPublic.isNotEmpty) _RowLabel('Na À Nossa!', listPublic.length),
       ],
       if (publicAsync.isLoading && publicAsync.value == null)
         // Cartões de evento a carregar, com o tamanho dos reais (2026-11-24).
         const SkeletonPhotoCardList(count: 2, cardHeight: null)
-      else if (publicEvents.isEmpty)
+      else if (listPublic.isEmpty && hero == null)
         _Pad(_EmptyNote(filtering
             ? 'Nenhum evento público com estes filtros.'
             : realEvents.isNotEmpty
@@ -276,12 +318,12 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
       else
         // Cartões empilhados: linha grossa (2 px #CFCFCF) entre eles
         // (pedido 2026-11-22; só nas listas na vertical, não nos carrosséis).
-        for (final (i, e) in publicEvents.indexed)
+        for (final (i, e) in listPublic.indexed)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.screenMargin),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               _PublicEventCard(event: e),
-              if (i < publicEvents.length - 1) const CardsDivider() else const SizedBox(height: 22),
+              if (i < listPublic.length - 1) const CardsDivider() else const SizedBox(height: 22),
             ]),
           ),
     ];
@@ -300,20 +342,14 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
                   // Sino com os avisos pessoais (convites, lembretes) — 2026-11-11.
                   // À esquerda, como Parceiros (pedido 2026-11-12).
                   PageHeader(
-                    title: 'Eventos',
+                    title: mine ? 'Meus eventos' : 'Explorar',
                     showBack: false,
                     titleFontSize: 28,
-                    // QR da conta ao lado do sino (pedido 2026-11-23: "adiciona
-                    // um icon do qr code ao lado do das notificações na página
-                    // dos eventos"; migração 228). Abre «Entrada»: o QR e todos
-                    // os eventos onde dá entrada.
+                    // O QR da conta passou para o topo de «Meus eventos»
+                    // (2026-11-27); lá fica também o «+» de criar evento.
                     trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                      if (role != null) ...[
-                        V2RoundButton(
-                          icon: Hi.qrCode,
-                          tooltip: 'O teu QR',
-                          onTap: () => context.push('/entrada'),
-                        ),
+                      if (mine && organizer) ...[
+                        V2RoundButton(icon: Hi.plus, tooltip: 'Criar evento', onTap: () => context.push('/novo-evento')),
                         const SizedBox(width: 10),
                       ],
                       const PartnerNotificationBell(),
@@ -331,7 +367,7 @@ class _EventosScreenState extends ConsumerState<EventosScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: const FloatingBottomNav(current: AppTab.events),
+            child: FloatingBottomNav(current: mine ? AppTab.mine : AppTab.events),
           ),
         ],
       ),
@@ -1405,4 +1441,166 @@ class EventPosterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _PublicEventCard(event: event);
+}
+
+/// Destaque grande do Explorar (prancheta «Explorar · A», 2026-11-27): foto
+/// 340 com o dia e a entrada por cima, véu escuro em baixo, «DESTAQUE DA
+/// SEMANA», o nome 28 a branco e «Ver evento». Cresce até à página como os
+/// outros cartões.
+class _HeroEvent extends StatelessWidget {
+  final Widget photo;
+  final String leftTag;
+  final String rightTag;
+  final String title;
+  final String meta;
+  final VoidCallback onTap;
+  const _HeroEvent({required this.photo, required this.leftTag, required this.rightTag, required this.title, required this.meta, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Builder(
+        builder: (context) => SnappyTap(
+          onTap: () {
+            ExpandOrigin.capture(context);
+            onTap();
+          },
+          child: ClipRSuperellipse(
+            borderRadius: BorderRadius.circular(22),
+            child: SizedBox(
+              height: 340,
+              child: Stack(fit: StackFit.expand, children: [
+                photo,
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.35, 1],
+                      colors: [Color(0x00171713), Color(0xC0171713)],
+                    ),
+                  ),
+                ),
+                Positioned(left: 12, top: 12, child: PhotoPill(leftTag)),
+                Positioned(right: 12, top: 12, child: PhotoPill(rightTag)),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                    const Text('DESTAQUE DA SEMANA',
+                        style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: Colors.white70)),
+                    const SizedBox(height: 6),
+                    Text(title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 28, height: 1.1, fontWeight: FontWeight.w700, color: Colors.white)),
+                    if (meta.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Colors.white)),
+                    ],
+                    const SizedBox(height: 12),
+                    Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      alignment: Alignment.center,
+                      decoration: const ShapeDecoration(color: Colors.white, shape: StadiumBorder()),
+                      child: const Text('Ver evento', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                    ),
+                  ]),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      );
+}
+
+/// O QR da conta em cima de «Meus eventos» (prancheta «Meus eventos»,
+/// 2026-11-27): QR 112, «O MEU CÓDIGO», «Mostra à entrada» e «Ampliar»
+/// (abre «Entrada», com o QR grande e os eventos onde dá entrada). O código
+/// muda a cada 30 s, como na Entrada.
+class _MyQrCard extends StatefulWidget {
+  const _MyQrCard();
+
+  @override
+  State<_MyQrCard> createState() => _MyQrCardState();
+}
+
+class _MyQrCardState extends State<_MyQrCard> {
+  MyQr? _qr;
+  bool _loading = true;
+  Timer? _refresh;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _refresh?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    _refresh?.cancel();
+    final q = await fetchMyQr();
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      if (q != null) _qr = q;
+    });
+    _refresh = Timer(q?.refreshIn ?? const Duration(seconds: 5), _load);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final q = _qr;
+    return SnappyTap(
+      onTap: () => context.push('/entrada'),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: ShapeDecoration(
+          color: Colors.white,
+          shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22)),
+        ),
+        child: Row(children: [
+          Container(
+            width: 112,
+            height: 112,
+            padding: const EdgeInsets.all(8),
+            decoration: ShapeDecoration(
+              color: AppTheme.background,
+              shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: q != null
+                ? brandQr(q.qrData, 96, label: 'Código QR da conta')
+                : _loading
+                    ? const SkeletonBox(width: 96, height: 96, radius: 8)
+                    : const Icon(Hi.signalSlash, size: 28, color: AppTheme.inkMuted),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('O MEU CÓDIGO',
+                  style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+              const SizedBox(height: 6),
+              const Text('Mostra à entrada', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.ink)),
+              const SizedBox(height: 4),
+              const Text('Serve de bilhete e de convite em todos os teus eventos.',
+                  style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
+              const SizedBox(height: 10),
+              Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
+                child: const Text('Ampliar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
 }

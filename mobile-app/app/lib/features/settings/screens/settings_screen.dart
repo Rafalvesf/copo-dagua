@@ -432,7 +432,7 @@ class GuestAccountSections extends StatelessWidget {
         const _SectionTitle('Eventos'),
         _Group(
           children: [
-            _Row(icon: Hi.sparkles, label: 'Os teus eventos', onTap: () => context.go('/eventos')),
+            _Row(icon: Hi.sparkles, label: 'Os teus eventos', onTap: () => context.go('/meus-eventos')),
             _Row(icon: Hi.key, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
           ],
         ),
@@ -847,7 +847,7 @@ class _GuestSettings extends StatelessWidget {
         const _SectionTitle('Eventos'),
         _Group(
           children: [
-            _Row(icon: Hi.sparkles, label: 'Os teus eventos', onTap: () => context.go('/eventos')),
+            _Row(icon: Hi.sparkles, label: 'Os teus eventos', onTap: () => context.go('/meus-eventos')),
             _Row(icon: Hi.key, label: 'Juntar-me a outro evento', onTap: () => showGuestModeSheet(context)),
           ],
         ),
