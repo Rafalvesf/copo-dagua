@@ -237,8 +237,6 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
                   ),
               ],
             ],
-            const GalleryViewToggle(),
-            const SizedBox(height: 12),
             KitPills([
               KitPill(label: 'Todas', count: allCount, selected: _tab == _GalleryTab.all,
                   onTap: () => setState(() => _tab = _GalleryTab.all)),
@@ -247,6 +245,8 @@ class _GalleryBodyState extends ConsumerState<_GalleryBody> {
               KitPill(label: 'Favoritas', count: favCount, selected: _tab == _GalleryTab.favorites,
                   onTap: () => setState(() => _tab = _GalleryTab.favorites)),
             ]),
+            const SizedBox(height: 12),
+            const GalleryViewToggle(),
             const SizedBox(height: 16),
             if (approved.isEmpty)
               GalleryEmptyState(
