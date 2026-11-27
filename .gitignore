@@ -15,3 +15,6 @@ supabase/.temp/
 **/google-services.json
 **/GoogleService-Info.plist
 __pycache__/
+
+# graphify (mapa do código, gerado localmente)
+graphify-out/
