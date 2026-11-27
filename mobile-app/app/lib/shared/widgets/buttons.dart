@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import 'snappy_tap.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../leave.dart';
 
 /// Pílula escura com um botão circular branco de seta encaixado no
 /// canto direito — o padrão de CTA usado nos cartões de destaque.
@@ -119,11 +120,7 @@ class CircleBackButton extends StatelessWidget {
   // pop, e o botão de voltar ficava sem efeito nenhum. Quando não há
   // nada para popular, volta à home em vez de ficar sem fazer nada.
   void _handleBack(BuildContext context) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    } else {
-      context.go('/evento');
-    }
+    leave(context);
   }
 
   @override

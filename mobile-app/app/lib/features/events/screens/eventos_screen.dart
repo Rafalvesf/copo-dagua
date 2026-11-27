@@ -958,7 +958,9 @@ class _MyEventCard extends ConsumerWidget {
 
   Future<void> _open(BuildContext context, WidgetRef ref) async {
     await ref.read(eventControllerProvider.notifier).select(event.id);
-    if (context.mounted) context.go('/evento');
+    // Por cima da lista (push, não go): ao voltar, o cartão encolhe para o
+    // seu sítio e a lista fica onde estava (pedido 2026-11-27).
+    if (context.mounted) context.push('/evento');
   }
 
   @override
@@ -1089,7 +1091,7 @@ class _InvitedEventCard extends ConsumerWidget {
       filled: true,
       onTap: () {
         markEventOpened(event.eventId); // o mais recente primeiro (2026-11-26)
-        context.go(open);
+        context.push(open);
       },
       photo: _coverImage(event.eventId, event.eventType, event.coverPhotoUrl),
       leftTag: const InfoTag('Convidado', onPhoto: true),

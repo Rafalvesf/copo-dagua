@@ -64,6 +64,7 @@ import '../../partners/screens/partner_detail_screen.dart' show PartnerDetailScr
 import '../../partners/widgets/partner_cards.dart' show PartnerCarousel;
 import 'package:copo_dagua_app/shared/widgets/app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../../../shared/leave.dart';
 
 
 /// Cor escolhida pelo organizador (verde-eucalipto por defeito, 098) e
@@ -284,7 +285,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
           top: topInset + 12,
           child: ScrollAwareBackButton(
             controller: _scroll,
-            onBack: () => context.go('/eventos'),
+            onBack: () => leave(context),
             backLabel: 'Voltar a Eventos',
             imageExtent: layout == MenuLayout.classic && hasCover ? 174 : 0,
             rotate: false,

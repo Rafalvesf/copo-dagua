@@ -15,6 +15,7 @@ import '../../../shared/widgets/section_frame.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
 import '../widgets/join_requests_card.dart' show guestCategories;
+import '../../../shared/leave.dart';
 
 /// «Pedidos para entrar» (pedido do Rafael, 2026-11-22, mockup «Páginas do
 /// evento», ⑨): um pedido de cada vez, com a foto grande, o @, os eventos e
@@ -88,7 +89,7 @@ class _JoinRequestsScreenState extends ConsumerState<JoinRequestsScreen> {
                 reaction: Estrela.piscar,
                 title: 'Está tudo tratado',
                 text: 'Respondeste a todos os pedidos. Os novos aparecem aqui.',
-                actions: [FrameButton44('Ver convidados', outlined: true, onTap: () => context.pop())],
+                actions: [FrameButton44('Ver convidados', outlined: true, onTap: () => leave(context, force: true))],
               ),
             ])
           else ...[

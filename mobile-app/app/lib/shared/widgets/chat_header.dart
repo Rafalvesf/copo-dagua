@@ -6,6 +6,7 @@ import 'floating_bottom_nav.dart' show kNavRadius;
 import 'snappy_tap.dart';
 import 'v2_kit.dart';
 import 'package:copo_dagua_app/shared/widgets/island_sheet.dart';
+import '../leave.dart';
 
 /// Cabeçalho de uma conversa (redesign 2026-10, igual ao canvas): voltar,
 /// avatar com foto ou iniciais, nome em Bold e uma linha secundária.
@@ -122,7 +123,7 @@ class ChatHeader extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(
           children: [
-            roundBtn(const Icon(Hi.arrowLeft, size: 20, color: Colors.white), 'Voltar', () => Navigator.of(context).maybePop()),
+            roundBtn(const Icon(Hi.arrowLeft, size: 20, color: Colors.white), 'Voltar', () => leave(context)),
             const SizedBox(width: 12),
             Expanded(child: onOpenProfile == null ? info : SnappyTap(onTap: onOpenProfile, child: info)),
             if (onReport != null || menu.isNotEmpty) ...[

@@ -26,6 +26,7 @@ import '../../../shared/widgets/line_icon.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/v2_kit.dart' show V2Avatar;
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
+import '../../../shared/leave.dart';
 
 enum _Step { checking, select, loading, card, confirming, mbWayPhone, mbWayWaiting, multibanco, done }
 
@@ -160,7 +161,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           'Avisamos-te 6 dias antes do prazo e nos últimos 3 dias. '
           '${a.isGuestShare ? 'Pagas no convite, na app.' : 'Pagas em Reservas, no evento.'}',
     );
-    if (later && mounted) context.pop();
+    if (later && mounted) leave(context, force: true);
   }
 
   @override
@@ -488,7 +489,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
       type: MaterialType.transparency,
       child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
         // Toque fora da folha fecha.
-        Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => context.pop())),
+        Expanded(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => leave(context, force: true))),
         ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxH),
           child: Container(
@@ -533,7 +534,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
                   child: Text(_sheetTitle,
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
                 ),
-                _SheetRound(icon: Hi.xMark, label: 'Fechar', onTap: () => context.pop()),
+                _SheetRound(icon: Hi.xMark, label: 'Fechar', onTap: () => leave(context, force: true)),
               ]),
               Flexible(
                 child: SingleChildScrollView(
@@ -879,12 +880,12 @@ class _PayScreenState extends ConsumerState<PayScreen> {
         button = _SheetButton(label: 'Enviar pedido MB WAY', onTap: _sendMbWay);
       case _Step.done:
         final toBooking = a.isBooking && !a.isGuestShare;
-        button = _SheetButton(label: toBooking ? 'Ver reserva' : 'Fechar', onTap: () => toBooking ? context.go('/bookings') : context.pop());
+        button = _SheetButton(label: toBooking ? 'Ver reserva' : 'Fechar', onTap: () => toBooking ? context.go('/bookings') : leave(context, force: true));
         if (toBooking) {
           final chat = a.onChat;
           extras.add(chat != null
               ? _SheetButton(label: 'Falar com ${a.partnerName}', secondary: true, onTap: () => chat(context))
-              : _SheetButton(label: 'Fechar', secondary: true, onTap: () => context.pop()));
+              : _SheetButton(label: 'Fechar', secondary: true, onTap: () => leave(context, force: true)));
         }
       case _Step.mbWayWaiting:
         button = _SheetButton(label: 'Escolher outro método', secondary: true, onTap: _backToSelect);
