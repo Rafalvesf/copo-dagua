@@ -165,8 +165,6 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                   _ => all,
                 };
                 return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  const GalleryViewToggle(),
-                  const SizedBox(height: 12),
                   KitPills([
                     KitPill(label: 'Todas', count: all.length, selected: _tab == _GalleryTab.values.first,
                         onTap: () => setState(() => _tab = _GalleryTab.values.first)),
@@ -175,6 +173,8 @@ class _GuestGalleryScreenState extends ConsumerState<_GuestGalleryBody> {
                     KitPill(label: 'Favoritas', count: favs.length, selected: _tab == _GalleryTab.favorites,
                         onTap: () => setState(() => _tab = _GalleryTab.favorites)),
                   ]),
+                  const SizedBox(height: 12),
+                  const GalleryViewToggle(),
                   const KitCaps('Esta semana', top: 20),
                   if (shown.isEmpty)
                     const GalleryEmptyState(message: 'Ainda não existem fotos. Carrega as primeiras.')
