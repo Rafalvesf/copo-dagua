@@ -27,6 +27,22 @@ export type Learned = {
 
 export const LEARNED: Learned[] = [
   {
+    id: "friccao-onboarding-pagar",
+    date: "2026-11-27",
+    title: "Menos fricção no onboarding e no pagar (referências do Dribbble)",
+    source: "Dribbble: Travel, Language e AI onboarding; Tasktugas; Learning OS; Parking Space (enviados pelo Rafael)",
+    lesson:
+      "Quem desiste, desiste antes de ver valor. Os bons onboardings mostram uma ideia por ecrã (título grande, cor forte, " +
+      "um só botão), deixam entrar com Apple/Google e pedem a conta só quando há algo a guardar. Pagar é um só ecrã: o preço " +
+      "em grande, escolhas em pílulas e «Desliza para pagar».",
+    checks: [
+      { item: "Organizador até ao 1.º evento", verdict: "problema", found: "~13 ecrãs: tipo de conta, interesses, «De onde és?», como entrar, registo com 6 campos, verificar email, 6 passos do evento.", next: "Proposta no canvas (OnbOrgIntro, OnbOrgEvento): evento primeiro, conta no fim, 4 ecrãs." },
+      { item: "Parceiro até publicar", verdict: "problema", found: "13 passos obrigatórios (logótipo, fotos mínimas, descrição 50+, NIF, horário…).", next: "Proposta (OnbParceiro): 3 passos e completar depois com «Perfil a 50 %»; NIF/IBAN só antes do 1.º sinal." },
+      { item: "Reservar e pagar o sinal", verdict: "problema", found: "~9 ecrãs entre escolher o evento e pagar.", next: "Proposta (PagarUmPopup): um só popup com «Desliza para pagar»." },
+      { item: "Programa", verdict: "problema", found: "Lista simples.", next: "Proposta (ProgramaRoadmap): semana em fila, cartões de cor e «Agora»." },
+    ],
+  },
+  {
     id: "graphify",
     date: "2026-11-27",
     title: "Graphify: um mapa do código para gastar menos tokens",
