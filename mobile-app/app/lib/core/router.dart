@@ -456,8 +456,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       tabRoute(
         path: '/eventos',
-        builder: (context, state) =>lazyPage([l16.loadLibrary], () => 
-            l16.EventosScreen(initialTab: state.uri.queryParameters['tab'] == 'meus' ? 1 : null)),
+        builder: (context, state) => state.uri.queryParameters['tab'] == 'meus'
+            // «?tab=meus» (links antigos) mostra «Meus eventos».
+            ? lazyPage([l16.loadLibrary], () => l16.EventosScreen(mine: true))
+            : lazyPage([l16.loadLibrary], () => l16.EventosScreen()),
+      ),
+      // «Meus eventos» (pedido 2026-11-27): separador próprio na navbar.
+      tabRoute(
+        path: '/meus-eventos',
+        builder: (context, state) => lazyPage([l16.loadLibrary], () => l16.EventosScreen(mine: true)),
       ),
       // Caminho antigo de "Os teus eventos" — agora é o separador Eventos.
       GoRoute(path: '/guest-events', redirect: (context, state) => '/eventos'),

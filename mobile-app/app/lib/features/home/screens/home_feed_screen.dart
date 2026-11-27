@@ -163,7 +163,7 @@ class _HomeFeedScreenState extends ConsumerState<HomeFeedScreen> {
                         ProfileSectionTitle(
                           'Os meus eventos',
                           action: 'Ver todos (${(profile.role == UserRole.partner ? 0 : ref.watch(eventControllerProvider).events.length) + (ref.watch(guestEventsProvider).value?.length ?? 0)})',
-                          onAction: () => context.go('/eventos'),
+                          onAction: () => context.go('/meus-eventos'),
                         ),
                         const MyEventsCarousel(),
                         _MyFollowing(profileId: profile.id),
