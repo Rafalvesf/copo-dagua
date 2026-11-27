@@ -10,6 +10,7 @@ import 'feedback.dart';
 import 'island_sheet.dart';
 import '../../core/notifications/push.dart';
 import 'package:copo_dagua_app/shared/widgets/skeleton.dart';
+import 'press_scale.dart';
 
 /// Sino de notificações do parceiro e do convidado — versão simples do sino do casal
 /// (`home_feed_screen.dart`, `_NotificationsSheet`), sem os separadores
@@ -31,7 +32,7 @@ class PartnerNotificationBell extends ConsumerWidget {
       child: Semantics(
         button: true,
         label: unread > 0 ? 'Notificações, $unread por ler' : 'Notificações',
-        child: GestureDetector(
+        child: PressScale(child: GestureDetector(
           onTap: () async {
             await showIslandSheet(
               context: context,
@@ -49,7 +50,7 @@ class PartnerNotificationBell extends ConsumerWidget {
               child: const Center(child: Icon(Hi.bell, size: 20, color: Colors.white)),
             ),
           ),
-        ),
+        )),
       ),
     );
   }

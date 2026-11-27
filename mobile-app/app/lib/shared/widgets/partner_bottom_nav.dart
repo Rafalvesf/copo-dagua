@@ -11,6 +11,7 @@ import 'floating_bottom_nav.dart' show NavBubble, kNavRadius;
 import 'count_badge.dart';
 import 'first_run_tour.dart';
 import 'floating_filter_bar.dart' show ConnectedFilterNav;
+import 'press_scale.dart';
 
 enum PartnerTab { home, requests, chat, profile }
 
@@ -141,7 +142,8 @@ class _NavIcon extends StatelessWidget {
       child: Tooltip(
         message: label,
         excludeFromSemantics: true,
-        child: InkWell(
+        // Encolhe a 0,97 ao carregar, como os botões (pedido 2026-11-27).
+        child: PressScale(child: InkWell(
       borderRadius: BorderRadius.circular(kNavRadius - 10),
       onTap: onTap,
       // Pill cinzenta no separador ativo (2026-11-11: "para ser mais
@@ -186,7 +188,7 @@ class _NavIcon extends StatelessWidget {
           ],
         ),
       ),
-    )));
+    ))));
   }
 }
 
