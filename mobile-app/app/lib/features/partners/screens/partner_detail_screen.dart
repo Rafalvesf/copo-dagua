@@ -153,8 +153,8 @@ class PartnerDetailScreen extends ConsumerStatefulWidget {
     // foto no topo com voltar e favorito, cartão branco por cima.
     return Navigator.of(context).push<Partner>(
       PageRouteBuilder<Partner>(
-        transitionDuration: const Duration(milliseconds: 300),
-        reverseTransitionDuration: const Duration(milliseconds: 180),
+        transitionDuration: ExpandOrigin.pushDuration,
+        reverseTransitionDuration: ExpandOrigin.popDuration,
         pageBuilder: (context, animation, secondaryAnimation) => PartnerDetailScreen(
           partner: partner,
           selectionMode: selectionMode,

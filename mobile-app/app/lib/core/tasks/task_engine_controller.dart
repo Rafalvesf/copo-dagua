@@ -6,6 +6,7 @@ import '../supabase/supabase_config.dart';
 import '../event/event_controller.dart';
 import 'task_models.dart';
 import '../../shared/money.dart';
+import '../event/organizers.dart' show OrganizerPerm, eventPermsProvider;
 
 /// Máximo de tarefas `SYSTEM` visíveis em simultâneo (RN33/59 do
 /// pedido do utilizador) — tarefas `USER` não contam para este limite.
@@ -182,6 +183,11 @@ class TaskEngineController extends Notifier<TaskEngineState> {
     if (eventId == null || _recomputing) return;
     _recomputing = true;
     try {
+      // Só quem pode gerir as tarefas deste evento as cria: antes, quem
+      // organiza sem essa permissão fazia o servidor recusar (403) a cada
+      // vez que abria o evento (2026-11-27).
+      final perms = await ref.read(eventPermsProvider(eventId).future);
+      if (!perms.can(OrganizerPerm.tarefas)) return;
       final ctxF = _gatherContext(eventId);
       final templatesF = _loadTemplates();
       final ctx = await ctxF;
