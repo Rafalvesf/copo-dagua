@@ -220,13 +220,18 @@ class FlowStarHalo extends StatelessWidget {
   final double size;
   const FlowStarHalo(this.reaction, {super.key, this.size = 270});
 
+  /// Sem o círculo branco por trás e o brilho maior (pedido 2026-11-28):
+  /// o desenho ocupa ~2/3 da largura do SVG, por isso cresce 1,15× e pode
+  /// sair um pouco da caixa.
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => SizedBox(
         width: size,
         height: size,
-        decoration: const BoxDecoration(color: FlowTint.halo, shape: BoxShape.circle),
-        alignment: Alignment.center,
-        child: EstrelaMascot(reaction, size: size * 0.74),
+        child: OverflowBox(
+          maxWidth: size * 1.2,
+          maxHeight: size * 1.2,
+          child: EstrelaMascot(reaction, size: size * 1.15),
+        ),
       );
 }
 

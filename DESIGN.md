@@ -513,8 +513,10 @@ conteúdo, a frase 17 e o botão 56 com a seta.
   parceiro estão no §6.9 (`shared/widgets/flow_kit.dart`). O `onb_kit.dart`
   fica só para o que ainda o usa (convidado, folhas de data e local).
 - **Mascote — a estrela** (`shared/widgets/estrela.dart`, desenho do
-  Rafael, canvas «Estrela · reações», 2026-11-14): estrela no verde da app `#4F6B4A` (pedido 2026-11-16),
-  lisa, com sombra no chão; 12 reações (feliz, parabéns, apaixonada, fixe,
+  Rafael, canvas «Estrela · reações», 2026-11-14): o **brilho branco com
+  contorno preto** (8 no desenho), a cara e os riscos a preto e a **sombra
+  no chão verde** `#4F6B4A` a 45 % (pedido 2026-11-28; antes era verde
+  `#4F6B4A` liso); o chapéu dos parabéns é branco com riscas pretas; 12 reações (feliz, parabéns, apaixonada, fixe,
   piscar o olho, surpresa, a dormir, a pensar, contente, triste, zangada,
   ideia). Anima 3 vezes ao aparecer e fica parada; só «a pensar» pode
   continuar enquanto carrega; parada com «reduzir movimento». Onde:
@@ -1235,8 +1237,8 @@ Pranchetas «Fluxo novo» do canvas. Peças em `shared/widgets/flow_kit.dart`
   cima, «À Nossa!» (ou «Novo evento») à esquerda e «Saltar», «Voltar» ou
   «Fechar» à direita; o conteúdo; o **título 54 por baixo do conteúdo** (era 44, pedido 2026-11-28); o
   botão preto 56 com o texto à esquerda e o círculo branco 40 com a seta; um
-  rodapé 15 («Já tens conta? **Entrar**»). A estrela num halo branco
-  translúcido. Escolhido: **preto** (cartões, mosaicos e pílulas); nas
+  rodapé 15 («Já tens conta? **Entrar**»). A estrela **sem círculo por trás**, maior
+  (`FlowStarHalo`, 1,15× da caixa; pedido 2026-11-28). Escolhido: **preto** (cartões, mosaicos e pílulas); nas
   categorias do parceiro, as outras com a linha preta 1,5.
 - **Boas-vindas 1 a 3** (só na primeira vez, sem conta): estrela, título e
   botão, sem frase. **Boas-vindas 4** «Como vais usar a À Nossa!?»: dois
