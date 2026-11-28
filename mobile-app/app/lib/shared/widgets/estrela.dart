@@ -7,7 +7,8 @@ import 'steady_ticker.dart';
 
 part 'estrela_svgs.dart';
 
-/// A mascote da À Nossa! (2026-11-14): a estrela verde, com 12 reações
+/// A mascote da À Nossa! (2026-11-14): o brilho — branco com contorno preto
+/// e sombra verde desde 2026-11-28 —, com 12 reações
 /// desenhadas pelo Rafael (canvas «Estrela · reações»).
 ///
 /// Cada reação anima algumas vezes ao aparecer e fica parada (como os
@@ -174,7 +175,7 @@ class _EstrelaMascotState extends State<EstrelaMascot> with SteadyTickerProvider
                         width: 140 * k,
                         height: 12 * k,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFE2DED2),
+                          color: Color(0x734F6B4A), // verde (brilho branco, 2026-11-28)
                           borderRadius: BorderRadius.all(Radius.elliptical(70, 6)),
                         ),
                       ),
