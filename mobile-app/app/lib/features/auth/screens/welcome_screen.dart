@@ -115,7 +115,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
     _size = MediaQuery.sizeOf(context);
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           const _WelcomeContent(),

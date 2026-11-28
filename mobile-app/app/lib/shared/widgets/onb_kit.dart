@@ -177,7 +177,8 @@ class OnbStep extends StatelessWidget {
       const SizedBox(height: 16),
     ]);
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      // Fundo branco como os fluxos novos (pedido 2026-11-28).
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 12, AppTheme.screenMargin, 24),
@@ -228,7 +229,11 @@ class OnbOption extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: selected ? _green : Colors.white, borderRadius: BorderRadius.circular(22)),
+          decoration: BoxDecoration(
+              color: selected ? _green : Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: selected ? null : Border.all(color: AppTheme.ink, width: 1.5),
+            ),
           child: Row(children: [
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -279,7 +284,11 @@ class OnbChips extends StatelessWidget {
             duration: const Duration(milliseconds: 140),
             height: 38,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(color: selected.contains(i) ? _green : Colors.white, borderRadius: BorderRadius.circular(19)),
+            decoration: BoxDecoration(
+              color: selected.contains(i) ? _green : Colors.white,
+              borderRadius: BorderRadius.circular(19),
+              border: selected.contains(i) ? null : Border.all(color: AppTheme.ink, width: 1.5),
+            ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Flexible(
                 child: Text(i,
@@ -332,9 +341,9 @@ class OnbField extends StatelessWidget {
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 18),
         decoration: BoxDecoration(
-          color: fill,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(26),
-          border: error != null ? Border.all(color: red, width: 1.5) : null,
+          border: Border.all(color: error != null ? red : AppTheme.ink, width: 1.5),
         ),
         child: Row(children: [
           Expanded(
@@ -387,7 +396,11 @@ class OnbRows extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.ink, width: 1.5),
+      ),
       child: Column(children: [
         for (var i = 0; i < rows.length; i++)
           SnappyTap(
@@ -463,7 +476,11 @@ class OnbTypeGrid extends StatelessWidget {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-              decoration: BoxDecoration(color: t == selected ? _green : Colors.white, borderRadius: BorderRadius.circular(22)),
+              decoration: BoxDecoration(
+                color: t == selected ? _green : Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                border: t == selected ? null : Border.all(color: AppTheme.ink, width: 1.5),
+              ),
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 LineIcon(onbTypeIcons[t]!.$1,
                     circles: onbTypeIcons[t]!.$2, size: 24, stroke: 1.8, color: t == selected ? Colors.white : AppTheme.ink),

@@ -411,7 +411,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
     // Canvas "Convidado 1–8": branco, "Passo X de N", barra fina,
     // pergunta 28/34 e botão verde em baixo.
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 34),
@@ -787,7 +787,7 @@ class _PersonRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE4E1D8)),
+        border: Border.all(color: AppTheme.ink, width: 1.5),
       ),
       child: Row(
         children: [
@@ -824,15 +824,11 @@ class _DashedBorder extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFD9D6CF)
+      ..color = const Color(0xFF171713)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    final path = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(16)));
-    for (final m in path.computeMetrics()) {
-      for (double d = 0; d < m.length; d += 9) {
-        canvas.drawPath(m.extractPath(d, d + 5), paint);
-      }
-    }
+    // Linha preta contínua (2026-11-28; antes tracejada cinzenta).
+    canvas.drawRRect(RRect.fromRectAndRadius((Offset.zero & size).deflate(0.75), const Radius.circular(16)), paint);
   }
 
   @override
@@ -874,7 +870,7 @@ class _PersonChoices extends StatelessWidget {
         decoration: BoxDecoration(
           color: on ? AppTheme.accentOliveDark : Colors.white,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: on ? AppTheme.accentOliveDark : AppTheme.borderMuted),
+          border: Border.all(color: on ? AppTheme.accentOliveDark : AppTheme.ink, width: 1.5),
         ),
         child: Row(
           mainAxisSize: equal ? MainAxisSize.max : MainAxisSize.min,
@@ -1101,7 +1097,7 @@ class _RadioRow extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? const Color(0xFFEEF2E9) : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: selected ? AppTheme.accentOliveDark : const Color(0xFFE4E1D8), width: selected ? 1.5 : 1),
+            border: Border.all(color: selected ? AppTheme.accentOliveDark : AppTheme.ink, width: 1.5),
           ),
           child: Row(
             children: [
@@ -1171,7 +1167,7 @@ class _BigChoice extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: selected ? AppTheme.accentOliveDark : Colors.white,
-          border: selected ? null : Border.all(color: const Color(0xFFE4E1D8)),
+          border: selected ? null : Border.all(color: AppTheme.ink, width: 1.5),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -1198,7 +1194,7 @@ class _ConfirmedView extends StatelessWidget {
   Widget build(BuildContext context) {
     // Canvas "Convidado 8 · Pronto" — mesmos tempos.
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           const Positioned.fill(child: FallingConfetti(delay: Duration(milliseconds: 1900))),
