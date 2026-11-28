@@ -753,7 +753,7 @@ class _ProposalRowState extends ConsumerState<_ProposalRow> {
               child: PressScale(child: FilledButton(
                 onPressed: _accepting ? null : _accept,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.ink,
+                  backgroundColor: AppTheme.action,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   shape: const StadiumBorder(),
@@ -1000,7 +1000,7 @@ class ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
           PressScale(child: FilledButton(
             onPressed: _rating == 0 || _submitting ? null : _submit,
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
+              backgroundColor: AppTheme.action,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: const StadiumBorder(),

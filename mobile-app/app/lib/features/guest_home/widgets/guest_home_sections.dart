@@ -217,7 +217,7 @@ class GuestAnswerCard extends ConsumerWidget {
           ),
           PressScale(child: FilledButton(
             onPressed: edit,
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, foregroundColor: Colors.white, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.action, foregroundColor: Colors.white, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: Text(declined ? 'Mudar' : 'Responder'),
           )),
         ]),
@@ -354,7 +354,7 @@ class GuestPlaceCard extends ConsumerWidget {
             child: PressScale(child: FilledButton(
               onPressed: () => showNavigationSheet(context, label: title, address: address, latitude: lat, longitude: lng),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(0, 44),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -619,7 +619,7 @@ class GuestPhotosCta extends StatelessWidget {
         icon: const Icon(Hi.camera),
         label: const Text('Tirar e partilhar fotos'),
         style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.ink,
+          backgroundColor: AppTheme.action,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: const StadiumBorder(),
@@ -832,7 +832,7 @@ class GuestTablesAlerts extends ConsumerWidget {
             height: 36,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+            decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(18)),
             child: Text(cta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
           ),
         ]),

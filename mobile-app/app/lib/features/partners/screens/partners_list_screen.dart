@@ -318,11 +318,11 @@ class _PartnersListScreenState extends ConsumerState<PartnersListScreen> {
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                                borderSide: BorderSide.none,
+                                borderSide: const BorderSide(color: AppTheme.ink, width: 1.5),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                                borderSide: BorderSide.none,
+                                borderSide: const BorderSide(color: AppTheme.ink, width: 1.5),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.pill),

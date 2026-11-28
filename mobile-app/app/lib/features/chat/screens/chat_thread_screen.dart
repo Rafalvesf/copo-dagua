@@ -900,7 +900,7 @@ class _PayOrLaterSheet extends StatelessWidget {
             child: PressScale(child: FilledButton(
               onPressed: canPayNow ? onPay : onLater,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, fontFamily: AppTheme.fontFamily),

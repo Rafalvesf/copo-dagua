@@ -171,7 +171,7 @@ class _OfferCard extends ConsumerWidget {
                     if (paid == true) await onReserved();
                   },
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
+              backgroundColor: AppTheme.action,
               minimumSize: const Size.fromHeight(46),
               shape: const StadiumBorder(),
             ),
@@ -294,7 +294,7 @@ class _ReserveSheetState extends ConsumerState<_ReserveSheet> {
             PressScale(child: FilledButton(
               onPressed: _busy ? null : _pay,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 minimumSize: const Size.fromHeight(52),
                 shape: const StadiumBorder(),
               ),

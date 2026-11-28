@@ -45,7 +45,7 @@ class DashButton36 extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: outlined ? Colors.white : AppTheme.ink,
+            color: outlined ? Colors.white : AppTheme.action,
             border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
             borderRadius: BorderRadius.circular(18),
           ),
@@ -630,7 +630,7 @@ Widget _big(String label, VoidCallback onTap, {bool outlined = false}) => Snappy
         height: 52,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: outlined ? Colors.white : AppTheme.ink,
+          color: outlined ? Colors.white : AppTheme.action,
           border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
           borderRadius: BorderRadius.circular(26),
         ),

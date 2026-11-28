@@ -112,10 +112,15 @@ class _IslandRoute<T> extends PopupRoute<T> {
         builder: (c) {
           final t = Theme.of(c);
           return Theme(
-            data: t.copyWith(inputDecorationTheme: t.inputDecorationTheme.copyWith(fillColor: AppTheme.surface)),
+            data: t.copyWith(inputDecorationTheme: t.inputDecorationTheme.copyWith(fillColor: Colors.white)),
             child: Padding(
               padding: EdgeInsets.only(bottom: safeInside),
-              child: Builder(builder: builder),
+              // A barrinha cinzenta em cima (pedido 2026-11-28): no lugar do
+              // «×» — puxar para baixo ou tocar fora fecha o popup.
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                const _SheetHandle(),
+                Flexible(child: Builder(builder: builder)),
+              ]),
             ),
           );
         },
@@ -160,6 +165,23 @@ class _IslandRoute<T> extends PopupRoute<T> {
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) =>
       child;
+}
+
+/// Barrinha cinzenta 40×5 no topo de todos os popups.
+class _SheetHandle extends StatelessWidget {
+  const _SheetHandle();
+
+  @override
+  Widget build(BuildContext context) => const Padding(
+        padding: EdgeInsets.only(top: 10, bottom: 2),
+        child: Center(
+          child: SizedBox(
+            width: 40,
+            height: 5,
+            child: DecoratedBox(decoration: BoxDecoration(color: Color(0xFFCFCFCF), borderRadius: BorderRadius.all(Radius.circular(3)))),
+          ),
+        ),
+      );
 }
 
 /// A animação: a onda nasce no centro da navbar e cresce até ser o popup.
@@ -321,7 +343,7 @@ Future<bool> askLeaveIsland(BuildContext context) async {
                 child: PressScale(child: FilledButton(
                   onPressed: () => Navigator.of(ctx).pop(false),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.ink,
+                    backgroundColor: AppTheme.action,
                     foregroundColor: Colors.white,
                     shape: const StadiumBorder(),
                     textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -366,13 +388,15 @@ class IslandRoundButton extends StatelessWidget {
       );
 }
 
-/// «×» de um popup: pergunta antes de sair (passa pelo `maybePop`).
+/// Já não há «×» nos popups (pedido 2026-11-28): fecha-se pela barrinha
+/// cinzenta de cima (puxar para baixo) ou tocando fora. Fica vazio para não
+/// partir quem ainda o usa.
 class IslandCloseButton extends StatelessWidget {
   const IslandCloseButton({super.key});
 
   @override
   Widget build(BuildContext context) =>
-      IslandRoundButton(icon: Hi.xMark, label: 'Fechar', onTap: () => Navigator.of(context).maybePop());
+      const SizedBox.shrink();
 }
 
 /// Voltar ao passo anterior de um popup com passos: sempre no canto superior
@@ -400,7 +424,7 @@ class IslandAlert extends StatelessWidget {
   Widget build(BuildContext context) {
     // Botões pretos com letra branca; o secundário branco com contorno
     // (deep fix 2026-11-11).
-    const c = AppTheme.ink;
+    const c = AppTheme.action;
     final base = Theme.of(context);
     const pill = StadiumBorder();
     final theme = base.copyWith(

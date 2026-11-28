@@ -3,6 +3,7 @@ import 'package:copo_dagua_app/shared/hero_icons.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/models/models.dart';
+import '../../core/theme/app_theme.dart';
 import 'island_sheet.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 
@@ -212,19 +213,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                 if (widget.subtitle != null) Text(widget.subtitle!, style: const TextStyle(fontSize: 13, color: Color(0xFF57534E))),
               ]),
             ),
-            Semantics(
-              button: true,
-              label: 'Fechar',
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(color: Color(0xFF171713), shape: BoxShape.circle),
-                  child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-                ),
-              ),
-            ),
+            const SizedBox.shrink(),
           ]),
         ),
         Flexible(
@@ -301,7 +290,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                 child: PressScale(child: FilledButton(
                   onPressed: _save,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF171713),
+                    backgroundColor: AppTheme.action,
                     foregroundColor: Colors.white,
                     shape: const StadiumBorder(),
                     textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),

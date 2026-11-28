@@ -231,7 +231,7 @@ class PillButton extends StatelessWidget {
       onPressed: onPressed,
       style: FilledButton.styleFrom(
         minimumSize: Size.fromHeight(height),
-        backgroundColor: AppTheme.ink,
+        backgroundColor: AppTheme.action,
         foregroundColor: Colors.white,
         shape: const StadiumBorder(),
         textStyle: text,

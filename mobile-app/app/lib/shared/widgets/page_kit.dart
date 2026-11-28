@@ -814,7 +814,7 @@ class KitAlert extends StatelessWidget {
           PressScale(child: FilledButton(
             onPressed: onAction,
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
+              backgroundColor: AppTheme.action,
               foregroundColor: Colors.white,
               minimumSize: const Size(0, 36),
               padding: const EdgeInsets.symmetric(horizontal: 16),

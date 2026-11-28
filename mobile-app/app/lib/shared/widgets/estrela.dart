@@ -162,23 +162,17 @@ class _EstrelaMascotState extends State<EstrelaMascot> with SteadyTickerProvider
             return Stack(
               clipBehavior: Clip.none,
               children: [
-                // Sombra no chão: encolhe quando a estrela sobe.
+                // Sombra no chão: encolhe quando a estrela sobe. Mancha
+                // irregular verde #4F6B4A (pedido 2026-11-28).
                 if (widget.shadow)
                 Positioned(
-                  left: w / 2 - 70 * k,
-                  top: svg.shadowY * k - 6 * k,
+                  left: w / 2 - 76 * k,
+                  top: svg.shadowY * k - 11 * k,
                   child: Transform.scale(
                     scaleX: 1 - (m.lift.clamp(0.0, 70.0) / 140),
                     child: Opacity(
                       opacity: 1 - (m.lift.clamp(0.0, 70.0) / 140),
-                      child: Container(
-                        width: 140 * k,
-                        height: 12 * k,
-                        decoration: const BoxDecoration(
-                          color: Color(0x734F6B4A), // verde (brilho branco, 2026-11-28)
-                          borderRadius: BorderRadius.all(Radius.elliptical(70, 6)),
-                        ),
-                      ),
+                      child: CustomPaint(size: Size(152 * k, 26 * k), painter: const _ShadowPainter()),
                     ),
                   ),
                 ),
@@ -212,6 +206,29 @@ class _EstrelaMascotState extends State<EstrelaMascot> with SteadyTickerProvider
       ),
     );
   }
+}
+
+/// A sombra irregular (do mockup «brilho branco»), numa caixa 152 × 26.
+class _ShadowPainter extends CustomPainter {
+  const _ShadowPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.scale(size.width / 152, size.height / 26);
+    final p = Path()
+      ..moveTo(5, 11)
+      ..cubicTo(15, 3, 47, 5, 65, 4)
+      ..cubicTo(87, 3, 113, 0, 133, 5)
+      ..cubicTo(151, 9, 147, 19, 129, 20)
+      ..cubicTo(107, 22, 95, 17, 75, 21)
+      ..cubicTo(53, 25, 21, 23, 9, 19)
+      ..cubicTo(1, 16, 0, 14, 5, 11)
+      ..close();
+    canvas.drawPath(p, Paint()..color = const Color(0xFF4F6B4A));
+  }
+
+  @override
+  bool shouldRepaint(_ShadowPainter old) => false;
 }
 
 class _M {

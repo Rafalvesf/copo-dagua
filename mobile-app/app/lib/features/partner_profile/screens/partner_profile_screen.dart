@@ -392,7 +392,7 @@ class _PaymentsRequiredCard extends ConsumerWidget {
           const SizedBox(width: 8),
           PressScale(child: FilledButton(
             onPressed: () => context.push('/partner-payments'),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: const Text('Ativar'),
           )),
         ]),

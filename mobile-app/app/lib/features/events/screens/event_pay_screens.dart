@@ -362,7 +362,7 @@ class _Button52 extends StatelessWidget {
           : PressScale(child: FilledButton(
               onPressed: busy ? () {} : onTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
                 disabledForegroundColor: Colors.white,

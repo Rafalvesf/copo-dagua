@@ -462,7 +462,7 @@ class _GuestOnboardingWizardScreenState extends ConsumerState<GuestOnboardingWiz
                 child: PressScale(child: FilledButton(
                   onPressed: _saving ? null : () => _continue(steps),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.ink,
+                    backgroundColor: AppTheme.action,
                     foregroundColor: Colors.white,
                     shape: const StadiumBorder(),
                     textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),

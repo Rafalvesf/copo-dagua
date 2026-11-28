@@ -141,11 +141,11 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
           decoration: InputDecoration(
             hintText: 'Uma palavra para ${widget.partnerName}…',
             filled: true,
-            fillColor: AppTheme.background,
+            fillColor: Colors.white,
             counterText: '',
             contentPadding: const EdgeInsets.all(16),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
           ),
@@ -165,7 +165,7 @@ class _RejectProposalSheetState extends State<RejectProposalSheet> {
                     Navigator.of(context).pop((r.$1, r.$2, note.isEmpty ? null : note));
                   },
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
+              backgroundColor: AppTheme.action,
               foregroundColor: Colors.white,
               disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
               disabledForegroundColor: Colors.white,

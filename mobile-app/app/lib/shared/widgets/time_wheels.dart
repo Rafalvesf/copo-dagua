@@ -133,19 +133,7 @@ Future<TimeOfDay?> pickTimeWheel(BuildContext context, {TimeOfDay? initial, Stri
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            Semantics(
-              button: true,
-              label: 'Fechar',
-              child: GestureDetector(
-                onTap: () => Navigator.of(c).pop(),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                  child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-                ),
-              ),
-            ),
+            const SizedBox.shrink(),
           ]),
           const SizedBox(height: 16),
           TimeWheels(columns: [
@@ -155,7 +143,7 @@ Future<TimeOfDay?> pickTimeWheel(BuildContext context, {TimeOfDay? initial, Stri
           SizedBox(
             height: 52,
             child: PressScale(child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
               onPressed: () {
                 final p = value.split(':');
                 Navigator.of(c).pop(TimeOfDay(hour: int.parse(p[0]), minute: int.parse(p[1])));
@@ -195,15 +183,7 @@ Future<DateTime?> pickDateWheel(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            GestureDetector(
-              onTap: () => Navigator.of(c).pop(),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-              ),
-            ),
+            const SizedBox.shrink(),
           ]),
           const SizedBox(height: 16),
           TimeWheels(columns: [
@@ -215,7 +195,7 @@ Future<DateTime?> pickDateWheel(
           SizedBox(
             height: 52,
             child: PressScale(child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
               onPressed: () {
                 final y = int.parse(year);
                 final m = _monthsPt.indexOf(month) + 1;
@@ -256,15 +236,7 @@ Future<int?> pickNumberWheel(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            GestureDetector(
-              onTap: () => Navigator.of(c).pop(),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-              ),
-            ),
+            const SizedBox.shrink(),
           ]),
           const SizedBox(height: 16),
           TimeWheels(columns: [
@@ -274,7 +246,7 @@ Future<int?> pickNumberWheel(
           SizedBox(
             height: 52,
             child: PressScale(child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
               onPressed: () => Navigator.of(c).pop(int.parse(value)),
               child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
             )),

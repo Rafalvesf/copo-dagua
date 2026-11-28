@@ -166,7 +166,7 @@ Future<void> showAchievementsSheet(BuildContext context, String partnerName, Lis
                   Text(partnerName, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ]),
               ),
-              IslandRoundButton(icon: Hi.xMark, label: 'Fechar', onTap: () => Navigator.of(ctx).pop()),
+              const SizedBox.shrink(),
             ]),
             const SizedBox(height: 16),
             for (var i = 0; i < list.length; i++)
@@ -178,7 +178,7 @@ Future<void> showAchievementsSheet(BuildContext context, String partnerName, Lis
             PressScale(child: FilledButton(
               onPressed: () => Navigator.of(ctx).pop(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(52),
                 shape: const StadiumBorder(),

@@ -150,19 +150,7 @@ class _PartnerNotificationsSheetState extends ConsumerState<_PartnerNotification
                     style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
-            Semantics(
-              button: true,
-              label: 'Fechar',
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                  child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-                ),
-              ),
-            ),
+            const SizedBox.shrink(),
           ]),
         ),
         Padding(
@@ -267,7 +255,7 @@ class _PartnerNotificationsSheetState extends ConsumerState<_PartnerNotification
                   Container(
                     height: 36,
                     padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+                    decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(18)),
                     alignment: Alignment.center,
                     child: Text(action, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
@@ -345,7 +333,7 @@ class _PushCardState extends State<_PushCard> {
               height: 36,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+              decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(18)),
               child: const Text('Ativar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
           ),

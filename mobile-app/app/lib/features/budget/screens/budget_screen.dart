@@ -698,19 +698,7 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
                 if (widget.subtitle != null) Text(widget.subtitle!, style: const TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
               ]),
             ),
-            Semantics(
-              button: true,
-              label: 'Fechar',
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                  child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-                ),
-              ),
-            ),
+            const SizedBox.shrink(),
           ]),
         ),
         Flexible(
@@ -719,7 +707,7 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: AppTheme.ink, width: 1.5)),
                 child: Column(children: [
                   const Text('VALOR', style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
                   Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
@@ -827,7 +815,7 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
             child: PressScale(child: FilledButton(
               onPressed: _save,
               style: FilledButton.styleFrom(
-                backgroundColor: ok ? AppTheme.ink : AppTheme.ink.withValues(alpha: 0.35),
+                backgroundColor: ok ? AppTheme.action : AppTheme.action.withValues(alpha: 0.35),
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),

@@ -28,6 +28,10 @@ class AppTheme {
   static const background = Color(0xFFF2F2F2);
   static const ink = Color(0xFF171713);
 
+  /// Botões principais (pedido 2026-11-28: «botões com 4F6B4A»). Os redondos
+  /// (voltar, sino, ⋯) e o «Continuar com Apple» ficam pretos.
+  static const action = Color(0xFF4F6B4A);
+
   /// Linha fina (1 px) entre elementos da mesma secção — linhas de uma lista
   /// (pedido 2026-11-21).
   static const line = Color(0xFFE3E3E3);
@@ -230,17 +234,19 @@ class AppTheme {
         hintStyle: const TextStyle(color: Color(0xFF6E6A63)),
         labelStyle: const TextStyle(color: inkMuted),
         floatingLabelStyle: TextStyle(color: accentOliveDark, fontWeight: FontWeight.w700),
+        // Caixas de escrever: brancas com a linha preta 1,5 (pedido
+        // 2026-11-28: «em vez de um fundo cinzento, uma linha preta»).
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: ink, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: ink, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
-          borderSide: BorderSide(color: accentOliveDark, width: 1.5),
+          borderSide: const BorderSide(color: ink, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -446,7 +452,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
-          backgroundColor: ink,
+          backgroundColor: action,
           foregroundColor: Colors.white,
           shape: const StadiumBorder(),
           textStyle: buttonText,
@@ -455,7 +461,7 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
-          backgroundColor: ink,
+          backgroundColor: action,
           foregroundColor: Colors.white,
           shape: const StadiumBorder(),
           textStyle: buttonText,

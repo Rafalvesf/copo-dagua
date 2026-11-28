@@ -176,7 +176,7 @@ class AlertStrip extends StatelessWidget {
               height: 32,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(16)),
               child: Text(cta, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
           ]),

@@ -265,7 +265,7 @@ class _PreferenceSheetState extends State<_PreferenceSheet> {
               height: 52,
               padding: const EdgeInsets.symmetric(horizontal: 18),
               alignment: Alignment.centerLeft,
-              decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppTheme.ink, width: 1.5)),
               child: TextField(
                 controller: _name,
                 style: const TextStyle(fontSize: 15, color: AppTheme.ink),
@@ -278,7 +278,7 @@ class _PreferenceSheetState extends State<_PreferenceSheet> {
             height: 52,
             child: PressScale(child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),

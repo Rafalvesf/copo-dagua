@@ -76,7 +76,7 @@ Future<bool> askPayLater(
               child: PressScale(child: FilledButton(
                 onPressed: () => Navigator.of(ctx).pop(false),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.ink,
+                  backgroundColor: AppTheme.action,
                   foregroundColor: Colors.white,
                   shape: const StadiumBorder(),
                   textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),

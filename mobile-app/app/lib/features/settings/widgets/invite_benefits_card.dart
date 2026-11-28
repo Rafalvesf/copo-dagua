@@ -125,7 +125,7 @@ class InviteBenefitsCard extends ConsumerWidget {
         PressScale(child: FilledButton(
           onPressed: share,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ink,
+            backgroundColor: AppTheme.action,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(44),
             shape: const StadiumBorder(),

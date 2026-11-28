@@ -225,7 +225,7 @@ Expanded(child: ScrollingHeader(
                                   }
                                 }),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.ink,
+                          backgroundColor: AppTheme.action,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
                         ),
@@ -260,7 +260,7 @@ Expanded(child: ScrollingHeader(
                                   }
                                 }),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.ink,
+                          backgroundColor: AppTheme.action,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
                         ),
@@ -301,7 +301,7 @@ Expanded(child: ScrollingHeader(
                           leave(context, force: true);
                         },
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.ink,
+                          backgroundColor: AppTheme.action,
                           shape: const StadiumBorder(),
                           textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, 
                             fontSize: 15,

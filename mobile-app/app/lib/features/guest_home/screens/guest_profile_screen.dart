@@ -714,8 +714,8 @@ class _CompanionFormState extends State<_CompanionForm> {
         labelText: label,
         hintText: hint,
         filled: true,
-        fillColor: const Color(0xFFF6F4EF),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
       );
 
   @override

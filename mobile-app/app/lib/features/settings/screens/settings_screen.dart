@@ -532,7 +532,7 @@ class _EditEventPageState extends ConsumerState<EditEventPage> {
             PressScale(child: FilledButton(
               onPressed: () => Navigator.of(sheet).pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(52),
                 shape: const StadiumBorder(),

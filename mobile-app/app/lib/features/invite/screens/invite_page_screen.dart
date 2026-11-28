@@ -506,7 +506,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                     icon: const Icon(Hi.map, size: 20),
                     label: const Text('Como chegar'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.ink,
+                      backgroundColor: AppTheme.action,
                       foregroundColor: Colors.white,
                       shape: const StadiumBorder(),
                       textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontSize: 15, fontWeight: FontWeight.w700),
@@ -636,7 +636,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                   onPressed: _busy ? null : () => _respond(ev, attending: true),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 54),
-                    backgroundColor: AppTheme.ink,
+                    backgroundColor: AppTheme.action,
                     shape: const StadiumBorder(),
                   ),
                   child: _busy
@@ -748,7 +748,7 @@ class _InvitePageScreenState extends State<InvitePageScreen> {
                         onPressed: () => _createAccount(ev),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(0, 44),
-                          backgroundColor: AppTheme.ink,
+                          backgroundColor: AppTheme.action,
                           shape: const StadiumBorder(),
                         ),
                         child: Text(kIsWeb && !widget.fromInstall ? 'Criar conta aqui' : 'Criar conta'),

@@ -292,17 +292,7 @@ class _TaxIdSheetState extends ConsumerState<_TaxIdSheet> {
               Text('Primeiro o NIF do negócio. A seguir, o IBAN.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
             ]),
           ),
-          SnappyTap(
-            onTap: () => Navigator.of(context).pop(false),
-            semanticLabel: 'Fechar',
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-              alignment: Alignment.center,
-              child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-            ),
-          ),
+          const SizedBox.shrink(),
         ]),
         const SizedBox(height: 16),
         const Text('NIF',
@@ -313,8 +303,8 @@ class _TaxIdSheetState extends ConsumerState<_TaxIdSheet> {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           alignment: Alignment.centerLeft,
           decoration: ShapeDecoration(
-            color: AppTheme.background,
-            shape: StadiumBorder(side: _error != null ? const BorderSide(color: red, width: 1.5) : BorderSide.none),
+            color: Colors.white,
+            shape: StadiumBorder(side: BorderSide(color: _error != null ? red : AppTheme.ink, width: 1.5)),
           ),
           child: TextField(
             controller: _nif,
@@ -351,7 +341,7 @@ class _TaxIdSheetState extends ConsumerState<_TaxIdSheet> {
           child: Container(
             height: 52,
             alignment: Alignment.center,
-            decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
+            decoration: const ShapeDecoration(color: AppTheme.action, shape: StadiumBorder()),
             child: _saving
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
                 : const Text('Continuar', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),

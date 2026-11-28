@@ -924,7 +924,7 @@ class _TaskPill extends StatelessWidget {
           PressScale(child: FilledButton(
             onPressed: onTap,
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
+              backgroundColor: AppTheme.action,
               foregroundColor: Colors.white,
               minimumSize: const Size(0, 36),
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1336,7 +1336,7 @@ class _InviteNoticeState extends ConsumerState<_InviteNotice> {
           height: 36,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: outlined ? Colors.white : AppTheme.ink,
+            color: outlined ? Colors.white : AppTheme.action,
             borderRadius: BorderRadius.circular(18),
             border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
           ),
@@ -1388,7 +1388,7 @@ class _OrganizerInviteNotice extends StatelessWidget {
             height: 36,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+            decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(18)),
             child: const Text('Ver', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
           ),
         ]),
@@ -1594,7 +1594,7 @@ class _MyQrCardState extends State<_MyQrCard> {
                 height: 36,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 alignment: Alignment.center,
-                decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
+                decoration: const ShapeDecoration(color: AppTheme.action, shape: StadiumBorder()),
                 child: const Text('Ampliar', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
               ),
             ]),

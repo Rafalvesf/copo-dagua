@@ -136,7 +136,7 @@ class ReserveButton extends StatelessWidget {
               height: 52,
               alignment: Alignment.center,
               decoration: ShapeDecoration(
-                color: outlined ? Colors.white : AppTheme.ink,
+                color: outlined ? Colors.white : AppTheme.action,
                 shape: StadiumBorder(side: outlined ? const BorderSide(color: AppTheme.ink, width: 1.5) : BorderSide.none),
               ),
               child: busy
@@ -591,7 +591,7 @@ class _SlideToPayState extends State<SlideToPay> with SingleTickerProviderStateM
                 child: Container(
                   height: 60,
                   padding: const EdgeInsets.all(6),
-                  decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
+                  decoration: const ShapeDecoration(color: AppTheme.action, shape: StadiumBorder()),
                   child: Stack(alignment: Alignment.centerLeft, children: [
                     Positioned.fill(
                       child: Padding(

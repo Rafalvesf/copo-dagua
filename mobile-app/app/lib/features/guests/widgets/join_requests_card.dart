@@ -183,7 +183,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                 child: PressScale(child: FilledButton(
                   onPressed: _busy ? null : () => _review(true),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.ink,
+                    backgroundColor: AppTheme.action,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(0, 44),
                     shape: const StadiumBorder(),

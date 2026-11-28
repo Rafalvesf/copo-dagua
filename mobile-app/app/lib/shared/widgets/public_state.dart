@@ -90,7 +90,7 @@ class PublicStateView extends StatelessWidget {
                     elevatedButtonTheme: ElevatedButtonThemeData(
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size.fromHeight(56),
-                        backgroundColor: AppTheme.ink,
+                        backgroundColor: AppTheme.action,
                         foregroundColor: Colors.white,
                         shape: const StadiumBorder(),
                         textStyle: _firstTouchButtonText,
@@ -99,7 +99,7 @@ class PublicStateView extends StatelessWidget {
                     filledButtonTheme: FilledButtonThemeData(
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(56),
-                        backgroundColor: AppTheme.ink,
+                        backgroundColor: AppTheme.action,
                         foregroundColor: Colors.white,
                         shape: const StadiumBorder(),
                         textStyle: _firstTouchButtonText,

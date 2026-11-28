@@ -223,7 +223,7 @@ class _ExtrasSheetState extends State<_ExtrasSheet> {
               child: Container(
                 height: 52,
                 alignment: Alignment.center,
-                decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
+                decoration: const ShapeDecoration(color: AppTheme.action, shape: StadiumBorder()),
                 child: Text('Continuar · ${euros(now, cents: true)}',
                     maxLines: 1, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
               ),

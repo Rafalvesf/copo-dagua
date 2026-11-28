@@ -619,7 +619,7 @@ class _InviteCardState extends ConsumerState<_InviteCard> {
               icon: const Icon(Hi.arrowUpOnSquare, size: 18),
               label: const FittedBox(child: Text('Enviar link', maxLines: 1, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(52),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -687,7 +687,7 @@ class _FriendInviteRow extends StatelessWidget {
             child: PressScale(child: FilledButton(
               onPressed: onInvite,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 minimumSize: const Size(0, 36),

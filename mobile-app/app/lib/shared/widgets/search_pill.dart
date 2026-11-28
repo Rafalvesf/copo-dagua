@@ -25,13 +25,8 @@ class SearchPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        // Sem contorno, com a sombra suave dos cartões (redesign
-        // 2026-10-19) — igual à pesquisa de Parceiros.
-        boxShadow: flat
-            ? null
-            : const [
-          BoxShadow(color: Color(0x0F171713), blurRadius: 18, offset: Offset(0, 6)),
-        ],
+        // Linha preta 1,5 como todas as caixas de escrever (2026-11-28).
+        border: Border.all(color: AppTheme.ink, width: 1.5),
       ),
       child: Row(
         children: [

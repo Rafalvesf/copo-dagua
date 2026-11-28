@@ -138,10 +138,10 @@ class _GuestModeSheetState extends ConsumerState<_GuestModeSheet> {
                   errorText: _codeError,
                   errorMaxLines: 2,
                   filled: true,
-                  fillColor: AppTheme.surface,
+                  fillColor: Colors.white,
                   contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: BorderSide.none),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                     borderSide: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
