@@ -105,7 +105,7 @@ mais acolhedora. Só nestes ecrãs — e em mais lado nenhum — vale esta escal
 de grupo/eyebrow **13**, botões **17** (altura **56**). O 32 e o 17 são
 exceções conscientes à regra «sem tamanhos intermédios», limitadas a estes
 ecrãs. O resto da app mantém a tabela acima. Os **fluxos novos** (boas-vindas,
-conta, criar evento e parceiro, §6.9) usam o título **44** por baixo do
+conta, criar evento e parceiro, §6.9) usam o título **54** por baixo do
 conteúdo, a frase 17 e o botão 56 com a seta.
 
 ## 4. Espaços e formas
@@ -1233,7 +1233,7 @@ Pranchetas «Fluxo novo» do canvas. Peças em `shared/widgets/flow_kit.dart`
 - **Desenho:** fundo suave de cor (`FlowTint`: verde `#DCE8D3`, amarelo
   `#F7E6BF`, terra `#F3D9CF`, azul `#D9E3EF`), traços do progresso (4) em
   cima, «À Nossa!» (ou «Novo evento») à esquerda e «Saltar», «Voltar» ou
-  «Fechar» à direita; o conteúdo; o **título 44 por baixo do conteúdo**; o
+  «Fechar» à direita; o conteúdo; o **título 54 por baixo do conteúdo** (era 44, pedido 2026-11-28); o
   botão preto 56 com o texto à esquerda e o círculo branco 40 com a seta; um
   rodapé 15 («Já tens conta? **Entrar**»). A estrela num halo branco
   translúcido. Escolhido: **preto** (cartões, mosaicos e pílulas); nas

@@ -7,7 +7,7 @@ import 'snappy_tap.dart';
 
 /// Peças dos fluxos novos de boas-vindas, conta, criar evento e parceiro
 /// (pranchetas «Fluxo novo», 2026-11-27). Cada ecrã tem um fundo de cor
-/// suave, os traços do progresso em cima, o conteúdo, o título grande (44)
+/// suave, os traços do progresso em cima, o conteúdo, o título grande (54)
 /// por baixo do conteúdo e o botão preto com a seta.
 
 /// Fundos suaves dos ecrãs dos fluxos.
@@ -165,14 +165,19 @@ class FlowNote extends StatelessWidget {
       textAlign: align, style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: AppTheme.inkMuted));
 }
 
-/// Título grande dos fluxos (44, negrito, entrelinha curta).
+/// Título grande dos fluxos (54, negrito, entrelinha curta — pedido
+/// 2026-11-28: «aumenta a letra do título»). Em ecrãs estreitos desce com a
+/// largura (14 %), nunca abaixo de 40.
 class FlowTitle extends StatelessWidget {
   final String text;
   const FlowTitle(this.text, {super.key});
 
   @override
-  Widget build(BuildContext context) => Text(text,
-      style: const TextStyle(fontSize: 44, height: 1.02, letterSpacing: -0.5, fontWeight: FontWeight.w700, color: AppTheme.ink));
+  Widget build(BuildContext context) {
+    final size = (MediaQuery.sizeOf(context).width * 0.14).clamp(40.0, 54.0);
+    return Text(text,
+        style: TextStyle(fontSize: size, height: 1.0, letterSpacing: -1, fontWeight: FontWeight.w700, color: AppTheme.ink));
+  }
 }
 
 /// Frase por baixo do título (17, cinzento).
