@@ -212,7 +212,7 @@ class _CancelSheetState extends State<_CancelSheet> {
                 ]),
               ),
               const SizedBox(width: 10),
-              _RoundButton(icon: Hi.xMark, label: 'Fechar', onTap: () => Navigator.of(context).pop()),
+              const SizedBox.shrink(),
             ]),
           ),
           Flexible(
@@ -301,7 +301,7 @@ class _CancelSheetState extends State<_CancelSheet> {
                     height: 52,
                     padding: const EdgeInsets.symmetric(horizontal: 18),
                     alignment: Alignment.centerLeft,
-                    decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppTheme.ink, width: 1.5)),
                     child: TextField(
                       controller: _reason,
                       style: const TextStyle(fontSize: 15, color: AppTheme.ink),
@@ -412,7 +412,7 @@ class _PillButton extends StatelessWidget {
           : PressScale(child: FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
                 padding: const EdgeInsets.symmetric(horizontal: 10),

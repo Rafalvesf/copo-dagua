@@ -23,3 +23,16 @@ regras de desempenho ou UX) entra em `admin-web/app/lib/learned.ts` (página
 tema parecido, ler esse ficheiro primeiro.
 
 @DESIGN.md
+
+**Graphify — poupar tokens (regra, 2026-11-28):** antes de procurar ou ler
+código, usar o mapa do graphify em vez de abrir ficheiros inteiros.
+- No início da sessão (é só AST, sem LLM, ~6 s):
+  `pip install --break-system-packages -q graphifyy && graphify update mobile-app/app/lib --no-cluster && graphify update admin-web/app --no-cluster`
+  (fica em `<pasta>/graphify-out/`, ignorado pelo git).
+- Para encontrar onde está uma classe, função ou widget:
+  `graphify explain "NomeDaClasse" --graph mobile-app/app/lib/graphify-out/graph.json`
+  (dá o ficheiro e a linha) ou `graphify query "…" --graph …`; depois ler
+  **só essas linhas** (`Read` com `offset`/`limit`), nunca o ficheiro todo.
+- No Dart o mapa tem as definições e heranças, não todas as chamadas: para
+  saber quem usa um widget, `grep -rn` continua a ser o mais rápido.
+- Depois de mexer em muitos ficheiros, voltar a correr o `graphify update`.

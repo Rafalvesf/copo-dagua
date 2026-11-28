@@ -161,15 +161,7 @@ class OpeningHoursEditor extends StatelessWidget {
               Expanded(
                 child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink)),
               ),
-              GestureDetector(
-                onTap: () => Navigator.of(c).pop(),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                  child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-                ),
-              ),
+              const SizedBox.shrink(),
             ]),
             const SizedBox(height: 16),
             TimeWheels(columns: [
@@ -180,7 +172,7 @@ class OpeningHoursEditor extends StatelessWidget {
             SizedBox(
               height: 52,
               child: PressScale(child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+                style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
                 onPressed: () => Navigator.of(c).pop(true),
                 child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
               )),
@@ -218,7 +210,7 @@ class OpeningHoursEditor extends StatelessWidget {
                 height: 36,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+                decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(18)),
                 child: Text(
                   value.days.isEmpty || !_allSame ? 'Aplicar a todos' : '${_common.$1} – ${_common.$2}',
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
@@ -365,15 +357,7 @@ Future<void> showOpeningHoursSheet(BuildContext context, OpeningHours h) {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             const Expanded(child: Text('Horário', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-            GestureDetector(
-              onTap: () => Navigator.of(c).pop(),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-                child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-              ),
-            ),
+            const SizedBox.shrink(),
           ]),
           if (now != null) ...[
             const SizedBox(height: 8),

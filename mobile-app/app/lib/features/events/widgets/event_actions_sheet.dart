@@ -117,7 +117,7 @@ class _EventActionsState extends State<_EventActions> {
                 onPressed: _busy ? null : () => _run(() => deleteEvent(widget.eventId), 'deleted'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
-                  backgroundColor: AppTheme.ink,
+                  backgroundColor: AppTheme.action,
                   foregroundColor: Colors.white,
                   shape: const StadiumBorder(),
                 ),

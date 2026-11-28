@@ -34,12 +34,15 @@ cores, sombras ou tamanhos à mão quando já existe um.
 | Erro / recusado | `#C8553D` | `AppStatusColors.declined` |
 | Barra de progresso | `#A9C79A` (verde clarinho, pedido 2026-11-21) | `AppTheme.progress` |
 
-**Verde só para seleção e etiquetas** (filtro ativo, contadores; e as barras
-de progresso, verde clarinho, §6). **Nunca** para botões.
+**Verde para os botões principais** (pedido 2026-11-28: «botões com
+4F6B4A», `AppTheme.action`), a seleção e as etiquetas (filtro ativo,
+contadores; e as barras de progresso, verde clarinho, §6). Os botões
+redondos (§2) e o «Continuar com Apple» ficam pretos.
 
 ## 2. Botões
 
-- **Principal:** fundo preto `#171713`, texto branco.
+- **Principal:** fundo verde `#4F6B4A` (`AppTheme.action`), texto branco
+  (pedido 2026-11-28; antes era preto).
 - **Secundário:** fundo branco, contorno preto 1,5 px, texto preto.
 - Sempre em **pílula** (`StadiumBorder`).
 - **Ao carregar, encolhem para 0,97** e voltam em 150 ms (ease-out), sem
@@ -97,6 +100,11 @@ letra maiúscula, mesmo que o organizador o tenha escrito em minúscula
 | Título de grupo em maiúsculas ("HOJE", "CONTA") | 12, espaçamento 2 | negrito, `#57534E` |
 | Texto da navbar | 11 | negrito |
 
+**Caixas de escrever** (pedido 2026-11-28): **brancas com a linha preta
+1,5** `#171713` — nunca o fundo cinzento `#F2F2F2` (tema
+`inputDecorationTheme`, `FlowField`, pesquisa, caixas dos popups); a linha
+fica com 2 ao escrever e vermelha no erro.
+
 **Páginas de primeiro contacto** (onboarding e páginas/estados públicos —
 `shared/widgets/onb_kit.dart` e `shared/widgets/public_state.dart`:
 boas-vindas, convites, `/juntar`, RSVP, verificar email, erros): letra maior,
@@ -106,7 +114,7 @@ de grupo/eyebrow **13**, botões **17** (altura **56**). O 32 e o 17 são
 exceções conscientes à regra «sem tamanhos intermédios», limitadas a estes
 ecrãs. O resto da app mantém a tabela acima. Os **fluxos novos** (boas-vindas,
 conta, criar evento e parceiro, §6.9) usam o título **54** por baixo do
-conteúdo, a frase 17 e o botão 56 com a seta.
+conteúdo, a frase **19** e o botão **64** com a seta (texto 19, círculo 46).
 
 ## 4. Espaços e formas
 
@@ -635,6 +643,9 @@ Pedido do Rafael, 2026-11-20. Vale para **todos** os popups da app
   Com «reduzir movimento» o popup só aparece e desaparece. Esta é a única
   exceção à regra «verde nunca em botões/fundos»: o verde só existe durante
   a animação.
+- **Sem «×»** (pedido 2026-11-28): nenhum popup tem o botão de fechar;
+  em cima de todos há a **barrinha cinzenta** 40×5 `#CFCFCF` (cantos 3, 10
+  do topo) — puxar para baixo ou tocar fora fecha.
 - **Fechar:** tocar fora ou puxar para baixo (se o popup o permitir).
 - **Sair pergunta só na reserva e no pagamento** (pedido do Rafael,
   2026-11-20; só nestes fluxos desde 2026-11-22): nos popups de **reservar
@@ -838,9 +849,9 @@ perguntar antes.
 **Popup (ilha, §6.1) — de cima para baixo, interior 20, espaço 16:**
 1. *(Só em fluxos com passos)* barra de progresso **10** (§6) + «2 DE 5» (12 negrito) à
    direita.
-2. Cabeçalho: voltar **44** preto à esquerda (a partir do 2.º passo) ·
-   título **22** negrito + subtítulo **13** `#57534E` · «×» **44** preto
-   à direita (ícones brancos sólidos 20, §2).
+2. Cabeçalho: a barrinha cinzenta em cima (§6.1) · voltar **44** preto à
+   esquerda (a partir do 2.º passo) · título **22** negrito + subtítulo
+   **13** `#57534E` · **sem «×»** (pedido 2026-11-28).
 3. Corpo, só com estas peças:
    - **Grupo** `#F2F2F2`, cantos 22, interior 4×16, linhas separadas por
      `#D9D9D9` (opções, pessoas, métodos de pagamento, extras). Opção
@@ -1232,13 +1243,18 @@ Pranchetas «Fluxo novo» do canvas. Peças em `shared/widgets/flow_kit.dart`
 (`FlowPage`, `FlowCta`, `FlowField`, `FlowChoiceCard`, `FlowCheckBox`,
 `FlowPillGrid`).
 
-- **Desenho:** fundo suave de cor (`FlowTint`: verde `#DCE8D3`, amarelo
-  `#F7E6BF`, terra `#F3D9CF`, azul `#D9E3EF`), traços do progresso (4) em
+- **Desenho:** fundo **branco** em todos os ecrãs (pedido 2026-11-28; antes
+  fundos suaves de cor — `FlowTint` ficou branco), traços do progresso (4) em
   cima, «À Nossa!» (ou «Novo evento») à esquerda e «Saltar», «Voltar» ou
   «Fechar» à direita; o conteúdo; o **título 54 por baixo do conteúdo** (era 44, pedido 2026-11-28); o
   botão preto 56 com o texto à esquerda e o círculo branco 40 com a seta; um
-  rodapé 15 («Já tens conta? **Entrar**»). A estrela **sem círculo por trás**, maior
-  (`FlowStarHalo`, 1,15× da caixa; pedido 2026-11-28). Escolhido: **preto** (cartões, mosaicos e pílulas); nas
+  rodapé 15 («Já tens conta? **Entrar**»). A mascote **sem círculo por trás**, maior
+  (`FlowStarHalo`, 1,15× da caixa) e com uma **mancha abstrata verde
+  eucalipto** `#C9DDD4` por trás; a sombra no chão é uma mancha irregular
+  `#4F6B4A` (em toda a app). As caixas, cartões, mosaicos e pílulas não
+  escolhidos são brancos com a **linha preta 1,5**; o rodapé fica a **32**
+  do botão e a **32** do fundo (mais a barra do iPhone) (pedidos
+  2026-11-28). Escolhido: **preto** (cartões, mosaicos e pílulas); nas
   categorias do parceiro, as outras com a linha preta 1,5.
 - **Boas-vindas 1 a 3** (só na primeira vez, sem conta): estrela, título e
   botão, sem frase. **Boas-vindas 4** «Como vais usar a À Nossa!?»: dois
@@ -1254,7 +1270,10 @@ Pranchetas «Fluxo novo» do canvas. Peças em `shared/widgets/flow_kit.dart`
   a conta (`/permissoes`), nunca dentro do criar evento.
 - **Criar evento** (o «+» de Meus eventos, `/novo-evento`): um só ecrã
   «Que evento vais criar?» (tipo, «Como vai ser?» Comer fora / Num espaço /
-  Em casa, nome, «Dia» e «Hora»), «Confirmar evento», e «Evento feito!» com
+  Em casa, nome e **«Dia e hora» numa só pílula** — abre «Quando é?»: o
+  calendário do mês e a roda «A QUE HORAS?» no mesmo popup, o botão com o
+  que ficou («Dom, 14 mar · 20:00») e «Só o dia»; `showOnbDayTimeSheet`,
+  pedido 2026-11-28), «Confirmar evento», e «Evento feito!» com
   «Convidar» (a página Convidar: por link ou a pessoas da app). O «Como vai
   ser?» fica em `events.event_format` (migração 245).
 - **Painel do evento acabado de criar** (sem convidados nem reservas;

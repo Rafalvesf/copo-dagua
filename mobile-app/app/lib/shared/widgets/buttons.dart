@@ -29,7 +29,7 @@ class ArrowCtaButton extends StatelessWidget {
         height: 46,
         padding: const EdgeInsets.only(left: 20, right: 5),
         decoration: BoxDecoration(
-          color: AppTheme.ink,
+          color: AppTheme.action,
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Row(

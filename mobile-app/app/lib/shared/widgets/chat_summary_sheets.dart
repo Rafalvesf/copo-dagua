@@ -55,23 +55,7 @@ class _Close extends StatelessWidget {
   const _Close({this.ring = false});
 
   @override
-  Widget build(BuildContext context) => Semantics(
-        button: true,
-        label: 'Fechar',
-        child: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppTheme.ink,
-              shape: BoxShape.circle,
-              // Sem aro nos botões de navegação (pedido 2026-11-25).
-            ),
-            child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-          ),
-        ),
-      );
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 Widget _stats(List<(String, String)> items) => Row(children: [
@@ -110,7 +94,7 @@ Widget _btn(String label, VoidCallback? onTap, {bool outlined = false}) => Sized
           : PressScale(child: FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 15, fontWeight: FontWeight.w700),
@@ -669,7 +653,7 @@ class _GroupSummaryState extends ConsumerState<_GroupSummary> {
                   height: 36,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+                  decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(18)),
                   child: const Text('Ver todos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
                 ),
               ),

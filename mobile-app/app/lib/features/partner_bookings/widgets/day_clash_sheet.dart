@@ -449,7 +449,7 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
                     Container(
                       height: 52,
                       padding: const EdgeInsets.symmetric(horizontal: 18),
-                      decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppTheme.ink, width: 1.5)),
                       child: Row(children: [
                         const Text('Novo total', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                         const SizedBox(width: 10),
@@ -471,7 +471,7 @@ class _ProposeDaySheetState extends State<_ProposeDaySheet> {
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(22)),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: AppTheme.ink, width: 1.5)),
                   child: TextField(
                     controller: _msg,
                     minLines: 2,
@@ -609,7 +609,7 @@ class _Pill extends StatelessWidget {
           : PressScale(child: FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -627,19 +627,6 @@ class _Round extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Fechar',
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-          alignment: Alignment.center,
-          child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }

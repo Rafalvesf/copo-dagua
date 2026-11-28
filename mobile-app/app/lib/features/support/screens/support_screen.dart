@@ -84,7 +84,7 @@ class SupportScreen extends ConsumerWidget {
               child: PressScale(child: FilledButton(
                 onPressed: () => _showNewTicketSheet(context, ref),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.ink,
+                  backgroundColor: AppTheme.action,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(52),
                   shape: const StadiumBorder(),

@@ -236,7 +236,7 @@ class _ActionPill extends StatelessWidget {
       decoration: BoxDecoration(
         // Botões pretos / brancos com contorno preto (DESIGN §2: verde
         // nunca em botões).
-        color: outlined ? Colors.white : AppTheme.ink,
+        color: outlined ? Colors.white : AppTheme.action,
         border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),

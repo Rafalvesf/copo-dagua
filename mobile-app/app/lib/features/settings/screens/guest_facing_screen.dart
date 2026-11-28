@@ -137,7 +137,7 @@ class _GuestFacingScreenState extends ConsumerState<GuestFacingScreen> {
             PressScale(child: FilledButton(
               onPressed: () => Navigator.of(sheet).pop(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(50),
                 shape: const StadiumBorder(),
@@ -876,11 +876,11 @@ class _Field extends StatelessWidget {
             hintText: hint,
             hintStyle: const TextStyle(color: _caps),
             filled: true,
-            fillColor: AppTheme.surface,
+            fillColor: Colors.white,
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: BorderSide.none),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.lg), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.lg),
               borderSide: BorderSide(color: AppTheme.accentOliveDark, width: 1.5),
@@ -1396,7 +1396,7 @@ class _CompanionsSectionState extends ConsumerState<_CompanionsSection> {
             PressScale(child: FilledButton(
               onPressed: () => Navigator.of(sheet).pop(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(50),
                 shape: const StadiumBorder(),
@@ -1805,7 +1805,7 @@ class _AccessCardState extends ConsumerState<_AccessCard> {
             child: PressScale(child: FilledButton(
               onPressed: _savingPrice ? null : _savePrice,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
               ),
@@ -1973,7 +1973,7 @@ class _CapacityBlockState extends ConsumerState<_CapacityBlock> {
           child: PressScale(child: FilledButton(
             onPressed: _saving || _value == null ? null : () => _save(_value),
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
+              backgroundColor: AppTheme.action,
               foregroundColor: Colors.white,
               shape: const StadiumBorder(),
             ),
@@ -2138,7 +2138,7 @@ class _CodeHero extends ConsumerWidget {
             child: PressScale(child: FilledButton(
               onPressed: onShare,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(44),
                 padding: const EdgeInsets.symmetric(horizontal: 8),

@@ -57,7 +57,7 @@ class GroupLoaderScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     PressScale(child: FilledButton(
                       onPressed: () => context.go('/chat'),
-                      style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+                      style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
                       child: const Text('Ir para as Mensagens'),
                     )),
                   ]),
@@ -158,7 +158,7 @@ class _NewGroupSheetState extends ConsumerState<NewGroupSheet> {
           const SizedBox(height: 8),
           PressScale(child: FilledButton(
             onPressed: _saving || _name.text.trim().isEmpty || _picked.isEmpty ? null : _create,
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.action, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
             child: Text(_saving ? 'A criar…' : 'Criar grupo'),
           )),
         ]),
@@ -603,7 +603,7 @@ class _RsvpCardState extends State<_RsvpCard> {
                     minimumSize: const Size(0, 36),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     shape: const StadiumBorder(),
-                    backgroundColor: AppTheme.ink,
+                    backgroundColor: AppTheme.action,
                     foregroundColor: Colors.white,
                     textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                   ),
@@ -650,7 +650,7 @@ class _AddPeopleSheetState extends State<_AddPeopleSheet> {
             ),
             PressScale(child: FilledButton(
               onPressed: _picked.isEmpty ? null : () => Navigator.of(context).pop(_picked.toList()),
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.action, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
               child: const Text('Adicionar'),
             )),
           ]),

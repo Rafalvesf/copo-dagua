@@ -433,7 +433,7 @@ class V2BigButton extends StatelessWidget {
           ? PressScale(child: FilledButton(
               onPressed: onTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
                 textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 16, fontWeight: FontWeight.w700),

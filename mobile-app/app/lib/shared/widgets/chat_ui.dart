@@ -337,7 +337,7 @@ class ChatProposalCard extends StatelessWidget {
                         alignment: Alignment.center,
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
-                          color: actions[i].primary && actions[i].onTap != null ? AppTheme.ink : Colors.white,
+                          color: actions[i].primary && actions[i].onTap != null ? AppTheme.action : Colors.white,
                           borderRadius: BorderRadius.circular(999),
                           border: actions[i].primary && actions[i].onTap != null
                               ? null
@@ -441,9 +441,8 @@ class ChatComposer extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(24),
-            ),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.ink, width: 1.5)),
             child: TextField(
               controller: controller,
               onChanged: onChanged,

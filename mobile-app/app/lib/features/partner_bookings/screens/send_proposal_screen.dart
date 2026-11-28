@@ -196,7 +196,7 @@ class _SendProposalScreenState extends ConsumerState<SendProposalScreen> {
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: AppTheme.ink, width: 1.5)),
                 child: TextField(
                   controller: _description,
                   maxLines: 4,

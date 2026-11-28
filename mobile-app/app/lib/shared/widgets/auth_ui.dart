@@ -246,8 +246,8 @@ class AuthPrimaryButton extends StatelessWidget {
       child: PressScale(child: FilledButton(
         onPressed: loading ? null : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: AppTheme.ink,
-          disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.45),
+          backgroundColor: AppTheme.action,
+          disabledBackgroundColor: AppTheme.action.withValues(alpha: 0.45),
           foregroundColor: Colors.white,
           shape: const StadiumBorder(),
           textStyle: const TextStyle(

@@ -97,7 +97,7 @@ class RowPillButton extends StatelessWidget {
     return PressScale(child: FilledButton(
       onPressed: onTap,
       style: FilledButton.styleFrom(
-        backgroundColor: AppTheme.ink,
+        backgroundColor: AppTheme.action,
         foregroundColor: Colors.white,
         minimumSize: const Size(0, 36),
         padding: pad,

@@ -427,7 +427,7 @@ class _Btn extends StatelessWidget {
             height: 52,
             alignment: Alignment.center,
             decoration: ShapeDecoration(
-              color: outlined ? Colors.white : AppTheme.ink,
+              color: outlined ? Colors.white : AppTheme.action,
               shape: StadiumBorder(side: outlined ? const BorderSide(color: AppTheme.ink, width: 1.5) : BorderSide.none),
             ),
             child: Text(label,
@@ -711,7 +711,7 @@ class _MenusStepState extends State<_MenusStep> {
                 height: 52,
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 alignment: Alignment.centerLeft,
-                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppTheme.ink, width: 1.5)),
                 child: TextField(
                   controller: _allergy,
                   maxLength: 200,

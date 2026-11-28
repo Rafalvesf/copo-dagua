@@ -303,7 +303,7 @@ class _PermRow extends StatelessWidget {
         PressScale(child: FilledButton(
           onPressed: filled && !busy ? onTap : null,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ink,
+            backgroundColor: AppTheme.action,
             foregroundColor: Colors.white,
             disabledBackgroundColor: state == _State.granted ? AppTheme.accentTint : AppTheme.surface,
             disabledForegroundColor: state == _State.granted ? AppTheme.accentOliveDark : AppTheme.inkMuted,

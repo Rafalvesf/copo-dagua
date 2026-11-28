@@ -42,19 +42,7 @@ class _Head extends StatelessWidget {
           ]),
         ),
         const SizedBox(width: 10),
-        Semantics(
-          button: true,
-          label: 'Fechar',
-          child: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-              child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-            ),
-          ),
-        ),
+        const SizedBox.shrink(),
       ]),
     );
   }
@@ -137,7 +125,7 @@ class _Box extends StatelessWidget {
       height: multi ? null : 52,
       padding: EdgeInsets.symmetric(horizontal: 18, vertical: multi ? 14 : 0),
       alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(multi ? 22 : 26)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(multi ? 22 : 26), border: Border.all(color: AppTheme.ink, width: 1.5)),
       child: TextField(
         controller: controller,
         minLines: lines,
@@ -228,7 +216,7 @@ class _StepperState extends State<_Stepper> {
                 width: 64,
                 height: 36,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppTheme.ink, width: 1.5)),
                 child: TextField(
                   controller: _ctrl,
                   focusNode: _focus,
@@ -306,7 +294,7 @@ class _Buttons extends StatelessWidget {
             child: PressScale(child: FilledButton(
               onPressed: onMain,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
                 textStyle: style,
@@ -1143,7 +1131,7 @@ class _EditOtherDayState extends State<_EditOtherDay> {
               Container(
                 height: 52,
                 padding: const EdgeInsets.symmetric(horizontal: 18),
-                decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppTheme.ink, width: 1.5)),
                 child: Row(children: [
                   const Text('Novo total', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                   const SizedBox(width: 10),

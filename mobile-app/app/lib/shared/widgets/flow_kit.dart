@@ -12,11 +12,17 @@ import 'snappy_tap.dart';
 
 /// Fundos suaves dos ecrãs dos fluxos.
 abstract final class FlowTint {
-  static const green = Color(0xFFDCE8D3);
-  static const yellow = Color(0xFFF7E6BF);
-  static const terra = Color(0xFFF3D9CF);
-  static const blue = Color(0xFFD9E3EF);
-  static const plum = Color(0xFFE6DAE8);
+  // Fundo branco em todos os ecrãs (pedido 2026-11-28: «fundo branco com a
+  // mancha verde por trás da mascote»). Os nomes ficam para não mexer nos
+  // ecrãs.
+  static const green = Colors.white;
+  static const yellow = Colors.white;
+  static const terra = Colors.white;
+  static const blue = Colors.white;
+  static const plum = Colors.white;
+
+  /// Mancha abstrata por trás da mascote (verde eucalipto claro).
+  static const blob = Color(0xFFC9DDD4);
 
   /// Branco translúcido (halo da estrela, caixas sobre o fundo de cor).
   static const halo = Color(0x8CFFFFFF);
@@ -84,8 +90,8 @@ class FlowTextAction extends StatelessWidget {
       );
 }
 
-/// Botão principal dos fluxos: pílula preta 56, texto 17 à esquerda e o
-/// círculo branco 40 com a seta à direita.
+/// Botão principal dos fluxos: pílula verde 64, texto 19 à esquerda e o
+/// círculo branco 46 com a seta à direita (pedido 2026-11-28).
 class FlowCta extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -102,24 +108,24 @@ class FlowCta extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         opacity: onPressed == null && !loading ? 0.35 : 1,
         child: Container(
-          height: 56,
-          padding: const EdgeInsets.fromLTRB(24, 0, 8, 0),
-          decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
+          height: 64,
+          padding: const EdgeInsets.fromLTRB(26, 0, 9, 0),
+          decoration: const ShapeDecoration(color: AppTheme.action, shape: StadiumBorder()),
           child: Row(children: [
             Expanded(
               child: Text(label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
             Container(
-              width: 40,
-              height: 40,
+              width: 46,
+              height: 46,
               decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
               alignment: Alignment.center,
               child: loading
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.ink))
-                  : const Icon(Hi.chevronRight, size: 18, color: AppTheme.ink),
+                  : const Icon(Hi.chevronRight, size: 20, color: AppTheme.action),
             ),
           ]),
         ),
@@ -180,14 +186,14 @@ class FlowTitle extends StatelessWidget {
   }
 }
 
-/// Frase por baixo do título (17, cinzento).
+/// Frase por baixo do título (19, cinzento).
 class FlowBody extends StatelessWidget {
   final String text;
   const FlowBody(this.text, {super.key});
 
   @override
   Widget build(BuildContext context) => Text(text,
-      style: const TextStyle(fontSize: 17, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.inkMuted));
+      style: const TextStyle(fontSize: 19, height: 1.35, fontWeight: FontWeight.w600, color: AppTheme.inkMuted));
 }
 
 /// Título de grupo em maiúsculas (12, espaçamento 2).
@@ -220,9 +226,8 @@ class FlowStarHalo extends StatelessWidget {
   final double size;
   const FlowStarHalo(this.reaction, {super.key, this.size = 270});
 
-  /// Sem o círculo branco por trás e o brilho maior (pedido 2026-11-28):
-  /// o desenho ocupa ~2/3 da largura do SVG, por isso cresce 1,15× e pode
-  /// sair um pouco da caixa.
+  /// Sem o círculo branco (pedido 2026-11-28): o brilho maior (1,15×) com
+  /// uma mancha abstrata verde eucalipto por trás.
   @override
   Widget build(BuildContext context) => SizedBox(
         width: size,
@@ -230,9 +235,43 @@ class FlowStarHalo extends StatelessWidget {
         child: OverflowBox(
           maxWidth: size * 1.2,
           maxHeight: size * 1.2,
-          child: EstrelaMascot(reaction, size: size * 1.15),
+          child: Stack(alignment: Alignment.center, clipBehavior: Clip.none, children: [
+            Positioned(
+              top: size * 0.02,
+              child: CustomPaint(size: Size.square(size * 1.02), painter: const _BlobPainter(FlowTint.blob)),
+            ),
+            EstrelaMascot(reaction, size: size * 1.15),
+          ]),
         ),
       );
+}
+
+/// A mancha (desenho do mockup, numa caixa 200 × 200).
+class _BlobPainter extends CustomPainter {
+  final Color color;
+  const _BlobPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final k = size.width / 200;
+    final p = Path()
+      ..moveTo(118, 14)
+      ..cubicTo(146, 6, 170, 30, 168, 56)
+      ..cubicTo(166, 74, 190, 80, 194, 104)
+      ..cubicTo(198, 132, 170, 140, 160, 160)
+      ..cubicTo(148, 186, 112, 198, 88, 182)
+      ..cubicTo(70, 170, 56, 186, 34, 176)
+      ..cubicTo(8, 164, 4, 130, 22, 112)
+      ..cubicTo(34, 100, 14, 86, 18, 64)
+      ..cubicTo(24, 34, 58, 36, 74, 30)
+      ..cubicTo(92, 24, 98, 20, 118, 14)
+      ..close();
+    canvas.scale(k);
+    canvas.drawPath(p, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_BlobPainter old) => old.color != color;
 }
 
 /// Página de um fluxo. Em cima os traços e a linha do topo (marca ou
@@ -296,16 +335,17 @@ class FlowPage extends StatelessWidget {
       if (title != null) ...[const SizedBox(height: 16), FlowTitle(title!)],
       if (body != null) ...[const SizedBox(height: 16), FlowBody(body!)],
       if (cta != null) ...[const SizedBox(height: 22), cta!],
-      if (footer != null) ...[const SizedBox(height: 10), footer!],
+      // 32 por cima e 32 por baixo do rodapé (o link tem 6 de cada lado).
+      if (footer != null) ...[const SizedBox(height: 26), footer!],
     ];
     return Scaffold(
       backgroundColor: tint,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, box) => SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+            padding: const EdgeInsets.fromLTRB(22, 12, 22, 26),
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: box.maxHeight - 36),
+              constraints: BoxConstraints(minHeight: box.maxHeight - 38),
               child: IntrinsicHeight(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                   top,
@@ -369,7 +409,7 @@ class FlowField extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: ShapeDecoration(
           color: Colors.white,
-          shape: StadiumBorder(side: error != null ? const BorderSide(color: red, width: 1.5) : BorderSide.none),
+          shape: StadiumBorder(side: BorderSide(color: error != null ? red : AppTheme.ink, width: 1.5)),
         ),
         child: Row(children: [
           if (prefix != null) Text(prefix!, style: style.copyWith(color: AppTheme.inkMuted)),
@@ -453,7 +493,10 @@ class FlowChoiceCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: ShapeDecoration(
           color: selected ? AppTheme.ink : Colors.white,
-          shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: const BorderSide(color: AppTheme.ink, width: 1.5),
+          ),
         ),
         child: Row(children: [
           Container(
@@ -515,10 +558,10 @@ class FlowCheckBox extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: ShapeDecoration(
-            color: FlowTint.box,
+            color: Colors.white,
             shape: RoundedSuperellipseBorder(
               borderRadius: BorderRadius.circular(18),
-              side: error ? const BorderSide(color: Color(0xFFC8553D), width: 1.5) : BorderSide.none,
+              side: BorderSide(color: error ? const Color(0xFFC8553D) : AppTheme.ink, width: 1.5),
             ),
           ),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -562,8 +605,11 @@ class FlowSocialButton extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         opacity: onPressed == null ? 0.4 : 1,
         child: Container(
-          height: 56,
-          decoration: ShapeDecoration(color: apple ? AppTheme.ink : Colors.white, shape: const StadiumBorder()),
+          height: 64,
+          decoration: ShapeDecoration(
+            color: apple ? AppTheme.ink : Colors.white,
+            shape: const StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
+          ),
           alignment: Alignment.center,
           child: loading
               ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: fg))
@@ -574,7 +620,7 @@ class FlowSocialButton extends StatelessWidget {
                     const Text('G', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Color(0xFF4285F4))),
                   const SizedBox(width: 10),
                   Text(apple ? 'Continuar com Apple' : 'Continuar com Google',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: fg)),
+                      style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: fg)),
                 ]),
         ),
       ),
@@ -583,8 +629,8 @@ class FlowSocialButton extends StatelessWidget {
 }
 
 /// Grelha de botões em pílula 44, todos com a mesma largura (`cols` por
-/// linha). Escolhido: preto com texto branco. Com [line], os não
-/// escolhidos levam a linha preta 1,5 (regra das categorias, §6).
+/// linha). Escolhido: preto com texto branco; os não escolhidos levam
+/// sempre a linha preta 1,5 (2026-11-28; [line] fica só por compatibilidade).
 class FlowPillGrid extends StatelessWidget {
   final List<String> items;
   final Set<String> selected;
@@ -618,7 +664,7 @@ class FlowPillGrid extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   decoration: ShapeDecoration(
                     color: selected.contains(t) ? AppTheme.ink : Colors.white,
-                    shape: StadiumBorder(side: line ? const BorderSide(color: AppTheme.ink, width: 1.5) : BorderSide.none),
+                    shape: const StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
                   ),
                   child: Text(t,
                       maxLines: 1,

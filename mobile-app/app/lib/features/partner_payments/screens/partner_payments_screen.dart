@@ -441,7 +441,7 @@ class _PillButton extends StatelessWidget {
         child: PressScale(child: FilledButton(
           onPressed: onPressed,
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ink,
+            backgroundColor: AppTheme.action,
             disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
             foregroundColor: Colors.white,
             disabledForegroundColor: Colors.white,

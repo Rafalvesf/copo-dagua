@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:copo_dagua_app/core/analytics/funnel.dart';
@@ -9,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/auth/auth_controller.dart';
-import '../../../core/event/date_format_pt.dart';
 import '../../../core/event/event_controller.dart';
 import '../../../core/models/models.dart';
 import '../../../core/moderation/word_filter.dart';
@@ -20,12 +18,11 @@ import '../../../shared/hero_icons.dart';
 import '../../../shared/widgets/estrela.dart';
 import '../../../shared/widgets/flow_kit.dart';
 import '../../../shared/widgets/line_icon.dart';
-import '../../../shared/widgets/onb_kit.dart' show onbTypeIcons, showOnbDateSheet;
+import '../../../shared/widgets/onb_kit.dart' show onbTypeIcons, showOnbDayTimeSheet;
 import '../../../shared/widgets/onboarding_exit.dart';
 import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/snappy_tap.dart';
 import '../../../shared/widgets/step_slide.dart';
-import '../../../shared/widgets/time_wheels.dart' show pickTimeWheel;
 import '../../guest_home/screens/guest_mode_screen.dart' show showGuestModeSheet;
 import '../../partner_onboarding/screens/partner_welcome_screen.dart';
 
@@ -302,21 +299,31 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
       _name.text.trim().isNotEmpty &&
       _nameFieldError == null;
 
-  Future<void> _pickDate() async {
+  /// O dia e a hora de uma vez (pedido 2026-11-28).
+  Future<void> _pickWhen() async {
     final now = DateTime.now();
-    final d = await showOnbDateSheet(
+    final r = await showOnbDayTimeSheet(
       context,
       initial: _date,
+      initialTime: _time,
       first: DateTime(now.year, now.month, now.day),
       last: DateTime(now.year + 5, 12, 31),
     );
-    if (d != null) setState(() => _date = d);
+    if (r != null) {
+      setState(() {
+        _date = r.$1;
+        _time = r.$2;
+      });
+    }
   }
 
-  Future<void> _pickTime() async {
-    final t = await pickTimeWheel(context,
-        initial: _time ?? const TimeOfDay(hour: 20, minute: 0), title: 'A que horas começa?', label: 'COMEÇA ÀS');
-    if (t != null) setState(() => _time = t);
+  String _whenLabel() {
+    const wd = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const mo = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    final d = _date!;
+    final t = _time;
+    final day = '${wd[d.weekday - 1]}, ${d.day} ${mo[d.month - 1]}${d.year != DateTime.now().year ? ' ${d.year}' : ''}';
+    return t == null ? day : '$day · ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
   }
 
   void _useCode() {
@@ -560,27 +567,11 @@ class _OnboardingWizardScreenState extends ConsumerState<OnboardingWizardScreen>
         const SizedBox(height: 12),
         FlowBlock(
           label: 'Quando',
-          child: Row(children: [
-            Expanded(
-              child: _PickPill(
-                icon: Hi.calendar,
-                label: _date == null
-                    ? 'Dia'
-                    : '${formatShortDatePt(_date!).replaceFirstMapped(RegExp(r' [A-Z]\w+$'), (m) => m[0]!.toLowerCase())} ${_date!.year}',
-                onTap: _pickDate,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _PickPill(
-                icon: Hi.clock,
-                label: _time == null
-                    ? 'Hora'
-                    : '${_time!.hour.toString().padLeft(2, '0')}:${_time!.minute.toString().padLeft(2, '0')}',
-                onTap: _pickTime,
-              ),
-            ),
-          ]),
+          child: _PickPill(
+            icon: Hi.calendar,
+            label: _date == null ? 'Dia e hora' : _whenLabel(),
+            onTap: _pickWhen,
+          ),
         ),
       ]),
       title: 'Que evento\nvais criar?',
@@ -626,7 +617,10 @@ class _TypeTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4),
         decoration: ShapeDecoration(
           color: selected ? AppTheme.ink : Colors.white,
-          shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22)),
+          shape: RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.circular(22),
+            side: const BorderSide(color: AppTheme.ink, width: 1.5),
+          ),
         ),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           if (icon != null) LineIcon(icon.$1, circles: icon.$2, size: 22, stroke: 1.8, color: fg),
@@ -656,7 +650,10 @@ class _PickPill extends StatelessWidget {
         child: Container(
           height: 52,
           padding: const EdgeInsets.fromLTRB(18, 0, 14, 0),
-          decoration: const ShapeDecoration(color: Colors.white, shape: StadiumBorder()),
+          decoration: const ShapeDecoration(
+            color: Colors.white,
+            shape: StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5)),
+          ),
           child: Row(children: [
             Icon(icon, size: 18, color: AppTheme.ink),
             const SizedBox(width: 10),
@@ -693,7 +690,7 @@ class _PhotoPicker extends StatelessWidget {
                   : CustomPaint(
                       painter: _DashedCircle(),
                       child: const DecoratedBox(
-                        decoration: BoxDecoration(color: FlowTint.halo, shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                         child: Center(
                           child: Text('Foto',
                               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
@@ -721,16 +718,11 @@ class _DashedCircle extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppTheme.inkMuted
+      ..color = AppTheme.ink
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    final r = size.width / 2 - 0.75;
-    final c = Offset(size.width / 2, size.height / 2);
-    const dashes = 36;
-    const sweep = 2 * math.pi / dashes;
-    for (var i = 0; i < dashes; i++) {
-      canvas.drawArc(Rect.fromCircle(center: c, radius: r), i * sweep, sweep * 0.55, false, paint);
-    }
+    // Linha preta contínua (2026-11-28; antes tracejada).
+    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2 - 0.75, paint);
   }
 
   @override

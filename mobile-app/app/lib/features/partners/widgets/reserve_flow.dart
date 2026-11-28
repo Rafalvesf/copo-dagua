@@ -958,7 +958,7 @@ class _ReserveFlowSheetState extends ConsumerState<ReserveFlowSheet> {
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         alignment: Alignment.centerLeft,
-        decoration: const ShapeDecoration(color: kPickGrey, shape: StadiumBorder()),
+        decoration: ShapeDecoration(color: Colors.white, shape: StadiumBorder(side: BorderSide(color: AppTheme.ink, width: 1.5))),
         child: TextField(
           controller: _name,
           maxLength: 40,
@@ -1403,11 +1403,11 @@ class _ReserveFlowSheetState extends ConsumerState<ReserveFlowSheet> {
           decoration: InputDecoration(
             hintText: 'O que procuras, o estilo, o que é importante para vocês',
             filled: true,
-            fillColor: kPickGrey,
+            fillColor: Colors.white,
             counterText: '',
             contentPadding: const EdgeInsets.all(16),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: BorderSide.none),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(22), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
           ),
         ),
@@ -1674,7 +1674,7 @@ class _PaidForSheetState extends State<PaidForSheet> {
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 18),
           alignment: Alignment.centerLeft,
-          decoration: BoxDecoration(color: AppTheme.background, borderRadius: BorderRadius.circular(26)),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppTheme.ink, width: 1.5)),
           child: TextField(
             style: const TextStyle(fontSize: 15, color: AppTheme.ink),
             decoration: const InputDecoration(filled: false, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, 
@@ -1712,7 +1712,7 @@ class _PaidForSheetState extends State<PaidForSheet> {
           child: Container(
             height: 52,
             alignment: Alignment.center,
-            decoration: const ShapeDecoration(color: AppTheme.ink, shape: StadiumBorder()),
+            decoration: const ShapeDecoration(color: AppTheme.action, shape: StadiumBorder()),
             child: Text(_on.isEmpty ? 'Guardar' : 'Guardar (${_on.length} ${_on.length == 1 ? 'pessoa' : 'pessoas'})',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
           ),

@@ -1525,7 +1525,7 @@ class _PartnerHero extends StatelessWidget {
                           height: 44,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           alignment: Alignment.center,
-                          decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(22)),
+                          decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(22)),
                           child: const Text('Abrir na app',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
@@ -1818,7 +1818,7 @@ class _BottomBar extends StatelessWidget {
               child: PressScale(child: FilledButton(
                 onPressed: onTap,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.ink,
+                  backgroundColor: AppTheme.action,
                   foregroundColor: Colors.white,
                   shape: const StadiumBorder(),
                   textStyle: const TextStyle(

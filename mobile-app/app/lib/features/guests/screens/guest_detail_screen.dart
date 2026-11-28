@@ -352,7 +352,7 @@ class _GuestDetailBodyState extends ConsumerState<_GuestDetailBody> {
           child: PressScale(child: FilledButton(
             onPressed: _edit,
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
+              backgroundColor: AppTheme.action,
               foregroundColor: Colors.white,
               minimumSize: const Size.fromHeight(52),
               shape: const StadiumBorder(),

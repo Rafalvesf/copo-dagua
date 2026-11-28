@@ -714,7 +714,7 @@ class _PayScreenState extends ConsumerState<PayScreen> {
           Container(
             height: 52,
             padding: const EdgeInsets.symmetric(horizontal: 18),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26)),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppTheme.ink, width: 1.5)),
             child: Row(children: [
               const Text('+351', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted)),
               const SizedBox(width: 10),
@@ -1017,7 +1017,7 @@ class _SheetButton extends StatelessWidget {
           : PressScale(child: FilledButton(
               onPressed: busy ? () {} : onTap,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
                 disabledForegroundColor: Colors.white,

@@ -232,7 +232,7 @@ class _ChatEventIslandState extends State<ChatEventIsland> {
               height: 36,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: AppTheme.ink, borderRadius: BorderRadius.circular(18)),
+              decoration: BoxDecoration(color: AppTheme.action, borderRadius: BorderRadius.circular(18)),
               child: Text(widget.action!,
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
             ),

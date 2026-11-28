@@ -238,7 +238,7 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
               ? VenueMap(label: _city, latitude: a!.latitude, longitude: a.longitude, height: 170)
               : Container(
                   height: 170,
-                  color: FlowTint.box,
+                  color: AppTheme.background,
                   alignment: Alignment.center,
                   child: const Icon(Hi.mapPin, size: 32, color: AppTheme.inkMuted),
                 ),
@@ -282,9 +282,9 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
                 width: 180,
                 height: 180,
                 decoration: BoxDecoration(
-                  color: FlowTint.box,
+                  color: Colors.white,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
+                  border: Border.all(color: AppTheme.ink, width: 1.5),
                   image: bytes == null ? null : DecorationImage(image: MemoryImage(bytes), fit: BoxFit.cover),
                 ),
                 alignment: Alignment.center,
@@ -308,8 +308,11 @@ class _PartnerWelcomeScreenState extends ConsumerState<PartnerWelcomeScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: ShapeDecoration(
-            color: FlowTint.box,
-            shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(22)),
+            color: Colors.white,
+            shape: RoundedSuperellipseBorder(
+              borderRadius: BorderRadius.circular(22),
+              side: const BorderSide(color: AppTheme.ink, width: 1.5),
+            ),
           ),
           child: Row(children: [
             if (bytes != null)
@@ -368,8 +371,11 @@ class _AlmostThere extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: ShapeDecoration(
-              color: FlowTint.box,
-              shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(18)),
+              color: Colors.white,
+              shape: RoundedSuperellipseBorder(
+                borderRadius: BorderRadius.circular(18),
+                side: const BorderSide(color: AppTheme.ink, width: 1.5),
+              ),
             ),
             child: Column(children: [
               for (final s in steps)

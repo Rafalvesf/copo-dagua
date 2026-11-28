@@ -439,7 +439,7 @@ class _WishSheetState extends ConsumerState<_WishSheet> {
         const SizedBox(height: 14),
         PressScale(child: FilledButton(
           onPressed: _saving ? null : _save,
-          style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+          style: FilledButton.styleFrom(backgroundColor: AppTheme.action, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           child: Text(_saving ? 'A guardar…' : 'Guardar'),
         )),
       ]),
@@ -538,7 +538,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
                   },
             icon: Icon(added ? Hi.check : Hi.plus),
             label: Text(added ? 'Já está na vossa lista' : (p.inStock ? 'Pôr na lista de presentes' : 'Esgotado')),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.action, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           )),
           const SizedBox(height: 6),
           const Text(
@@ -563,7 +563,7 @@ class _GiftShopViewState extends ConsumerState<GiftShopView> {
     // Igual à aba Empresas (pedido 2026-11-08): pesquisa em pílula com um
     // botão redondo ao lado (a vossa lista), "Em destaque", "N produtos" e
     // cartões em lista com foto à esquerda.
-    final pill = OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.pill), borderSide: BorderSide.none);
+    final pill = OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.pill), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5));
     return Column(children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(AppTheme.screenMargin, 16, AppTheme.screenMargin, 0),
@@ -871,7 +871,7 @@ class _GuestItemCard extends ConsumerWidget {
                 isScrollControlled: true,
                 builder: (_) => _OfferSheet(item: i, eventId: eventId),
               ),
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
               child: Text(i.isProduct ? 'Oferecer · ${giftEuros(i.price ?? 0)}' : 'Vou oferecer'),
             )),
         ]),
@@ -988,7 +988,7 @@ class _OfferSheetState extends ConsumerState<_OfferSheet> {
         const SizedBox(height: 12),
         PressScale(child: FilledButton(
           onPressed: _busy ? null : _go,
-          style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
+          style: FilledButton.styleFrom(backgroundColor: AppTheme.action, minimumSize: const Size.fromHeight(50), shape: const StadiumBorder()),
           child: _busy
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : Text(i.isProduct ? 'Pagar ${giftEuros((i.price ?? 0) * _qty)}' : 'Reservar'),
@@ -1064,7 +1064,7 @@ class _GiftReturnScreenState extends ConsumerState<GiftReturnScreen> {
               if (_status != 'checking')
                 PressScale(child: FilledButton(
                   onPressed: () => context.go(_eventId != null ? '/guest-gifts/$_eventId' : '/guest-gifts'),
-                  style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+                  style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
                   child: const Text('Voltar aos presentes'),
                 )),
             ]),

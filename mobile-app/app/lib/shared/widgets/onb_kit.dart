@@ -8,6 +8,7 @@ import 'island_sheet.dart';
 import '../hero_icons.dart';
 import 'line_icon.dart';
 import 'snappy_tap.dart';
+import 'time_wheels.dart';
 import 'app_progress.dart';
 import 'package:copo_dagua_app/shared/widgets/press_scale.dart';
 import 'package:copo_dagua_app/shared/widgets/step_slide.dart';
@@ -98,7 +99,7 @@ class OnbButton extends StatelessWidget {
           : PressScale(child: FilledButton(
               onPressed: loading ? null : onPressed,
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
+                backgroundColor: AppTheme.action,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: AppTheme.ink.withValues(alpha: 0.35),
                 disabledForegroundColor: Colors.white,
@@ -504,7 +505,7 @@ class OnbSheetHeader extends StatelessWidget {
         const SizedBox(height: 14),
         Row(children: [
           Expanded(child: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.ink))),
-          _SheetRound(icon: Hi.xMark, onTap: () => Navigator.of(context).pop()),
+          const SizedBox.shrink(),
         ]),
       ]);
 }
@@ -546,12 +547,46 @@ Future<DateTime?> showOnbDateSheet(
       builder: (ctx) => _DateSheet(initial: initial, first: first, last: last, title: title),
     );
 
+/// O dia e a hora de uma vez (pedido 2026-11-28: «o dia e a hora devem ser
+/// escolhidos simultaneamente»): o calendário do mês e, por baixo, a roda
+/// «A QUE HORAS?». O botão diz o que ficou escolhido («Dom, 14 mar ·
+/// 20:00») e «Só o dia» guarda o dia sem hora.
+Future<(DateTime, TimeOfDay?)?> showOnbDayTimeSheet(
+  BuildContext context, {
+  DateTime? initial,
+  TimeOfDay? initialTime,
+  required DateTime first,
+  required DateTime last,
+  String title = 'Quando é?',
+}) =>
+    showIslandSheet<(DateTime, TimeOfDay?)>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _DateSheet(
+        initial: initial,
+        first: first,
+        last: last,
+        title: title,
+        withTime: true,
+        initialTime: initialTime,
+      ),
+    );
+
 class _DateSheet extends StatefulWidget {
   final DateTime? initial;
   final DateTime first;
   final DateTime last;
   final String title;
-  const _DateSheet({required this.initial, required this.first, required this.last, required this.title});
+  final bool withTime;
+  final TimeOfDay? initialTime;
+  const _DateSheet({
+    required this.initial,
+    required this.first,
+    required this.last,
+    required this.title,
+    this.withTime = false,
+    this.initialTime,
+  });
 
   @override
   State<_DateSheet> createState() => _DateSheetState();
@@ -559,6 +594,18 @@ class _DateSheet extends StatefulWidget {
 
 class _DateSheetState extends State<_DateSheet> {
   late DateTime? _picked = widget.initial;
+  late String _time = _timeText(widget.initialTime ?? const TimeOfDay(hour: 20, minute: 0));
+
+  static String _two(int v) => v.toString().padLeft(2, '0');
+  static String _timeText(TimeOfDay t) {
+    final m = (t.hour * 60 + t.minute) ~/ 15 * 15;
+    return '${_two(m ~/ 60)}:${_two(m % 60)}';
+  }
+
+  TimeOfDay get _timeOfDay {
+    final p = _time.split(':');
+    return TimeOfDay(hour: int.parse(p[0]), minute: int.parse(p[1]));
+  }
   late DateTime _month = DateTime((widget.initial ?? widget.first).year, (widget.initial ?? widget.first).month);
 
   DateTime get _firstMonth => DateTime(widget.first.year, widget.first.month);
@@ -579,7 +626,8 @@ class _DateSheetState extends State<_DateSheet> {
       for (var d = 1; d <= daysInMonth; d++) _day(DateTime(_month.year, _month.month, d)),
     ];
     final p = _picked;
-    return Padding(
+    return SingleChildScrollView(
+      child: Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
       child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         OnbSheetHeader(widget.title),
@@ -607,12 +655,50 @@ class _DateSheetState extends State<_DateSheet> {
           childAspectRatio: 1.15,
           children: cells,
         ),
+        if (widget.withTime) ...[
+          const SizedBox(height: 12),
+          const Text('A QUE HORAS?',
+              style: TextStyle(fontSize: 12, letterSpacing: 2, fontWeight: FontWeight.w700, color: AppTheme.inkMuted)),
+          const SizedBox(height: 8),
+          TimeWheels(columns: [
+            WheelColumn(
+              label: 'COMEÇA ÀS',
+              options: [for (var m = 0; m < 24 * 60; m += 15) '${_two(m ~/ 60)}:${_two(m % 60)}'],
+              value: _time,
+              onChanged: (v) => setState(() => _time = v),
+            ),
+          ]),
+        ],
         const SizedBox(height: 14),
-        OnbButton(
-          label: p == null ? 'Escolher' : 'Escolher ${_weekdays[p.weekday - 1]}, ${p.day} ${_monthsShort[p.month - 1]}',
-          onPressed: p == null ? null : () => Navigator.of(context).pop(p),
-        ),
+        if (widget.withTime)
+          OnbButton(
+            label: p == null ? 'Escolhe o dia' : '${_weekdays[p.weekday - 1]}, ${p.day} ${_monthsShort[p.month - 1]} · $_time',
+            onPressed: p == null ? null : () => Navigator.of(context).pop((p, _timeOfDay)),
+          )
+        else
+          OnbButton(
+            label: p == null ? 'Escolher' : 'Escolher ${_weekdays[p.weekday - 1]}, ${p.day} ${_monthsShort[p.month - 1]}',
+            onPressed: p == null ? null : () => Navigator.of(context).pop(p),
+          ),
+        if (widget.withTime) ...[
+          const SizedBox(height: 26),
+          Center(
+            child: SnappyTap(
+              onTap: p == null ? null : () => Navigator.of(context).pop((p, null)),
+              child: Text.rich(
+                const TextSpan(children: [
+                  TextSpan(text: 'Ainda não sabes a hora? '),
+                  TextSpan(text: 'Só o dia', style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.ink)),
+                ]),
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.inkMuted.withValues(alpha: p == null ? 0.5 : 1)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+        ],
       ]),
+      ),
     );
   }
 

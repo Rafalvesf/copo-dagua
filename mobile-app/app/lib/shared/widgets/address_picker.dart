@@ -271,17 +271,7 @@ class _AddressPickerState extends State<_AddressPicker> {
         Tooltip(
           message: 'Fechar',
           excludeFromSemantics: true,
-          child: SnappyTap(
-            onTap: () => Navigator.of(context).maybePop(),
-            semanticLabel: 'Fechar',
-            child: Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(color: AppTheme.ink, shape: BoxShape.circle),
-              child: const Icon(Hi.xMark, size: 20, color: Colors.white),
-            ),
-          ),
+          child: const SizedBox.shrink(),
         ),
       ]);
 
@@ -329,10 +319,10 @@ class _AddressPickerState extends State<_AddressPicker> {
                       },
                     )),
               filled: true,
-              fillColor: AppTheme.background,
+              fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(vertical: 16),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(26), borderSide: BorderSide.none),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(26), borderSide: BorderSide.none),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(26), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(26), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(26), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
             ),
@@ -492,7 +482,7 @@ class _AddressPickerState extends State<_AddressPicker> {
           child: PressScale(child: FilledButton(
             onPressed: () => Navigator.of(context).pop(p),
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.ink,
+              backgroundColor: AppTheme.action,
               foregroundColor: Colors.white,
               shape: const StadiumBorder(),
               textStyle: const TextStyle(

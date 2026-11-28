@@ -170,7 +170,7 @@ class _ChooseMenuScreenState extends ConsumerState<ChooseMenuScreen> {
         PressScale(child: FilledButton(
           onPressed: pkg == null || _saving ? null : () => _save(pkg, amount),
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ink,
+            backgroundColor: AppTheme.action,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(52),
             shape: const StadiumBorder(),

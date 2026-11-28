@@ -84,7 +84,7 @@ class FrameButton36 extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: outlined ? Colors.transparent : AppTheme.ink,
+            color: outlined ? Colors.transparent : AppTheme.action,
             border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
             borderRadius: BorderRadius.circular(18),
           ),
@@ -111,7 +111,7 @@ class FrameButton44 extends StatelessWidget {
             height: 44,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: outlined ? Colors.transparent : AppTheme.ink,
+              color: outlined ? Colors.transparent : AppTheme.action,
               border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
               borderRadius: BorderRadius.circular(22),
             ),

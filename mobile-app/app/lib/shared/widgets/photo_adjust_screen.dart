@@ -113,7 +113,7 @@ class _PhotoAdjustScreenState extends State<_PhotoAdjustScreen> {
                 width: double.infinity,
                 child: PressScale(child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.ink,
+                    backgroundColor: AppTheme.action,
                     minimumSize: const Size.fromHeight(52),
                   ),
                   onPressed: _saving ? null : _save,

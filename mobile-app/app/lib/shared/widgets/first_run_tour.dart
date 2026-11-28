@@ -390,7 +390,7 @@ class _TourOverlayState extends State<_TourOverlay> {
           const SizedBox(width: 4),
           PressScale(child: FilledButton(
             onPressed: () => setState(() => _step++),
-            style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
+            style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder(), minimumSize: const Size(0, 36), padding: const EdgeInsets.symmetric(horizontal: 16), tapTargetSize: MaterialTapTargetSize.shrinkWrap, textStyle: const TextStyle(fontFamily: AppTheme.fontFamily, fontFamilyFallback: AppTheme.fontFamilyFallback, fontSize: 13, fontWeight: FontWeight.w700), ),
             child: const Text('Seguinte'),
           )),
         ]),
@@ -443,7 +443,7 @@ class _TourOverlayState extends State<_TourOverlay> {
                 onPressed: () => setState(() => _step = 1),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
-                  backgroundColor: AppTheme.ink,
+                  backgroundColor: AppTheme.action,
                   shape: const StadiumBorder(),
                 ),
                 child: const Text('Começar'),
@@ -497,7 +497,7 @@ class _TourOverlayState extends State<_TourOverlay> {
           onPressed: _close,
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(50),
-            backgroundColor: AppTheme.ink,
+            backgroundColor: AppTheme.action,
             shape: const StadiumBorder(),
           ),
           child: Text(_c.finalCta),

@@ -112,7 +112,7 @@ class PartnerInviteCard extends ConsumerWidget {
           icon: const Icon(Hi.arrowUpOnSquare, size: 18),
           label: const Text('Partilhar convite'),
           style: FilledButton.styleFrom(
-            backgroundColor: AppTheme.ink,
+            backgroundColor: AppTheme.action,
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(46),
             shape: const StadiumBorder(),

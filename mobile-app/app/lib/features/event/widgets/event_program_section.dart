@@ -651,9 +651,9 @@ class _PillField extends StatelessWidget {
           hintText: hint,
           hintStyle: const TextStyle(fontSize: 15, color: AppTheme.inkMuted),
           filled: true,
-          fillColor: AppTheme.background,
+          fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide.none),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: const BorderSide(color: AppTheme.ink, width: 1.5)),
         ),
       );
 }

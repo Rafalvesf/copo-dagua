@@ -221,7 +221,7 @@ class _Button36 extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: outlined ? Colors.white : AppTheme.ink,
+            color: outlined ? Colors.white : AppTheme.action,
             border: outlined ? Border.all(color: AppTheme.ink, width: 1.5) : null,
             borderRadius: BorderRadius.circular(18),
           ),
@@ -325,7 +325,7 @@ class _HeroState extends ConsumerState<_Hero> {
           height: 52,
           child: PressScale(
             child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+              style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
               onPressed: () => context.push('/guests/convidar'),
               child: const Text('Convidar', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
             ),
@@ -606,7 +606,6 @@ class _PeopleSheetState extends State<_PeopleSheet> {
                   Text('Mais ou menos. Podes mudar depois.', style: TextStyle(fontSize: 13, color: AppTheme.inkMuted)),
                 ]),
               ),
-              _step(Hi.xMark, 'Fechar', () => Navigator.of(context).pop()),
             ]),
             const SizedBox(height: 16),
             Container(
@@ -625,7 +624,7 @@ class _PeopleSheetState extends State<_PeopleSheet> {
               height: 52,
               child: PressScale(
                 child: FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: AppTheme.ink, shape: const StadiumBorder()),
+                  style: FilledButton.styleFrom(backgroundColor: AppTheme.action, shape: const StadiumBorder()),
                   onPressed: () => Navigator.of(context).pop(_value),
                   child: const Text('Guardar', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                 ),
