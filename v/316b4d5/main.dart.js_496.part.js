@@ -1,0 +1,7 @@
+((a,b)=>{a[b]=a[b]||{}})(self,"$__dart_deferred_initializers__")
+$__dart_deferred_initializers__.current=function(a,b,c,$){var A,B,C
+A=c[0]
+B=c[2]
+C=c[300]
+var z=a.updateTypes([]);(function constants(){C.uj=new A.Y(1,0.24705882352941178,0.5411764705882353,0.35294117647058826,B.C)})()};
+(a=>{a["KrfwYjdIfTMkmGmnh7G4EQyv2p4="]=a.current})($__dart_deferred_initializers__);

@@ -1,0 +1,201 @@
+((a,b)=>{a[b]=a[b]||{}})(self,"$__dart_deferred_initializers__")
+$__dart_deferred_initializers__.current=function(a,b,c,$){var J,A,D,C={
+akE(d){var x=0,w=A.n(y.c),v,u=2,t=[],s,r,q,p,o
+var $async$akE=A.j(function(e,f){if(e===1){t.push(f)
+x=u}for(;;)switch(x){case 0:case 3:switch(d.a){case 0:x=5
+break
+case 1:x=6
+break
+case 2:x=7
+break
+default:x=4
+break}break
+case 5:q=A.Fu()
+A:{if(D.kL===q){s=B.kj
+break A}if(D.ro===q){s=B.jg
+break A}if(D.y6===q||D.y7===q){s=B.mv
+break A}if(D.GF===q){s=B.ki
+break A}s=null}v=s
+x=1
+break
+case 6:u=9
+s=null
+x=12
+return A.d($.a_t().uU(),$async$akE)
+case 12:r=f
+B:{if(D.FE===r||D.qO===r){s=B.kj
+break B}if(D.qN===r){s=B.jg
+break B}if(D.bE2===r||D.od===r){s=B.ki
+break B}}s=s
+v=s
+x=1
+break
+u=2
+x=11
+break
+case 9:u=8
+o=t.pop()
+v=B.mv
+x=1
+break
+x=11
+break
+case 8:x=2
+break
+case 11:x=4
+break
+case 7:case 13:x=19
+return A.d(C.cHy(),$async$akE)
+case 19:switch(f){case"granted":x=15
+break
+case"denied":x=16
+break
+case"unsupported":x=17
+break
+default:x=18
+break}break
+case 15:s=B.kj
+x=14
+break
+case 16:s=B.jg
+x=14
+break
+case 17:s=B.mv
+x=14
+break
+case 18:s=B.ki
+x=14
+break
+case 14:v=s
+x=1
+break
+case 4:case 1:return A.l(v,w)
+case 2:return A.k(t.at(-1),w)}})
+return A.m($async$akE,w)},
+ZR(d){return C.dHh(d)},
+dHh(d){var x=0,w=A.n(y.c),v,u=2,t=[],s,r,q,p,o,n
+var $async$ZR=A.j(function(e,f){if(e===1){t.push(f)
+x=u}for(;;)switch(x){case 0:u=4
+case 7:switch(d.a){case 0:x=9
+break
+case 1:x=10
+break
+case 2:x=11
+break
+default:x=8
+break}break
+case 9:x=12
+return A.d(A.y4(),$async$ZR)
+case 12:s=f
+if(s===D.kL)p=B.kj
+else p=s===D.ro?B.jg:B.ki
+v=p
+x=1
+break
+case 10:x=13
+return A.d($.a_t().vM(0),$async$ZR)
+case 13:r=f
+p=r===D.FE||r===D.qO?B.kj:B.jg
+v=p
+x=1
+break
+case 11:x=14
+return A.d(C.cHx(),$async$ZR)
+case 14:q=f
+if(J.o(q,"granted"))p=B.kj
+else p=J.o(q,"unsupported")?B.mv:B.jg
+v=p
+x=1
+break
+case 8:u=2
+x=6
+break
+case 4:u=3
+n=t.pop()
+v=B.jg
+x=1
+break
+x=6
+break
+case 3:x=2
+break
+case 6:case 1:return A.l(v,w)
+case 2:return A.k(t.at(-1),w)}})
+return A.m($async$ZR,w)},
+wF:function wF(d,e){this.a=d
+this.b=e},
+Hs:function Hs(d,e){this.a=d
+this.b=e},
+cHy(){var x=0,w=A.n(y.g),v,u=2,t=[],s,r,q,p
+var $async$cHy=A.j(function(d,e){if(d===1){t.push(e)
+x=u}for(;;)switch(x){case 0:q=b.G.tchinCamera
+if(q==null){v="unsupported"
+x=1
+break}u=4
+x=7
+return A.d(A.fG(q.status(),y.g),$async$cHy)
+case 7:s=e
+v=s
+x=1
+break
+u=2
+x=6
+break
+case 4:u=3
+p=t.pop()
+v="prompt"
+x=1
+break
+x=6
+break
+case 3:x=2
+break
+case 6:case 1:return A.l(v,w)
+case 2:return A.k(t.at(-1),w)}})
+return A.m($async$cHy,w)},
+cHx(){var x=0,w=A.n(y.g),v,u=2,t=[],s,r,q,p
+var $async$cHx=A.j(function(d,e){if(d===1){t.push(e)
+x=u}for(;;)switch(x){case 0:q=b.G.tchinCamera
+if(q==null){v="unsupported"
+x=1
+break}u=4
+x=7
+return A.d(A.fG(q.request(),y.g),$async$cHx)
+case 7:s=e
+v=s
+x=1
+break
+u=2
+x=6
+break
+case 4:u=3
+p=t.pop()
+v="denied"
+x=1
+break
+x=6
+break
+case 3:x=2
+break
+case 6:case 1:return A.l(v,w)
+case 2:return A.k(t.at(-1),w)}})
+return A.m($async$cHx,w)}},B
+J=c[1]
+A=c[0]
+D=c[2]
+C=a.updateHolder(c[179],C)
+B=c[295]
+C.wF.prototype={
+I(){return"AppPermission."+this.b}}
+C.Hs.prototype={
+I(){return"_State."+this.b}}
+var z=a.updateTypes([]);(function inheritance(){var x=a.inheritMany
+x(A.fg,[C.wF,C.Hs])})()
+var y={g:A.y("c"),c:A.y("Hs")};(function constants(){B.l8=new C.wF(0,"notifications")
+B.jj=new C.wF(1,"location")
+B.jk=new C.wF(2,"camera")
+B.ki=new C.Hs(0,"ask")
+B.kj=new C.Hs(1,"granted")
+B.jg=new C.Hs(2,"denied")
+B.mv=new C.Hs(3,"unsupported")})()};
+(a=>{a["cGBf0zgt+h6bJP/VyJ7fYddzQfo="]=a.current})($__dart_deferred_initializers__);

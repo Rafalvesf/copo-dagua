@@ -1,0 +1,10 @@
+((a,b)=>{a[b]=a[b]||{}})(self,"$__dart_deferred_initializers__")
+$__dart_deferred_initializers__.current=function(a,b,c,$){var C,A,B
+C=c[0]
+A=c[2]
+B=c[440]
+var z=a.updateTypes([]);(function constants(){B.cfh=new C.D("+ taxa de servi\xe7o no passo seguinte",null,A.L,null,null,null,null,null,null,null,null)
+B.JP=new C.d0(A.e0,null,null,B.cfh,null)
+B.Ed=new C.b7(A.ds,13,A.t,null,null,null)
+B.a7P=new C.jb(A.t,null,null,null,A.I4)})()};
+(a=>{a["yxv0c2lHgpieVuIcc4qmHfe1X0Y="]=a.current})($__dart_deferred_initializers__);
